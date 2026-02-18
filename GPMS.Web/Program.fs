@@ -42,7 +42,8 @@ module Program =
         app.UseRouting()
         app.UseAuthorization()
 
-        app.MapControllerRoute(name = "default", pattern = "{controller=Home}/{action=Index}/{id?}")
+        app.MapControllerRoute(name = "default", pattern = "{controller=Auth}/{action=Login}/{id?}")
+
 
         app.MapRazorPages()
 
