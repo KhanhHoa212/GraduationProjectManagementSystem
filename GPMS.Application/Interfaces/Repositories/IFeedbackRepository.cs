@@ -1,0 +1,13 @@
+using GPMS.Domain.Entities;
+using System.Threading.Tasks;
+
+namespace GPMS.Application.Interfaces.Repositories;
+
+public interface IFeedbackRepository
+{
+    Task<Feedback?> GetByIdAsync(int feedbackId);
+    Task<Feedback?> GetByEvaluationIdAsync(int evaluationId);
+    Task AddAsync(Feedback feedback);
+    Task UpdateApprovalAsync(FeedbackApproval approval);
+    Task SaveChangesAsync();
+}
