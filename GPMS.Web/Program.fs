@@ -14,7 +14,10 @@ open Microsoft.AspNetCore.HttpsPolicy
 open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
-open Microsoft.Extensions.Logging
+open Microsoft.EntityFrameworkCore
+open GPMS.Infrastructure.Data
+open GPMS.Infrastructure.Repositories
+open GPMS.Application.Interfaces.Repositories
 
 module Program =
     let exitCode = 0
@@ -22,6 +25,22 @@ module Program =
     [<EntryPoint>]
     let main args =
         let builder = WebApplication.CreateBuilder(args)
+
+        // Add services to the container.
+        let connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+        builder.Services.AddDbContext<GpmsDbContext>(fun options ->
+            options.UseSqlServer(connectionString) |> ignore)
+
+        // Register Repositories
+        builder.Services.AddScoped<IUserRepository, UserRepository>() |> ignore
+        builder.Services.AddScoped<IProjectRepository, ProjectRepository>() |> ignore
+        builder.Services.AddScoped<IProjectGroupRepository, ProjectGroupRepository>() |> ignore
+        builder.Services.AddScoped<IReviewRoundRepository, ReviewRoundRepository>() |> ignore
+        builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepository>() |> ignore
+        builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>() |> ignore
+        builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>() |> ignore
+        builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>() |> ignore
+        builder.Services.AddScoped<INotificationRepository, NotificationRepository>() |> ignore
 
         builder
             .Services
