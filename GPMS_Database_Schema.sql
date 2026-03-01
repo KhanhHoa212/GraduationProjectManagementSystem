@@ -108,6 +108,8 @@ CREATE TABLE [UserCredentials] (
     [PasswordHash] nvarchar(255) NULL,
     [ExternalProviderID] nvarchar(255) NULL,
     [LastLoginAt] datetime2 NULL,
+    [PasswordResetToken] nvarchar(255) NULL,
+    [PasswordResetExpiry] datetime2 NULL,
     CONSTRAINT [PK_UserCredentials] PRIMARY KEY ([CredentialID]),
     CONSTRAINT [FK_UserCredentials_Users_UserID] FOREIGN KEY ([UserID]) REFERENCES [Users] ([UserID]) ON DELETE CASCADE
 );
@@ -542,3 +544,10 @@ GO
 COMMIT;
 GO
 
+-- add hashed password "123456"
+TRUNCATE TABLE UserCredentials;
+INSERT INTO UserCredentials (UserID, AuthProvider, PasswordHash) VALUES 
+('ADMIN001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
+('GV001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
+('SE180001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
+GO
