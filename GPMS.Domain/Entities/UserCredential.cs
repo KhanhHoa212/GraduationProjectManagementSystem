@@ -10,6 +10,8 @@ public class UserCredential
     public string? PasswordHash { get; set; }
     public string? ExternalProviderID { get; set; }
     public DateTime? LastLoginAt { get; set; }
+    public string? PasswordResetToken { get; set; }
+    public DateTime? PasswordResetExpiry { get; set; }
 
     // Navigation
     public virtual User User { get; set; } = null!;

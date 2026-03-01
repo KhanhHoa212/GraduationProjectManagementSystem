@@ -14,5 +14,39 @@ obj/
 Thumbs.db
 .DS_Store
 
+
 # Secrets
 appsettings.Development.json
+appsettings.json
+secrets.json
+.env
+
+# Migrations
+**/Migrations/
+
+# Build and Publish
+bin/
+obj/
+publish/
+dist/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
+# IDEs
+.vscode/
+.idea/
+
+# OS and Temp
+Thumbs.db
+.DS_Store
+*.tmp
+*.log
+
+# Packages
+node_modules/
+packages/
+

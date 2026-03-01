@@ -15,6 +15,8 @@ open Microsoft.Extensions.Configuration
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.Extensions.Hosting
 open Microsoft.EntityFrameworkCore
+open Microsoft.AspNetCore.Authentication.Cookies
+open Microsoft.AspNetCore.Authentication.Google
 open GPMS.Infrastructure.Data
 open GPMS.Infrastructure.Repositories
 open GPMS.Application.Interfaces.Repositories
@@ -49,6 +51,15 @@ module Program =
 
         builder.Services.AddRazorPages()
 
+        // add google authentication
+        builder.Services.AddAuthentication(fun options ->
+            options.DefaultScheme <- CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie()
+            .AddGoogle(fun options ->
+                options.ClientId <- builder.Configuration["Authentication:Google:ClientId"]
+                options.ClientSecret <- builder.Configuration["Authentication:Google:ClientSecret"]
+                options.CallbackPath <- "/signin-google") |> ignore
+
         let app = builder.Build()
 
         if not (builder.Environment.IsDevelopment()) then
@@ -59,6 +70,7 @@ module Program =
 
         app.UseStaticFiles()
         app.UseRouting()
+        app.UseAuthentication()
         app.UseAuthorization()
 
         app.MapControllerRoute(name = "default", pattern = "{controller=Auth}/{action=Login}/{id?}")

@@ -5,6 +5,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="ViewModels/LoginViewModel.fs" />
+    <Compile Include="ViewModels/UserManagementViewModel.fs" />
+    <Compile Include="ViewModels/ForgotPasswordViewModel.fs" />
+    <Compile Include="Controllers\AdminController.fs" />
+    <Compile Include="Controllers\TeacherController.fs" />
+    <Compile Include="Controllers\StudentController.fs" />
     <Compile Include="Controllers\AuthController.fs" />
     <Compile Include="Models/ErrorViewModel.fs" />
     <Compile Include="Controllers/HomeController.fs" />
@@ -12,7 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.19" />
+	  <PackageReference Include="BCrypt.Net-Next" Version="4.1.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.12" />
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.19" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.0">
       <PrivateAssets>all</PrivateAssets>
