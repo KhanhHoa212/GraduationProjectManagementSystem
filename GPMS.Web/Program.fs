@@ -52,6 +52,9 @@ module Program =
         builder.Services.AddRazorPages()
 
         // add google authentication
+        let googleClientId = builder.Configuration["Authentication:Google:ClientId"]
+        let googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]
+
         builder.Services.AddAuthentication(fun options ->
             options.DefaultScheme <- CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie()

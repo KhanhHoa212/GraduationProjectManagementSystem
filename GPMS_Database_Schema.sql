@@ -551,3 +551,4 @@ INSERT INTO UserCredentials (UserID, AuthProvider, PasswordHash) VALUES
 ('GV001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
 ('SE180001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
 GO
+
