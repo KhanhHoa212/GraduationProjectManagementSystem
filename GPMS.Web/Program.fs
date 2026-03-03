@@ -43,6 +43,7 @@ module Program =
         builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>() |> ignore
         builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>() |> ignore
         builder.Services.AddScoped<INotificationRepository, NotificationRepository>() |> ignore
+        builder.Services.AddScoped<ISemesterRepository, SemesterRepository>() |> ignore
 
         builder
             .Services

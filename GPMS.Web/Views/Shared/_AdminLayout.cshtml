@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GPMS Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#F37021",
+                        "secondary": "#1152d4",
+                        "background-light": "#f0f2f5",
+                        "background-dark": "#101622",
+                        "sidebar-dark": "#1a2236",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Sidebar Styles */
+        #admin-sidebar {
+            width: 256px;
+            min-width: 256px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            background: #1a2236;
+            border-right: 1px solid rgba(255,255,255,0.06);
+            transition: transform 0.3s ease;
+        }
+
+        #admin-main {
+            margin-left: 256px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: rgba(148, 163, 184, 1);
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-nav-item:hover {
+            background: rgba(255,255,255,0.07);
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .sidebar-nav-item.active {
+            background: rgba(243, 112, 33, 0.1);
+            color: #F37021;
+            font-weight: 600;
+            border-left: 3px solid #F37021;
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .sidebar-nav-item.active .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .sidebar-nav-item .material-symbols-outlined {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(100, 116, 139, 0.8);
+            padding: 0 14px;
+            margin: 16px 0 6px 0;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.2s linear;
+        }
+        #loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* Scrollbar */
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .main-content-area::-webkit-scrollbar { width: 6px; }
+        .main-content-area::-webkit-scrollbar-track { background: #f0f2f5; }
+        .main-content-area::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 6px; }
+
+        @@media (max-width: 768px) {
+            #admin-sidebar { transform: translateX(-100%); }
+            #admin-sidebar.open { transform: translateX(0); }
+            #admin-main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body class="bg-background-light font-display text-slate-900">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+            <p class="text-primary font-bold animate-pulse text-sm tracking-wide uppercase">Processing...</p>
+        </div>
+    </div>
+
+    <div class="flex">
+        <!-- ===== ADMIN SIDEBAR ===== -->
+        <aside id="admin-sidebar">
+            <!-- Logo / Brand -->
+            <div class="px-5 py-5 border-b border-white/5">
+                <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 no-underline">
+                    <div class="size-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/30 flex-shrink-0">
+                        <span class="material-symbols-outlined text-white text-xl filled">school</span>
+                    </div>
+                    <div>
+                        <h1 class="text-white text-lg font-extrabold tracking-tight leading-tight">GPMS</h1>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-widest font-semibold">Admin Portal</p>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto sidebar-nav px-3 py-3">
+
+                <span class="sidebar-section-label">Overview</span>
+
+                <a asp-controller="Admin" asp-action="Dashboard"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Dashboard" ? "active" : "")">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <span class="sidebar-section-label">Management</span>
+
+                <a asp-controller="Admin" asp-action="Index"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <span class="material-symbols-outlined">manage_accounts</span>
+                    <span>User Management</span>
+                </a>
+
+                <a asp-controller="Semester" asp-action="Index"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Semester" ? "active" : "")">
+                    <span class="material-symbols-outlined">calendar_month</span>
+                    <span>Semester Settings</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">account_tree</span>
+                    <span>Projects</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">domain</span>
+                    <span>Faculty &amp; Majors</span>
+                </a>
+
+                <span class="sidebar-section-label">System</span>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">history</span>
+                    <span>System Logs</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">security</span>
+                    <span>Backup &amp; Security</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">settings</span>
+                    <span>Settings</span>
+                </a>
+
+            </nav>
+
+            <!-- Current Semester Badge -->
+            <div class="px-4 py-3 mx-3 mb-3 bg-white/5 rounded-xl border border-white/5">
+                <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold mb-1">Current Semester</p>
+                <p class="text-primary font-extrabold text-sm">Spring 2026 (SP26)</p>
+            </div>
+
+            <!-- User Profile -->
+            <div class="border-t border-white/5 p-3">
+                <div class="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 transition-colors cursor-pointer">
+                    <div class="size-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0 border-2 border-primary/30">
+                        <span class="material-symbols-outlined text-base">person</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <p class="text-sm font-semibold text-white truncate">@User.Identity.Name</p>
+                            <p class="text-[11px] text-slate-400 truncate">System Administrator</p>
+                        }
+                        else
+                        {
+                            <p class="text-sm font-semibold text-white truncate">Admin User</p>
+                            <p class="text-[11px] text-slate-400 truncate">Academic Office</p>
+                        }
+                    </div>
+                    <a asp-controller="Auth" asp-action="Logout" class="no-underline" title="Logout">
+                        <span class="material-symbols-outlined text-slate-500 hover:text-red-400 transition-colors text-base">logout</span>
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div id="admin-main" class="flex-1">
+            <!-- Top Header Bar -->
+            <header class="sticky top-0 z-50 h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 shadow-sm">
+                <!-- Mobile menu toggle -->
+                <button id="sidebar-toggle" class="md:hidden p-2 text-slate-500 hover:bg-slate-100 rounded-lg">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
+                <!-- Breadcrumbs -->
+                <div class="flex items-center gap-2 text-slate-500 text-sm">
+                    @if (ViewData["BreadcrumbTitle"] != null)
+                    {
+                        <a asp-controller="Admin" asp-action="Index" class="text-slate-500 hover:text-primary no-underline transition-colors font-medium">Admin</a>
+                        <span class="material-symbols-outlined text-slate-300 text-xs">chevron_right</span>
+                        <span class="text-slate-900 font-semibold">@ViewData["BreadcrumbTitle"]</span>
+                    }
+                    else
+                    {
+                        <span class="text-slate-500 font-medium">Admin</span>
+                        <span class="material-symbols-outlined text-slate-300 text-xs">chevron_right</span>
+                        <span class="text-slate-900 font-semibold">@ViewData["Title"]</span>
+                    }
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-3">
+                    <!-- Search -->
+                    <div class="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-slate-400 text-sm">
+                        <span class="material-symbols-outlined text-sm text-slate-400">search</span>
+                        <span class="text-slate-400">Search system records...</span>
+                    </div>
+
+                    <!-- Notifications -->
+                    <button class="relative p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span class="absolute top-1.5 right-1.5 size-2 bg-red-500 rounded-full"></span>
+                    </button>
+
+                    <!-- Help -->
+                    <button class="p-2 text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">
+                        <span class="material-symbols-outlined">help_outline</span>
+                    </button>
+
+                    <!-- User -->
+                    <div class="flex items-center gap-2 pl-3 border-l border-slate-200">
+                        <div class="text-right hidden sm:block">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <p class="text-xs font-bold text-slate-900">@User.Identity.Name</p>
+                            }
+                            else
+                            {
+                                <p class="text-xs font-bold text-slate-900">Admin Portal</p>
+                            }
+                            <p class="text-[10px] text-slate-500">System Administrator</p>
+                        </div>
+                        <div class="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary border-2 border-primary/20">
+                            <span class="material-symbols-outlined text-base">person</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto main-content-area p-8">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-90 hidden md:hidden"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('loading-overlay');
+            const sidebar = document.getElementById('admin-sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            // Mobile sidebar toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('hidden');
+                });
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function () {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.add('hidden');
+                });
+            }
+
+            // Loading overlay on form submit
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function () {
+                    if (this.checkValidity()) {
+                        overlay.classList.add('active');
+                    }
+                });
+            });
+
+            // Loading overlay on navigation links
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"])').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+                        setTimeout(() => overlay.classList.add('active'), 50);
+                    }
+                });
+            });
+
+            // Hide spinner on back/forward
+            window.addEventListener('pageshow', function (event) {
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

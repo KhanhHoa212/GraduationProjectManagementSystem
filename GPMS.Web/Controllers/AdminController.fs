@@ -13,6 +13,10 @@ open GPMS.Web.ViewModels
 type AdminController(userRepository: IUserRepository) =
     inherit Controller()
 
+    [<Authorize(Roles = "Admin")>]
+    member this.Dashboard() =
+        this.View() :> IActionResult
+
     member this.Index() =
         task {
             let! users = userRepository.GetAllAsync()

@@ -1,112 +1,170 @@
 @model GPMS.Web.ViewModels.EditUserViewModel
 @{
-    var isEdit = ViewContext.RouteData.Values["action"].ToString() == "Edit";
-    ViewData["Title"] = isEdit ? "Edit User" : "Create User";
+    ViewData["Title"] = "Create User";
+    ViewData["BreadcrumbTitle"] = "Create User";
+    Layout = "_AdminLayout";
 }
 
-<div class="px-4 sm:px-10 py-8">
-    <!-- Breadcrumbs -->
-    <div class="flex flex-wrap gap-2 py-2 mb-6 items-center">
-        <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary text-sm font-medium no-underline" asp-controller="Home" asp-action="Index">Home</a>
-        <span class="material-symbols-outlined text-[#4c669a] dark:text-gray-500 text-sm">chevron_right</span>
-        <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary text-sm font-medium no-underline" asp-action="Index">User Management</a>
-        <span class="material-symbols-outlined text-[#4c669a] dark:text-gray-500 text-sm">chevron_right</span>
-        <span class="text-[#0d121b] dark:text-white text-sm font-medium">@ViewData["Title"]</span>
+<div class="max-w-3xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-1">
+            <a asp-action="Index" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors no-underline">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Create New User</h1>
+        </div>
+        <p class="text-slate-500 text-sm ml-11">Add a new user to the system with specific roles and permissions.</p>
     </div>
 
-    <div class="max-w-4xl">
-        <div class="mb-8">
-            <h1 class="text-[#0d121b] dark:text-white text-3xl font-bold leading-tight tracking-tight">@ViewData["Title"]</h1>
-            <p class="text-[#4c669a] dark:text-gray-400 text-base font-normal">@(isEdit ? "Update account details and permissions for this user." : "Add a new user to the system with specific roles.")</p>
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <!-- Card Header -->
+        <div class="px-8 py-5 border-b border-slate-100 bg-slate-50/50">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-green-100 flex items-center justify-center text-green-600">
+                    <span class="material-symbols-outlined">person_add</span>
+                </div>
+                <div>
+                    <p class="text-sm font-bold text-slate-900">New User Account</p>
+                    <p class="text-xs text-slate-500">Fill in all required fields marked with *</p>
+                </div>
+            </div>
         </div>
 
-        <div class="bg-white dark:bg-[#1a2230] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-800 overflow-hidden">
-            <div class="p-8">
-                <form asp-action="@(isEdit ? "Edit" : "Create")" method="post" class="space-y-6">
-                    @Html.AntiForgeryToken()
-                    <div asp-validation-summary="ModelOnly" class="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg dark:bg-red-200 dark:text-red-800" role="alert"></div>
+        <div class="p-8">
+            <form asp-action="Create" method="post" class="space-y-6">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="ModelOnly" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl" role="alert"></div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label asp-for="UserID" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">User ID</label>
-                            <input asp-for="UserID" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm @(isEdit ? "opacity-60 cursor-not-allowed" : "")" readonly="@isEdit" placeholder="Leave blank for auto-gen" />
-                            <span asp-validation-for="UserID" class="text-xs text-red-600 mt-1 block"></span>
-                        </div>
-                        <div>
-                            <label asp-for="Username" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Username</label>
-                            <input asp-for="Username" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm" placeholder="e.g. johndoe" />
-                            <span asp-validation-for="Username" class="text-xs text-red-600 mt-1 block"></span>
-                        </div>
-                    </div>
-
+                <!-- User ID & Username -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                        <label asp-for="FullName" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
-                        <input asp-for="FullName" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm" placeholder="e.g. John Doe" />
-                        <span asp-validation-for="FullName" class="text-xs text-red-600 mt-1 block"></span>
+                        <label asp-for="UserID" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            User ID
+                            <span class="ml-1 text-xs text-slate-400 font-normal">(optional)</span>
+                        </label>
+                        <input asp-for="UserID"
+                               class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                               placeholder="Leave blank for auto-gen" />
+                        <span asp-validation-for="UserID" class="text-xs text-red-500 mt-1 block"></span>
                     </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label asp-for="Email" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Email Address</label>
-                            <input asp-for="Email" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm" placeholder="example@fpt.edu.vn" />
-                            <span asp-validation-for="Email" class="text-xs text-red-600 mt-1 block"></span>
-                        </div>
-                        <div>
-                            <label asp-for="Phone" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Phone Number</label>
-                            <input asp-for="Phone" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm" placeholder="e.g. 0901234567" />
-                            <span asp-validation-for="Phone" class="text-xs text-red-600 mt-1 block"></span>
-                        </div>
-                    </div>
-
                     <div>
-                        <label asp-for="Status" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Account Status</label>
-                        <select asp-for="Status" class="block w-full px-4 py-2.5 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all text-sm" asp-items="Html.GetEnumSelectList<GPMS.Domain.Enums.UserStatus>()"></select>
-                        <span asp-validation-for="Status" class="text-xs text-red-600 mt-1 block"></span>
+                        <label asp-for="Username" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Username <span class="text-red-500">*</span>
+                        </label>
+                        <input asp-for="Username"
+                               class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                               placeholder="e.g. johndoe" />
+                        <span asp-validation-for="Username" class="text-xs text-red-500 mt-1 block"></span>
                     </div>
+                </div>
 
-                    <div class="p-6 bg-[#f8f9fc] dark:bg-gray-800/50 rounded-xl border border-[#e7ebf3] dark:border-gray-700">
-                        <label class="block text-sm font-bold text-[#0d121b] dark:text-white mb-4 uppercase tracking-wider">Roles & Permissions</label>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <label class="relative flex items-center p-3 rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#1a2230] hover:border-primary transition-all cursor-pointer group">
-                                <input type="radio" asp-for="Role" value="Student" class="size-4 text-primary border-slate-300 focus:ring-primary/20" />
-                                <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">Student</span>
-                            </label>
+                <!-- Full Name -->
+                <div>
+                    <label asp-for="FullName" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Full Name <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="FullName"
+                           class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                           placeholder="e.g. Nguyen Van A" />
+                    <span asp-validation-for="FullName" class="text-xs text-red-500 mt-1 block"></span>
+                </div>
 
-                            <label class="relative flex items-center p-3 rounded-lg border border-slate-200 dark:border-gray-700 bg-white dark:bg-[#1a2230] hover:border-primary transition-all cursor-pointer group">
-                                <input type="radio" asp-for="Role" value="Lecturer" class="size-4 text-primary border-slate-300 focus:ring-primary/20" />
-                                <span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">Lecturer</span>
-                            </label>
-
-                            <label class="relative flex items-center p-3 rounded-lg border border-slate-200 dark:border-gray-700 bg-slate-100 dark:bg-gray-800 opacity-60 cursor-not-allowed group">
-                                @if (isEdit && Model.Role == "Admin")
-                                {
-                                    <input type="hidden" name="Role" value="Admin" />
-                                }
-                                <input type="radio" asp-for="Role" value="Admin" disabled class="size-4 text-slate-300 border-slate-300" />
-                                <div class="ml-3">
-                                    <span class="text-sm font-medium text-slate-500">Administrator</span>
-                                    <span class="block text-[10px] text-orange-500 font-bold uppercase tracking-tighter">System Protected</span>
-                                </div>
-                            </label>
+                <!-- Email & Phone -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label asp-for="Email" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Email Address <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">mail</span>
+                            <input asp-for="Email"
+                                   class="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                                   placeholder="example@fpt.edu.vn" />
                         </div>
-                        <span asp-validation-for="Role" class="text-xs text-red-600 mt-2 block"></span>
+                        <span asp-validation-for="Email" class="text-xs text-red-500 mt-1 block"></span>
                     </div>
+                    <div>
+                        <label asp-for="Phone" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                            Phone Number
+                        </label>
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">phone</span>
+                            <input asp-for="Phone"
+                                   class="block w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                                   placeholder="e.g. 0901234567" />
+                        </div>
+                        <span asp-validation-for="Phone" class="text-xs text-red-500 mt-1 block"></span>
+                    </div>
+                </div>
 
-                    <div class="flex items-center justify-between pt-6 border-t border-slate-100 dark:border-slate-800">
-                        <a asp-action="Index" class="flex items-center gap-2 text-slate-500 hover:text-slate-700 font-semibold text-sm transition-colors no-underline">
-                            <span class="material-symbols-outlined text-xl">arrow_back</span>
-                            Back to List
-                        </a>
-                        <button type="submit" class="rounded-lg bg-primary hover:bg-[#d95d12] text-white h-11 px-8 text-sm font-bold transition-all shadow-lg shadow-orange-500/20">
-                            @(isEdit ? "Save Changes" : "Create User")
-                        </button>
+                <!-- Account Status -->
+                <div>
+                    <label asp-for="Status" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Account Status <span class="text-red-500">*</span>
+                    </label>
+                    <select asp-for="Status"
+                            class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                            asp-items="Html.GetEnumSelectList<GPMS.Domain.Enums.UserStatus>()">
+                    </select>
+                    <span asp-validation-for="Status" class="text-xs text-red-500 mt-1 block"></span>
+                </div>
+
+                <!-- Roles Section -->
+                <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-slate-600 text-[18px]">admin_panel_settings</span>
+                        <label class="text-sm font-bold text-slate-900 uppercase tracking-wider">Roles &amp; Permissions</label>
                     </div>
-                </form>
-            </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Student -->
+                        <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-primary/50 transition-all cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <input type="radio" asp-for="Role" value="Student" class="size-4 text-primary border-slate-300 focus:ring-primary/20" />
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-700">Student</span>
+                                <span class="block text-xs text-slate-400">Basic access</span>
+                            </div>
+                        </label>
+
+                        <!-- Lecturer -->
+                        <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-primary/50 transition-all cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <input type="radio" asp-for="Role" value="Lecturer" class="size-4 text-primary border-slate-300 focus:ring-primary/20" />
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-700">Lecturer</span>
+                                <span class="block text-xs text-slate-400">Supervisor access</span>
+                            </div>
+                        </label>
+
+                        <!-- Admin (locked) -->
+                        <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed">
+                            <input type="radio" asp-for="Role" value="Admin" disabled class="size-4 text-slate-300 border-slate-300" />
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-500">Administrator</span>
+                                <span class="block text-[10px] text-orange-500 font-bold uppercase">System Protected</span>
+                            </div>
+                        </label>
+                    </div>
+                    <span asp-validation-for="Role" class="text-xs text-red-500 mt-2 block"></span>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex items-center justify-between pt-2">
+                    <a asp-action="Index" class="flex items-center gap-2 text-slate-500 hover:text-slate-800 font-semibold text-sm transition-colors no-underline">
+                        <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+                        Cancel
+                    </a>
+                    <button type="submit"
+                            class="flex items-center gap-2 rounded-xl bg-primary hover:bg-orange-600 text-white px-8 py-2.5 text-sm font-bold transition-all shadow-lg shadow-primary/25">
+                        <span class="material-symbols-outlined text-[18px]">person_add</span>
+                        Create User
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
 }
