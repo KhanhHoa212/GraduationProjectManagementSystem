@@ -9,7 +9,6 @@
     <Compile Include="ViewModels/UserManagementViewModel.fs" />
     <Compile Include="ViewModels/ForgotPasswordViewModel.fs" />
     <Compile Include="ViewModels/SemesterViewModel.fs" />
-    <Compile Include="Controllers\SemesterController.fs" />
     <Compile Include="Controllers\AdminController.fs" />
     <Compile Include="Controllers\TeacherController.fs" />
     <Compile Include="Controllers\StudentController.fs" />

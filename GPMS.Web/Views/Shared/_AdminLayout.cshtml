@@ -9,28 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#F37021",
-                        "secondary": "#1152d4",
-                        "background-light": "#f0f2f5",
-                        "background-dark": "#101622",
-                        "sidebar-dark": "#1a2236",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"],
-                        "body": ["Inter", "sans-serif"]
-                    },
-                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
-                },
-            },
-        }
-    </script>
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
     <style>
         body { font-family: 'Inter', sans-serif; }
         .material-symbols-outlined {
@@ -191,8 +170,8 @@
                     <span>User Management</span>
                 </a>
 
-                <a asp-controller="Semester" asp-action="Index"
-                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Semester" ? "active" : "")">
+                <a asp-controller="Admin" asp-action="SemesterIndex"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "SemesterIndex" ? "active" : "")">
                     <span class="material-symbols-outlined">calendar_month</span>
                     <span>Semester Settings</span>
                 </a>
