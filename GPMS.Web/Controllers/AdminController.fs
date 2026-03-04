@@ -10,12 +10,14 @@ open GPMS.Domain.Enums
 open GPMS.Web.ViewModels
 
 [<Authorize(Roles = "Admin,HeadOfDept")>]
-type AdminController(userRepository: IUserRepository) =
+type AdminController(userRepository: IUserRepository, semesterRepository: ISemesterRepository) =
     inherit Controller()
 
     [<Authorize(Roles = "Admin")>]
     member this.Dashboard() =
         this.View() :> IActionResult
+
+    // --- USER MANAGEMENT ---
 
     member this.Index() =
         task {
@@ -33,12 +35,12 @@ type AdminController(userRepository: IUserRepository) =
                     vm.Roles.AddRange(u.UserRoles |> Seq.map (fun r -> r.RoleName.ToString()))
                     vm)
                 |> Seq.toList
-            return this.View(viewModels)
+            return this.View(viewModels) :> IActionResult
         }
 
     [<HttpGet>]
     member this.Create() =
-        this.View(EditUserViewModel())
+        this.View(EditUserViewModel()) :> IActionResult
 
     [<HttpPost>]
     [<ValidateAntiForgeryToken>]
@@ -107,8 +109,6 @@ type AdminController(userRepository: IUserRepository) =
                     user.Phone <- model.Phone
                     user.Status <- model.Status
                     
-                    // Update Roles (Single role model)
-                    // Security: If the target user is already an admin, keep it if we can't change it
                     let wasAdmin = user.UserRoles |> Seq.exists (fun r -> r.RoleName = RoleName.Admin)
                     
                     if wasAdmin && model.Role <> "Admin" then
@@ -144,4 +144,110 @@ type AdminController(userRepository: IUserRepository) =
                     do! userRepository.SaveChangesAsync()
                     this.TempData.["SuccessMessage"] <- "Changed user status successfully!"
                     return this.RedirectToAction("Index") :> IActionResult
+        }
+
+    // --- SEMESTER MANAGEMENT ---
+
+    [<Authorize(Roles = "Admin")>]
+    member this.SemesterIndex() =
+        task {
+            let! semesters = semesterRepository.GetAllAsync()
+            let viewModels = 
+                semesters 
+                |> Seq.map (fun s -> 
+                    let vm = SemesterViewModel()
+                    vm.SemesterID <- s.SemesterID
+                    vm.SemesterCode <- s.SemesterCode
+                    vm.AcademicYear <- s.AcademicYear
+                    vm.StartDate <- s.StartDate
+                    vm.EndDate <- s.EndDate
+                    vm.Status <- s.Status
+                    vm.ProjectsCount <- (if s.Projects <> null then s.Projects.Count else 0)
+                    vm)
+                |> Seq.toList
+            return this.View("SemesterIndex", viewModels) :> IActionResult
+        }
+
+    [<Authorize(Roles = "Admin")>]
+    [<HttpGet>]
+    member this.SemesterCreate() =
+        this.View("SemesterCreate", EditSemesterViewModel()) :> IActionResult
+
+    [<Authorize(Roles = "Admin")>]
+    [<HttpPost>]
+    [<ValidateAntiForgeryToken>]
+    member this.SemesterCreate(model: EditSemesterViewModel) =
+        task {
+            if not this.ModelState.IsValid then
+                return this.View("SemesterCreate", model) :> IActionResult
+            else
+                let semester = Semester()
+                semester.SemesterCode <- model.SemesterCode
+                semester.AcademicYear <- model.AcademicYear
+                semester.StartDate <- model.StartDate
+                semester.EndDate <- model.EndDate
+                semester.Status <- model.Status
+                
+                do! semesterRepository.AddAsync(semester)
+                do! semesterRepository.SaveChangesAsync()
+                this.TempData.["SuccessMessage"] <- "Created semester successfully!"
+                return this.RedirectToAction("SemesterIndex") :> IActionResult
+        }
+
+    [<Authorize(Roles = "Admin")>]
+    [<HttpGet>]
+    member this.SemesterEdit(id: int) =
+        task {
+            let! semester = semesterRepository.GetByIdAsync(id)
+            if semester = null then return this.NotFound() :> IActionResult
+            else
+                let model = EditSemesterViewModel()
+                model.SemesterID <- semester.SemesterID
+                model.SemesterCode <- semester.SemesterCode
+                model.AcademicYear <- semester.AcademicYear
+                model.StartDate <- semester.StartDate
+                model.EndDate <- semester.EndDate
+                model.Status <- semester.Status
+                return this.View("SemesterEdit", model) :> IActionResult
+        }
+
+    [<Authorize(Roles = "Admin")>]
+    [<HttpPost>]
+    [<ValidateAntiForgeryToken>]
+    member this.SemesterEdit(model: EditSemesterViewModel) =
+        task {
+            if not this.ModelState.IsValid then
+                return this.View("SemesterEdit", model) :> IActionResult
+            else
+                let! semester = semesterRepository.GetByIdAsync(model.SemesterID)
+                if semester = null then return this.NotFound() :> IActionResult
+                else
+                    semester.SemesterCode <- model.SemesterCode
+                    semester.AcademicYear <- model.AcademicYear
+                    semester.StartDate <- model.StartDate
+                    semester.EndDate <- model.EndDate
+                    semester.Status <- model.Status
+                    
+                    do! semesterRepository.UpdateAsync(semester)
+                    do! semesterRepository.SaveChangesAsync()
+                    this.TempData.["SuccessMessage"] <- "Updated semester successfully!"
+                    return this.RedirectToAction("SemesterIndex") :> IActionResult
+        }
+
+    [<Authorize(Roles = "Admin")>]
+    [<HttpPost>]
+    [<ValidateAntiForgeryToken>]
+    member this.SemesterDelete(id: int) =
+        task {
+            let! semester = semesterRepository.GetByIdAsync(id)
+            if semester = null then return this.NotFound() :> IActionResult
+            else
+                let hasProjects = if semester.Projects <> null then semester.Projects.Count > 0 else false
+                if hasProjects then
+                    this.TempData.["ErrorMessage"] <- "Cannot delete semester because it has projects."
+                else
+                    do! semesterRepository.DeleteAsync(id)
+                    do! semesterRepository.SaveChangesAsync()
+                    this.TempData.["SuccessMessage"] <- "Deleted semester successfully!"
+                return this.RedirectToAction("SemesterIndex") :> IActionResult
         }
