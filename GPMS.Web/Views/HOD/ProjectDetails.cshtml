@@ -1,0 +1,119 @@
+@{
+    ViewData["Title"] = "Project Details";
+    Layout = "_HODLayout";
+}
+
+<div class="max-w-7xl mx-auto space-y-6 pb-12">
+    <div class="flex items-center gap-4">
+        <a asp-action="Projects" class="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-[#F37021] hover:bg-orange-50/50 shadow-sm transition-all">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+        </a>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight tracking-tight">Project Details</h1>
+        <span class="px-2 py-1 bg-[#F37021]/10 text-[#F37021] text-[10px] font-bold uppercase rounded-lg border border-[#F37021]/10">ID: GP-SE-001</span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        <!-- Main Form Wrapper -->
+        <div class="lg:col-span-2 space-y-6">
+            <div class="bg-white rounded-xl border border-slate-200 p-8 shadow-sm">
+                <form class="space-y-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Academic Semester</label>
+                            <input class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-400 font-bold" disabled type="text" value="Spring 2025"/>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Execution Status</label>
+                            <select class="w-full border border-slate-200 bg-slate-50 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:border-[#F37021] transition-all">
+                                <option selected>Approved</option>
+                                <option>Draft</option>
+                                <option>Rejected</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1 text-slate-500">Project Title</label>
+                        <input class="w-full border border-slate-200 bg-white rounded-xl px-4 py-3 text-sm font-bold text-slate-700 focus:border-[#F37021] transition-all" placeholder="Enter title..." type="text" value="Smart Campus IoT System"/>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2 px-1">Description</label>
+                        <textarea class="w-full border border-slate-200 bg-white rounded-xl px-4 py-3 text-sm text-slate-700 focus:border-[#F37021] transition-all min-h-[120px]"></textarea>
+                    </div>
+
+                    <div class="flex justify-end gap-3 pt-6 border-t border-slate-100">
+                        <button class="px-6 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all uppercase text-[11px] font-bold">Cancel</button>
+                        <button class="px-8 py-2 bg-[#F37021] text-white rounded-lg text-sm font-semibold hover:bg-orange-600 shadow-lg shadow-orange-500/20 transition-all uppercase text-[11px] font-bold">Save Changes</button>
+                    </div>
+                </form>
+
+                <!-- Team Management -->
+                <div class="mt-12 pt-10 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-xl font-bold text-slate-800">Team Members</h3>
+                        <span class="px-3 py-1 bg-slate-50 text-slate-400 rounded-lg text-[10px] font-extrabold uppercase tracking-widest">3 / 5 MEMBERS</span>
+                    </div>
+
+                    <div class="flex gap-2 mb-6">
+                        <div class="relative flex-1 group">
+                            <span class="absolute left-3 top-2.5 text-slate-400 group-focus-within:text-[#F37021]"><span class="material-symbols-outlined text-sm">search</span></span>
+                            <input class="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:ring-0 focus:border-[#F37021] bg-slate-50/50 transition-all" placeholder="MSSV..." type="text"/>
+                        </div>
+                        <button class="px-6 py-2.5 bg-[#1a2236] text-white rounded-xl text-xs font-bold hover:bg-slate-700 transition-all uppercase tracking-widest">ADD STUDENT</button>
+                    </div>
+
+                     <!-- Team Table (Cleaned UI) -->
+                    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                        <table class="w-full text-left">
+                            <thead class="bg-slate-50 text-slate-500 font-semibold text-xs border-b border-slate-100">
+                                <tr>
+                                    <th class="px-6 py-4">SID</th>
+                                    <th class="px-6 py-4">Name</th>
+                                    <th class="px-6 py-4">Role</th>
+                                    <th class="px-6 py-4 text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 uppercase text-[10px] font-bold tracking-widest text-[#1a2236]">
+                                <tr class="hover:bg-slate-50/50">
+                                    <td class="px-6 py-4 text-[#F37021]">#SE180002</td>
+                                    <td class="px-6 py-4 font-bold text-slate-700 text-xs">Lê Văn Đạt</td>
+                                    <td class="px-6 py-4"><span class="bg-orange-50 text-[#F37021] px-2 py-0.5 rounded text-[10px]">Leader</span></td>
+                                    <td class="px-8 py-4 text-right">
+                                        <button class="text-red-500 hover:underline"><span class="material-symbols-outlined text-sm">remove_circle</span></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Toolbelt -->
+        <div class="space-y-6 sticky top-24">
+            <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <h3 class="text-sm font-bold text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-orange-500 text-base">history</span>Audit Trail
+                </h3>
+                <div class="space-y-4">
+                    <div class="relative pl-4">
+                         <div class="absolute left-0 top-1 w-2 h-2 rounded-full bg-green-500 shadow-sm shadow-green-500/50"></div>
+                         <p class="text-xs font-bold text-slate-700">Project Approved</p>
+                         <p class="text-[10px] text-slate-400 mt-1 uppercase">Jan 12 • 09:30 AM</p>
+                    </div>
+                    <div class="relative pl-4 border-l border-slate-100 ml-1 pb-4">
+                         <div class="absolute -left-1.5 top-0 w-2 h-2 rounded-full bg-slate-200"></div>
+                         <p class="text-xs font-bold text-slate-400 italic">Initial Submission</p>
+                         <p class="text-[10px] text-slate-300 mt-1 uppercase">Jan 10 • 02:15 PM</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#F37021]/5 border border-[#F37021]/10 rounded-xl p-6">
+                <p class="text-xs font-bold text-[#F37021] tracking-widest uppercase mb-2">Notice</p>
+                <p class="text-[11px] font-medium text-slate-500 italic leading-relaxed">Changes to approved projects must be authorized by the HOD board.</p>
+            </div>
+        </div>
+    </div>
+</div>
