@@ -1,6 +1,7 @@
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
+using Microsoft.Extensions.Configuration;
 using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using System;
@@ -12,10 +13,14 @@ namespace GPMS.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IEmailService _emailService;
+    private readonly IConfiguration _config;
 
-    public AuthService(IUserRepository userRepository)
+    public AuthService(IUserRepository userRepository, IEmailService emailService, IConfiguration config)
     {
         _userRepository = userRepository;
+        _emailService = emailService;
+        _config = config;
     }
 
     public async Task<AuthResultDto> LoginAsync(LoginDto dto)
@@ -103,12 +108,58 @@ public class AuthService : IAuthService
                 var token = Guid.NewGuid().ToString("N");
                 credential.PasswordResetToken = token;
                 credential.PasswordResetExpiry = DateTime.UtcNow.AddHours(2);
+                var baseUrl = _config["AppSettings:BaseUrl"];
+                var resetLink = $"{baseUrl}/Auth/ResetPassword?token={token}";
                 await _userRepository.UpdateAsync(user);
                 await _userRepository.SaveChangesAsync();
                 
-                // Usually we'd send an email here.
-                // For now we just return the token if we wanted to mock it.
+                // Send email
+                var subject = "[NO REPLY] Reset Your Password - GPMS";
+                var body = $@"
+                <h2>Reset Your Password</h2>
+
+                <p>You requested to reset your password for the Graduation Project Management System.</p>
+
+                <p>Please click the link below to reset your password. This link will expire in 2 hours.</p>
+
+                <p>
+                <a href='{resetLink}' 
+                style='padding:10px 18px;background:#F27123;color:white;text-decoration:none;border-radius:6px'>
+                Reset Password
+                </a>
+                </p>
+
+                <p>If the button doesn't work, copy this link:</p>
+
+                <p>{resetLink}</p>
+
+                <p>If you did not request this, please ignore this email.</p>
+                ";
+                Console.WriteLine($"[DEBUG] Attempting to send email to {email}");
+                await _emailService.SendEmailAsync(email, subject, body);
+                Console.WriteLine($"[DEBUG] Email sent successfully to {email}");
             }
+            else 
+            {
+                // Create credential if missing (for legacy users)
+                var newCredential = new UserCredential
+                {
+                    UserID = user.UserID,
+                    AuthProvider = AuthProvider.Internal,
+                    PasswordResetToken = Guid.NewGuid().ToString("N"),
+                    PasswordResetExpiry = DateTime.UtcNow.AddHours(2)
+                };
+                user.UserCredentials.Add(newCredential);
+                await _userRepository.UpdateAsync(user);
+                await _userRepository.SaveChangesAsync();
+                
+                Console.WriteLine($"[DEBUG] Created new credential for {email} and sending email");
+                await _emailService.SendEmailAsync(email, "Reset Your Password - GPMS", $"Token: {newCredential.PasswordResetToken}");
+            }
+        }
+        else 
+        {
+            Console.WriteLine($"[DEBUG] User not found with email {email}");
         }
 
         // Always return success to avoid leaking existence of user.
@@ -117,18 +168,28 @@ public class AuthService : IAuthService
 
     public async Task<AuthResultDto> ResetPasswordAsync(ResetPasswordDto dto)
     {
-        var users = await _userRepository.GetAllAsync();
-        var user = users.FirstOrDefault(u => u.UserCredentials.Any(c => 
-            c.PasswordResetToken == dto.Token && 
-            c.PasswordResetExpiry.HasValue && 
-            c.PasswordResetExpiry.Value > DateTime.UtcNow));
+        var user = await _userRepository.GetUserByResetTokenAsync(dto.Token);
 
         if (user == null)
         {
-            return new AuthResultDto { Success = false, ErrorMessage = "Invalid or expired link." };
+            return new AuthResultDto
+            {
+                Success = false,
+                ErrorMessage = "Invalid or expired link."
+            };
         }
 
-        var credential = user.UserCredentials.First(c => c.PasswordResetToken == dto.Token);
+        var credential = user.UserCredentials.FirstOrDefault(c => c.PasswordResetToken == dto.Token);
+
+        if (credential == null)
+        {
+            return new AuthResultDto
+            {
+                Success = false,
+                ErrorMessage = "Invalid reset token."
+            };
+        }
+
         credential.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
         credential.PasswordResetToken = null;
         credential.PasswordResetExpiry = null;

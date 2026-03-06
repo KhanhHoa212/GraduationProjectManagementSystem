@@ -13,7 +13,7 @@ public class ForgotPasswordDto
 
 public class ResetPasswordDto
 {
-    public string Token { get; set; } = string.Empty;
+    public string Token { get; set; } = string.Empty.Trim();
     public string NewPassword { get; set; } = string.Empty;
 }
 

@@ -28,9 +28,14 @@ public class AdminController : Controller
 
     // --- USER MANAGEMENT ---
 
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(string? search, string? role, GPMS.Domain.Enums.UserStatus? status)
     {
-        var users = await _userService.GetAllUsersAsync();
+        var users = await _userService.GetAllUsersAsync(search, role, status);
+        
+        ViewData["CurrentSearch"] = search;
+        ViewData["CurrentRole"] = role;
+        ViewData["CurrentStatus"] = status;
+
         var viewModels = users.Select(u => new UserViewModel
         {
             UserID = u.UserID,
@@ -77,9 +82,25 @@ public class AdminController : Controller
             Status = model.Status
         };
 
-        await _userService.CreateUserAsync(dto);
-        TempData["SuccessMessage"] = "Created user successfully!";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            await _userService.CreateUserAsync(dto);
+            TempData["SuccessMessage"] = "Created user successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("User ID"))
+                ModelState.AddModelError("UserID", ex.Message);
+            else if (ex.Message.Contains("Email"))
+                ModelState.AddModelError("Email", ex.Message);
+            else if (ex.Message.Contains("Username"))
+                ModelState.AddModelError("Username", ex.Message);
+            else
+                ModelState.AddModelError("", ex.Message);
+
+            return View(model);
+        }
     }
 
     [HttpGet]
@@ -89,6 +110,7 @@ public class AdminController : Controller
         if (user == null) return NotFound();
 
         var role = user.Roles.Contains("Admin") ? "Admin" 
+                 : user.Roles.Contains("HeadOfDept") ? "HeadOfDept"
                  : user.Roles.Contains("Lecturer") ? "Lecturer" 
                  : "Student";
 
@@ -136,9 +158,23 @@ public class AdminController : Controller
             Status = model.Status
         };
 
-        await _userService.UpdateUserAsync(dto);
-        TempData["SuccessMessage"] = "Update user successfully!";
-        return RedirectToAction(nameof(Index));
+        try
+        {
+            await _userService.UpdateUserAsync(dto);
+            TempData["SuccessMessage"] = "Update user successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            if (ex.Message.Contains("Email"))
+                ModelState.AddModelError("Email", ex.Message);
+            else if (ex.Message.Contains("Username"))
+                ModelState.AddModelError("Username", ex.Message);
+            else
+                ModelState.AddModelError("", ex.Message);
+
+            return View(model);
+        }
     }
 
     [HttpPost]

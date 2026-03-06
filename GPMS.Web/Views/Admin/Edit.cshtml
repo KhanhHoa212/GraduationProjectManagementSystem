@@ -135,6 +135,15 @@
                             </div>
                         </label>
 
+                        <!-- HeadOfDept -->
+                        <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-primary/50 transition-all cursor-pointer has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+                            <input type="radio" asp-for="Role" value="HeadOfDept" class="size-4 text-primary border-slate-300 focus:ring-primary/20" />
+                            <div>
+                                <span class="block text-sm font-semibold text-slate-700">Head of Dept</span>
+                                <span class="block text-xs text-slate-400">Department management</span>
+                            </div>
+                        </label>
+
                         <!-- Admin (locked) -->
                         <label class="relative flex items-center gap-3 p-4 rounded-xl border-2 border-slate-200 bg-slate-100 opacity-60 cursor-not-allowed">
                             @if (Model.Role == "Admin")

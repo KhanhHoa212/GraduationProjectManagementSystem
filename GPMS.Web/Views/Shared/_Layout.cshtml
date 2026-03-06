@@ -57,19 +57,31 @@
     <header class="sticky top-0 z-50 w-full border-b border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-[#1a2230] px-6 lg:px-10 py-3 shadow-sm">
         <div class="flex items-center justify-between whitespace-nowrap">
             <div class="flex items-center gap-4 text-[#0d121b] dark:text-white">
-                <a asp-controller="Home" asp-action="Index" class="flex items-center gap-4 no-underline text-inherit hover:opacity-80 transition-opacity">
-                    <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
-                        <span class="material-symbols-outlined text-2xl font-bold">school</span>
-                    </div>
-                    <h2 class="text-lg font-extrabold leading-tight tracking-[-0.015em]">GPMS</h2>
-                </a>
+                @if (User.IsInRole("Admin") || User.IsInRole("HeadOfDept"))
+                {
+                    <a asp-controller="Admin" asp-action="Dashboard" class="flex items-center gap-4 no-underline text-inherit hover:opacity-80 transition-opacity">
+                        <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <span class="material-symbols-outlined text-2xl font-bold">school</span>
+                        </div>
+                        <h2 class="text-lg font-extrabold leading-tight tracking-[-0.015em]">GPMS</h2>
+                    </a>
+                }
+                else
+                {
+                    <a asp-controller="Home" asp-action="Index" class="flex items-center gap-4 no-underline text-inherit hover:opacity-80 transition-opacity">
+                        <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <span class="material-symbols-outlined text-2xl font-bold">school</span>
+                        </div>
+                        <h2 class="text-lg font-extrabold leading-tight tracking-[-0.015em]">GPMS</h2>
+                    </a>
+                }
             </div>
             
             <div class="flex flex-1 justify-end gap-8">
                 <div class="hidden md:flex items-center gap-8">
-                    <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Home" asp-action="Index">Dashboard</a>
+                    <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Admin" asp-action="Dashboard">Dashboard</a>
                     
-                    @if (User.IsInRole("Admin"))
+                    @if (User.IsInRole("Admin") || User.IsInRole("HeadOfDept"))
                     {
                         <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Admin" asp-action="Index">Users</a>
                     }

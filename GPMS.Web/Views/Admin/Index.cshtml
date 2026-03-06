@@ -37,33 +37,38 @@
 
     <!-- Filters & Search Bar -->
     <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 mb-5">
-        <div class="flex flex-col md:flex-row gap-3 items-center">
+        <form asp-action="Index" method="get" class="flex flex-col md:flex-row gap-3 items-center">
             <!-- Search -->
             <div class="relative flex-1 w-full">
                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                <input type="text"
+                <input type="text" name="search" value="@ViewData["CurrentSearch"]"
                        placeholder="Search by name, email, or ID..."
                        class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
             </div>
-            <!-- Role Filter -->
+            <!-- Role & Status Filter -->
             <div class="flex items-center gap-2">
-                <select class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-8">
-                    <option>All Roles</option>
-                    <option>Admin</option>
-                    <option>Lecturer</option>
-                    <option>Student</option>
+                <select name="role" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-8">
+                    <option value="">All Roles</option>
+                    @foreach (var r in new[] { "Admin", "HeadOfDept", "Lecturer", "Student" })
+                    {
+                        <option value="@r" selected="@(ViewData["CurrentRole"]?.ToString() == r)">@r</option>
+                    }
                 </select>
-                <select class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-8">
-                    <option>All Status</option>
-                    <option>Active</option>
-                    <option>Inactive</option>
+                <select name="status" class="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary pr-8">
+                    <option value="">All Status</option>
+                    <option value="Active" selected="@(ViewData["CurrentStatus"]?.ToString() == "Active")">Active</option>
+                    <option value="Inactive" selected="@(ViewData["CurrentStatus"]?.ToString() == "Inactive")">Inactive</option>
                 </select>
-                <button class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-all">
+                <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-lg hover:bg-orange-600 transition-all">
                     <span class="material-symbols-outlined text-[16px]">tune</span>
                     Apply
                 </button>
+                @if (ViewData["CurrentSearch"] != null || ViewData["CurrentRole"] != null || ViewData["CurrentStatus"] != null)
+                {
+                    <a asp-action="Index" class="text-xs text-slate-400 hover:text-primary no-underline font-medium">Clear</a>
+                }
             </div>
-        </div>
+        </form>
     </div>
 
     <!-- Data Table -->
@@ -167,11 +172,18 @@
 
         <!-- Pagination -->
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <span class="text-sm text-slate-500">
-                Showing <span class="font-semibold text-slate-900">1</span> to
-                <span class="font-semibold text-slate-900">@Model.Count()</span> of
-                <span class="font-semibold text-slate-900">@Model.Count()</span> results
-            </span>
+            @if (Model.Any())
+            {
+                <span class="text-sm text-slate-500">
+                    Showing <span class="font-semibold text-slate-900">1</span> to
+                    <span class="font-semibold text-slate-900">@Model.Count()</span> of
+                    <span class="font-semibold text-slate-900">@Model.Count()</span> results
+                </span>
+            }
+            else
+            {
+                <span class="text-sm text-slate-500 italic">No users found matching your criteria.</span>
+            }
             <div class="flex items-center gap-2">
                 <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed">
                     &larr; Previous

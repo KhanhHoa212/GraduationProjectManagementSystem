@@ -2,6 +2,7 @@ using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
 using GPMS.Application.Services;
 using GPMS.Infrastructure.Data;
+using GPMS.Infrastructure.Email;
 using GPMS.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -51,6 +52,11 @@ builder.Services.AddAuthentication(options =>
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"] ?? string.Empty;
     options.CallbackPath = "/signin-google";
 });
+
+// Add email service
+builder.Services.Configure<EmailSettings>(
+    builder.Configuration.GetSection("EmailSettings"));
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 var app = builder.Build();
 

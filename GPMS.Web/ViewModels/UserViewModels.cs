@@ -17,7 +17,8 @@ public class UserViewModel
 
 public class EditUserViewModel
 {
-    [Required]
+    [Required(ErrorMessage = "Student ID/User ID is required")]
+    [RegularExpression(@"^[A-Za-z]{2}\d{6}$", ErrorMessage = "Student ID must be 2 letters followed by 6 digits (e.g. DE000001)")]
     public string UserID { get; set; } = string.Empty;
 
     [Required]
