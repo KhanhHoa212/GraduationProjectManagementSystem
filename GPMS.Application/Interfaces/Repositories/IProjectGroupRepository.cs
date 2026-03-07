@@ -14,5 +14,6 @@ public interface IProjectGroupRepository
     Task AddMemberAsync(GroupMember member);
     Task RemoveMemberAsync(GroupMember member);
     Task UpdateMemberAsync(GroupMember member);
+    Task<bool> IsUserInAnyGroupAsync(string userId);
     Task SaveChangesAsync();
 }

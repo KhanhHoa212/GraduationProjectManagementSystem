@@ -6,34 +6,36 @@
     Layout = "_HODLayout";
     var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
     bool isNew = Model == null || Model.ProjectID == 0;
+
     var statusColor = Model?.Status switch
     {
-        ProjectStatus.Active => "bg-blue-50 text-blue-600 border-blue-100",
-        ProjectStatus.Completed => "bg-emerald-50 text-emerald-700 border-emerald-100",
-        ProjectStatus.Cancelled => "bg-red-50 text-red-500 border-red-100",
-        _ => "bg-slate-100 text-slate-500 border-slate-200"
+        ProjectStatus.Active     => "bg-blue-50 text-blue-600 border-blue-100",
+        ProjectStatus.Completed  => "bg-emerald-50 text-emerald-700 border-emerald-100",
+        ProjectStatus.Cancelled  => "bg-red-50 text-red-500 border-red-100",
+        _                        => "bg-slate-100 text-slate-500 border-slate-200"
     };
     var dotColor = Model?.Status switch
     {
-        ProjectStatus.Active => "bg-blue-500 animate-pulse",
-        ProjectStatus.Completed => "bg-emerald-500",
-        ProjectStatus.Cancelled => "bg-red-500",
-        _ => "bg-slate-400"
+        ProjectStatus.Active     => "bg-blue-500 animate-pulse",
+        ProjectStatus.Completed  => "bg-emerald-500",
+        ProjectStatus.Cancelled  => "bg-red-500",
+        _                        => "bg-slate-400"
     };
+    var memberCount = Model?.Members?.Count ?? 0;
 }
 
 <div class="max-w-7xl mx-auto space-y-6 pb-16">
 
-    <!-- Alerts -->
+    @* ── Alerts ─────────────────────────────────────────── *@
     @if (TempData["SuccessMessage"] != null)
     {
-        <div class="p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
-            <span class="material-symbols-outlined text-green-500">check_circle</span>
-            <p class="text-sm text-green-700 font-medium">@TempData["SuccessMessage"]</p>
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+            <p class="text-sm text-emerald-700 font-medium">@TempData["SuccessMessage"]</p>
         </div>
     }
 
-    <!-- PAGE HEADER -->
+    @* ── PAGE HEADER ─────────────────────────────────────── *@
     <div class="flex items-center justify-between">
         <div class="flex items-center gap-3">
             <a asp-action="Projects"
@@ -42,9 +44,11 @@
             </a>
             <div>
                 <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
-                    @(isNew ? "Create New Project" : "Project Details")
+                    @(isNew ? "Create New Project" : "Edit Project")
                 </h1>
-                <p class="text-sm text-slate-500 mt-0.5">@(isNew ? "Fill in the details below" : Model!.ProjectName)</p>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    @(isNew ? "Fill in the details to create a new graduation project" : Model!.ProjectName)
+                </p>
             </div>
             @if (!isNew)
             {
@@ -58,6 +62,13 @@
             <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase @statusColor">
                 <span class="size-2 rounded-full @dotColor"></span>
                 @Model.Status
+            </span>
+        }
+        else
+        {
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
+                <span class="size-2 rounded-full bg-slate-400"></span>
+                Draft
             </span>
         }
     </div>
@@ -74,6 +85,7 @@
                     <span class="material-symbols-outlined text-primary text-[18px]">edit_document</span>
                     <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Project Information</h2>
                 </div>
+
                 @{ var formAction = isNew ? "CreateProject" : "UpdateProject"; }
                 <form asp-action="@formAction" method="post">
                     @Html.AntiForgeryToken()
@@ -81,7 +93,10 @@
                     {
                         <input type="hidden" name="ProjectID" value="@Model.ProjectID" />
                     }
+
                     <div class="p-8 space-y-6">
+
+                        @* Row 1: Semester + Status *@
                         <div class="grid grid-cols-2 gap-6">
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Academic Semester</label>
@@ -96,110 +111,150 @@
                                 }
                                 else
                                 {
-                                    <input type="text" value="@Model?.SemesterCode" disabled
+                                    <input type="text" value="@(Model?.SemesterCode ?? "—")" disabled
                                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
                                 }
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+                                <select name="Status" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                    @foreach (var s in Enum.GetValues<ProjectStatus>())
+                                    {
+                                        if (Model != null && Model.Status == s)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else if (Model == null && s == ProjectStatus.Draft)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@s</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        @* Row 2: Project Title + Major (side by side) *@
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Project Title</label>
+                                <input type="text" name="ProjectName" value="@(Model?.ProjectName ?? "")"
+                                       placeholder="Enter project title..."
+                                       class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Major</label>
                                 @if (isNew)
                                 {
-                                    <input type="text" value="Draft" disabled
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
+                                    <select name="MajorID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                        <option value="1">Software Engineering</option>
+                                        <option value="2">Software Testing</option>
+                                    </select>
                                 }
                                 else
                                 {
-                                    <select name="Status" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                        @foreach (var s in Enum.GetValues<ProjectStatus>())
-                                        {
-                                            <option value="@s" selected="@(Model != null && Model.Status == s)">@s</option>
-                                        }
-                                    </select>
+                                    <input type="text" value="@(Model?.MajorName ?? "—")" disabled
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
                                 }
                             </div>
                         </div>
 
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Project Title</label>
-                            <input type="text" name="ProjectName" value="@Model?.ProjectName"
-                                   placeholder="Enter project title..."
-                                   class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-                        </div>
-
-                        @if (isNew)
-                        {
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Major</label>
-                                <select name="MajorID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                    <option value="1">Software Engineering</option>
-                                    <option value="2">Software Testing</option>
-                                </select>
-                            </div>
-                        }
-
+                        @* Description *@
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label>
                             <textarea name="Description" rows="4"
-                                      placeholder="Describe the project scope and goals..."
-                                      class="w-full border border-slate-200 bg-white rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none">@Model?.Description</textarea>
+                                      placeholder="Describe the project scope and objectives..."
+                                      class="w-full border border-slate-200 bg-white rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none">@(Model?.Description ?? "")</textarea>
                         </div>
 
                     </div>
 
-                    <!-- Action Buttons: Create (new) / Save (edit) -->
-                    @if (isNew)
-                    {
-                        <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
-                            <a asp-action="Projects" class="px-6 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all no-underline">
-                                Cancel
-                            </a>
-                            <button type="submit" class="flex items-center gap-2 px-8 py-2.5 bg-primary hover:bg-orange-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/25 transition-all">
-                                <span class="material-symbols-outlined text-[18px]">add</span>
-                                Create Project
-                            </button>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
-                            <a asp-action="Projects" class="px-6 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all no-underline">
-                                Cancel
-                            </a>
-                            <button type="submit" class="flex items-center gap-2 px-8 py-2.5 bg-primary hover:bg-orange-600 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/25 transition-all">
-                                <span class="material-symbols-outlined text-[18px]">save</span>
-                                Save Changes
-                            </button>
-                        </div>
-                    }
+                    @* Action Buttons — always at bottom of form *@
+                    <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <a asp-action="Projects"
+                           class="px-6 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all no-underline">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                                class="flex items-center gap-2 px-8 py-2.5 bg-primary hover:bg-orange-600 active:scale-95 text-white rounded-lg text-sm font-bold shadow-lg shadow-primary/25 transition-all">
+                            <span class="material-symbols-outlined text-[18px]">@(isNew ? "add" : "save")</span>
+                            @(isNew ? "Create Project" : "Save Changes")
+                        </button>
+                    </div>
                 </form>
             </div>
 
-            <!-- Team Members Card (edit mode only) -->
-            @if (!isNew && Model != null)
-            {
-                <div id="teamMembersCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <span class="material-symbols-outlined text-primary text-[18px]">group</span>
-                            <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Team Members</h2>
+            @* ── TEAM MEMBERS CARD ─── *@
+            <div id="teamMembersCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">group</span>
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Team Members</h2>
+                    </div>
+                    <span id="memberCount" class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full text-[11px] font-bold">@memberCount Members</span>
+                </div>
+
+                @if (isNew)
+                {
+                    @* CREATE MODE: lock state — can't add members before project exists *@
+                    <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
+                        <div class="flex items-center gap-3 max-w-xl opacity-50 pointer-events-none select-none">
+                            <div class="relative flex-1">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                                <input type="text" placeholder="Search by MSSV or name..." disabled
+                                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white cursor-not-allowed placeholder:text-slate-300" />
+                            </div>
+                            <button type="button" disabled
+                                    class="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-primary text-white rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-not-allowed">
+                                <span class="material-symbols-outlined text-[16px]">person_add</span>
+                                Add Member
+                            </button>
                         </div>
-                        <span id="memberCount" class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full text-[11px] font-bold">@Model.Members.Count Members</span>
+                        <div class="mt-3 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+                            <span class="material-symbols-outlined text-[16px]">lock</span>
+                            Create the project first, then you can assign team members.
+                        </div>
                     </div>
 
-                    <!-- Toast notification -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Student ID</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="py-10 text-center text-sm text-slate-400">
+                                        No members yet — save the project first.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    @* EDIT MODE: fully interactive *@
+
+                    @* Toast notification *@
                     <div id="memberToast" class="hidden mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"></div>
 
-                    <!-- Add Student Row -->
+                    @* Search + Add row *@
                     <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
                         <div class="flex items-center gap-3 max-w-xl">
-                            <!-- Search with constrained width -->
                             <div class="relative flex-1">
                                 <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">search</span>
                                 <input id="studentSearchInput" type="text"
                                        placeholder="Search by MSSV or name..."
                                        autocomplete="off"
                                        class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-300" />
-                                <!-- Dropdown results — constrained to input width -->
                                 <div id="searchResults"
                                      class="hidden absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
                                 </div>
@@ -210,7 +265,9 @@
                                 Add Member
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-400 mt-2">Type at least 2 characters to search. First added member becomes <span class="font-bold text-primary">Leader</span> automatically.</p>
+                        <p class="text-[11px] text-slate-400 mt-2">
+                            Type ≥ 2 characters to search. First added member becomes <span class="font-bold text-primary">Leader</span> automatically.
+                        </p>
                     </div>
 
                     <!-- Members Table -->
@@ -225,12 +282,15 @@
                                 </tr>
                             </thead>
                             <tbody id="memberTableBody" class="divide-y divide-slate-100">
-                                @if (Model.Members.Any())
+                                @if (Model != null && Model.Members.Any())
                                 {
                                     @foreach (var member in Model.Members)
                                     {
                                         var initials = string.Concat(member.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
                                         var isLeader = member.RoleInGroup == GroupRole.Leader;
+                                        var roleSelectClass = isLeader
+                                            ? "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20"
+                                            : "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100";
                                         <tr id="row-@member.UserID" class="group hover:bg-slate-50/70 transition-colors">
                                             <td class="py-4 px-6 text-sm font-semibold text-primary">@member.UserID</td>
                                             <td class="py-4 px-6">
@@ -240,7 +300,6 @@
                                                 </div>
                                             </td>
                                             <td class="py-4 px-6">
-                                                @{ var roleSelectClass = isLeader ? "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20" : "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100"; }
                                                 <select onchange="updateRole('@member.UserID', this)" class="@roleSelectClass">
                                                     @if (isLeader)
                                                     {
@@ -272,84 +331,94 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-            }
+                }
+            </div>
 
         </div>
 
-        <!-- RIGHT: Sidebar -->
-        <div class="space-y-8 sticky top-24">
+        @* RIGHT COLUMN: Sidebar *@
+        <div class="space-y-6 sticky top-24">
 
-            @if (!isNew && Model != null)
-            {
-                <!-- Supervisor Card -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-primary text-[18px]">supervisor_account</span>
-                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Supervisor</h3>
-                    </div>
-                    @if (!string.IsNullOrEmpty(Model.SupervisorName))
-                    {
-                        var supInitials = string.Concat(Model.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
-                        <div class="flex items-center gap-3">
-                            <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">@supInitials</div>
-                            <div>
-                                <p class="text-sm font-bold text-slate-900">@Model.SupervisorName</p>
-                                <p class="text-xs text-slate-400">@Model.MajorName</p>
-                            </div>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="flex items-center gap-3 py-2">
-                            <div class="size-10 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center">
-                                <span class="material-symbols-outlined text-[20px]">person_off</span>
-                            </div>
-                            <p class="text-sm text-slate-400 italic">No supervisor assigned</p>
-                        </div>
-                    }
-                    <a asp-action="AssignSupervisor"
-                       class="mt-4 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 rounded-lg transition-all no-underline">
-                        <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                        @(string.IsNullOrEmpty(Model.SupervisorName) ? "Assign Supervisor" : "Change Supervisor")
-                    </a>
+            @* Supervisor Card *@
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary text-[18px]">supervisor_account</span>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Supervisor</h3>
                 </div>
+                @if (!isNew && !string.IsNullOrEmpty(Model?.SupervisorName))
+                {
+                    var supInitials = string.Concat(Model.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">@supInitials</div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">@Model.SupervisorName</p>
+                            <p class="text-xs text-slate-400">@Model.MajorName</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-center gap-3 py-1">
+                        <div class="size-10 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[20px]">person_off</span>
+                        </div>
+                        <p class="text-sm text-slate-400 italic">@(isNew ? "Available after project creation" : "No supervisor assigned")</p>
+                    </div>
+                }
+                <a asp-action="AssignSupervisor"
+                   class="mt-4 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 rounded-lg transition-all no-underline @(isNew ? "opacity-40 pointer-events-none" : "")">
+                    <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+                    @(string.IsNullOrEmpty(Model?.SupervisorName) ? "Assign Supervisor" : "Change Supervisor")
+                </a>
+            </div>
 
                 <!-- Project Info -->
-                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-primary text-[18px]">info</span>
-                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Details</h3>
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Details</h3>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Major</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.MajorName ?? "—")</p>
                     </div>
-                    <div class="space-y-3">
-                        <div>
-                            <p class="text-[11px] text-slate-400 uppercase font-bold">Major</p>
-                            <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model.MajorName ?? "—")</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-slate-400 uppercase font-bold">Semester</p>
-                            <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model.SemesterCode ?? "—")</p>
-                        </div>
-                        <div>
-                            <p class="text-[11px] text-slate-400 uppercase font-bold">Created</p>
-                            <p class="text-sm font-semibold text-slate-800 mt-0.5">@Model.CreatedAt.ToString("MMM dd, yyyy")</p>
-                        </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Semester</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.SemesterCode ?? "—")</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Created</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">
+                            @(isNew ? "—" : Model!.CreatedAt.ToString("MMM dd, yyyy"))
+                        </p>
                     </div>
                 </div>
-            }
+            </div>
 
-            <!-- Notice Card -->
+            @* Notice Card *@
             <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
                 <span class="material-symbols-outlined text-amber-500 text-[20px] flex-shrink-0 mt-0.5">info</span>
                 <div>
                     <p class="text-xs font-bold text-amber-700 mb-1">Notice</p>
-                    <p class="text-[11px] text-amber-600 leading-relaxed">Changes to approved projects must be authorized by the HOD board before taking effect.</p>
+                    <p class="text-[11px] text-amber-600 leading-relaxed">
+                        @if (isNew)
+                        {
+                            <text>After creating the project, you can assign supervisors and add team members.</text>
+                        }
+                        else
+                        {
+                            <text>Changes to approved projects must be authorized by the HOD board before taking effect.</text>
+                        }
+                    </p>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
+@* ── JAVASCRIPT: Member management — only in edit mode ─── *@
 @if (!isNew && Model != null)
 {
     <script>
@@ -358,12 +427,14 @@
 
         let selectedStudent = null;
         let searchTimeout = null;
-        let currentMemberCount = @Model.Members.Count;
+        let currentMemberCount = @memberCount;
 
-        // ── Toast ──────────────────────────────────────────────
+        // ── Toast ──────────────────────────────────────────
         function showToast(message, isSuccess) {
             const toast = document.getElementById('memberToast');
-            toast.className = `mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}`;
+            toast.className = `mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-red-50 text-red-600 border border-red-200'}`;
             toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isSuccess ? 'check_circle' : 'error'}</span>${message}`;
             toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             setTimeout(() => { toast.className = 'hidden'; }, 4000);
@@ -374,7 +445,7 @@
             document.getElementById('memberCount').textContent = `${currentMemberCount} Members`;
         }
 
-        // ── Search ──────────────────────────────────────────────
+        // ── Search Input ────────────────────────────────────
         const searchInput = document.getElementById('studentSearchInput');
         const searchResultsEl = document.getElementById('searchResults');
 
@@ -386,11 +457,11 @@
             searchTimeout = setTimeout(() => doSearch(q), 300);
         });
 
-        searchInput.addEventListener('keydown', function (e) {
+        searchInput.addEventListener('keydown', e => {
             if (e.key === 'Escape') searchResultsEl.classList.add('hidden');
         });
 
-        document.addEventListener('click', function (e) {
+        document.addEventListener('click', e => {
             if (!searchInput.contains(e.target) && !searchResultsEl.contains(e.target))
                 searchResultsEl.classList.add('hidden');
         });
@@ -409,7 +480,7 @@
                     item.innerHTML = `
                         <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">${initials}</div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-800">${s.fullName}</p>
+                            <p class="text-sm font-semibold text-slate-800 truncate">${s.fullName}</p>
                             <p class="text-[11px] text-slate-400">${s.userID} · ${s.email ?? ''}</p>
                         </div>`;
                     item.addEventListener('click', () => {
@@ -423,10 +494,10 @@
             searchResultsEl.classList.remove('hidden');
         }
 
-        // ── Add Member ──────────────────────────────────────────
+        // ── Add Member ──────────────────────────────────────
         document.getElementById('addMemberBtn').addEventListener('click', async () => {
             if (!selectedStudent) {
-                showToast('Please select a student from the search results.', false);
+                showToast('Please select a student from the search results first.', false);
                 searchInput.focus();
                 return;
             }
@@ -441,7 +512,7 @@
             const data = await res.json();
 
             btn.disabled = false;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">person_add</span> Add';
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">person_add</span> Add Member';
 
             if (data.success) {
                 appendMemberRow(selectedStudent);
@@ -459,11 +530,11 @@
             if (emptyRow) emptyRow.remove();
 
             const initials = student.fullName.split(' ').slice(-2).map(w => w[0]?.toUpperCase() ?? '').join('');
-            const isFirstMember = currentMemberCount === 0;
-            const role = isFirstMember ? 'Leader' : 'Member';
-            const roleClass = isFirstMember
-                ? 'bg-primary/10 text-primary border-primary/20'
-                : 'bg-blue-50 text-blue-600 border-blue-100';
+            const isFirst = currentMemberCount === 0;
+            const role = isFirst ? 'Leader' : 'Member';
+            const roleClass = isFirst
+                ? 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20'
+                : 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100';
 
             const tr = document.createElement('tr');
             tr.id = `row-${student.userID}`;
@@ -477,10 +548,9 @@
                     </div>
                 </td>
                 <td class="py-4 px-6">
-                    <select onchange="updateRole('${student.userID}', this)"
-                            class="text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${roleClass}">
-                        <option value="Leader" ${isFirstMember ? 'selected' : ''}>Leader</option>
-                        <option value="Member" ${!isFirstMember ? 'selected' : ''}>Member</option>
+                    <select onchange="updateRole('${student.userID}', this)" class="${roleClass}">
+                        <option value="Leader" ${isFirst ? 'selected' : ''}>Leader</option>
+                        <option value="Member" ${!isFirst ? 'selected' : ''}>Member</option>
                     </select>
                 </td>
                 <td class="py-4 px-6 text-right">
@@ -493,22 +563,20 @@
             updateMemberCount(1);
         }
 
-        // ── Remove Member ───────────────────────────────────────
+        // ── Remove Member ───────────────────────────────────
         async function removeMember(userId) {
             if (!confirm('Remove this member from the project?')) return;
-
             const res = await fetch(`/HOD/RemoveMember?projectId=${PROJECT_ID}&userId=${encodeURIComponent(userId)}`, {
                 method: 'POST',
                 headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
             });
             const data = await res.json();
             if (data.success) {
-                const row = document.getElementById(`row-${userId}`);
-                if (row) row.remove();
+                document.getElementById(`row-${userId}`)?.remove();
                 updateMemberCount(-1);
                 if (currentMemberCount === 0) {
-                    const tbody = document.getElementById('memberTableBody');
-                    tbody.innerHTML = '<tr id="emptyRow"><td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td></tr>';
+                    document.getElementById('memberTableBody').innerHTML =
+                        '<tr id="emptyRow"><td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td></tr>';
                 }
                 showToast('Member removed.', true);
             } else {
@@ -516,7 +584,7 @@
             }
         }
 
-        // ── Update Role ─────────────────────────────────────────
+        // ── Update Role ─────────────────────────────────────
         async function updateRole(userId, selectEl) {
             const newRole = selectEl.value;
             const prevValue = newRole === 'Leader' ? 'Member' : 'Leader';
@@ -528,12 +596,11 @@
             const data = await res.json();
 
             if (data.success) {
-                // Re-style the dropdown
                 const isLeader = newRole === 'Leader';
-                selectEl.className = `text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${isLeader ? 'bg-primary/10 text-primary border-primary/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`;
+                selectEl.className = `text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${
+                    isLeader ? 'bg-primary/10 text-primary border-primary/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`;
                 showToast(`Role updated to ${newRole}.`, true);
             } else {
-                // Revert selection
                 selectEl.value = prevValue;
                 showToast(data.message, false);
             }

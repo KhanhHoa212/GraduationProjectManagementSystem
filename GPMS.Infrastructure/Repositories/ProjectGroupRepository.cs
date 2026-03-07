@@ -47,6 +47,9 @@ public class ProjectGroupRepository : IProjectGroupRepository
         return Task.CompletedTask;
     }
 
+    public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
+        await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
+
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
 }
