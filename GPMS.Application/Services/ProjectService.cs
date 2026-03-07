@@ -86,7 +86,7 @@ public class ProjectService : IProjectService
             Description = dto.Description,
             SemesterID = dto.SemesterID,
             MajorID = dto.MajorID,
-            Status = ProjectStatus.Draft,
+            Status = dto.Status,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -147,6 +147,9 @@ public class ProjectService : IProjectService
         var student = await _userRepository.GetByIdAsync(userId);
         if (student == null)
             return (false, "Student not found.");
+
+        if (await _groupRepository.IsUserInAnyGroupAsync(userId))
+            return (false, "Student is already assigned to a project group.");
 
         var group = await _groupRepository.GetByProjectIdWithMembersAsync(projectId);
         if (group == null)
