@@ -13,10 +13,40 @@ public class ProjectGroupRepository : IProjectGroupRepository
     private readonly GpmsDbContext _context;
     public ProjectGroupRepository(GpmsDbContext context) => _context = context;
 
-    public async Task<ProjectGroup?> GetByIdAsync(int groupId) => await _context.ProjectGroups.FindAsync(groupId);
-    public async Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId) => 
+    public async Task<ProjectGroup?> GetByIdAsync(int groupId) =>
+        await _context.ProjectGroups.FindAsync(groupId);
+
+    public async Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId) =>
         await _context.ProjectGroups.Where(pg => pg.ProjectID == projectId).ToListAsync();
-    public async Task AddAsync(ProjectGroup group) => await _context.ProjectGroups.AddAsync(group);
-    public async Task AddMemberAsync(GroupMember member) => await _context.GroupMembers.AddAsync(member);
-    public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+    public async Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId) =>
+        await _context.ProjectGroups
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .FirstOrDefaultAsync(g => g.ProjectID == projectId);
+
+    public async Task<GroupMember?> GetMemberAsync(int groupId, string userId) =>
+        await _context.GroupMembers
+            .FirstOrDefaultAsync(m => m.GroupID == groupId && m.UserID == userId);
+
+    public async Task AddAsync(ProjectGroup group) =>
+        await _context.ProjectGroups.AddAsync(group);
+
+    public async Task AddMemberAsync(GroupMember member) =>
+        await _context.GroupMembers.AddAsync(member);
+
+    public Task RemoveMemberAsync(GroupMember member)
+    {
+        _context.GroupMembers.Remove(member);
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateMemberAsync(GroupMember member)
+    {
+        _context.GroupMembers.Update(member);
+        return Task.CompletedTask;
+    }
+
+    public async Task SaveChangesAsync() =>
+        await _context.SaveChangesAsync();
 }
