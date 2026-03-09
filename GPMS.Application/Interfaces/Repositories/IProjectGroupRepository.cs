@@ -8,7 +8,12 @@ public interface IProjectGroupRepository
 {
     Task<ProjectGroup?> GetByIdAsync(int groupId);
     Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId);
+    Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId);
+    Task<GroupMember?> GetMemberAsync(int groupId, string userId);
     Task AddAsync(ProjectGroup group);
     Task AddMemberAsync(GroupMember member);
+    Task RemoveMemberAsync(GroupMember member);
+    Task UpdateMemberAsync(GroupMember member);
+    Task<bool> IsUserInAnyGroupAsync(string userId);
     Task SaveChangesAsync();
 }
