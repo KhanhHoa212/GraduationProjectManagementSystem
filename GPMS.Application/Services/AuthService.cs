@@ -1,3 +1,4 @@
+using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -13,15 +14,22 @@ namespace GPMS.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
     private readonly IEmailService _emailService;
     private readonly IConfiguration _config;
 
-    public AuthService(IUserRepository userRepository, IEmailService emailService, IConfiguration config)
+    public AuthService(
+        IUserRepository userRepository, 
+        IMapper mapper, 
+        IEmailService emailService, 
+        IConfiguration config)
     {
         _userRepository = userRepository;
+        _mapper = mapper;
         _emailService = emailService;
         _config = config;
     }
+
 
     public async Task<AuthResultDto> LoginAsync(LoginDto dto)
     {
@@ -45,7 +53,7 @@ public class AuthService : IAuthService
         return new AuthResultDto
         {
             Success = true,
-            User = MapToDto(user)
+            User = _mapper.Map<UserDto>(user)
         };
     }
 
@@ -93,7 +101,7 @@ public class AuthService : IAuthService
         return new AuthResultDto
         {
             Success = true,
-            User = MapToDto(dbUser)
+            User = _mapper.Map<UserDto>(dbUser)
         };
     }
 
@@ -200,17 +208,4 @@ public class AuthService : IAuthService
         return new AuthResultDto { Success = true };
     }
 
-    private UserDto MapToDto(User u)
-    {
-        return new UserDto
-        {
-            UserID = u.UserID,
-            Username = u.Username,
-            Email = u.Email,
-            FullName = u.FullName,
-            Phone = u.Phone,
-            Status = u.Status,
-            Roles = u.UserRoles.Select(r => r.RoleName.ToString()).ToList()
-        };
-    }
 }

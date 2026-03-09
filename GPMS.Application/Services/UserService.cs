@@ -1,3 +1,4 @@
+using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -13,16 +14,17 @@ namespace GPMS.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
-    public UserService(IUserRepository userRepository)
+    public UserService(IUserRepository userRepository, IMapper mapper)
     {
         _userRepository = userRepository;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<UserDto>> GetAllUsersAsync(string? search = null, string? role = null, UserStatus? status = null)
     {
         var users = await _userRepository.GetAllAsync();
-
         if (status.HasValue)
         {
             users = users.Where(u => u.Status == status.Value);
@@ -42,16 +44,9 @@ public class UserService : IUserService
                 u.UserID.ToLower().Contains(search));
         }
 
-        return users.Select(u => new UserDto
-        {
-            UserID = u.UserID,
-            Username = u.Username,
-            Email = u.Email,
-            FullName = u.FullName,
-            Phone = u.Phone,
-            Status = u.Status,
-            Roles = u.UserRoles.Select(r => r.RoleName.ToString()).ToList()
-        });
+        // Sử dụng Mapper thay thế cho đoạn Manual Mapping thủ công 
+        return _mapper.Map<IEnumerable<UserDto>>(users);
+
     }
 
     public async Task<UserDto?> GetUserByIdAsync(string id)
@@ -59,16 +54,7 @@ public class UserService : IUserService
         var user = await _userRepository.GetByIdAsync(id);
         if (user == null) return null;
 
-        return new UserDto
-        {
-            UserID = user.UserID,
-            Username = user.Username,
-            Email = user.Email,
-            FullName = user.FullName,
-            Phone = user.Phone,
-            Status = user.Status,
-            Roles = user.UserRoles.Select(r => r.RoleName.ToString()).ToList()
-        };
+        return _mapper.Map<UserDto>(user);
     }
 
     public async Task CreateUserAsync(CreateUserDto dto)
