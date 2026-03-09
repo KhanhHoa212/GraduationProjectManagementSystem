@@ -1001,7 +1001,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "ADMIN001",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5557),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(152),
                             Email = "admin@fpt.edu.vn",
                             FullName = "System Admin",
                             Status = "Active",
@@ -1010,7 +1010,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV001",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5570),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(163),
                             Email = "giao-vien1@fpt.edu.vn",
                             FullName = "Lecturer One",
                             Status = "Active"
@@ -1018,7 +1018,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV002",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5573),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(165),
                             Email = "giao-vien2@fpt.edu.vn",
                             FullName = "Lecturer Two",
                             Status = "Active"
@@ -1026,15 +1026,23 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV003",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5575),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(166),
                             Email = "giao-vien3@fpt.edu.vn",
                             FullName = "Lecturer Three",
                             Status = "Active"
                         },
                         new
                         {
+                            UserID = "HOD001",
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(169),
+                            Email = "hod@fpt.edu.vn",
+                            FullName = "Head of Department",
+                            Status = "Active"
+                        },
+                        new
+                        {
                             UserID = "SE180001",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5578),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(170),
                             Email = "student1@fpt.edu.vn",
                             FullName = "Student One",
                             Status = "Active"
@@ -1042,7 +1050,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180002",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5585),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(172),
                             Email = "student2@fpt.edu.vn",
                             FullName = "Student Two",
                             Status = "Active"
@@ -1050,7 +1058,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180003",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5587),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(174),
                             Email = "student3@fpt.edu.vn",
                             FullName = "Student Three",
                             Status = "Active"
@@ -1058,7 +1066,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180004",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5589),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(176),
                             Email = "student4@fpt.edu.vn",
                             FullName = "Student Four",
                             Status = "Active"
@@ -1066,7 +1074,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180005",
-                            CreatedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5591),
+                            CreatedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(178),
                             Email = "student5@fpt.edu.vn",
                             FullName = "Student Five",
                             Status = "Active"
@@ -1147,63 +1155,70 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserRoleID = 1,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5626),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(238),
                             RoleName = "Admin",
                             UserID = "ADMIN001"
                         },
                         new
                         {
                             UserRoleID = 2,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5627),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(240),
                             RoleName = "Lecturer",
                             UserID = "GV001"
                         },
                         new
                         {
                             UserRoleID = 3,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5628),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(241),
                             RoleName = "Lecturer",
                             UserID = "GV002"
                         },
                         new
                         {
                             UserRoleID = 4,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5629),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(241),
                             RoleName = "Lecturer",
                             UserID = "GV003"
                         },
                         new
                         {
+                            UserRoleID = 10,
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(242),
+                            RoleName = "HeadOfDept",
+                            UserID = "HOD001"
+                        },
+                        new
+                        {
                             UserRoleID = 5,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5629),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(243),
                             RoleName = "Student",
                             UserID = "SE180001"
                         },
                         new
                         {
                             UserRoleID = 6,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5630),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(244),
                             RoleName = "Student",
                             UserID = "SE180002"
                         },
                         new
                         {
                             UserRoleID = 7,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5631),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(244),
                             RoleName = "Student",
                             UserID = "SE180003"
                         },
                         new
                         {
                             UserRoleID = 8,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5631),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(245),
                             RoleName = "Student",
                             UserID = "SE180004"
                         },
                         new
                         {
                             UserRoleID = 9,
-                            AssignedAt = new DateTime(2026, 3, 1, 6, 5, 21, 992, DateTimeKind.Utc).AddTicks(5632),
+                            AssignedAt = new DateTime(2026, 3, 6, 10, 1, 52, 710, DateTimeKind.Utc).AddTicks(246),
                             RoleName = "Student",
                             UserID = "SE180005"
                         });

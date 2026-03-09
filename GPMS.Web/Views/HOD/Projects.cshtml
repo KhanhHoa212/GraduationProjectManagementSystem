@@ -1,0 +1,206 @@
+@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+@using GPMS.Domain.Enums
+@{
+    ViewData["Title"] = "Projects";
+    ViewData["BreadcrumbTitle"] = "Projects Management";
+    Layout = "_HODLayout";
+    var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
+    var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
+    var currentStatus = ViewBag.CurrentStatus as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
+    var projects = Model?.ToList() ?? new List<GPMS.Application.DTOs.ProjectDto>();
+}
+
+<div class="space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Project Portfolio</h1>
+            <p class="text-sm text-slate-500 mt-0.5">
+                @(semesterList.FirstOrDefault(s => s.SemesterID == selectedSemesterId)?.SemesterCode ?? "All Semesters")
+                &middot; @projects.Count projects
+            </p>
+        </div>
+        <div class="flex items-center gap-2">
+            <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
+                <span class="material-symbols-outlined text-[18px]">cloud_download</span>
+                Export
+            </button>
+            <a asp-action="ProjectDetails"
+               class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 transition-all no-underline">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                Create New Project
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter / Search Bar -->
+    <form method="get" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <!-- Search -->
+        <div class="relative flex-1 w-full max-w-sm group">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+                <span class="material-symbols-outlined text-[20px]">search</span>
+            </span>
+            <input type="text" name="search" value="@currentSearch"
+                   placeholder="Search by title, ID, supervisor..."
+                   class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-slate-50 transition-all font-medium" />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="relative">
+            <select name="status" class="appearance-none text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer">
+                <option value="">All Statuses</option>
+                    @foreach (var s in Enum.GetValues<ProjectStatus>())
+                    {
+                        if (currentStatus == s.ToString())
+                        {
+                            <option value="@s" selected>@s</option>
+                        }
+                        else
+                        {
+                            <option value="@s">@s</option>
+                        }
+                    }
+            </select>
+            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+        </div>
+
+        <!-- Semester Filter -->
+        <div class="relative">
+            <select name="semesterId" class="appearance-none text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer">
+                <option value="">All Semesters</option>
+                @foreach (var sem in semesterList)
+                {
+                    if (selectedSemesterId == sem.SemesterID)
+                    {
+                        <option value="@sem.SemesterID" selected>@sem.SemesterCode</option>
+                    }
+                    else
+                    {
+                        <option value="@sem.SemesterID">@sem.SemesterCode</option>
+                    }
+                }
+            </select>
+            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
+        </div>
+
+        <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-orange-600 transition-all">
+            <span class="material-symbols-outlined text-[16px]">filter_alt</span>
+            Apply
+        </button>
+    </form>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200">
+                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Project</th>
+                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">ID</th>
+                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Supervisor</th>
+                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (projects.Any())
+                    {
+                        @foreach (var project in projects)
+                        {
+                            var initials = string.Concat(project.ProjectName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                            var dotColor = project.Status switch
+                            {
+                                ProjectStatus.Active => "bg-blue-500 animate-pulse",
+                                ProjectStatus.Completed => "bg-emerald-500",
+                                ProjectStatus.Cancelled => "bg-red-500",
+                                _ => "bg-slate-300"
+                            };
+                            var statusText = project.Status switch
+                            {
+                                ProjectStatus.Active => "text-blue-600 font-medium",
+                                ProjectStatus.Completed => "text-emerald-600 font-medium",
+                                ProjectStatus.Cancelled => "text-red-500",
+                                _ => "text-slate-400"
+                            };
+                            <tr class="group hover:bg-slate-50/70 transition-colors">
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-3">
+                                        <div class="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
+                                            @initials
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-semibold text-slate-900">@project.ProjectName</p>
+                                            <p class="text-xs text-slate-400">@project.MajorName</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-sm font-semibold text-primary">@project.ProjectCode</td>
+                                <td class="py-4 px-6">
+                                    @if (!string.IsNullOrEmpty(project.SupervisorName))
+                                    {
+                                        var supInitials = string.Concat(project.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">@supInitials</div>
+                                            <span class="text-sm text-slate-600">@project.SupervisorName</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-sm text-slate-400 italic">Unassigned</span>
+                                    }
+                                </td>
+                                <td class="py-4 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full @dotColor"></div>
+                                        <span class="text-sm @statusText">@project.Status</span>
+                                    </div>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <div class="flex items-center justify-end gap-1">
+                                        <a asp-action="ProjectDetails" asp-route-id="@project.ProjectID"
+                                           class="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg no-underline" title="View / Edit">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </a>
+                                        <button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Delete">
+                                            <span class="material-symbols-outlined text-[18px]">delete_outline</span>
+                                        </button>
+                                        <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors rounded-lg" title="More options">
+                                            <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="py-16 text-center">
+                                <span class="material-symbols-outlined text-slate-300 text-[48px] block mb-3">inbox</span>
+                                <p class="text-sm font-semibold text-slate-400">No projects found</p>
+                                <p class="text-xs text-slate-300 mt-1">Try adjusting your filters or create a new project</p>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination Footer -->
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-sm text-slate-500">
+                Showing <span class="font-semibold text-slate-900">@projects.Count</span> results
+            </span>
+            <div class="flex items-center gap-2">
+                <button disabled class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed">
+                    &larr; Previous
+                </button>
+                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                    Next &rarr;
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

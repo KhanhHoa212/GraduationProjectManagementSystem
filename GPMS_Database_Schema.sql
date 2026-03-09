@@ -547,7 +547,10 @@ GO
 -- add hashed password "123456"
 TRUNCATE TABLE UserCredentials;
 INSERT INTO UserCredentials (UserID, AuthProvider, PasswordHash) VALUES 
-('ADMIN001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
-('GV001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
-('SE180001', 0, '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
+('ADMIN001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
+('GV001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('HOD001', 'Internal','$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
 GO
+
+

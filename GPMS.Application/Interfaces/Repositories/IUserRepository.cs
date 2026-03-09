@@ -16,4 +16,5 @@ public interface IUserRepository
     Task UpdateAsync(User user);
     Task<bool> ExistsAsync(string userId);
     Task SaveChangesAsync();
+    Task<User?> GetUserByResetTokenAsync(string token);
 }

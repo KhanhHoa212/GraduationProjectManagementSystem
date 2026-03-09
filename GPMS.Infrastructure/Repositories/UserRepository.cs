@@ -36,4 +36,12 @@ public class UserRepository : IUserRepository
     public async Task UpdateAsync(User user) => _context.Users.Update(user);
     public async Task<bool> ExistsAsync(string userId) => await _context.Users.AnyAsync(u => u.UserID == userId);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+    public async Task<User?> GetUserByResetTokenAsync(string token)
+    => await _context.Users
+            .Include(u => u.UserCredentials)
+            .FirstOrDefaultAsync(u => u.UserCredentials.Any(c =>
+                c.PasswordResetToken == token &&
+                c.PasswordResetExpiry.HasValue &&
+                c.PasswordResetExpiry > DateTime.UtcNow));
+    
 }
