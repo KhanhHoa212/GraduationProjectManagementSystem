@@ -1,3 +1,4 @@
+using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -12,8 +13,9 @@ namespace GPMS.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
-    public AuthService(IUserRepository userRepository)
+    public AuthService(IUserRepository userRepository, IMapper mapper)
     {
         _userRepository = userRepository;
     }
@@ -40,7 +42,7 @@ public class AuthService : IAuthService
         return new AuthResultDto
         {
             Success = true,
-            User = MapToDto(user)
+            User = _mapper.Map<UserDto>(user)
         };
     }
 
@@ -88,7 +90,7 @@ public class AuthService : IAuthService
         return new AuthResultDto
         {
             Success = true,
-            User = MapToDto(dbUser)
+            User = _mapper.Map<UserDto>(dbUser)
         };
     }
 
@@ -139,17 +141,4 @@ public class AuthService : IAuthService
         return new AuthResultDto { Success = true };
     }
 
-    private UserDto MapToDto(User u)
-    {
-        return new UserDto
-        {
-            UserID = u.UserID,
-            Username = u.Username,
-            Email = u.Email,
-            FullName = u.FullName,
-            Phone = u.Phone,
-            Status = u.Status,
-            Roles = u.UserRoles.Select(r => r.RoleName.ToString()).ToList()
-        };
-    }
 }

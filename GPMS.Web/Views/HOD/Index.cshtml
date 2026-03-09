@@ -24,7 +24,7 @@
         </div>
         <div class="flex gap-2">
             <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-all">
-                <span class="material-symbols-outlined text-[18px]">download</span>
+                <span class="material-symbols-outlined text-[18px]">cloud_download</span>
                 Export Report
             </button>
         </div>
@@ -41,7 +41,7 @@
                     <h3 class="text-3xl font-extrabold text-slate-900 mt-1">@totalProjects</h3>
                 </div>
                 <span class="size-10 rounded-xl bg-blue-50 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-blue-500 text-[20px]">folder_open</span>
+                    <span class="material-symbols-outlined text-blue-500 text-[20px]">topic</span>
                 </span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5">
@@ -55,20 +55,25 @@
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Missing Supervisor</p>
-                    <h3 class="text-3xl font-extrabold text-slate-900 mt-1">@missingSupervisor</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                        <h3 class="text-3xl font-extrabold text-slate-900">@missingSupervisor</h3>
+                        @if (missingSupervisor > 0)
+                        {
+                            <span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase rounded-lg border border-red-100">
+                                Action Required
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-lg border border-emerald-100">
+                                All Assigned
+                            </span>
+                        }
+                    </div>
                 </div>
-                @if (missingSupervisor > 0)
-                {
-                    <span class="px-2 py-1 bg-red-50 text-red-600 text-[10px] font-bold uppercase rounded-lg border border-red-100">
-                        Action Required
-                    </span>
-                }
-                else
-                {
-                    <span class="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold uppercase rounded-lg border border-emerald-100">
-                        All Assigned
-                    </span>
-                }
+                <span class="size-10 rounded-xl bg-orange-50 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-orange-500 text-[20px]">person_off</span>
+                </span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5">
                 @{ int supervisorPercent = totalProjects > 0 ? (int)((double)(totalProjects - missingSupervisor) / totalProjects * 100) : 100; }
@@ -82,14 +87,19 @@
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Groups w/o Members</p>
-                    <h3 class="text-3xl font-extrabold text-slate-900 mt-1">@missingMembers</h3>
+                    <div class="flex items-center gap-2 mt-1">
+                        <h3 class="text-3xl font-extrabold text-slate-900">@missingMembers</h3>
+                        @if (missingMembers > 0)
+                        {
+                            <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded-lg border border-amber-100">
+                                Critical
+                            </span>
+                        }
+                    </div>
                 </div>
-                @if (missingMembers > 0)
-                {
-                    <span class="px-2 py-1 bg-amber-50 text-amber-600 text-[10px] font-bold uppercase rounded-lg border border-amber-100">
-                        Critical
-                    </span>
-                }
+                <span class="size-10 rounded-xl bg-amber-50 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-amber-500 text-[20px]">group_remove</span>
+                </span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5">
                 <div class="bg-amber-500 h-1.5 rounded-full" style="width: @(missingMembers > 0 ? 40 : 0)%"></div>
@@ -105,7 +115,7 @@
                     <h3 class="text-3xl font-extrabold text-slate-900 mt-1">@withGroup</h3>
                 </div>
                 <span class="size-10 rounded-xl bg-emerald-50 flex items-center justify-center">
-                    <span class="material-symbols-outlined text-emerald-500 text-[20px]">groups</span>
+                    <span class="material-symbols-outlined text-emerald-500 text-[20px]">diversity_3</span>
                 </span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-1.5">
@@ -122,7 +132,10 @@
         <!-- Project Status Table (2/3) -->
         <div class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                <h2 class="text-sm font-bold text-slate-800">Project Status Distribution</h2>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[18px]">pie_chart</span>
+                    <h2 class="text-sm font-bold text-slate-800">Project Status Distribution</h2>
+                </div>
                 <a asp-action="Projects" class="text-xs font-semibold text-primary hover:underline no-underline">View All →</a>
             </div>
             <div class="overflow-x-auto">
@@ -140,37 +153,58 @@
                         {
                             @foreach (var project in Model)
                             {
-                                var statusColor = project.Status switch
+                                var initials = string.Concat(project.ProjectName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                var statusText = project.Status switch
                                 {
-                                    ProjectStatus.Active => "bg-blue-50 text-blue-600",
-                                    ProjectStatus.Completed => "bg-emerald-50 text-emerald-700",
-                                    ProjectStatus.Cancelled => "bg-red-50 text-red-600",
-                                    _ => "bg-slate-100 text-slate-500"
+                                    ProjectStatus.Active => "text-blue-600 font-medium",
+                                    ProjectStatus.Completed => "text-emerald-600 font-medium",
+                                    ProjectStatus.Cancelled => "text-red-500",
+                                    _ => "text-slate-400"
                                 };
                                 var dotColor = project.Status switch
                                 {
-                                    ProjectStatus.Active => "bg-blue-500",
+                                    ProjectStatus.Active => "bg-blue-500 animate-pulse",
                                     ProjectStatus.Completed => "bg-emerald-500",
                                     ProjectStatus.Cancelled => "bg-red-500",
-                                    _ => "bg-slate-400"
+                                    _ => "bg-slate-300"
                                 };
-                                <tr class="hover:bg-slate-50/60 transition-colors">
-                                    <td class="px-6 py-3.5">
-                                        <p class="text-sm font-semibold text-slate-800">@project.ProjectName</p>
-                                        <p class="text-[11px] text-slate-400">@project.ProjectCode</p>
+                                <tr class="group hover:bg-slate-50/70 transition-colors">
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
+                                                @initials
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-semibold text-slate-900">@project.ProjectName</p>
+                                                <p class="text-xs font-semibold text-primary mt-0.5">@project.ProjectCode</p>
+                                            </div>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-3.5 text-sm text-slate-600">
-                                        @(project.SupervisorName ?? "—")
+                                    <td class="py-4 px-6">
+                                        @if (!string.IsNullOrEmpty(project.SupervisorName))
+                                        {
+                                            var supInitials = string.Concat(project.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                            <div class="flex items-center gap-2">
+                                                <div class="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">@supInitials</div>
+                                                <span class="text-sm text-slate-600">@project.SupervisorName</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-sm text-slate-400 italic">Unassigned</span>
+                                        }
                                     </td>
-                                    <td class="px-6 py-3.5">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold @statusColor">
-                                            <span class="size-1.5 rounded-full @dotColor"></span>
-                                            @project.Status
-                                        </span>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-2">
+                                            <div class="size-2 rounded-full @dotColor"></div>
+                                            <span class="text-sm @statusText">@project.Status</span>
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-3.5 text-right">
+                                    <td class="py-4 px-6 text-right">
                                         <a asp-action="ProjectDetails" asp-route-id="@project.ProjectID"
-                                           class="text-xs font-semibold text-primary hover:underline no-underline">View →</a>
+                                           class="inline-flex items-center gap-1.5 p-2 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg no-underline" title="View / Edit">
+                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                        </a>
                                     </td>
                                 </tr>
                             }
@@ -178,7 +212,9 @@
                         else
                         {
                             <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-400">No projects found for this semester.</td>
+                                <td colspan="4" class="px-6 py-10 text-center text-sm text-slate-400">
+                                    No projects found for this semester.
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -189,8 +225,10 @@
         <!-- Recent Projects (1/3) -->
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
             <div class="flex items-center justify-between mb-4">
-                <h2 class="text-sm font-bold text-slate-800">Recent Activities</h2>
-                <span class="material-symbols-outlined text-slate-400 text-[18px]">schedule</span>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-[18px]">history</span>
+                    <h2 class="text-sm font-bold text-slate-800">Recent Activities</h2>
+                </div>
             </div>
             <div class="space-y-4">
                 @if (Model != null && Model.Any())
