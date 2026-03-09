@@ -1,0 +1,158 @@
+@using GPMS.Domain.Enums
+@model GPMS.Web.ViewModels.SupervisorFeedbackReviewViewModel
+@{
+    ViewData["Title"] = "Feedback Approvals";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0">
+                    <h6>Pending Feedback Approvals</h6>
+                </div>
+                <div class="card-body px-0 pt-0 pb-2">
+                    <div class="table-responsive p-0">
+                        <table class="table align-items-center mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Project / Group</th>
+                                    <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">Reviewer</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Round</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Score</th>
+                                    <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Submitted</th>
+                                    <th class="text-secondary opacity-7"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.PendingFeedbacks.Any())
+                                {
+                                    @foreach (var item in Model.PendingFeedbacks)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex px-2 py-1">
+                                                    <div class="d-flex flex-column justify-content-center">
+                                                        <h6 class="mb-0 text-sm">@item.ProjectName</h6>
+                                                        <p class="text-xs text-secondary mb-0">Group: @item.GroupName</p>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs font-weight-bold mb-0">@item.ReviewerName</p>
+                                            </td>
+                                            <td class="align-middle text-center text-sm">
+                                                <span class="badge badge-sm bg-gradient-info">@item.RoundName</span>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <span class="text-secondary text-xs font-weight-bold">
+                                                    @(item.Score.HasValue ? item.Score.Value.ToString("0.0") : "N/A")
+                                                </span>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <span class="text-secondary text-xs font-weight-bold">
+                                                    @item.SubmittedAt.ToString("dd/MM/yyyy")
+                                                </span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <button class="btn btn-link text-secondary mb-0 p-2 view-feedback-btn" 
+                                                        data-bs-toggle="modal" data-bs-target="#feedbackModal"
+                                                        data-id="@item.FeedbackID"
+                                                        data-content="@item.Content"
+                                                        data-reviewer="@item.ReviewerName">
+                                                    Review
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr>
+                                        <td colspan="6" class="text-center p-4">
+                                            <p class="text-sm mb-0">No pending feedback to approve.</p>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" role="dialog" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedbackModalLabel">Review Feedback</h5>
+                <button type="button" class="btn-close text-dark" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Reviewer:</strong> <span id="modalReviewer"></span></p>
+                <div class="form-group">
+                    <label>Reviewer's General Comments:</label>
+                    <textarea id="modalContent" class="form-control" rows="4" readonly></textarea>
+                </div>
+                <div class="form-group mt-3">
+                    <label for="supervisorComment">Supervisor Comments (Optional):</label>
+                    <textarea id="supervisorComment" class="form-control" rows="2" placeholder="Leave a remark..."></textarea>
+                </div>
+                <input type="hidden" id="modalFeedbackId" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn bg-gradient-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn bg-gradient-danger" id="btnReject">Reject</button>
+                <button type="button" class="btn bg-gradient-success" id="btnApprove">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.view-feedback-btn').click(function() {
+                var btn = $(this);
+                $('#modalFeedbackId').val(btn.data('id'));
+                $('#modalContent').val(btn.data('content'));
+                $('#modalReviewer').text(btn.data('reviewer'));
+                $('#supervisorComment').val('');
+            });
+
+            function processFeedback(status) {
+                var data = {
+                    FeedbackID: parseInt($('#modalFeedbackId').val()),
+                    Status: status, // ApprovalStatus enum value
+                    SupervisorComment: $('#supervisorComment').val()
+                };
+
+                // Enums: Pending=0, Approved=1, Rejected=2
+                var statusEnum = (status === 'Approved') ? 1 : 2;
+                data.Status = statusEnum;
+
+                $.ajax({
+                    url: '@Url.Action("ProcessFeedbackApproval", "Teacher")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    success: function() {
+                        alert('Feedback ' + status + ' successfully.');
+                        location.reload();
+                    },
+                    error: function() {
+                        alert('An error occurred.');
+                    }
+                });
+            }
+
+            $('#btnApprove').click(function() { processFeedback('Approved'); });
+            $('#btnReject').click(function() { processFeedback('Rejected'); });
+        });
+    </script>
+}

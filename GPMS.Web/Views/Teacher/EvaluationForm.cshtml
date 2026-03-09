@@ -1,0 +1,207 @@
+@using GPMS.Domain.Enums
+@model GPMS.Web.ViewModels.EvaluationFormViewModel
+@{
+    ViewData["Title"] = "Evaluation Form";
+}
+
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header pb-0 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0">@Model.ChecklistTitle</h6>
+                        <p class="text-sm mb-0">Project: @Model.ProjectName | Group: @Model.GroupName</p>
+                    </div>
+                    <div>
+                        @if (Model.Status == EvaluationStatus.Submitted)
+                        {
+                            <span class="badge bg-gradient-success">Submitted</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-gradient-warning">Draft</span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body px-4 pt-4 pb-2">
+                    <form id="evaluationForm" method="post">
+                        <input type="hidden" id="EvaluationID" name="EvaluationID" value="@Model.EvaluationID" />
+                        <input type="hidden" id="ReviewRoundID" name="ReviewRoundID" value="@Model.ReviewRoundID" />
+                        <input type="hidden" id="GroupID" name="GroupID" value="@Model.GroupID" />
+
+                        <div class="table-responsive p-0">
+                            <table class="table align-items-center mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 5%">Code</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7" style="width: 40%">Criteria</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center" style="width: 10%">Max</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center" style="width: 10%">Weight</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 text-center" style="width: 15%">Score</th>
+                                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">Comment</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @for (int i = 0; i < Model.Items.Count; i++)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <input type="hidden" name="Items[@i].ItemID" value="@Model.Items[i].ItemID" />
+                                                <input type="hidden" name="Items[@i].ItemCode" value="@Model.Items[i].ItemCode" />
+                                                <p class="text-xs font-weight-bold mb-0">@Model.Items[i].ItemCode</p>
+                                            </td>
+                                            <td>
+                                                <p class="text-xs text-secondary mb-0 text-wrap">@Model.Items[i].ItemContent</p>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <span class="text-secondary text-xs font-weight-bold">@Model.Items[i].MaxScore</span>
+                                            </td>
+                                            <td class="align-middle text-center">
+                                                <span class="text-secondary text-xs font-weight-bold">@(Model.Items[i].Weight * 100)%</span>
+                                            </td>
+                                            <td class="align-middle">
+                                                <input type="number" 
+                                                       class="form-control form-control-sm item-score" 
+                                                       name="Items[@i].Score" 
+                                                       value="@Model.Items[i].Score" 
+                                                       min="0" 
+                                                       max="@Model.Items[i].MaxScore" 
+                                                       step="0.1" 
+                                                       @(Model.Status == EvaluationStatus.Submitted ? "disabled" : "") />
+                                            </td>
+                                            <td class="align-middle">
+                                                <input type="text" 
+                                                       class="form-control form-control-sm" 
+                                                       name="Items[@i].Comment" 
+                                                       value="@Model.Items[i].Comment" 
+                                                       placeholder="Optional comment..." 
+                                                       @(Model.Status == EvaluationStatus.Submitted ? "disabled" : "") />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label for="GeneralComment">General Feedback / Comments</label>
+                                    <textarea class="form-control" id="GeneralComment" name="GeneralComment" rows="3" 
+                                              @(Model.Status == EvaluationStatus.Submitted ? "disabled" : "")>@Model.GeneralComment</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end mt-4">
+                            <a href="@Url.Action("AssignedGroups", "Teacher")" class="btn btn-light m-0 me-2">Cancel</a>
+                            @if (Model.Status != EvaluationStatus.Submitted)
+                            {
+                                <button type="button" class="btn btn-info m-0 me-2" id="btnSaveDraft">Save Draft</button>
+                                <button type="button" class="btn btn-success m-0" id="btnSubmit">Submit Evaluation</button>
+                            }
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            function getFormData() {
+                var model = {
+                    EvaluationID: $('#EvaluationID').val(),
+                    ReviewRoundID: $('#ReviewRoundID').val(),
+                    GroupID: $('#GroupID').val(),
+                    GeneralComment: $('#GeneralComment').val(),
+                    Items: []
+                };
+
+                var itemsCount = @Model.Items.Count;
+                for (let i = 0; i < itemsCount; i++) {
+                    var scoreVal = $('input[name="Items['+i+'].Score"]').val();
+                    model.Items.push({
+                        ItemID: $('input[name="Items['+i+'].ItemID"]').val(),
+                        ItemCode: $('input[name="Items['+i+'].ItemCode"]').val(),
+                        Score: scoreVal ? parseFloat(scoreVal) : null,
+                        Comment: $('input[name="Items['+i+'].Comment"]').val()
+                    });
+                }
+                return model;
+            }
+
+            $('#btnSaveDraft').click(function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                btn.prop('disabled', true).text('Saving...');
+
+                $.ajax({
+                    url: '@Url.Action("SaveDraft", "Teacher")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(getFormData()),
+                    success: function() {
+                        alert('Draft saved successfully!');
+                        btn.prop('disabled', false).text('Save Draft');
+                    },
+                    error: function() {
+                        alert('Failed to save draft. Please try again.');
+                        btn.prop('disabled', false).text('Save Draft');
+                    }
+                });
+            });
+
+            $('#btnSubmit').click(function(e) {
+                e.preventDefault();
+                
+                // Basic validation
+                let isValid = true;
+                $('.item-score').each(function() {
+                    let val = $(this).val();
+                    let max = parseFloat($(this).attr('max'));
+                    if (!val) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else if (parseFloat(val) > max || parseFloat(val) < 0) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                if (!isValid) {
+                    alert('Please fill out all scores correctly before submitting. Scores must be between 0 and Max score.');
+                    return;
+                }
+
+                if (confirm('Are you sure you want to submit this evaluation? This action cannot be undone.')) {
+                    var btn = $(this);
+                    btn.prop('disabled', true).text('Submitting...');
+                    $('#btnSaveDraft').prop('disabled', true);
+
+                    $.ajax({
+                        url: '@Url.Action("SubmitEvaluation", "Teacher")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(getFormData()),
+                        success: function(res) {
+                            if (res.success) {
+                                window.location.href = res.redirectUrl;
+                            }
+                        },
+                        error: function(err) {
+                            alert(err.responseText || 'Failed to submit evaluation.');
+                            btn.prop('disabled', false).text('Submit Evaluation');
+                            $('#btnSaveDraft').prop('disabled', false);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
