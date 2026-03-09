@@ -22,10 +22,31 @@ public class UserService : IUserService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserDto>> GetAllUsersAsync(string? search = null, string? role = null, UserStatus? status = null)
     {
         var users = await _userRepository.GetAllAsync();
+        if (status.HasValue)
+        {
+            users = users.Where(u => u.Status == status.Value);
+        }
+
+        if (!string.IsNullOrEmpty(role) && role != "All Roles")
+        {
+            users = users.Where(u => u.UserRoles.Any(r => r.RoleName.ToString().Equals(role, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            search = search.ToLower();
+            users = users.Where(u => 
+                u.FullName.ToLower().Contains(search) || 
+                (u.Email != null && u.Email.ToLower().Contains(search)) || 
+                u.UserID.ToLower().Contains(search));
+        }
+
+        // Sử dụng Mapper thay thế cho đoạn Manual Mapping thủ công 
         return _mapper.Map<IEnumerable<UserDto>>(users);
+
     }
 
     public async Task<UserDto?> GetUserByIdAsync(string id)
@@ -48,14 +69,48 @@ public class UserService : IUserService
             Status = dto.Status
         };
 
-        if (dto.Role == "Lecturer")
+        // Check if UserID already exists
+        if (await _userRepository.ExistsAsync(newUser.UserID))
         {
+            throw new InvalidOperationException("User ID already exists.");
+        }
+
+        // Check if Email already exists
+        if (!string.IsNullOrEmpty(newUser.Email))
+        {
+            var userByEmail = await _userRepository.GetByEmailAsync(newUser.Email);
+            if (userByEmail != null)
+            {
+                throw new InvalidOperationException("Email address already exists.");
+            }
+        }
+
+        // Check if Username already exists
+        if (!string.IsNullOrEmpty(newUser.Username))
+        {
+            var userByUsername = await _userRepository.GetByUsernameOrEmailAsync(newUser.Username);
+            if (userByUsername != null)
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+        }
+
+        if (dto.Role == "Admin")
+            newUser.UserRoles.Add(new UserRole { RoleName = RoleName.Admin, UserID = newUser.UserID });
+        else if (dto.Role == "HeadOfDept")
+            newUser.UserRoles.Add(new UserRole { RoleName = RoleName.HeadOfDept, UserID = newUser.UserID });
+        else if (dto.Role == "Lecturer")
             newUser.UserRoles.Add(new UserRole { RoleName = RoleName.Lecturer, UserID = newUser.UserID });
-        }
         else
-        {
             newUser.UserRoles.Add(new UserRole { RoleName = RoleName.Student, UserID = newUser.UserID });
-        }
+
+        // Create default credential so "Forgot Password" works
+        newUser.UserCredentials.Add(new UserCredential
+        {
+            UserID = newUser.UserID,
+            AuthProvider = AuthProvider.Internal,
+            PasswordHash = null // User will need to use Forgot Password to set it
+        });
 
         await _userRepository.AddAsync(newUser);
         await _userRepository.SaveChangesAsync();
@@ -65,6 +120,26 @@ public class UserService : IUserService
     {
         var user = await _userRepository.GetByIdAsync(dto.UserID);
         if (user == null) return;
+
+        // Check if Email already exists for another user
+        if (!string.IsNullOrEmpty(dto.Email))
+        {
+            var userByEmail = await _userRepository.GetByEmailAsync(dto.Email);
+            if (userByEmail != null && userByEmail.UserID != dto.UserID)
+            {
+                throw new InvalidOperationException("Email address already exists.");
+            }
+        }
+
+        // Check if Username already exists for another user
+        if (!string.IsNullOrEmpty(dto.Username))
+        {
+            var userByUsername = await _userRepository.GetByUsernameOrEmailAsync(dto.Username);
+            if (userByUsername != null && userByUsername.UserID != dto.UserID)
+            {
+                throw new InvalidOperationException("Username already exists.");
+            }
+        }
 
         user.Username = dto.Username;
         user.Email = dto.Email;
@@ -84,6 +159,8 @@ public class UserService : IUserService
         user.UserRoles.Clear();
         if (dto.Role == "Admin")
             user.UserRoles.Add(new UserRole { RoleName = RoleName.Admin, UserID = user.UserID });
+        else if (dto.Role == "HeadOfDept")
+            user.UserRoles.Add(new UserRole { RoleName = RoleName.HeadOfDept, UserID = user.UserID });
         else if (dto.Role == "Lecturer")
             user.UserRoles.Add(new UserRole { RoleName = RoleName.Lecturer, UserID = user.UserID });
         else
