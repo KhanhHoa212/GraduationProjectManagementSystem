@@ -35,19 +35,34 @@ public class HODController : Controller
 
         // Recent projects for the status table
         var projects = activeSemester != null
-            ? await _projectService.GetProjectsBySemesterAsync(activeSemester.SemesterID)
-            : await _projectService.GetAllProjectsAsync();
+            ? (await _projectService.GetProjectsBySemesterAsync(activeSemester.SemesterID)).ToList()
+            : (await _projectService.GetAllProjectsAsync()).ToList();
 
-        return View(projects.Take(5));
+        ViewBag.ActiveCount = projects.Count(p => p.Status == ProjectStatus.Active);
+        ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
+        ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
+
+        return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
 
-    // GET: /HOD/Projects
-    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search)
+    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search, string? majorName)
     {
         var semesters = (await _semesterService.GetAllSemestersAsync()).ToList();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
 
-        var targetSemesterId = semesterId ?? activeSemester?.SemesterID;
+        int? targetSemesterId;
+        if (semesterId == -1)
+        {
+            targetSemesterId = null; 
+        }
+        else if (semesterId == null)
+        {
+            targetSemesterId = activeSemester?.SemesterID;
+        }
+        else
+        {
+            targetSemesterId = semesterId;
+        }
 
         IEnumerable<ProjectDto> projects = targetSemesterId.HasValue
             ? await _projectService.GetProjectsBySemesterAsync(targetSemesterId.Value)
@@ -64,11 +79,16 @@ public class HODController : Controller
                 p.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 (p.SupervisorName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
 
+        // Filter by major
+        if (!string.IsNullOrWhiteSpace(majorName))
+            projects = projects.Where(p => p.MajorName == majorName);
+
         ViewBag.Semesters = semesters;
-        ViewBag.SelectedSemesterId = targetSemesterId;
+        ViewBag.SelectedSemesterId = semesterId == -1 ? -1 : targetSemesterId;
         ViewBag.ActiveSemester = activeSemester;
         ViewBag.CurrentStatus = status;
         ViewBag.CurrentSearch = search;
+        ViewBag.CurrentMajor = majorName;
 
         return View(projects.ToList());
     }
@@ -155,11 +175,15 @@ public class HODController : Controller
     public IActionResult Groups() => View();
     public IActionResult GroupDetails(string id) => View();
     public IActionResult AssignSupervisor() => View();
+    public IActionResult ReviewRounds() => View();
     public IActionResult Import() => View();
     
     [HttpGet]
-    public IActionResult CreateProject()
+    public async Task<IActionResult> CreateProject()
     {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        ViewBag.ActiveSemester = activeSemester;
         return View();
     }
 }

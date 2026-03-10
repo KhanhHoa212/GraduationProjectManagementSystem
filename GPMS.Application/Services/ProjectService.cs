@@ -51,9 +51,13 @@ public class ProjectService : IProjectService
 
     public async Task CreateProjectAsync(CreateProjectDto dto)
     {
-        var allProjects = await _projectRepository.GetAllAsync();
-        var count = allProjects.Count();
-        var code = $"GP-{dto.SemesterID}-{count + 1:D3}";
+        string code = dto.ProjectCode;
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            var allProjects = await _projectRepository.GetAllAsync();
+            var count = allProjects.Count();
+            code = $"GP-{dto.SemesterID}-{count + 1:D3}";
+        }
 
         var project = new Project
         {
