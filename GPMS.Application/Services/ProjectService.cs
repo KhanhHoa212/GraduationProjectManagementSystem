@@ -1,3 +1,4 @@
+using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -14,27 +15,30 @@ public class ProjectService : IProjectService
     private readonly IProjectRepository _projectRepository;
     private readonly IProjectGroupRepository _groupRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IMapper _mapper;
 
     public ProjectService(
         IProjectRepository projectRepository,
         IProjectGroupRepository groupRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IMapper mapper)
     {
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
         _userRepository = userRepository;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<ProjectDto>> GetAllProjectsAsync()
     {
         var projects = await _projectRepository.GetAllWithDetailsAsync();
-        return projects.Select(MapToDto);
+        return _mapper.Map<IEnumerable<ProjectDto>>(projects);
     }
 
     public async Task<IEnumerable<ProjectDto>> GetProjectsBySemesterAsync(int semesterId)
     {
         var projects = await _projectRepository.GetBySemesterWithDetailsAsync(semesterId);
-        return projects.Select(MapToDto);
+        return _mapper.Map<IEnumerable<ProjectDto>>(projects);
     }
 
     public async Task<ProjectDetailDto?> GetProjectDetailAsync(int projectId)
@@ -42,35 +46,7 @@ public class ProjectService : IProjectService
         var project = await _projectRepository.GetDetailAsync(projectId);
         if (project == null) return null;
 
-        var mainSupervisor = project.ProjectSupervisors
-            .FirstOrDefault(ps => ps.Role == ProjectRole.Main);
-
-        var members = project.ProjectGroups
-            .SelectMany(g => g.GroupMembers.Select(m => new ProjectMemberDto
-            {
-                UserID = m.UserID,
-                FullName = m.User.FullName,
-                RoleInGroup = m.RoleInGroup,
-                GroupName = g.GroupName
-            }))
-            .ToList();
-
-        return new ProjectDetailDto
-        {
-            ProjectID = project.ProjectID,
-            ProjectCode = project.ProjectCode,
-            ProjectName = project.ProjectName,
-            Description = project.Description,
-            SemesterID = project.SemesterID,
-            SemesterCode = project.Semester?.SemesterCode,
-            MajorID = project.MajorID,
-            MajorName = project.Major?.MajorName,
-            Status = project.Status,
-            CreatedAt = project.CreatedAt,
-            SupervisorID = mainSupervisor?.LecturerID,
-            SupervisorName = mainSupervisor?.Lecturer?.FullName,
-            Members = members
-        };
+        return _mapper.Map<ProjectDetailDto>(project);
     }
 
     public async Task CreateProjectAsync(CreateProjectDto dto)
@@ -128,18 +104,13 @@ public class ProjectService : IProjectService
     public async Task<IEnumerable<StudentSearchDto>> SearchStudentsAsync(string query)
     {
         var students = await _userRepository.GetByRoleAsync(RoleName.Student);
-        return students
+        var filtered = students
             .Where(u => u.UserID.Contains(query, StringComparison.OrdinalIgnoreCase)
                      || u.FullName.Contains(query, StringComparison.OrdinalIgnoreCase)
                      || (u.Email != null && u.Email.Contains(query, StringComparison.OrdinalIgnoreCase)))
-            .Select(u => new StudentSearchDto
-            {
-                UserID = u.UserID,
-                FullName = u.FullName,
-                Email = u.Email
-            })
-            .Take(10)
-            .ToList();
+            .Take(10);
+            
+        return _mapper.Map<IEnumerable<StudentSearchDto>>(filtered).ToList();
     }
 
     public async Task<(bool success, string message)> AddMemberAsync(int projectId, string userId)
@@ -224,23 +195,4 @@ public class ProjectService : IProjectService
     }
 
     // ============================================================
-    private static ProjectDto MapToDto(Project p)
-    {
-        var mainSupervisor = p.ProjectSupervisors
-            .FirstOrDefault(ps => ps.Role == ProjectRole.Main);
-
-        return new ProjectDto
-        {
-            ProjectID = p.ProjectID,
-            ProjectCode = p.ProjectCode,
-            ProjectName = p.ProjectName,
-            MajorName = p.Major?.MajorName,
-            SemesterCode = p.Semester?.SemesterCode,
-            Status = p.Status,
-            CreatedAt = p.CreatedAt,
-            SupervisorID = mainSupervisor?.LecturerID,
-            SupervisorName = mainSupervisor?.Lecturer?.FullName,
-            GroupCount = p.ProjectGroups.Count
-        };
-    }
 }

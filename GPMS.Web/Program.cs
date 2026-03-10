@@ -1,5 +1,6 @@
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
+using GPMS.Application.Mapping;
 using GPMS.Application.Services;
 using GPMS.Infrastructure.Data;
 using GPMS.Infrastructure.Email;
@@ -35,6 +36,9 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+
+// Register AutoMapper
+builder.Services.AddAutoMapper(cfg => {}, typeof(MappingProfile).Assembly);
 
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();

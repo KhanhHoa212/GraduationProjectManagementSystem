@@ -1,3 +1,4 @@
+using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -11,25 +12,18 @@ namespace GPMS.Application.Services;
 public class SemesterService : ISemesterService
 {
     private readonly ISemesterRepository _semesterRepository;
+    private readonly IMapper _mapper;
 
-    public SemesterService(ISemesterRepository semesterRepository)
+    public SemesterService(ISemesterRepository semesterRepository, IMapper mapper)
     {
         _semesterRepository = semesterRepository;
+        _mapper = mapper;
     }
 
     public async Task<IEnumerable<SemesterDto>> GetAllSemestersAsync()
     {
         var semesters = await _semesterRepository.GetAllAsync();
-        return semesters.Select(s => new SemesterDto
-        {
-            SemesterID = s.SemesterID,
-            SemesterCode = s.SemesterCode,
-            AcademicYear = s.AcademicYear,
-            StartDate = s.StartDate,
-            EndDate = s.EndDate,
-            Status = s.Status,
-            ProjectsCount = s.Projects?.Count ?? 0
-        });
+        return _mapper.Map<IEnumerable<SemesterDto>>(semesters);
     }
 
     public async Task<SemesterDto?> GetSemesterByIdAsync(int id)
@@ -37,16 +31,7 @@ public class SemesterService : ISemesterService
         var s = await _semesterRepository.GetByIdAsync(id);
         if (s == null) return null;
 
-        return new SemesterDto
-        {
-            SemesterID = s.SemesterID,
-            SemesterCode = s.SemesterCode,
-            AcademicYear = s.AcademicYear,
-            StartDate = s.StartDate,
-            EndDate = s.EndDate,
-            Status = s.Status,
-            ProjectsCount = s.Projects?.Count ?? 0
-        };
+        return _mapper.Map<SemesterDto>(s);
     }
 
     public async Task CreateSemesterAsync(CreateSemesterDto dto)
