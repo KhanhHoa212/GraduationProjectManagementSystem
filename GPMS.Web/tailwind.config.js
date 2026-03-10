@@ -8,8 +8,8 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                "primary": "#F37021", // FPT University Orange
-                "secondary": "#112D4E", // Navy
+                "primary": "#F37021", 
+                "secondary": "#112D4E", 
                 "background-light": "#f6f6f8",
                 "background-dark": "#101622",
             },
