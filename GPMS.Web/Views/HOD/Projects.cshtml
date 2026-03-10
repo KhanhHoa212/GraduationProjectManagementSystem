@@ -1,8 +1,15 @@
+@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+@using GPMS.Domain.Enums
 @{
     ViewBag.Title = "Projects";
     ViewBag.CurrentPage = "Projects";
     ViewBag.BreadcrumbSection = "Project";
     Layout = "~/Views/Shared/_HODLayout.cshtml";
+
+    var semesters = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? new List<GPMS.Application.DTOs.SemesterDto>();
+    var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
+    var currentStatus = ViewBag.CurrentStatus as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
 }
 
 <!-- Projects List Content -->
@@ -11,7 +18,7 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800">Danh sách Đề tài</h1>
-            <p class="text-slate-500 text-sm mt-1">Quản lý toàn bộ đề tài trong học kỳ SP25</p>
+            <p class="text-slate-500 text-sm mt-1">Quản lý toàn bộ đề tài trong hệ thống</p>
         </div>
         <div class="flex gap-3">
             <button class="bg-[#F37021] hover:bg-orange-600 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-orange-600">
@@ -27,36 +34,52 @@
 
     <!-- Filters Card -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <form method="get" action="/HOD/Projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Semester Filter -->
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HỌC KỲ</label>
-                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option>SP25</option>
-                    <option>FA24</option>
-                    <option>SP24</option>
+                <select name="semesterId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">Tất cả học kỳ</option>
+                    @foreach (var sem in semesters)
+                    {
+                        if (selectedSemesterId.HasValue && sem.SemesterID == selectedSemesterId.Value)
+                        {
+                            <option value="@sem.SemesterID" selected>@sem.SemesterCode</option>
+                        }
+                        else
+                        {
+                            <option value="@sem.SemesterID">@sem.SemesterCode</option>
+                        }
+                    }
                 </select>
             </div>
 
             <!-- Specialization Filter -->
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CHUYÊN NGÀNH</label>
-                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option>Tất cả</option>
-                    <option>Công nghệ thông tin</option>
-                    <option>Kỹ thuật phần mềm</option>
-                    <option>An toàn thông tin</option>
+                <select name="majorName" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả chuyên ngành</option>
+                    <option value="Software Engineering" selected="@(ViewBag.CurrentMajor == "Software Engineering" ? "selected" : null)">Software Engineering (SE)</option>
+                    <option value="Software Testing" selected="@(ViewBag.CurrentMajor == "Software Testing" ? "selected" : null)">Software Testing (SS)</option>
                 </select>
             </div>
 
             <!-- Status Filter -->
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TRẠNG THÁI</label>
-                <select class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option>Tất cả trạng thái</option>
-                    <option>Active</option>
-                    <option>Draft</option>
-                    <option>Completed</option>
+                <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả trạng thái</option>
+                    @foreach (var st in Enum.GetValues(typeof(ProjectStatus)).Cast<ProjectStatus>())
+                    {
+                        if (currentStatus == st.ToString())
+                        {
+                            <option value="@st" selected>@st</option>
+                        }
+                        else
+                        {
+                            <option value="@st">@st</option>
+                        }
+                    }
                 </select>
             </div>
 
@@ -65,11 +88,14 @@
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TÌM KIẾM</label>
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" placeholder="Mã đề tài, tên đề tài..." 
+                    <input type="text" name="search" value="@currentSearch" placeholder="Mã hoặc tên đề tài..." 
                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 pl-10 text-sm text-slate-700 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors outline-none" />
                 </div>
             </div>
-        </div>
+            
+            <!-- Hidden submit button for Enter key in Search input -->
+            <input type="submit" class="hidden" />
+        </form>
     </div>
 
     <!-- Projects Table -->
@@ -88,129 +114,58 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-5 font-bold text-slate-800">PRJ001</td>
-                        <td class="px-6 py-5">
-                            <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">Hệ thống quản lý chuỗi cung ứng Blockchain</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="text-slate-600 font-medium">Kỹ thuật phần mềm</span>
-                        </td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="font-bold text-slate-800">04</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100">Active</span>
-                        </td>
-                        <td class="px-6 py-5 text-slate-500 font-medium">12/01/2025</td>
-                        <td class="px-6 py-5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="View">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition" title="Edit">
-                                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-5 font-bold text-slate-800">PRJ002</td>
-                        <td class="px-6 py-5">
-                            <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">Ứng dụng AI trong chẩn đoán y khoa</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="text-slate-600 font-medium whitespace-nowrap">Hệ thống thông tin</span>
-                        </td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="font-bold text-slate-800">02</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold text-amber-700 bg-amber-50 border border-amber-100">Draft</span>
-                        </td>
-                        <td class="px-6 py-5 text-slate-500 font-medium">10/01/2025</td>
-                        <td class="px-6 py-5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="View">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition" title="Edit">
-                                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-5 font-bold text-slate-800">PRJ003</td>
-                        <td class="px-6 py-5">
-                            <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">Phát triển Mobile Game với Unity</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="text-slate-600 font-medium">Kỹ thuật phần mềm</span>
-                        </td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="font-bold text-slate-800">05</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100">Completed</span>
-                        </td>
-                        <td class="px-6 py-5 text-slate-500 font-medium">20/12/2024</td>
-                        <td class="px-6 py-5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="View">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition" title="Edit">
-                                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- Row 4 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-5 font-bold text-slate-800">PRJ004</td>
-                        <td class="px-6 py-5">
-                            <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">Bảo mật IoT với mã hóa đầu cuối</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="text-slate-600 font-medium whitespace-nowrap">An toàn thông tin</span>
-                        </td>
-                        <td class="px-6 py-5 text-center">
-                            <span class="font-bold text-slate-800">03</span>
-                        </td>
-                        <td class="px-6 py-5">
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-100">Active</span>
-                        </td>
-                        <td class="px-6 py-5 text-slate-500 font-medium">15/01/2025</td>
-                        <td class="px-6 py-5 text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <button class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition" title="View">
-                                    <span class="material-symbols-outlined text-[20px]">visibility</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition" title="Edit">
-                                    <span class="material-symbols-outlined text-[20px]">edit</span>
-                                </button>
-                                <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
-                                    <span class="material-symbols-outlined text-[20px]">delete</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-5 font-bold text-slate-800">@item.ProjectCode</td>
+                                <td class="px-6 py-5">
+                                    <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">@item.ProjectName</span>
+                                    @if (!string.IsNullOrEmpty(item.SupervisorName))
+                                    {
+                                        <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                                            <span class="material-symbols-outlined text-[13px]">person</span> HD: @item.SupervisorName
+                                        </div>
+                                    }
+                                </td>
+                                <td class="px-6 py-5">
+                                    <span class="text-slate-600 font-medium whitespace-nowrap">@(item.MajorName ?? "-")</span>
+                                </td>
+                                <td class="px-6 py-5 text-center">
+                                    <span class="font-bold text-slate-800">@item.GroupCount.ToString("D2")</span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    @{
+                                        var badgeClass = item.Status switch {
+                                            ProjectStatus.Active => "text-emerald-700 bg-emerald-50 border-emerald-100",
+                                            ProjectStatus.Draft => "text-amber-700 bg-amber-50 border-amber-100",
+                                            ProjectStatus.Completed => "text-blue-700 bg-blue-50 border-blue-100",
+                                            _ => "text-slate-700 bg-slate-50 border-slate-200"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border @badgeClass">@item.Status</span>
+                                </td>
+                                <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td class="px-6 py-5 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="View/Edit">
+                                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                        </a>
+                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
                 </tbody>
             </table>
         </div>
@@ -218,17 +173,13 @@
         <!-- Pagination -->
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
             <div class="text-sm font-medium text-slate-500">
-                Đang hiển thị 1 đến 4 trong tổng số 24 đề tài
+                Hiển thị <span class="font-bold text-slate-800">@Model.Count()</span> đề tài
             </div>
             <div class="flex items-center gap-1">
                 <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition">
                     <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                 </button>
                 <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#1E3A5F] text-white font-bold shadow-sm">1</button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 hover:text-blue-600 font-bold transition">2</button>
-                <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 hover:text-blue-600 font-bold transition">3</button>
-                <span class="w-8 h-8 flex items-center justify-center text-slate-400 font-bold">...</span>
-                <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 hover:text-blue-600 font-bold transition">6</button>
                 <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition">
                     <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                 </button>

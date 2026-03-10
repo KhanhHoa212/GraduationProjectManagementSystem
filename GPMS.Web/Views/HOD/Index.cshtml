@@ -1,8 +1,28 @@
+@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
 @{
     ViewBag.Title = "Dashboard";
     ViewBag.CurrentPage = "Dashboard";
     ViewBag.BreadcrumbSection = "Dashboard";
     Layout = "~/Views/Shared/_HODLayout.cshtml";
+
+    int totalProjects = ViewBag.TotalProjects ?? 0;
+    int missingSup = ViewBag.MissingSupervisor ?? 0;
+    // int missingMem = ViewBag.MissingMembers ?? 0;
+    int unassigned = missingSup; // Just mapping to pending assignments
+
+    int draftCt = ViewBag.DraftCount ?? 0;
+    int activeCt = ViewBag.ActiveCount ?? 0;
+    int compCt = ViewBag.CompletedCount ?? 0;
+    int totalCt = (ViewBag.TotalProjects ?? 0) == 0 ? 1 : (int)ViewBag.TotalProjects;
+
+    double circ = 534;
+    double compLen = (double)compCt / totalCt * circ;
+    double activeLen = (double)activeCt / totalCt * circ;
+    double draftLen = (double)draftCt / totalCt * circ;
+
+    double compOffset = 0;
+    double activeOffset = -compLen;
+    double draftOffset = -(compLen + activeLen);
 }
 
 <!-- Dashboard Constraints & Typography -->
@@ -35,22 +55,22 @@
     
     <!-- Row 1: Statistics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Card 1: Total Groups -->
+        <!-- Card 1: Total Projects -->
         <div class="saas-card flex flex-col justify-between">
             <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Total Groups</span>
+                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Total Projects</span>
                 <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                     <span class="material-symbols-outlined text-[20px]">folder_copy</span>
                 </div>
             </div>
             <div>
-                <div class="saas-stat-number">42</div>
+                <div class="saas-stat-number">@totalProjects</div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="flex items-center text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-xs font-semibold">
                         <span class="material-symbols-outlined text-[14px]">trending_up</span>
-                        12%
+                        Active
                     </span>
-                    <span class="text-xs font-medium saas-text-muted">from last month</span>
+                    <span class="text-xs font-medium saas-text-muted">this semester</span>
                 </div>
             </div>
         </div>
@@ -83,7 +103,7 @@
                 </div>
             </div>
             <div>
-                <div class="saas-stat-number">12</div>
+                <div class="saas-stat-number">@unassigned</div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-xs font-semibold">
                         <span class="material-symbols-outlined text-[14px]">warning</span>
@@ -125,23 +145,21 @@
                     <!-- Donut Background -->
                     <circle cx="100" cy="100" r="85" fill="none" stroke="#F1F5F9" stroke-width="25"></circle>
 
-                    <!-- Completed (#10B981) - 12/42 = ~28.5% -->
+                    <!-- Completed (#10B981) -->
                     <circle cx="100" cy="100" r="85" fill="none" class="stroke-emerald-500" stroke-width="25" 
-                            stroke-dasharray="152 534" stroke-dashoffset="0" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+                            stroke-dasharray="@compLen 534" stroke-dashoffset="@compOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
                             
-                    <!-- Active (#2563EB) - 25/42 = ~59.5% -->
-                    <!-- offset by previous segment 152 + gap space if any -->
+                    <!-- Active (#2563EB) -->
                     <circle cx="100" cy="100" r="85" fill="none" stroke="#2563EB" stroke-width="25" 
-                            stroke-dasharray="317 534" stroke-dashoffset="-152" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+                            stroke-dasharray="@activeLen 534" stroke-dashoffset="@activeOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
                             
-                    <!-- Draft (#F59E0B) - 5/42 = ~12% -->
-                    <!-- offset by previous 152 + 317 = 469 -->
+                    <!-- Draft (#F59E0B) -->
                     <circle cx="100" cy="100" r="85" fill="none" stroke="#F59E0B" stroke-width="25" 
-                            stroke-dasharray="65 534" stroke-dashoffset="-469" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+                            stroke-dasharray="@draftLen 534" stroke-dashoffset="@draftOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
                 </svg>
                 
                 <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-3xl font-bold saas-text-heading">42</span>
+                    <span class="text-3xl font-bold saas-text-heading">@(ViewBag.TotalProjects ?? 0)</span>
                     <span class="text-xs font-semibold saas-text-muted uppercase tracking-wider">Total</span>
                 </div>
             </div>
@@ -152,21 +170,21 @@
                         <div class="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-amber-500/20"></div>
                         <span class="font-medium saas-text-neutral">Draft</span>
                     </div>
-                    <span class="font-bold saas-text-heading">5 <span class="text-xs text-slate-400 font-normal ml-1">(12%)</span></span>
+                    <span class="font-bold saas-text-heading">@draftCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)draftCt / totalCt * 100)%)</span></span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 rounded-full" style="background-color: #2563EB; box-shadow: 0 0 0 2px rgba(37,99,235,0.2);"></div>
                         <span class="font-medium saas-text-neutral">Active</span>
                     </div>
-                    <span class="font-bold saas-text-heading">25 <span class="text-xs text-slate-400 font-normal ml-1">(60%)</span></span>
+                    <span class="font-bold saas-text-heading">@activeCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)activeCt / totalCt * 100)%)</span></span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
                     <div class="flex items-center gap-2">
                         <div class="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20"></div>
                         <span class="font-medium saas-text-neutral">Completed</span>
                     </div>
-                    <span class="font-bold saas-text-heading">12 <span class="text-xs text-slate-400 font-normal ml-1">(28%)</span></span>
+                    <span class="font-bold saas-text-heading">@compCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)compCt / totalCt * 100)%)</span></span>
                 </div>
             </div>
         </div>
@@ -238,69 +256,76 @@
         <!-- Action Required Table -->
         <div class="saas-card lg:col-span-2 !p-0 overflow-hidden flex flex-col">
             <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h3 class="text-lg font-bold saas-text-heading">Action Required</h3>
-                <a href="/HOD/Groups" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">View All</a>
+                <h3 class="text-lg font-bold saas-text-heading">Recent Projects</h3>
+                <a href="/HOD/Projects" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">View All</a>
             </div>
             
             <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
                         <tr>
-                            <th class="px-6 py-4">Group ID</th>
+                            <th class="px-6 py-4">Project ID</th>
                             <th class="px-6 py-4">Project Name</th>
-                            <th class="px-6 py-4">Issue</th>
+                            <th class="px-6 py-4">Status & Focus</th>
                             <th class="px-6 py-4 text-center">Action</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
-                        <tr class="hover:bg-slate-50/50 transition duration-150">
-                            <td class="px-6 py-4 font-bold text-slate-800">G01-SP25</td>
-                            <td class="px-6 py-4 font-medium saas-text-neutral">AI Health Assistant</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-red-700 bg-red-50 border border-red-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> No Supervisor
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <a href="/HOD/AssignSupervisor" class="inline-flex justify-center items-center px-4 py-1.5 bg-[#1E3A5F] hover:bg-slate-800 text-white text-xs font-bold rounded-md transition shadow-sm">Assign</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-slate-50/50 transition duration-150">
-                            <td class="px-6 py-4 font-bold text-slate-800">G14-SP25</td>
-                            <td class="px-6 py-4 font-medium saas-text-neutral">BlockChain Voting</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-amber-700 bg-amber-50 border border-amber-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Missing Reviewer
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <a href="/HOD/AssignReviewer" class="inline-flex justify-center items-center px-4 py-1.5 bg-[#1E3A5F] hover:bg-slate-800 text-white text-xs font-bold rounded-md transition shadow-sm">Assign</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-slate-50/50 transition duration-150">
-                            <td class="px-6 py-4 font-bold text-slate-800">G22-SP25</td>
-                            <td class="px-6 py-4 font-medium saas-text-neutral">Smart Agriculture</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-red-700 bg-red-50 border border-red-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span> No Supervisor
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <a href="/HOD/AssignSupervisor" class="inline-flex justify-center items-center px-4 py-1.5 bg-[#1E3A5F] hover:bg-slate-800 text-white text-xs font-bold rounded-md transition shadow-sm">Assign</a>
-                            </td>
-                        </tr>
-                        <tr class="hover:bg-slate-50/50 transition duration-150">
-                            <td class="px-6 py-4 font-bold text-slate-800">G31-SP25</td>
-                            <td class="px-6 py-4 font-medium saas-text-neutral">Fintech Credit Scorer</td>
-                            <td class="px-6 py-4">
-                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span> Topic Unapproved
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-center">
-                                <a href="/HOD/Projects" class="inline-flex justify-center items-center px-4 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold rounded-md transition shadow-sm">Review</a>
-                            </td>
-                        </tr>
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                string issueType = "";
+                                string issueColor = "";
+                                string dotColor = "";
+
+                                if (string.IsNullOrEmpty(item.SupervisorName))
+                                {
+                                    issueType = "No Sup / " + item.Status.ToString();
+                                    issueColor = "text-amber-700 bg-amber-50 border-amber-100";
+                                    dotColor = "bg-amber-500";
+                                }
+                                else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Draft)
+                                {
+                                    issueType = "Draft";
+                                    issueColor = "text-slate-700 bg-slate-50 border-slate-200";
+                                    dotColor = "bg-slate-500";
+                                }
+                                else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Completed)
+                                {
+                                    issueType = "Completed";
+                                    issueColor = "text-emerald-700 bg-emerald-50 border-emerald-100";
+                                    dotColor = "bg-emerald-600";
+                                }
+                                else
+                                {
+                                    issueType = "Active";
+                                    issueColor = "text-blue-700 bg-blue-50 border-blue-100";
+                                    dotColor = "bg-blue-600";
+                                }
+
+                                <tr class="hover:bg-slate-50/50 transition duration-150">
+                                    <td class="px-6 py-4 font-bold text-slate-800">@item.ProjectCode</td>
+                                    <td class="px-6 py-4 font-medium saas-text-neutral">
+                                        <div class="line-clamp-1">@item.ProjectName</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold @issueColor border uppercase tracking-wider">
+                                            <span class="w-1.5 h-1.5 rounded-full @dotColor"></span> @issueType
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-center">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="inline-flex justify-center items-center px-4 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold rounded-md transition shadow-sm">View</a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="px-6 py-10 text-center text-slate-500 font-medium">No projects available for this semester.</td>
+                            </tr>
+                        }
                     </tbody>
                 </table>
             </div>
