@@ -156,5 +156,11 @@ public class HODController : Controller
     public IActionResult GroupDetails(string id) => View();
     public IActionResult AssignSupervisor() => View();
     public IActionResult Import() => View();
+    
+    [HttpGet]
+    public IActionResult CreateProject()
+    {
+        return View();
+    }
 }
 
