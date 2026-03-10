@@ -1,0 +1,280 @@
+@{
+    ViewData["Title"] = "Feedback Approval";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h1 class="page-title">Feedback Approval List</h1>
+        <p class="page-subtitle text-muted mb-0">Review and validate assessment feedback before student release.</p>
+    </div>
+    
+    <!-- Top-right alert / CTA -->
+    <div class="d-none d-md-flex p-3 rounded bg-danger-subtle text-danger align-items-center gap-4" style="background:#FEF2F2;">
+        <div>
+            <div class="fw-bold" style="font-size:10px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8;">NEXT AUTO-RELEASE IN</div>
+            <div class="fw-bold fs-3" style="line-height:1; color: var(--error-text); letter-spacing: -0.5px;">
+                00<span style="opacity:0.3; font-weight:400; font-size: 20px;">:</span>04<span style="opacity:0.3; font-weight:400; font-size: 20px;">:</span>25
+            </div>
+            <div class="d-flex justify-content-between" style="font-size:9px; font-weight:700; opacity:0.7;">
+                <span>DAYS</span><span style="margin-left: 12px;">HRS</span><span style="margin-right: -4px;">MINS</span>
+            </div>
+        </div>
+        <span class="material-symbols-outlined rounded-circle bg-white text-danger p-2" style="font-size: 20px; color: var(--error-text);">timer</span>
+    </div>
+</div>
+
+<!-- Filters Bar -->
+<div class="d-flex align-items-center justify-content-between gap-3 mb-4 flex-wrap">
+    <form class="d-flex align-items-center gap-3 flex-wrap" method="get">
+        <div class="d-flex align-items-center bg-white border rounded pe-3" style="height: 42px;">
+            <label class="form-label mb-0 ms-3 me-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">ROUND:</label>
+            <select class="form-select border-0 shadow-none ps-0 fw-medium" name="roundId" style="background-color: transparent;">
+                <option value="1">Round 1 (Proposal)</option>
+                <option value="2">Round 2 (Interim)</option>
+                <option value="3">Final Defense</option>
+            </select>
+        </div>
+
+        <div class="d-flex align-items-center bg-white border rounded pe-3" style="height: 42px;">
+            <label class="form-label mb-0 ms-3 me-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">STATUS:</label>
+            <select class="form-select border-0 shadow-none ps-0 fw-medium" name="status" style="background-color: transparent;">
+                <option value="pending">All Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+                <option value="autoreleased">Auto-Released</option>
+            </select>
+        </div>
+    </form>
+
+    <button type="button" class="btn btn-primary d-flex align-items-center gap-2" style="background-color: var(--fpt-orange); border-color: var(--fpt-orange);">
+        <span class="material-symbols-outlined fs-5">done_all</span>
+        Approve All Selected
+    </button>
+</div>
+
+<!-- Approvals Table -->
+<div class="card-panel p-0 mb-4 overflow-hidden border">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle text-nowrap">
+            <thead>
+                <tr>
+                    <th scope="col" style="width: 40px; padding-left: 20px;">
+                        <input class="form-check-input" type="checkbox" />
+                    </th>
+                    <th scope="col" style="width: 15%;">GROUP NAME</th>
+                    <th scope="col" style="width: 25%;">PROJECT TITLE</th>
+                    <th scope="col" style="width: 5%;">ROUND</th>
+                    <th scope="col" style="width: 15%;">REVIEWER</th>
+                    <th scope="col" style="width: 10%;">SUBMITTED</th>
+                    <th scope="col" style="width: 10%;">STATUS</th>
+                    <th scope="col" style="width: 10%;">RELEASE TIMER</th>
+                    <th scope="col" class="text-end" style="width: 10%;">ACTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Pending Row 1 -->
+                <tr style="background-color: #FAFAFA;"> <!-- Very subtle tint representing pending state -->
+                    <td style="padding-left: 20px;">
+                        <input class="form-check-input" type="checkbox" />
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" style="font-size: 11px; color: var(--fpt-orange); background: #FFF7F2; padding: 2px 6px; border-radius: 4px;">G-08</span>
+                            <span class="fw-bold text-body" style="font-size: 13px;">NeuralOps AI</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate text-muted fw-medium" style="max-width: 200px; font-size: 13px;">Deep Learning Optimization...</div>
+                    </td>
+                    <td>
+                        <span class="badge text-orange-600 border border-orange-200 d-inline-block text-center" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd !important; font-size: 9px; line-height: 1.1; padding: 4px;">ROUND<br/>1</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2 fw-medium" style="font-size: 13px;">
+                            <img src="https://ui-avatars.com/api/?name=AS&background=86EFAC&color=fff" width="20" height="20" class="rounded-circle" />
+                            A. Smith
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted" style="font-size: 12px;">2h ago</span>
+                    </td>
+                    <td>
+                        <span class="status-badge pending">
+                            <span class="d-inline-block rounded-circle bg-warning me-1" style="width: 6px; height: 6px;"></span>
+                            Pending
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-danger countdown-timer urgent" data-deadline="@DateTime.UtcNow.AddHours(4).AddMinutes(22).ToString("o")" style="font-size: 13px;">
+                            --:--:--
+                        </div>
+                        <div class="progress mt-1" style="height: 3px; max-width: 60px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 80%" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = "FB-101" })" class="btn btn-sm btn-secondary fw-semibold text-body border-0 shadow-sm" style="font-size: 12px; background: #fff;">
+                            Review
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Pending Row 2 -->
+                 <tr style="background-color: #FAFAFA;">
+                    <td style="padding-left: 20px;">
+                        <input class="form-check-input" type="checkbox" />
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                             <span class="fw-bold" style="font-size: 11px; color: var(--fpt-orange); background: #FFF7F2; padding: 2px 6px; border-radius: 4px;">G-12</span>
+                            <span class="fw-bold text-body" style="font-size: 13px;">GreenPath</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate text-muted fw-medium" style="max-width: 200px; font-size: 13px;">Sustainable Urban Tracking</div>
+                    </td>
+                    <td>
+                         <span class="badge text-orange-600 border border-orange-200 d-inline-block text-center" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd !important; font-size: 9px; line-height: 1.1; padding: 4px;">ROUND<br/>1</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2 fw-medium" style="font-size: 13px;">
+                            <img src="https://ui-avatars.com/api/?name=MJ&background=1E293B&color=fff" width="20" height="20" class="rounded-circle" />
+                            M. Johnson
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted" style="font-size: 12px;">5h ago</span>
+                    </td>
+                    <td>
+                        <span class="status-badge pending">
+                            <span class="d-inline-block rounded-circle bg-warning me-1" style="width: 6px; height: 6px;"></span>
+                            Pending
+                        </span>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-danger countdown-timer urgent" data-deadline="@DateTime.UtcNow.AddHours(4).AddMinutes(25).ToString("o")" style="font-size: 13px;">
+                            --:--:--
+                        </div>
+                        <div class="progress mt-1" style="height: 3px; max-width: 60px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 75%" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </td>
+                    <td class="text-end">
+                        <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = "FB-102" })" class="btn btn-sm btn-secondary fw-semibold text-body border-0 shadow-sm" style="font-size: 12px; background: #fff;">
+                            Review
+                        </a>
+                    </td>
+                </tr>
+
+                <!-- Approved Row -->
+                 <tr>
+                    <td style="padding-left: 20px;">
+                        <input class="form-check-input" type="checkbox" disabled />
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" style="font-size: 11px; color: #6B7280; background: #F3F4F6; padding: 2px 6px; border-radius: 4px;">G-03</span>
+                            <span class="fw-bold text-body" style="font-size: 13px;">QuantumLedger</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate text-muted" style="max-width: 200px; font-size: 13px;">Blockchain Scalability...</div>
+                    </td>
+                    <td>
+                         <span class="badge text-orange-600 border border-orange-200 d-inline-block text-center" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd !important; font-size: 9px; line-height: 1.1; padding: 4px;">ROUND<br/>1</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2" style="font-size: 13px;">
+                            <img src="https://ui-avatars.com/api/?name=DW&background=0F766E&color=fff" width="20" height="20" class="rounded-circle" />
+                            D. Williams
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted" style="font-size: 12px;">Yesterday</span>
+                    </td>
+                    <td>
+                        <span class="status-badge approved">
+                            <span class="d-inline-block rounded-circle bg-success me-1" style="width: 6px; height: 6px;"></span>
+                            Approved
+                        </span>
+                    </td>
+                    <td>
+                        <div class="text-muted" style="font-size: 12px;">Released</div>
+                    </td>
+                    <td class="text-end">
+                        <a href="#" class="btn btn-sm btn-link text-muted fw-semibold p-1 hover-primary text-decoration-none" style="font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+
+                 <!-- Approved Row 2 -->
+                 <tr>
+                    <td style="padding-left: 20px;">
+                        <input class="form-check-input" type="checkbox" disabled />
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fw-bold" style="font-size: 11px; color: #6B7280; background: #F3F4F6; padding: 2px 6px; border-radius: 4px;">G-15</span>
+                            <span class="fw-bold text-body" style="font-size: 13px;">EduStream</span>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="text-truncate text-muted" style="max-width: 200px; font-size: 13px;">VR Classroom Environment</div>
+                    </td>
+                    <td>
+                        <span class="badge text-orange-600 border border-orange-200 d-inline-block text-center" style="background: #e0f2fe; color: #0284c7; border-color: #bae6fd !important; font-size: 9px; line-height: 1.1; padding: 4px;">ROUND<br/>1</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2" style="font-size: 13px;">
+                            <img src="https://ui-avatars.com/api/?name=LT&background=5E817B&color=fff" width="20" height="20" class="rounded-circle" />
+                            L. Taylor
+                        </div>
+                    </td>
+                    <td>
+                        <span class="text-muted" style="font-size: 12px;">Oct 12</span>
+                    </td>
+                    <td>
+                        <span class="status-badge approved">
+                            <span class="d-inline-block rounded-circle bg-success me-1" style="width: 6px; height: 6px;"></span>
+                            Approved
+                        </span>
+                    </td>
+                    <td>
+                        <div class="text-muted" style="font-size: 12px;">Released</div>
+                    </td>
+                    <td class="text-end">
+                         <a href="#" class="btn btn-sm btn-link text-muted fw-semibold p-1 hover-primary text-decoration-none" style="font-size: 12px;">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="p-3 border-top d-flex align-items-center justify-content-between bg-white mt-0 pt-3">
+        <div class="text-muted" style="font-size: 13px;">
+            Showing 1 to 4 of 24 entries
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0 outline-none shadow-none">
+                <li class="page-item disabled">
+                    <a class="page-link text-muted border-0 bg-transparent px-1" href="#" tabindex="-1" aria-disabled="true">
+                        <span class="material-symbols-outlined fs-6 align-middle">chevron_left</span>
+                    </a>
+                </li>
+                <li class="page-item active mx-1"><a class="page-link rounded text-white border-0 py-1 px-2" href="#" style="background-color: var(--fpt-orange); line-height: 1.5;">1</a></li>
+                <li class="page-item mx-1"><a class="page-link rounded text-muted border px-2 py-1 mx-0" href="#" style="line-height: 1.5;">2</a></li>
+                <li class="page-item mx-1"><a class="page-link rounded text-muted border px-2 py-1 mx-0" href="#" style="line-height: 1.5;">3</a></li>
+                <li class="page-item">
+                    <a class="page-link text-muted border-0 bg-transparent px-1" href="#">
+                        <span class="material-symbols-outlined fs-6 align-middle">chevron_right</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>

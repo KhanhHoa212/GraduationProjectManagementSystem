@@ -109,5 +109,61 @@ public class GpmsDbContext : DbContext
             new UserRole { UserRoleID = 8, UserID = "SE180004", RoleName = RoleName.Student },
             new UserRole { UserRoleID = 9, UserID = "SE180005", RoleName = RoleName.Student }
         );
+
+        // 8. Projects & Groups
+        modelBuilder.Entity<Project>().HasData(
+            new Project { ProjectID = 100, ProjectCode = "PRJ-01", ProjectName = "AI Traffic Analyzer", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 },
+            new Project { ProjectID = 101, ProjectCode = "PRJ-02", ProjectName = "Smart Healthcare System", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 }
+        );
+        modelBuilder.Entity<ProjectGroup>().HasData(
+            new ProjectGroup { GroupID = 100, ProjectID = 100, GroupName = "Group 1", CreatedAt = DateTime.Now },
+            new ProjectGroup { GroupID = 101, ProjectID = 101, GroupName = "Group 2", CreatedAt = DateTime.Now }
+        );
+
+        // 9. Members & Supervisors
+        modelBuilder.Entity<GroupMember>().HasData(
+            new GroupMember { GroupID = 100, RoleInGroup = GroupRole.Member, UserID = "SE180001" },
+            new GroupMember { GroupID = 100, RoleInGroup = GroupRole.Member, UserID = "SE180002" },
+            new GroupMember { GroupID = 101, RoleInGroup = GroupRole.Member, UserID = "SE180003" }
+        );
+        modelBuilder.Entity<ProjectSupervisor>().HasData(
+            new ProjectSupervisor { ProjectID = 100, Role = ProjectRole.Main, LecturerID = "GV001", AssignedAt = DateTime.Now },
+            new ProjectSupervisor { ProjectID = 101, Role = ProjectRole.Main, LecturerID = "GV002", AssignedAt = DateTime.Now }
+        );
+
+        // 10. Reviews & Checklists
+        modelBuilder.Entity<ReviewRound>().HasData(
+            new ReviewRound { ReviewRoundID = 1, SemesterID = 1, RoundNumber = 1, RoundType = RoundType.Online, StartDate = DateTime.Now.AddDays(-10), EndDate = DateTime.Now.AddDays(10), Status = RoundStatus.Ongoing },
+            new ReviewRound { ReviewRoundID = 2, SemesterID = 1, RoundNumber = 3, RoundType = RoundType.Offline, StartDate = DateTime.Now.AddDays(20), EndDate = DateTime.Now.AddDays(30), Status = RoundStatus.Planned }
+        );
+        modelBuilder.Entity<ReviewChecklist>().HasData(
+            new ReviewChecklist { ChecklistID = 1, ReviewRoundID = 1, Title = "Cross Review 1 Checklist", Description = "Evaluate early stage architecture" }
+        );
+        modelBuilder.Entity<ChecklistItem>().HasData(
+            new ChecklistItem { ItemID = 1, ChecklistID = 1, ItemCode = "ARCH-01", ItemContent = "Is the architecture solid?", MaxScore = 5, Weight = 50, OrderIndex = 1 },
+            new ChecklistItem { ItemID = 2, ChecklistID = 1, ItemCode = "CODE-01", ItemContent = "Code quality for MVP", MaxScore = 5, Weight = 50, OrderIndex = 2 }
+        );
+
+        // 11. Review Assignments & Feedback
+        modelBuilder.Entity<ReviewSessionInfo>().HasData(
+            new ReviewSessionInfo { SessionID = 1, ReviewRoundID = 1, GroupID = 101, RoomID = 1, MeetLink = "https://meet.google.com/abc-defg-hij", ScheduledAt = DateTime.Now.AddDays(1) },
+            new ReviewSessionInfo { SessionID = 2, ReviewRoundID = 1, GroupID = 100, RoomID = 2, MeetLink = "https://meet.google.com/xyz-uvw-qrs", ScheduledAt = DateTime.Now.AddDays(5) }
+        );
+        modelBuilder.Entity<ReviewerAssignment>().HasData(
+            // GV001 is reviewing Group 101 (Not their own group!)
+            new ReviewerAssignment { AssignmentID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, AssignedAt = DateTime.Now },
+            // GV001 is reviewing Group 100 on Defense
+            new ReviewerAssignment { AssignmentID = 2, GroupID = 100, ReviewerID = "GV001", ReviewRoundID = 2, AssignedAt = DateTime.Now }
+        );
+
+        modelBuilder.Entity<Evaluation>().HasData(
+            new Evaluation { EvaluationID = 1, GroupID = 101, ReviewerID = "GV002", ReviewRoundID = 1, TotalScore = 8.5m, Status = EvaluationStatus.Submitted, SubmittedAt = DateTime.Now.AddDays(-2) }
+        );
+        modelBuilder.Entity<Feedback>().HasData(
+            new Feedback { FeedbackID = 1, EvaluationID = 1, Content = "Great architecture. Code needs more comments.", CreatedAt = DateTime.Now.AddDays(-2) }
+        );
+        modelBuilder.Entity<FeedbackApproval>().HasData(
+            new FeedbackApproval { FeedbackID = 1, SupervisorID = "GV002", ApprovalStatus = ApprovalStatus.Pending, SupervisorComment = "" }
+        );
     }
 }

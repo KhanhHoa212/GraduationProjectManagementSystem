@@ -1,0 +1,234 @@
+@{
+    ViewData["Title"] = "Group " + ViewBag.GroupId;
+    Layout = "_LecturerLayout";
+}
+
+<style>
+/* Custom Timeline Styles localized just for this page to keep global CSS clean per spec */
+.timeline-wrapper {
+    position: relative;
+    padding-left: 36px;
+    margin-bottom: 40px;
+}
+.timeline-wrapper::before {
+    content: '';
+    position: absolute;
+    left: 17px;
+    top: 8px;
+    bottom: -40px;
+    width: 2px;
+    background-color: var(--fpt-orange);
+    z-index: 1;
+}
+.timeline-wrapper:last-child::before {
+    bottom: 0;
+}
+.timeline-icon {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid var(--fpt-orange);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+}
+.timeline-icon.completed { background-color: var(--fpt-orange); color: #fff; }
+.timeline-icon.active { background-color: #fff; color: var(--fpt-orange); border-width: 3px; }
+.timeline-icon.upcoming { background-color: #F9FAFB; border-color: #D1D5DB; color: #9CA3AF; }
+
+.timeline-wrapper.upcoming::before { background-color: #E5E7EB; }
+</style>
+
+<!-- Header Card: Group Info -->
+<div class="card-panel py-4 px-4 mb-5 border-start border-4 shadow-sm" style="border-left-color: var(--fpt-orange) !important;">
+    <div class="d-flex align-items-start gap-4">
+        <div class="d-flex align-items-center justify-content-center text-orange-600 rounded bg-orange-50 flex-shrink-0" style="width: 80px; height: 80px; background:#FFF7F2; color:var(--fpt-orange)">
+            <span class="material-symbols-outlined" style="font-size: 40px;">smart_toy</span>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="fw-bold mb-2" style="font-size: 22px; color: var(--text-heading); letter-spacing: -0.3px;">AI-Driven Logistics Optimization</h1>
+                    <div class="text-muted d-flex align-items-center gap-2 mb-4" style="font-size: 14px;">
+                        <span class="fw-semibold text-body">Group ID: GRP-2024-08</span>
+                        <span>•</span>
+                        <span>Year 4 Computer Science</span>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined fs-5">mail</span>
+                    Message Group
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">MENTOR</div>
+                    <div class="d-flex align-items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(User.Identity?.Name ?? "Sarah Jenkins")&background=818CF8&color=fff" width="24" height="24" class="rounded-circle" />
+                        <span class="fw-medium text-body" style="font-size: 13px;">@User.Identity?.Name</span>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">STUDENT MEMBERS</div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
+                            <img src="https://ui-avatars.com/api/?name=AL&background=FDBA74&color=fff" width="18" height="18" class="rounded-circle" />
+                            Alex Low (Leader)
+                        </div>
+                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
+                             <img src="https://ui-avatars.com/api/?name=MT&background=FCA5A5&color=fff" width="18" height="18" class="rounded-circle" />
+                            Maria Tan
+                        </div>
+                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
+                             <img src="https://ui-avatars.com/api/?name=JW&background=FCD34D&color=fff" width="18" height="18" class="rounded-circle" />
+                            John Wu
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2 class="section-title mb-4">Assessment Progress</h2>
+
+<div class="row">
+    <!-- Left Column: Timeline -->
+    <div class="col-lg-8">
+        
+        <!-- ROUND 1 (Completed) -->
+        <div class="timeline-wrapper">
+            <div class="timeline-icon completed">
+                <span class="material-symbols-outlined" style="font-size: 20px;">check</span>
+            </div>
+            <div class="card-panel py-3 px-4 mb-0 opacity-75 border">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h3 class="fw-bold m-0 text-body" style="font-size: 15px;">Round 1 - Proposal</h3>
+                    <span class="status-badge approved">Approved</span>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Completed on Sep 15, 2023</div>
+            </div>
+        </div>
+
+        <!-- ROUND 2 (Active/Pending) -->
+        <div class="timeline-wrapper">
+            <div class="timeline-icon active">
+                <span class="material-symbols-outlined" style="font-size: 20px;">rate_review</span>
+            </div>
+            
+            <div class="card-panel py-4 px-4 mb-0 border shadow-sm border-orange-200 position-relative overflow-hidden" style="background:#fff;">
+                <!-- Decorative top border -->
+                <div class="position-absolute top-0 start-0 end-0 bg-warning-subtle" style="height: 4px;"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold m-0 d-flex align-items-center gap-2" style="font-size: 16px;">
+                        <span class="material-symbols-outlined" style="font-size: 20px; color: var(--fpt-orange);">assignment</span>
+                        Active Round: Round 2 - Interim Report
+                    </h3>
+                    <span class="status-badge pending" style="text-transform: uppercase;">Pending Approval</span>
+                </div>
+
+                <!-- Submitted File -->
+                <div class="bg-light rounded p-3 mb-4 border d-flex align-items-center gap-3">
+                    <div class="bg-danger text-white rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                        <span class="material-symbols-outlined">picture_as_pdf</span>
+                    </div>
+                    <div class="flex-grow-1 min-width-0">
+                        <div class="fw-bold text-truncate" style="font-size: 14px;">Logistics_System_Draft_v2.pdf</div>
+                        <div class="text-muted text-truncate" style="font-size: 12px;">Submitted by Alex Low on Oct 14, 2023 • 4.2 MB</div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-sm btn-light border d-flex align-items-center gap-1 text-orange-600 fw-semibold" style="color:var(--fpt-orange); font-size: 12px;">
+                            <span class="material-symbols-outlined fs-6">download</span> Download
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Details block -->
+                <div class="row g-3 mb-4">
+                    <div class="col-sm-6">
+                        <div class="bg-light p-3 rounded h-100">
+                            <div class="text-muted mb-1" style="font-size: 11px; text-transform: uppercase; font-weight: 600;">ASSIGNED REVIEWER</div>
+                            <div class="d-flex align-items-center gap-2 fw-medium" style="font-size: 14px;">
+                                <img src="https://ui-avatars.com/api/?name=RS&background=374151&color=fff" width="20" height="20" class="rounded-circle" />
+                                Prof. Robert Smith
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                         <div class="bg-warning-subtle text-warning-emphasis p-3 rounded h-100">
+                            <div class="text-muted mb-1 text-warning-emphasis fw-bold" style="font-size: 11px; text-transform: uppercase;">FEEDBACK STATUS</div>
+                            <div class="d-flex align-items-center gap-2 fw-bold" style="font-size: 14px;">
+                                <span class="material-symbols-outlined fs-5">history</span>
+                                Ready for Mentor Review
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id="FB-100" })" class="btn btn-primary w-100 py-2 d-flex justify-content-center align-items-center gap-2 fw-bold" style="font-size: 14px;">
+                    View Feedback to Approve
+                    <span class="material-symbols-outlined fs-5">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- DEFENSE (Upcoming) -->
+        <div class="timeline-wrapper upcoming">
+            <div class="timeline-icon upcoming">
+                <span class="material-symbols-outlined" style="font-size: 20px;">event</span>
+            </div>
+            <div class="card-panel py-3 px-4 mb-0 border shadow-none bg-light">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <h3 class="fw-bold m-0 text-muted" style="font-size: 15px;">Final Defense</h3>
+                    <span class="status-badge not-started">Upcoming</span>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Scheduled for Nov 18, 2023</div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Context/Calendar -->
+    <div class="col-lg-4 d-flex flex-column gap-section">
+        <div class="card-panel mb-0">
+            <h3 class="section-title mb-4">Milestone Calendar</h3>
+            
+            <div class="d-flex gap-3 mb-4">
+                <div class="bg-light border rounded text-center py-2 flex-shrink-0" style="width: 56px;">
+                    <div class="text-muted fw-bold" style="font-size: 10px; text-transform: uppercase;">OCT</div>
+                    <div class="fw-bold text-body" style="font-size: 18px; line-height: 1.2;">20</div>
+                </div>
+                <div class="d-flex flex-column justify-content-center pt-1">
+                    <h6 class="fw-bold mb-1" style="font-size: 14px;">Feedback Deadline</h6>
+                    <p class="text-muted mb-0" style="font-size: 12px;">Approvals due in 3 days</p>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mb-4">
+                <div class="bg-light border rounded text-center py-2 flex-shrink-0" style="width: 56px;">
+                    <div class="text-muted fw-bold" style="font-size: 10px; text-transform: uppercase;">NOV</div>
+                    <div class="fw-bold text-body" style="font-size: 18px; line-height: 1.2;">12</div>
+                </div>
+                <div class="d-flex flex-column justify-content-center pt-1">
+                    <h6 class="fw-bold mb-1" style="font-size: 14px;">Final Submission</h6>
+                    <p class="text-muted mb-0" style="font-size: 12px;">Group final report upload</p>
+                </div>
+            </div>
+
+            <button class="btn btn-secondary w-100 py-2" style="font-size: 13px;">View Full Schedule</button>
+        </div>
+
+        <div class="card-panel mb-0 text-white border-0" style="background-color: var(--fpt-orange);">
+            <h3 class="fw-bold mb-2" style="font-size: 16px;">Mentor Quick Action</h3>
+            <p class="mb-4" style="font-size: 13px; opacity: 0.9;">Need to schedule a meeting with the group leader regarding Round 2?</p>
+            <button class="btn bg-white text-orange-600 w-100 fw-bold border-0 shadow-sm hover-bg-light" style="color: var(--fpt-orange); font-size: 13px;">Book Sync Meeting</button>
+        </div>
+    </div>
+</div>

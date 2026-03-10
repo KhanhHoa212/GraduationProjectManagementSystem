@@ -24,6 +24,14 @@ public class ReviewRoundRepository : IReviewRoundRepository
             
     public async Task<IEnumerable<ReviewRound>> GetBySemesterAsync(int semesterId) => 
         await _context.ReviewRounds.Where(r => r.SemesterID == semesterId).ToListAsync();
+        
+    public async Task<IEnumerable<ReviewRound>> GetUpcomingRoundsAsync(int count = 5) =>
+        await _context.ReviewRounds
+            .Where(r => r.EndDate >= System.DateTime.UtcNow.Date)
+            .OrderBy(r => r.StartDate)
+            .Take(count)
+            .ToListAsync();
+
     public async Task AddAsync(ReviewRound round) => await _context.ReviewRounds.AddAsync(round);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }

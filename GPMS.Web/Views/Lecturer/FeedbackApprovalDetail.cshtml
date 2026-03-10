@@ -1,0 +1,208 @@
+@{
+    ViewData["Title"] = "Feedback Approval Detail";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
+    <div>
+        <h1 class="page-title">Feedback Approval Detail</h1>
+        <p class="page-subtitle text-muted mb-0">Reviewing Final Year Project Round 1 - Submission from Group A</p>
+    </div>
+    <div class="d-flex gap-3">
+        <div class="px-4 py-2 bg-white border rounded text-center">
+            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">ROUND</div>
+            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">1 <span class="text-muted fw-normal" style="font-size: 14px;">/ 4</span></div>
+        </div>
+        <div class="px-4 py-2 bg-white border rounded text-center">
+            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">GROUP ID</div>
+            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">GRP-A2024</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Scores & Feedback Content -->
+    <div class="col-lg-8 d-flex flex-column gap-section">
+        
+        <!-- Scores Table -->
+        <div class="card-panel p-0 overflow-hidden mb-0 border">
+            <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">bar_chart</span>
+                <h2 class="section-title mb-0">Evaluation Criteria Scores</h2>
+            </div>
+            
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 45%;">CRITERIA</th>
+                        <th style="width: 15%; text-align: center;">WEIGHT</th>
+                        <th style="width: 20%; text-align: center;">SCORE</th>
+                        <th style="width: 20%; text-align: center;">WEIGHTED SCORE</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="fw-medium" style="font-size: 13px;">Project Scope & Feasibility</td>
+                        <td class="text-center text-muted" style="font-size: 13px;">20%</td>
+                        <td class="text-center fw-medium" style="font-size: 13px;">8.5 <span class="text-muted">/ 10</span></td>
+                        <td class="text-center fw-bold text-body" style="font-size: 14px;">1.7</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium" style="font-size: 13px;">Methodology & Design</td>
+                        <td class="text-center text-muted" style="font-size: 13px;">30%</td>
+                        <td class="text-center fw-medium" style="font-size: 13px;">7.0 <span class="text-muted">/ 10</span></td>
+                        <td class="text-center fw-bold text-body" style="font-size: 14px;">2.1</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium" style="font-size: 13px;">Presentation Quality</td>
+                        <td class="text-center text-muted" style="font-size: 13px;">20%</td>
+                        <td class="text-center fw-medium" style="font-size: 13px;">9.0 <span class="text-muted">/ 10</span></td>
+                        <td class="text-center fw-bold text-body" style="font-size: 14px;">1.8</td>
+                    </tr>
+                    <tr>
+                        <td class="fw-medium" style="font-size: 13px;">Team Collaboration</td>
+                        <td class="text-center text-muted" style="font-size: 13px;">30%</td>
+                        <td class="text-center fw-medium" style="font-size: 13px;">8.0 <span class="text-muted">/ 10</span></td>
+                        <td class="text-center fw-bold text-body" style="font-size: 14px;">2.4</td>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr style="background-color: #FFF7F2;">
+                        <td colspan="3" class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">Total Score</td>
+                        <td class="text-center fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 18px;">8.0 <span style="font-size: 14px; font-weight: 500;">/ 10.0</span></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Feedback Content Editor -->
+        <div class="card-panel mb-0 border">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">edit_note</span>
+                    <h2 class="section-title mb-0">Evaluation Feedback Content</h2>
+                </div>
+                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px; letter-spacing: 0.5px;">EDITABLE</span>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">FEEDBACK TO GROUP MEMBERS</label>
+                <textarea class="form-control hover-bg-light" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">The project shows strong initial research and clear understanding of the core problem. The methodology is sound, but needs more detailed risk assessment for the implementation phase. Great presentation skills, however, the group should focus on more concrete KPIs for the upcoming round.
+
+Strong Points:
+- Excellent visual documentation
+- Thorough stakeholder analysis</textarea>
+            </div>
+            
+            <div class="d-flex align-items-start gap-2 mt-3 text-muted">
+                <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                <p class="mb-0" style="font-size: 12px;">You can modify this text before clicking 'Approve with Edits'.</p>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: Actions & Meta -->
+    <div class="col-lg-4 d-flex flex-column gap-section">
+        
+        <!-- Group Members -->
+        <div class="card-panel mb-0 border">
+            <div class="text-muted mb-3 pb-2 border-bottom" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP MEMBERS</div>
+            
+            <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="https://ui-avatars.com/api/?name=JW&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
+                    <div style="line-height: 1.2;">
+                        <div class="fw-bold text-body" style="font-size: 13px;">James Wilson</div>
+                        <div class="text-muted mt-1" style="font-size: 11px;">Project Lead</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <img src="https://ui-avatars.com/api/?name=SC&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
+                    <div style="line-height: 1.2;">
+                        <div class="fw-bold text-body" style="font-size: 13px;">Sarah Chen</div>
+                        <div class="text-muted mt-1" style="font-size: 11px;">Tech Lead</div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <img src="https://ui-avatars.com/api/?name=MR&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
+                    <div style="line-height: 1.2;">
+                        <div class="fw-bold text-body" style="font-size: 13px;">Michael Ross</div>
+                        <div class="text-muted mt-1" style="font-size: 11px;">Documentation</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Decision Panel -->
+        <div class="card-panel mb-0 border shadow-sm section-panel-bg">
+            <h2 class="section-title d-flex align-items-center gap-2 mb-4">
+                <span class="material-symbols-outlined fs-5">gavel</span>
+                Decision Panel
+            </h2>
+
+            <!-- Original Submitter Info (Hidden to stay true to screenshot, or we can just show action buttons) -->
+            <button class="btn btn-primary w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 fs-6 shadow-sm" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">
+                <span class="material-symbols-outlined fs-5">check_circle</span>
+                Approve Feedback
+            </button>
+            <button class="btn btn-secondary w-100 py-3 mb-4 d-flex align-items-center justify-content-center gap-2" style="font-size: 15px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">
+                <span class="material-symbols-outlined fs-5 text-orange-600" style="color:var(--fpt-orange)">edit</span>  
+                <span class="text-orange-600" style="color:var(--fpt-orange)">Approve with Edits</span>
+            </button>
+
+            <div class="position-relative text-center mb-4">
+                <hr class="text-muted" style="opacity: 0.2;">
+                <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted" style="font-size: 10px; font-weight: 700; letter-spacing: 1px;">OR</span>
+            </div>
+
+            <button class="btn btn-danger w-100 py-3 d-flex align-items-center justify-content-center gap-2 bg-danger-subtle border-0" style="background:#FEF2F2;" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
+                <span class="material-symbols-outlined fs-5">block</span>
+                Reject for Revision
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Approve Feedback</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="font-size: 14px;">Are you sure you want to approve this feedback? It will be immediately released to the students.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 flex-nowrap">
+                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary w-50 m-0 ms-2">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">Reject Feedback</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="font-size: 14px; margin-bottom: 20px;">Please provide a reason for rejecting this feedback. This will be sent back to the assigned Reviewer.</p>
+                
+                <div class="form-group">
+                    <label class="form-label">Rejection Reason</label>
+                    <textarea class="form-control" rows="4" placeholder="Explain what needs to be changed..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 flex-nowrap">
+                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger w-50 m-0 ms-2 border-danger text-white hover-bg-danger" style="background:#DC2626;">Confirm Reject</button>
+            </div>
+        </div>
+    </div>
+</div>

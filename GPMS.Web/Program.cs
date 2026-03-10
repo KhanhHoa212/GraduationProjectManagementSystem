@@ -63,6 +63,9 @@ builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+// Register Background Services
+builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

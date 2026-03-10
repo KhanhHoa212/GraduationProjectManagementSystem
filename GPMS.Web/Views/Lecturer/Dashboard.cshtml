@@ -1,0 +1,190 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "_LecturerLayout";
+}
+
+<div class="row g-4 mb-4">
+    <!-- Stat Cards -->
+    <div class="col-md-6 col-lg-3">
+        <div class="card-panel h-100 d-flex flex-column justify-content-center">
+            <div class="text-muted fw-bold mb-1" style="font-size:11px; letter-spacing:1px;">GROUPS MENTORING</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold" style="font-size:32px; letter-spacing:-1px;">8</div>
+                <div class="rounded p-2" style="background:#FFF7F2; color:var(--fpt-orange)">
+                    <span class="material-symbols-outlined">people</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 col-lg-3">
+        <div class="card-panel h-100 d-flex flex-column justify-content-center">
+            <div class="text-muted fw-bold mb-1" style="font-size:11px; letter-spacing:1px;">PENDING APPROVALS</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold" style="font-size:32px; letter-spacing:-1px;">12</div>
+                <div class="rounded p-2" style="background:#FFF7F2; color:var(--fpt-orange)">
+                    <span class="material-symbols-outlined">fact_check</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card-panel h-100 d-flex flex-column justify-content-center">
+            <div class="text-muted fw-bold mb-1" style="font-size:11px; letter-spacing:1px;">ASSIGNED REVIEWS</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold" style="font-size:32px; letter-spacing:-1px;">5</div>
+                <div class="rounded p-2" style="background:#FFF7F2; color:var(--fpt-orange)">
+                    <span class="material-symbols-outlined">assignment</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card-panel h-100 d-flex flex-column justify-content-center border-0" style="border-left: 4px solid var(--error-text) !important;">
+            <div class="text-muted fw-bold mb-1" style="font-size:11px; letter-spacing:1px;">UPCOMING DEADLINES</div>
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="fw-bold text-danger" style="font-size:32px; letter-spacing:-1px;">3</div>
+                <div class="rounded p-2" style="background:var(--error-bg); color:var(--error-text)">
+                    <span class="material-symbols-outlined">event_busy</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Left Column: Activity & Actions -->
+    <div class="col-lg-8 d-flex flex-column gap-section">
+        
+        <!-- Activity Feed -->
+        <div class="card-panel mb-0 flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="section-title mb-0">Recent Activity</h2>
+                <a href="#" class="text-decoration-none fw-semibold" style="font-size:13px; color:var(--fpt-orange)">View All</a>
+            </div>
+
+            <div class="d-flex flex-column gap-4">
+                <!-- Activity Item -->
+                <div class="d-flex gap-3">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="d-flex align-items-center justify-content-center text-white rounded-circle" style="width:36px; height:36px; background:var(--fpt-orange)">
+                            <span class="material-symbols-outlined" style="font-size:18px;">note_add</span>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold" style="font-size:14px;">Group G04 - AI Ethics</h6>
+                            <span class="text-muted" style="font-size:12px;">14m ago</span>
+                        </div>
+                        <p class="text-muted mb-2" style="font-size:13px;">New final project report submitted for your approval.</p>
+                        <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer")" class="btn btn-primary py-1 px-3 d-inline-flex" style="font-size:12px;">Review Now</a>
+                    </div>
+                </div>
+
+                <hr class="m-0 text-muted" style="opacity:0.2;" />
+
+                <!-- Activity Item -->
+                <div class="d-flex gap-3">
+                    <div class="flex-shrink-0 mt-1">
+                        <div class="d-flex align-items-center justify-content-center bg-secondary text-white rounded-circle" style="width:36px; height:36px;">
+                            <span class="material-symbols-outlined" style="font-size:18px;">chat</span>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold" style="font-size:14px;">Review Assignment</h6>
+                            <span class="text-muted" style="font-size:12px;">2h ago</span>
+                        </div>
+                        <p class="text-muted mb-0" style="font-size:13px;">You were assigned to review "Smart Irrigation IoT" by Group G12.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Actions & Schedule -->
+    <div class="col-lg-4 d-flex flex-column gap-section">
+
+
+        <div class="card-panel mb-0 flex-grow-1">
+            <h2 class="section-title d-flex align-items-center gap-2">
+                <span class="material-symbols-outlined" style="color:var(--fpt-orange); font-size: 20px;">calendar_today</span>
+                Today's Schedule
+            </h2>
+
+            <div class="d-flex flex-column gap-3 mt-4">
+                <!-- Schedule Item -->
+                <div class="p-3 border rounded border-start border-4" style="border-left-color: var(--fpt-orange) !important; background:#FFF7F2;">
+                    <div class="d-flex gap-3">
+                        <div class="text-center" style="color:var(--fpt-orange); min-width: 45px;">
+                            <div class="fw-bold" style="font-size:14px;">10:00</div>
+                            <div style="font-size:11px; font-weight:600;">AM</div>
+                        </div>
+                        <div>
+                            <div class="fw-bold mb-1" style="font-size:13px;">Mentoring Session G04</div>
+                            <div class="text-muted" style="font-size:12px;">Virtual Room A • 45m</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Schedule Item -->
+                <div class="p-3 border rounded border-start border-4" style="border-left-color: #D1D5DB !important; background:#F9FAFB;">
+                    <div class="d-flex gap-3">
+                        <div class="text-center text-muted" style="min-width: 45px;">
+                            <div class="fw-bold" style="font-size:14px;">02:00</div>
+                            <div style="font-size:11px; font-weight:600;">PM</div>
+                        </div>
+                        <div>
+                            <div class="fw-bold mb-1 text-body" style="font-size:13px;">Peer Review Meeting</div>
+                            <div class="text-muted" style="font-size:12px;">Office 302 • 60m</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                
+        <!-- Quick Actions in Right Col -->
+        <div class="card-panel mb-0">
+            <h2 class="section-title">Quick Actions</h2>
+            <div class="row g-3">
+                <div class="col-6">
+                    <a href="@Url.Action("ReviewAssignments", "Lecturer")" class="btn btn-secondary w-100 d-flex flex-column align-items-center justify-content-center py-3 text-decoration-none border-0" style="background:#F9FAFB;">
+                        <span class="material-symbols-outlined mb-2" style="color:var(--fpt-orange)">edit_document</span>
+                        <span class="fw-bold" style="font-size:10px; letter-spacing:1px; color:var(--text-body);">GRADING</span>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="#" class="btn btn-secondary w-100 d-flex flex-column align-items-center justify-content-center py-3 text-decoration-none border-0" style="background:#F9FAFB;">
+                        <span class="material-symbols-outlined mb-2" style="color:var(--fpt-orange)">mail</span>
+                        <span class="fw-bold" style="font-size:10px; letter-spacing:1px; color:var(--text-body);">EMAIL</span>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="#" class="btn btn-secondary w-100 d-flex flex-column align-items-center justify-content-center py-3 text-decoration-none border-0" style="background:#F9FAFB;">
+                        <span class="material-symbols-outlined mb-2" style="color:var(--fpt-orange)">inventory_2</span>
+                        <span class="fw-bold" style="font-size:10px; letter-spacing:1px; color:var(--text-body);">ARCHIVE</span>
+                    </a>
+                </div>
+                <div class="col-6">
+                    <a href="#" class="btn btn-secondary w-100 d-flex flex-column align-items-center justify-content-center py-3 text-decoration-none border-0" style="background:#F9FAFB;">
+                        <span class="material-symbols-outlined mb-2" style="color:var(--fpt-orange)">download</span>
+                        <span class="fw-bold" style="font-size:10px; letter-spacing:1px; color:var(--text-body);">REPORT</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-panel mb-0 bg-light border">
+            <div class="d-flex align-items-start gap-3">
+                <span class="material-symbols-outlined text-primary fs-4">info</span>
+                <div>
+                    <h6 class="fw-bold mb-1" style="font-size: 13px;">System Maintenance</h6>
+                    <p class="mb-0 text-muted" style="font-size: 12px;">GPMS will be down for scheduled maintenance on Sunday from 2 AM - 4 AM.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

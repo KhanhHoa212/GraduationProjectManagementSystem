@@ -19,6 +19,17 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public async Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId) =>
         await _context.ProjectGroups.Where(pg => pg.ProjectID == projectId).ToListAsync();
 
+    public async Task<IEnumerable<ProjectGroup>> GetBySupervisorAsync(string supervisorId) =>
+        await _context.ProjectGroups
+            .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .Include(pg => pg.Project)
+            .Include(pg => pg.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Feedback)
+                    .ThenInclude(f => f.FeedbackApproval)
+            .ToListAsync();
+
     public async Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId) =>
         await _context.ProjectGroups
             .Include(g => g.GroupMembers)
