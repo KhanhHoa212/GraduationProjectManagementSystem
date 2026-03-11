@@ -64,8 +64,8 @@
                     {
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-6 py-4 font-bold text-slate-900">@s.SemesterCode</td>
-                            <td class="px-6 py-4 text-sm text-slate-600">@s.StartDate.ToString("yyyy-MM-dd")</td>
-                            <td class="px-6 py-4 text-sm text-slate-600">@s.EndDate.ToString("yyyy-MM-dd")</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">@s.StartDate.ToString("dd/MM/yyyy")</td>
+                            <td class="px-6 py-4 text-sm text-slate-600">@s.EndDate.ToString("dd/MM/yyyy")</td>
                             <td class="px-6 py-4">
                                 @{
                                     var statusClass = s.Status switch {
