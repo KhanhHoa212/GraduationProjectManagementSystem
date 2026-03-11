@@ -202,6 +202,11 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateReviewRound(CreateReviewRoundDto dto)
     {
+        if (dto.StartDate >= dto.EndDate)
+        {
+            ModelState.AddModelError("EndDate", "End date must be greater than start date.");
+        }
+
         if (!ModelState.IsValid)
         {
             var semesters = await _semesterService.GetAllSemestersAsync();
@@ -238,8 +243,7 @@ public class HODController : Controller
                 Description = req.Description,
                 AllowedFormats = req.AllowedFormats,
                 MaxFileSizeMB = req.MaxFileSizeMB,
-                IsRequired = req.IsRequired,
-                Deadline = req.Deadline
+                IsRequired = req.IsRequired
             }).ToList() ?? new List<SubmissionRequirementDto>()
         };
         
@@ -254,6 +258,11 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditReviewRound(int id, CreateReviewRoundDto dto)
     {
+        if (dto.StartDate >= dto.EndDate)
+        {
+            ModelState.AddModelError("EndDate", "End date must be greater than start date.");
+        }
+
         if (!ModelState.IsValid)
         {
             var semesters = await _semesterService.GetAllSemestersAsync();

@@ -23,6 +23,23 @@ public class ReviewRoundService : IReviewRoundService
     public async Task<IEnumerable<ReviewRoundDto>> GetReviewRoundsBySemesterAsync(int semesterId)
     {
         var rounds = await _repository.GetBySemesterAsync(semesterId);
+
+        var now = System.DateTime.Now;
+        bool anyChanged = false;
+        foreach (var r in rounds)
+        {
+            var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                                 r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+                                 GPMS.Domain.Enums.RoundStatus.Ongoing;
+            if (r.Status != expectedStatus)
+            {
+                r.Status = expectedStatus;
+                _repository.Update(r);
+                anyChanged = true;
+            }
+        }
+        if (anyChanged) await _repository.SaveChangesAsync();
+
         var mappedRounds = _mapper.Map<IEnumerable<ReviewRoundDto>>(rounds);
         return mappedRounds.OrderBy(r => r.RoundNumber);
     }
@@ -32,12 +49,29 @@ public class ReviewRoundService : IReviewRoundService
         var r = await _repository.GetByIdAsync(id);
         if (r == null) return null;
 
+        var now = System.DateTime.Now;
+        var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                             r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+                             GPMS.Domain.Enums.RoundStatus.Ongoing;
+        if (r.Status != expectedStatus)
+        {
+            r.Status = expectedStatus;
+            _repository.Update(r);
+            await _repository.SaveChangesAsync();
+        }
+
         return _mapper.Map<ReviewRoundDto>(r);
     }
 
     public async Task CreateReviewRoundAsync(CreateReviewRoundDto dto)
     {
         var entity = _mapper.Map<ReviewRound>(dto);
+        
+        var now = System.DateTime.Now;
+        entity.Status = entity.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                        entity.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+                        GPMS.Domain.Enums.RoundStatus.Ongoing;
+
         if (dto.SubmissionRequirements != null && dto.SubmissionRequirements.Any())
         {
             foreach (var reqDto in dto.SubmissionRequirements)
@@ -48,8 +82,7 @@ public class ReviewRoundService : IReviewRoundService
                     Description = reqDto.Description,
                     AllowedFormats = reqDto.AllowedFormats,
                     MaxFileSizeMB = reqDto.MaxFileSizeMB,
-                    IsRequired = reqDto.IsRequired,
-                    Deadline = reqDto.Deadline
+                    IsRequired = reqDto.IsRequired
                 });
             }
         }
@@ -64,6 +97,11 @@ public class ReviewRoundService : IReviewRoundService
         if (existing == null) throw new KeyNotFoundException("Review round not found.");
 
         _mapper.Map(dto, existing);
+
+        var now = System.DateTime.Now;
+        existing.Status = existing.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                          existing.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+                          GPMS.Domain.Enums.RoundStatus.Ongoing;
 
         // Sync requirements explicitly
         var currentReqs = existing.SubmissionRequirements.ToList();
@@ -90,8 +128,7 @@ public class ReviewRoundService : IReviewRoundService
                     Description = reqDto.Description,
                     AllowedFormats = reqDto.AllowedFormats,
                     MaxFileSizeMB = reqDto.MaxFileSizeMB,
-                    IsRequired = reqDto.IsRequired,
-                    Deadline = reqDto.Deadline
+                    IsRequired = reqDto.IsRequired
                 });
             }
             else
@@ -105,7 +142,6 @@ public class ReviewRoundService : IReviewRoundService
                     existingReq.AllowedFormats = reqDto.AllowedFormats;
                     existingReq.MaxFileSizeMB = reqDto.MaxFileSizeMB;
                     existingReq.IsRequired = reqDto.IsRequired;
-                    existingReq.Deadline = reqDto.Deadline;
                 }
             }
         }
