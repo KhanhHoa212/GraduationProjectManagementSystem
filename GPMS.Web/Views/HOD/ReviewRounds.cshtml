@@ -26,20 +26,49 @@
 
             <!-- Review Timeline Visualization -->
             <div class="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between relative">
                     @if (Model != null && Model.Any())
                     {
                         var rounds = Model.OrderBy(r => r.RoundNumber).Take(3).ToList();
+                        
+                        // Render progress line if multiple rounds
+                        if (rounds.Count > 1)
+                        {
+                            <div class="absolute left-[5rem] right-[5rem] top-7 h-1 bg-slate-200 dark:bg-slate-700 z-0"></div>
+                            
+                            int completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
+                            int ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                            
+                            double progressPercentage = 0;
+                            int totalSegments = rounds.Count - 1;
+                            
+                            if (ongoingIndex != -1) {
+                                progressPercentage = (ongoingIndex * 100.0 / totalSegments) + (50.0 / totalSegments); 
+                            } else {
+                                progressPercentage = (completedCount == 0 ? 0 : ((completedCount - 1) * 100.0 / totalSegments));
+                                if (completedCount == rounds.Count) progressPercentage = 100;
+                            }
+                            progressPercentage = Math.Min(100, Math.Max(0, progressPercentage));
+
+                            <div class="absolute left-[5rem] right-[5rem] top-7 h-1 z-0">
+                                <div class="h-full bg-[#F37021] transition-all duration-500" style="width: @(progressPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+                            </div>
+                        }
+
                         for (int i = 0; i < rounds.Count; i++)
                         {
                             var r = rounds[i];
-                            var statusColorBg = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-orange-100 dark:bg-orange-900" : (r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
-                            var statusTextColor = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "text-orange-800 dark:text-orange-200" : (r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
-                            var iconBg = r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-500 text-white" : (r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-[#F37021] text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400");
-                            var iconName = r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "check_circle" : (r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "sync" : "schedule");
+                            var isCompleted = r.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                            var isOngoing = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                            
+                            var statusColorBg = isOngoing ? "bg-orange-100 dark:bg-orange-900" : (isCompleted ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
+                            var statusTextColor = isOngoing ? "text-orange-800 dark:text-orange-200" : (isCompleted ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
+                            
+                            var iconBg = isCompleted || isOngoing ? "bg-[#F37021] text-white border-[#F37021] ring-4 ring-orange-50 dark:ring-slate-800" : "bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-white dark:border-slate-900 ring-4 ring-slate-50 dark:ring-slate-800";
+                            var iconName = isCompleted ? "check_circle" : (isOngoing ? "sync" : "schedule");
 
-                            <div class="flex flex-col items-center flex-1">
-                                <div class="w-14 h-14 rounded-full @iconBg flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-md">
+                            <div class="flex flex-col items-center flex-1 z-10">
+                                <div class="w-14 h-14 rounded-full @iconBg flex items-center justify-center shadow-sm transition-all duration-300">
                                     <span class="material-symbols-outlined" style="font-size: 24px;">@iconName</span>
                                 </div>
                                 <div class="mt-4 text-center">
@@ -48,17 +77,11 @@
                                     <p class="text-sm text-slate-600 dark:text-slate-400 mt-3">@r.StartDate.ToString("dd/MM") - @r.EndDate.ToString("dd/MM")</p>
                                 </div>
                             </div>
-                            
-                            if (i < rounds.Count - 1)
-                            {
-                                <!-- Connecting Line -->
-                                <div class="flex-1 h-1 bg-slate-300 dark:bg-slate-700 mx-4 mt-8"></div>
-                            }
                         }
                     }
                     else
                     {
-                        <div class="py-4 text-center text-slate-500 flex-1">
+                        <div class="py-4 text-center text-slate-500 w-full">
                             Chưa có vòng review nào được thiết lập.
                         </div>
                     }

@@ -25,7 +25,6 @@ public class SubmissionRequirementDto
     public string? AllowedFormats { get; set; }
     public int? MaxFileSizeMB { get; set; } = 50;
     public bool IsRequired { get; set; } = true;
-    public DateTime Deadline { get; set; }
 }
 
 public class CreateReviewRoundDto
