@@ -11,11 +11,13 @@ public class HODController : Controller
 {
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
+    private readonly IReviewRoundService _reviewRoundService;
 
-    public HODController(IProjectService projectService, ISemesterService semesterService)
+    public HODController(IProjectService projectService, ISemesterService semesterService, IReviewRoundService reviewRoundService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
+        _reviewRoundService = reviewRoundService;
     }
 
     // GET: /HOD/Index (Dashboard)
@@ -175,9 +177,105 @@ public class HODController : Controller
     public IActionResult Groups() => View();
     public IActionResult GroupDetails(string id) => View();
     public IActionResult AssignSupervisor() => View();
-    public IActionResult ReviewRounds() => View();
-    public IActionResult CreateReviewRound() => View();
-    public IActionResult Import() => View();
+    public async Task<IActionResult> ReviewRounds()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        if (activeSemester == null)
+            return View(new List<ReviewRoundDto>());
+
+        var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        return View(rounds);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateReviewRound()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        ViewBag.ActiveSemester = activeSemester;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateReviewRound(CreateReviewRoundDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var semesters = await _semesterService.GetAllSemestersAsync();
+            var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+            ViewBag.ActiveSemester = activeSemester;
+            return View(dto);
+        }
+
+        await _reviewRoundService.CreateReviewRoundAsync(dto);
+        TempData["SuccessMessage"] = "Review round created successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditReviewRound(int id)
+    {
+        var round = await _reviewRoundService.GetReviewRoundByIdAsync(id);
+        if (round == null) return NotFound();
+        
+        var dto = new CreateReviewRoundDto
+        {
+            SemesterID = round.SemesterID,
+            RoundNumber = round.RoundNumber,
+            RoundType = round.RoundType,
+            StartDate = round.StartDate,
+            EndDate = round.EndDate,
+            SubmissionDeadline = round.SubmissionDeadline,
+            Description = round.Description,
+            Status = round.Status,
+            SubmissionRequirements = round.SubmissionRequirements?.Select(req => new SubmissionRequirementDto
+            {
+                RequirementID = req.RequirementID,
+                DocumentName = req.DocumentName,
+                Description = req.Description,
+                AllowedFormats = req.AllowedFormats,
+                MaxFileSizeMB = req.MaxFileSizeMB,
+                IsRequired = req.IsRequired,
+                Deadline = req.Deadline
+            }).ToList() ?? new List<SubmissionRequirementDto>()
+        };
+        
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        ViewBag.ActiveSemester = semesters.FirstOrDefault(s => s.SemesterID == round.SemesterID);
+        ViewBag.ReviewRoundID = id;
+
+        return View("CreateReviewRound", dto); 
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditReviewRound(int id, CreateReviewRoundDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var semesters = await _semesterService.GetAllSemestersAsync();
+            ViewBag.ActiveSemester = semesters.FirstOrDefault(s => s.SemesterID == dto.SemesterID);
+            ViewBag.ReviewRoundID = id;
+            return View("CreateReviewRound", dto);
+        }
+
+        await _reviewRoundService.UpdateReviewRoundAsync(id, dto);
+        TempData["SuccessMessage"] = "Review round updated successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReviewRound(int id)
+    {
+        await _reviewRoundService.DeleteReviewRoundAsync(id);
+        TempData["SuccessMessage"] = "Review round deleted successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
     public IActionResult Checklists() => View();
     public IActionResult AssignReviewer() => View();
     public IActionResult Reports() => View();
