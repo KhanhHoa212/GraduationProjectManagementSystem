@@ -47,5 +47,15 @@ public class MappingProfile : Profile
                     RoleInGroup = m.RoleInGroup,
                     GroupName = g.GroupName
                 })).ToList()));
+
+        // ReviewRound mapping
+        CreateMap<ReviewRound, ReviewRoundDto>()
+            .ForMember(dest => dest.SemesterCode, opt => opt.MapFrom(src => src.Semester != null ? src.Semester.SemesterCode : string.Empty));
+            
+        CreateMap<CreateReviewRoundDto, ReviewRound>()
+            .ForMember(dest => dest.SubmissionRequirements, opt => opt.Ignore());
+
+        // SubmissionRequirement mapping
+        CreateMap<SubmissionRequirement, SubmissionRequirementDto>().ReverseMap();
     }
 }
