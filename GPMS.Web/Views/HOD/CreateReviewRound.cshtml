@@ -1,0 +1,373 @@
+@model GPMS.Application.DTOs.CreateReviewRoundDto
+@{
+    ViewData["Title"] = ViewBag.ReviewRoundID != null ? "Edit Review Round" : "Create Review Round";
+    Layout = "~/Views/Shared/_HodLayout.cshtml";
+}
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <!-- Breadcrumb Navigation -->
+    <div class="border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div class="px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                    <span>GPMS</span>
+                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
+                    <span>Vòng Review</span>
+                    <span class="text-slate-400 dark:text-slate-600">&gt;</span>
+                    <span class="text-slate-900 dark:text-white font-medium">@(ViewBag.ReviewRoundID != null ? "Edit Review Round" : "Create Review Round")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="p-6">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header Section -->
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">@(ViewBag.ReviewRoundID != null ? "Edit Review Round" : "Create Review Round")</h1>
+                    <p class="text-slate-600 dark:text-slate-400">Configure the assessment cycle and submission requirements.</p>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-8 border-b border-slate-200 dark:border-slate-800 mb-8" id="tab-container">
+                <button type="button" onclick="switchTab('general')" id="tab-general" class="pb-4 px-1 border-b-2 border-[#F37021] text-slate-900 dark:text-white font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-5" style="font-size: 20px;">info</span>
+                    General Info
+                </button>
+                <button type="button" onclick="switchTab('submission')" id="tab-submission" class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent font-medium flex items-center gap-2">
+                    <span class="material-symbols-outlined text-5" style="font-size: 20px;">description</span>
+                    Submission Requirements
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Main Content -->
+                <div class="lg:col-span-2 relative">
+                    <form asp-action="@(ViewBag.ReviewRoundID != null ? "EditReviewRound" : "CreateReviewRound")" asp-route-id="@ViewBag.ReviewRoundID" method="post" id="main-form">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="SemesterID" value="@(ViewBag.ActiveSemester?.SemesterID)" />
+
+                        <!-- GENERAL INFO TAB CONTENT -->
+                        <div id="content-general" class="block space-y-6">
+                            <!-- Round Details Card -->
+                            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">edit</span>
+                                    <h2 class="text-xl font-bold text-slate-900 dark:text-white">Round Details</h2>
+                                </div>
+                                <div class="space-y-6">
+                                    
+                            <!-- Round Number -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                    Round Number <span class="text-red-500">*</span>
+                                </label>
+                                <input type="number" name="RoundNumber" value="@Model?.RoundNumber" required
+                                       placeholder="e.g., 1, 2, 3" 
+                                       class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                            </div>
+
+                            <!-- Semester and Status Row -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                        Semester <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" disabled value="@(ViewBag.ActiveSemester?.SemesterCode)" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                        Status <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="Status" class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                                        <option value="Planned" selected="@(Model?.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "selected" : null)">Planned</option>
+                                        <option value="Ongoing" selected="@(Model?.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "selected" : null)">Ongoing</option>
+                                        <option value="Completed" selected="@(Model?.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "selected" : null)">Completed</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Dates Row -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                        Start Date <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="datetime-local" name="StartDate" value="@(Model?.StartDate.ToString("yyyy-MM-ddTHH:mm"))" required
+                                           class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                        End Date <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="datetime-local" name="EndDate" value="@(Model?.EndDate.ToString("yyyy-MM-ddTHH:mm"))" required
+                                           class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                                </div>
+                            </div>
+
+                            <!-- Submission Deadline -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                                    Submission Deadline <span class="text-red-500">*</span>
+                                </label>
+                                <input type="datetime-local" name="SubmissionDeadline" value="@(Model?.SubmissionDeadline.ToString("yyyy-MM-ddTHH:mm"))" required
+                                       class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent">
+                                <p class="text-sm text-slate-500 dark:text-slate-400 mt-2">Students will not be able to submit past this time unless granted an extension.</p>
+                            </div>
+
+                            <!-- Description -->
+                            <div>
+                                <label class="block text-sm font-medium text-slate-900 dark:text-white mb-2">Description</label>
+                                <textarea name="Description" placeholder="Brief overview of the review objectives and instructions..." 
+                                          rows="4"
+                                          class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent resize-none">@(Model?.Description)</textarea>
+                            </div>
+                            
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SUBMISSION REQUIREMENTS TAB CONTENT -->
+                        <div id="content-submission" class="hidden space-y-6">
+                            <!-- Document Requirements Card -->
+                            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                                <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">description</span>
+                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">Document Requirements</h2>
+                            </div>
+                            <button type="button" onclick="addRequirement()" class="flex items-center gap-2 px-4 py-2 text-[#F37021] hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg font-medium transition">
+                                <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                                Add Document Requirement
+                            </button>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="border-b border-slate-200 dark:border-slate-800">
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Document Name</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Allowed Formats</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Max Size</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Internal Deadline</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Required</th>
+                                        <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="requirements-table-body" class="divide-y divide-slate-200 dark:divide-slate-800">
+                                    @if (Model != null && Model.SubmissionRequirements != null && Model.SubmissionRequirements.Any())
+                                    {
+                                        for (int i = 0; i < Model.SubmissionRequirements.Count; i++)
+                                        {
+                                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 requirement-row">
+                                                <td class="py-4 px-4">
+                                                    <input type="hidden" name="SubmissionRequirements[@i].RequirementID" value="@Model.SubmissionRequirements[i].RequirementID" />
+                                                    <input type="text" name="SubmissionRequirements[@i].DocumentName" value="@Model.SubmissionRequirements[i].DocumentName" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021] text-slate-900 dark:text-white" required placeholder="Name" />
+                                                    <input type="text" name="SubmissionRequirements[@i].Description" value="@Model.SubmissionRequirements[i].Description" class="mt-1 w-full text-xs text-slate-500 dark:text-slate-400 bg-transparent border-none focus:outline-none focus:ring-0" placeholder="Description" />
+                                                </td>
+                                                <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                                                    <input type="text" name="SubmissionRequirements[@i].AllowedFormats" value="@Model.SubmissionRequirements[i].AllowedFormats" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021]" placeholder="PDF, DOCX" />
+                                                </td>
+                                                <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                                                    <div class="flex items-center gap-1">
+                                                        <input type="number" name="SubmissionRequirements[@i].MaxFileSizeMB" value="@Model.SubmissionRequirements[i].MaxFileSizeMB" class="w-16 bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021]" placeholder="50" min="1" max="500" />
+                                                        <span class="text-xs">MB</span>
+                                                    </div>
+                                                </td>
+                                                <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                                                    <input type="datetime-local" name="SubmissionRequirements[@i].Deadline" value="@(Model.SubmissionRequirements[i].Deadline.ToString("yyyy-MM-ddTHH:mm"))" required class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021] text-sm" />
+                                                </td>
+                                                <td class="py-4 px-4">
+                                                    <label class="relative inline-flex items-center cursor-pointer">
+                                                        <input type="checkbox" name="SubmissionRequirements[@i].IsRequired" value="true" @(Model.SubmissionRequirements[i].IsRequired ? "checked" : "") class="sr-only peer requirement-required-checkbox">
+                                                        <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#F37021] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F37021]"></div>
+                                                    </label>
+                                                    <input type="hidden" name="SubmissionRequirements[@i].IsRequired" value="false" />
+                                                </td>
+                                                <td class="py-4 px-4">
+                                                    <button type="button" onclick="removeRequirement(this)" class="text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition">
+                                                        <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Shared Submit Buttons -->
+                <div class="flex justify-end gap-3 pt-4 mt-6">
+                    <a href="/HOD/ReviewRounds" class="px-6 py-2 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition text-center inline-block">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2 text-white bg-[#F37021] hover:bg-[#E55D0D] rounded-lg font-medium transition cursor-pointer">
+                        Save Round
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Sidebar -->
+                <div class="space-y-6">
+                    <!-- Submission Summary Card -->
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-slate-800 dark:to-slate-900 rounded-xl border border-orange-200 dark:border-slate-700 p-6">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-6">Submission Summary</h3>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 mb-1">Required Files</div>
+                                <div class="text-3xl font-bold text-[#F37021]">4 Files</div>
+                            </div>
+                            <div class="h-px bg-orange-200 dark:bg-slate-700"></div>
+                            <div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 mb-1">Total Max Size</div>
+                                <div class="text-2xl font-bold text-slate-900 dark:text-white">150 MB</div>
+                            </div>
+                            <div class="h-px bg-orange-200 dark:bg-slate-700"></div>
+                            <div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 mb-1">Avg. Review Time</div>
+                                <div class="text-2xl font-bold text-slate-900 dark:text-white">14 Days</div>
+                            </div>
+                        </div>
+
+                        <p class="text-xs text-slate-600 dark:text-slate-400 mt-6 pt-6 border-t border-orange-200 dark:border-slate-700">
+                            Note: These settings will be applied to all students participating in this round. You can override specific student deadlines later in the management tools.
+                        </p>
+                    </div>
+
+                    <!-- Notification Settings Card -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 p-6">
+                        <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-4">Notification Settings</h3>
+                        
+                        <div class="space-y-4">
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="mt-1 w-5 h-5 rounded border-slate-300 dark:border-slate-700 text-[#F37021] focus:ring-[#F37021]">
+                                <div>
+                                    <div class="font-medium text-slate-900 dark:text-white">Email students on start</div>
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">Send notification when round begins</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" checked class="mt-1 w-5 h-5 rounded border-slate-300 dark:border-slate-700 text-[#F37021] focus:ring-[#F37021]">
+                                <div>
+                                    <div class="font-medium text-slate-900 dark:text-white">24h deadline reminder</div>
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">Notify advisor on submission</div>
+                                </div>
+                            </label>
+
+                            <label class="flex items-start gap-3 cursor-pointer">
+                                <input type="checkbox" class="mt-1 w-5 h-5 rounded border-slate-300 dark:border-slate-700 text-[#F37021] focus:ring-[#F37021]">
+                                <div>
+                                    <div class="font-medium text-slate-900 dark:text-white">Notify advisor on submission</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function switchTab(tabId) {
+        const generalTab = document.getElementById('tab-general');
+        const submissionTab = document.getElementById('tab-submission');
+        const generalContent = document.getElementById('content-general');
+        const submissionContent = document.getElementById('content-submission');
+
+        const activeClasses = ['border-[#F37021]', 'text-slate-900', 'dark:text-white'];
+        const inactiveClasses = ['border-transparent', 'text-slate-600', 'dark:text-slate-400'];
+
+        if (tabId === 'general') {
+            generalTab.classList.remove(...inactiveClasses);
+            generalTab.classList.add(...activeClasses);
+            submissionTab.classList.remove(...activeClasses);
+            submissionTab.classList.add(...inactiveClasses);
+
+            generalContent.classList.remove('hidden');
+            generalContent.classList.add('block');
+            submissionContent.classList.remove('block');
+            submissionContent.classList.add('hidden');
+        } else {
+            submissionTab.classList.remove(...inactiveClasses);
+            submissionTab.classList.add(...activeClasses);
+            generalTab.classList.remove(...activeClasses);
+            generalTab.classList.add(...inactiveClasses);
+
+            submissionContent.classList.remove('hidden');
+            submissionContent.classList.add('block');
+            generalContent.classList.remove('block');
+            generalContent.classList.add('hidden');
+        }
+    }
+
+    function addRequirement() {
+        const tbody = document.getElementById('requirements-table-body');
+        const rows = tbody.querySelectorAll('tr.requirement-row');
+        const i = rows.length;
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-800/50 requirement-row';
+        tr.innerHTML = `
+            <td class="py-4 px-4">
+                <input type="hidden" name="SubmissionRequirements[${i}].RequirementID" value="0" />
+                <input type="text" name="SubmissionRequirements[${i}].DocumentName" value="" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021] text-slate-900 dark:text-white" required placeholder="Name" />
+                <input type="text" name="SubmissionRequirements[${i}].Description" value="" class="mt-1 w-full text-xs text-slate-500 dark:text-slate-400 bg-transparent border-none focus:outline-none focus:ring-0" placeholder="Description" />
+            </td>
+            <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                <input type="text" name="SubmissionRequirements[${i}].AllowedFormats" value="PDF" class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021]" placeholder="PDF, DOCX" />
+            </td>
+            <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                <div class="flex items-center gap-1">
+                    <input type="number" name="SubmissionRequirements[${i}].MaxFileSizeMB" value="50" class="w-16 bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021]" placeholder="50" min="1" max="500" />
+                    <span class="text-xs">MB</span>
+                </div>
+            </td>
+            <td class="py-4 px-4 text-slate-600 dark:text-slate-400">
+                <input type="datetime-local" name="SubmissionRequirements[${i}].Deadline" value="" required class="w-full bg-transparent border-b border-slate-300 dark:border-slate-700 focus:outline-none focus:border-[#F37021] text-sm" />
+            </td>
+            <td class="py-4 px-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input type="checkbox" name="SubmissionRequirements[${i}].IsRequired" value="true" checked class="sr-only peer requirement-required-checkbox">
+                    <div class="w-11 h-6 bg-slate-300 dark:bg-slate-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-[#F37021] rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#F37021]"></div>
+                </label>
+                <input type="hidden" name="SubmissionRequirements[${i}].IsRequired" value="false" />
+            </td>
+            <td class="py-4 px-4">
+                <button type="button" onclick="removeRequirement(this)" class="text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                </button>
+            </td>
+        `;
+
+        tbody.appendChild(tr);
+        reindexRequirements();
+    }
+
+    function removeRequirement(btn) {
+        const tr = btn.closest('tr');
+        tr.remove();
+        reindexRequirements();
+    }
+
+    function reindexRequirements() {
+        const rows = document.querySelectorAll('#requirements-table-body tr.requirement-row');
+        rows.forEach((row, index) => {
+            row.querySelectorAll('input, select, textarea').forEach(input => {
+                if (input.name && input.name.includes('SubmissionRequirements[')) {
+                    input.name = input.name.replace(/SubmissionRequirements\[\d+\]/, 'SubmissionRequirements['+index+']');
+                }
+            });
+        });
+    }
+
+</script>
+}

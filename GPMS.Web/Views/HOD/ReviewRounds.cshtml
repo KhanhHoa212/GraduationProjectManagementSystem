@@ -1,242 +1,161 @@
+@model IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>
 @{
-    ViewBag.Title = "Quản lý Vòng Review";
-    ViewBag.CurrentPage = "ReviewRounds";
-    ViewBag.BreadcrumbSection = "Vòng Review";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    ViewData["Title"] = "Review Rounds";
+    Layout = "~/Views/Shared/_HodLayout.cshtml";
 }
 
-<div class="space-y-6">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-            <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
-                <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline">GPMS</a>
-                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-slate-800 font-bold">Vòng Review</span>
-            </nav>
-            <h1 class="text-2xl font-bold text-slate-800">Quản lý Vòng Review</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">Thiết lập và theo dõi các giai đoạn đánh giá đồ án trong học kỳ.</p>
-        </div>
-        <div class="flex items-end">
-            <button class="bg-[#1E3A5F] hover:bg-slate-800 text-white flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold transition shadow-sm border border-slate-700">
-                <span class="material-symbols-outlined text-[18px]">add_circle</span>
-                Tạo vòng review mới
-            </button>
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-8">
+                <div>
+                    <nav class="flex items-center gap-2 text-sm mb-4">
+                        <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">GPMS</a>
+                        <span class="text-slate-400 dark:text-slate-600">/</span>
+                        <span class="text-slate-900 dark:text-slate-100 font-medium">Vòng Review</span>
+                    </nav>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Vòng Review</h1>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Thiết lập và theo dõi các giai đoạn đánh giá đề án trong học kỳ.</p>
+                </div>
+                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                    Tạo vòng review mới
+                </a>
+            </div>
+
+            <!-- Review Timeline Visualization -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div class="flex items-center justify-between">
+                    @if (Model != null && Model.Any())
+                    {
+                        var rounds = Model.OrderBy(r => r.RoundNumber).Take(3).ToList();
+                        for (int i = 0; i < rounds.Count; i++)
+                        {
+                            var r = rounds[i];
+                            var statusColorBg = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-orange-100 dark:bg-orange-900" : (r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
+                            var statusTextColor = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "text-orange-800 dark:text-orange-200" : (r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
+                            var iconBg = r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-500 text-white" : (r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-[#F37021] text-white" : "bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400");
+                            var iconName = r.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "check_circle" : (r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "sync" : "schedule");
+
+                            <div class="flex flex-col items-center flex-1">
+                                <div class="w-14 h-14 rounded-full @iconBg flex items-center justify-center border-4 border-white dark:border-slate-900 shadow-md">
+                                    <span class="material-symbols-outlined" style="font-size: 24px;">@iconName</span>
+                                </div>
+                                <div class="mt-4 text-center">
+                                    <h3 class="font-semibold text-slate-900 dark:text-white">Review @r.RoundNumber</h3>
+                                    <span class="inline-block mt-2 px-3 py-1 @statusColorBg @statusTextColor text-xs font-semibold rounded-full">@r.Status</span>
+                                    <p class="text-sm text-slate-600 dark:text-slate-400 mt-3">@r.StartDate.ToString("dd/MM") - @r.EndDate.ToString("dd/MM")</p>
+                                </div>
+                            </div>
+                            
+                            if (i < rounds.Count - 1)
+                            {
+                                <!-- Connecting Line -->
+                                <div class="flex-1 h-1 bg-slate-300 dark:bg-slate-700 mx-4 mt-8"></div>
+                            }
+                        }
+                    }
+                    else
+                    {
+                        <div class="py-4 text-center text-slate-500 flex-1">
+                            Chưa có vòng review nào được thiết lập.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Review Rounds Table -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Danh sách các Vòng Review</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" style="font-size: 20px;">search</span>
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm vòng..."
+                                class="pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 dark:bg-slate-800">
+                            <tr class="border-b border-slate-200 dark:border-slate-700">
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TÊN VÒNG</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">HỌC KỲ</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THỜI GIAN (BĐ - KT)</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">DEADLINE</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TRẠNG THÁI</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    var rowStatusColorBg = item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-orange-100 dark:bg-orange-900" : (item.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
+                                    var rowStatusTextColor = item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "text-orange-800 dark:text-orange-200" : (item.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
+                                
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                        <td class="py-4 px-6">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-sm">
+                                                    R@(item.RoundNumber)
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold text-slate-900 dark:text-white block">Review @(item.RoundNumber)</span>
+                                                    <span class="text-xs text-slate-500">@(item.RoundType)</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-slate-600 dark:text-slate-400">@item.SemesterCode</td>
+                                        <td class="py-4 px-6 text-slate-600 dark:text-slate-400">@item.StartDate.ToString("dd/MM/yyyy") - @item.EndDate.ToString("dd/MM/yyyy")</td>
+                                        <td class="py-4 px-6 text-slate-600 dark:text-slate-400">
+                                            <span class="px-2 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-semibold rounded">@item.SubmissionDeadline.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <span class="px-3 py-1 @rowStatusColorBg @rowStatusTextColor text-xs font-semibold rounded-full">@item.Status</span>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <div class="flex items-center gap-2">
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition inline-block" title="Edit">
+                                                    <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                                                </a>
+                                                <form asp-action="DeleteReviewRound" method="post" asp-route-id="@item.ReviewRoundID" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vòng này?');">
+                                                    <button type="submit" class="p-1 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition" title="Delete">
+                                                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="py-10 text-center text-slate-500 font-medium">Bạn chưa tạo vòng review nào trong học kỳ này</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Hiển thị @(Model?.Count() ?? 0) vòng review</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition" disabled>Trước</button>
+                        <button class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white rounded font-medium">1</button>
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">Sau</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Timeline Overview (Top Card) -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] pt-12 pb-10 px-6 overflow-hidden">
-        <div class="relative flex justify-between items-start w-full max-w-4xl mx-auto">
-            <!-- Background line -->
-            <div class="absolute top-[18px] left-0 w-full h-[3px] bg-slate-100 rounded-full z-0"></div>
-            <!-- Progress line -->
-            <div class="absolute top-[18px] left-0 w-[40%] h-[3px] bg-[#F37021] rounded-full z-0"></div>
-            
-            <!-- Step 1: Ongoing -->
-            <div class="relative z-10 flex flex-col items-center flex-1 text-center group cursor-pointer -ml-8">
-                <div class="w-10 h-10 rounded-full bg-[#F37021] text-white flex items-center justify-center shadow-lg ring-4 ring-white transition-transform group-hover:scale-110 mb-4 border border-orange-500">
-                    <span class="material-symbols-outlined text-[20px] font-bold">check</span>
-                </div>
-                <h3 class="text-[15px] font-bold text-slate-800">Vòng 1: Proposal Review</h3>
-                <span class="inline-block mt-2 mb-2 px-2.5 py-0.5 bg-orange-50 text-[#F37021] text-[10px] font-extrabold rounded-full border border-orange-100 uppercase tracking-wider">Đang diễn ra</span>
-                <p class="text-[11px] text-slate-500 font-bold flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 10/01 - 25/01</p>
-            </div>
-
-            <!-- Step 2: Planned -->
-            <div class="relative z-10 flex flex-col items-center flex-1 text-center group cursor-pointer">
-                <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center ring-4 ring-white border border-slate-200 transition-transform group-hover:scale-110 mb-4 shadow-sm">
-                    <span class="material-symbols-outlined text-[20px]">more_horiz</span>
-                </div>
-                <h3 class="text-[15px] font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Vòng 2: Mid-term Progress</h3>
-                <span class="inline-block mt-2 mb-2 px-2.5 py-0.5 bg-slate-50 text-slate-400 text-[10px] font-extrabold rounded-full border border-slate-200 uppercase tracking-wider">Dự kiến</span>
-                <p class="text-[11px] text-slate-400 font-bold flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 01/03 - 15/03</p>
-            </div>
-
-            <!-- Step 3: Planned -->
-            <div class="relative z-10 flex flex-col items-center flex-1 text-center group cursor-pointer -mr-8">
-                <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center ring-4 ring-white border border-slate-200 transition-transform group-hover:scale-110 mb-4 shadow-sm">
-                    <span class="material-symbols-outlined text-[20px]">event</span>
-                </div>
-                <h3 class="text-[15px] font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Vòng 3: Final Defense</h3>
-                <span class="inline-block mt-2 mb-2 px-2.5 py-0.5 bg-slate-50 text-slate-400 text-[10px] font-extrabold rounded-full border border-slate-200 uppercase tracking-wider">Dự kiến</span>
-                <p class="text-[11px] text-slate-400 font-bold flex items-center justify-center gap-1.5"><span class="material-symbols-outlined text-[14px]">calendar_today</span> 20/05 - 30/06</p>
-            </div>
-        </div>
-    </div>
-
-    <!-- Data Table Section -->
-    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden">
-        <div class="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-[#1E3A5F]">list_alt</span>
-                <h2 class="text-[15px] font-bold text-slate-800">Danh sách các Vòng Review</h2>
-            </div>
-            <div class="relative min-w-[300px]">
-                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                <input type="text" placeholder="Tìm kiếm vòng..." class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-lg bg-slate-50 text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:bg-white transition-colors shadow-sm" />
-            </div>
-        </div>
-
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-white border-b border-slate-200">
-                        <th class="px-6 py-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider w-[35%]">TÊN VÒNG</th>
-                        <th class="px-6 py-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">HỌC KỲ</th>
-                        <th class="px-6 py-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider w-[20%]">THỜI GIAN (BĐ - KT)</th>
-                        <th class="px-6 py-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">DEADLINE NỘP</th>
-                        <th class="px-6 py-5 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">TRẠNG THÁI</th>
-                        <th class="px-6 py-5 text-center text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">THAO TÁC</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-100">
-                    <!-- R1: Proposal Review -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-6">
-                            <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-orange-50 border border-orange-100 flex flex-col items-center justify-center flex-shrink-0 text-[#F37021] shadow-sm">
-                                    <span class="font-extrabold text-sm leading-none m-0 p-0 block">R</span>
-                                    <span class="font-bold text-[10px] leading-none m-0 p-0 block mt-0.5">1</span>
-                                </div>
-                                <div class="pt-0.5">
-                                    <p class="font-bold text-slate-800 text-[15px] leading-snug">Proposal Review</p>
-                                    <p class="text-xs text-slate-500 font-medium mt-1 leading-snug tracking-wide">Vòng đánh giá đề cương chi tiết</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-extrabold text-slate-800 text-sm">SP25</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <p class="font-bold text-slate-700 text-[13px] tracking-wide">10/01/2025 - 25/01/2025</p>
-                            <p class="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1.5">15 NGÀY THỰC HIỆN</p>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-bold text-red-500 text-sm">20/01/2025</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 text-[#F37021] rounded-full shadow-sm">
-                                <span class="w-1.5 h-1.5 rounded-full bg-[#F37021]"></span>
-                                <span class="text-[10px] font-extrabold uppercase tracking-widest mt-px">Ongoing</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Stage">
-                                    <span class="material-symbols-outlined text-[18px]">edit</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Manage Checklist">
-                                    <span class="material-symbols-outlined text-[18px]">fact_check</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Assign Reviewers">
-                                    <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- R2: Mid-term Progress -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-6">
-                            <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex flex-col items-center justify-center flex-shrink-0 text-blue-600 shadow-sm">
-                                    <span class="font-extrabold text-sm leading-none m-0 p-0 block">R</span>
-                                    <span class="font-bold text-[10px] leading-none m-0 p-0 block mt-0.5">2</span>
-                                </div>
-                                <div class="pt-0.5">
-                                    <p class="font-bold text-slate-800 text-[15px] leading-snug">Mid-term Progress</p>
-                                    <p class="text-xs text-slate-500 font-medium mt-1 leading-snug tracking-wide">Đánh giá tiến độ giữa kỳ</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-extrabold text-slate-800 text-sm">SP25</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <p class="font-bold text-slate-700 text-[13px] tracking-wide">01/03/2025 - 15/03/2025</p>
-                            <p class="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1.5">14 NGÀY THỰC HIỆN</p>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-bold text-slate-800 text-sm">10/03/2025</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-full shadow-sm">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <span class="text-[10px] font-extrabold uppercase tracking-widest mt-px">Planned</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Stage">
-                                    <span class="material-symbols-outlined text-[18px]">edit</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Manage Checklist">
-                                    <span class="material-symbols-outlined text-[18px]">fact_check</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Assign Reviewers">
-                                    <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <!-- R3: Final Defense -->
-                    <tr class="hover:bg-slate-50/50 transition-colors border-b border-transparent">
-                        <td class="px-6 py-6">
-                            <div class="flex items-start gap-4">
-                                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-100 flex flex-col items-center justify-center flex-shrink-0 text-blue-600 shadow-sm">
-                                    <span class="font-extrabold text-sm leading-none m-0 p-0 block">R</span>
-                                    <span class="font-bold text-[10px] leading-none m-0 p-0 block mt-0.5">3</span>
-                                </div>
-                                <div class="pt-0.5">
-                                    <p class="font-bold text-slate-800 text-[15px] leading-snug">Final Defense</p>
-                                    <p class="text-xs text-slate-500 font-medium mt-1 leading-snug tracking-wide">Bảo vệ đồ án cuối kỳ</p>
-                                </div>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-extrabold text-slate-800 text-sm">SP25</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <p class="font-bold text-slate-700 text-[13px] tracking-wide">20/05/2025 - 30/06/2025</p>
-                            <p class="text-[9px] text-slate-400 font-extrabold uppercase tracking-widest mt-1.5">41 NGÀY THỰC HIỆN</p>
-                        </td>
-                        <td class="px-6 py-6">
-                            <span class="font-bold text-slate-800 text-sm">15/05/2025</span>
-                        </td>
-                        <td class="px-6 py-6">
-                            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 rounded-full shadow-sm">
-                                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                <span class="text-[10px] font-extrabold uppercase tracking-widest mt-px">Planned</span>
-                            </div>
-                        </td>
-                        <td class="px-6 py-6 text-center">
-                            <div class="flex items-center justify-center gap-1.5">
-                                <button class="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Edit Stage">
-                                    <span class="material-symbols-outlined text-[18px]">edit</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="Manage Checklist">
-                                    <span class="material-symbols-outlined text-[18px]">fact_check</span>
-                                </button>
-                                <button class="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Assign Reviewers">
-                                    <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-between bg-white text-sm">
-            <p class="font-medium text-slate-500">Hiển thị <span class="font-bold text-slate-800">3</span> trong số <span class="font-bold text-slate-800">3</span> vòng review</p>
-            <div class="flex items-center gap-2">
-                <button class="px-3.5 py-1.5 border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 transition shadow-sm">Trước</button>
-                <button class="w-8 h-8 flex items-center justify-center bg-[#1E3A5F] text-white font-bold rounded-lg shadow-sm">1</button>
-                <button class="px-3.5 py-1.5 border border-slate-200 text-slate-500 font-bold rounded-lg hover:bg-slate-50 transition shadow-sm">Sau</button>
-            </div>
-        </div>
-    </div>
-</div>
