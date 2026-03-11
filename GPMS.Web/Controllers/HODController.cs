@@ -176,7 +176,11 @@ public class HODController : Controller
     public IActionResult GroupDetails(string id) => View();
     public IActionResult AssignSupervisor() => View();
     public IActionResult ReviewRounds() => View();
+    public IActionResult CreateReviewRound() => View();
     public IActionResult Import() => View();
+    public IActionResult Checklists() => View();
+    public IActionResult AssignReviewer() => View();
+    public IActionResult Reports() => View();
     
     [HttpGet]
     public async Task<IActionResult> CreateProject()
