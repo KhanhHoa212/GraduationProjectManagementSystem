@@ -11,6 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using GPMS.Infrastructure;
+using GPMS.Infrastructure.Data.Seeding;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,6 +39,9 @@ builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
+
+// Register Infrastructure (including Seeders)
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Register AutoMapper
 builder.Services.AddAutoMapper(cfg => {}, typeof(MappingProfile).Assembly);
@@ -67,7 +72,16 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    // Seed Data
+    using (var scope = app.Services.CreateScope())
+    {
+        var runner = scope.ServiceProvider.GetRequiredService<DataSeederRunner>();
+        await runner.RunAsync();
+    }
+}
+else
 {
     app.UseExceptionHandler("/Home/Error");
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.

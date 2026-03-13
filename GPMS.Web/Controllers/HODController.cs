@@ -202,15 +202,44 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> CreateReviewRound(CreateReviewRoundDto dto)
     {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        // 1. Basic Date Range Validation
         if (dto.StartDate >= dto.EndDate)
         {
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
+        // 2. Future Date Validation
+        if (dto.EndDate <= DateTime.Now)
+        {
+            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
+        }
+
+        // 3. Sequential Validation
+        if (activeSemester != null)
+        {
+            var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID))
+                                 .OrderBy(r => r.RoundNumber).ToList();
+
+            // Check previous round
+            var prevRound = existingRounds.LastOrDefault(r => r.RoundNumber < dto.RoundNumber);
+            if (prevRound != null && dto.StartDate < prevRound.EndDate)
+            {
+                ModelState.AddModelError("StartDate", $"Round {dto.RoundNumber} must start after Round {prevRound.RoundNumber} ends ({prevRound.EndDate:dd/MM/yyyy HH:mm}).");
+            }
+
+            // Check next round
+            var nextRound = existingRounds.FirstOrDefault(r => r.RoundNumber > dto.RoundNumber);
+            if (nextRound != null && dto.EndDate > nextRound.StartDate)
+            {
+                ModelState.AddModelError("EndDate", $"Round {dto.RoundNumber} must end before Round {nextRound.RoundNumber} starts ({nextRound.StartDate:dd/MM/yyyy HH:mm}).");
+            }
+        }
+
         if (!ModelState.IsValid)
         {
-            var semesters = await _semesterService.GetAllSemestersAsync();
-            var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
             ViewBag.ActiveSemester = activeSemester;
             return View(dto);
         }
@@ -258,9 +287,36 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> EditReviewRound(int id, CreateReviewRoundDto dto)
     {
+        // 1. Basic Date Range Validation
         if (dto.StartDate >= dto.EndDate)
         {
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
+        }
+
+        // 2. Future Date Validation
+        var now = DateTime.Now;
+        if (dto.EndDate <= now)
+        {
+            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
+        }
+
+        // 3. Sequential Validation
+        var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID))
+                             .Where(r => r.ReviewRoundID != id) // Exclude current round being edited
+                             .OrderBy(r => r.RoundNumber).ToList();
+
+        // Check previous round
+        var prevRound = existingRounds.LastOrDefault(r => r.RoundNumber < dto.RoundNumber);
+        if (prevRound != null && dto.StartDate < prevRound.EndDate)
+        {
+            ModelState.AddModelError("StartDate", $"Round {dto.RoundNumber} must start after Round {prevRound.RoundNumber} ends ({prevRound.EndDate:dd/MM/yyyy HH:mm}).");
+        }
+
+        // Check next round
+        var nextRound = existingRounds.FirstOrDefault(r => r.RoundNumber > dto.RoundNumber);
+        if (nextRound != null && dto.EndDate > nextRound.StartDate)
+        {
+            ModelState.AddModelError("EndDate", $"Round {dto.RoundNumber} must end before Round {nextRound.RoundNumber} starts ({nextRound.StartDate:dd/MM/yyyy HH:mm}).");
         }
 
         if (!ModelState.IsValid)
