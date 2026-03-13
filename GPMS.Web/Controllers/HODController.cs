@@ -12,13 +12,20 @@ public class HODController : Controller
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
     private readonly IReviewRoundService _reviewRoundService;
+    private readonly IProjectGroupService _groupService;
 
-    public HODController(IProjectService projectService, ISemesterService semesterService, IReviewRoundService reviewRoundService)
+    public HODController(
+        IProjectService projectService, 
+        ISemesterService semesterService, 
+        IReviewRoundService reviewRoundService,
+        IProjectGroupService groupService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
+        _groupService = groupService;
     }
+
 
     // GET: /HOD/Index (Dashboard)
     public async Task<IActionResult> Index()
@@ -174,8 +181,35 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public IActionResult Groups() => View();
-    public IActionResult GroupDetails(string id) => View();
+    public async Task<IActionResult> Groups(string? search, string? status, string? supervisor)
+    {
+        var allGroups = await _groupService.GetAllGroupsAsync();
+        var supervisors = allGroups
+            .Select(g => g.SupervisorName)
+            .Where(s => s != null && s != "Not Assigned")
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        var filteredGroups = await _groupService.GetAllGroupsAsync(search, status, supervisor);
+        
+        // Preserve filter values for the view
+        ViewData["Search"] = search;
+        ViewData["Status"] = status;
+        ViewData["Supervisor"] = supervisor;
+        ViewData["AllSupervisors"] = supervisors;
+
+        return View(filteredGroups);
+    }
+
+
+    public async Task<IActionResult> GroupDetails(int id)
+    {
+        var group = await _groupService.GetGroupDetailAsync(id);
+        if (group == null) return NotFound();
+        return View(group);
+    }
+
     public IActionResult AssignSupervisor() => View();
     public async Task<IActionResult> ReviewRounds()
     {

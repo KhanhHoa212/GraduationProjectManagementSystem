@@ -39,6 +39,8 @@ builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
+builder.Services.AddScoped<IProjectGroupService, ProjectGroupService>();
+
 
 // Register Infrastructure (including Seeders)
 builder.Services.AddInfrastructure(builder.Configuration);
