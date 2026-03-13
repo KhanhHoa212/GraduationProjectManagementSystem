@@ -57,5 +57,28 @@ public class MappingProfile : Profile
 
         // SubmissionRequirement mapping
         CreateMap<SubmissionRequirement, SubmissionRequirementDto>().ReverseMap();
+
+        // ProjectGroup -> ProjectGroupDto
+        CreateMap<ProjectGroup, ProjectGroupDto>()
+            .ForMember(dest => dest.ProjectName, opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectName : string.Empty))
+            .ForMember(dest => dest.ProjectCode, opt => opt.MapFrom(src => src.Project != null ? src.Project.ProjectCode : string.Empty))
+            .ForMember(dest => dest.ProjectStatus, opt => opt.MapFrom(src => src.Project != null ? src.Project.Status : ProjectStatus.Draft))
+            .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => 
+                src.Project != null && src.Project.ProjectSupervisors.Any(ps => ps.Role == ProjectRole.Main)
+                ? src.Project.ProjectSupervisors.First(ps => ps.Role == ProjectRole.Main).Lecturer.FullName
+                : "Not Assigned"))
+            .ForMember(dest => dest.MemberCount, opt => opt.MapFrom(src => src.GroupMembers.Count))
+            .ForMember(dest => dest.MemberNames, opt => opt.MapFrom(src => src.GroupMembers.Select(m => m.User.FullName).ToList()))
+            .ForMember(dest => dest.CurrentReviewPhase, opt => opt.MapFrom(src => "Phase 1")); // Temporary placeholder
+
+        // ProjectGroup -> ProjectGroupDetailDto
+        CreateMap<ProjectGroup, ProjectGroupDetailDto>()
+            .IncludeBase<ProjectGroup, ProjectGroupDto>()
+            .ForMember(dest => dest.Members, opt => opt.MapFrom(src => src.GroupMembers));
+
+        // GroupMember -> GroupMemberDto
+        CreateMap<GroupMember, GroupMemberDto>()
+            .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : string.Empty))
+            .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.User != null ? src.User.Email : string.Empty));
     }
 }
