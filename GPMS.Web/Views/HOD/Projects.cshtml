@@ -1,204 +1,187 @@
 @model IEnumerable<GPMS.Application.DTOs.ProjectDto>
 @using GPMS.Domain.Enums
 @{
-    ViewData["Title"] = "Projects";
-    ViewData["BreadcrumbTitle"] = "Projects Management";
-    Layout = "_HODLayout";
-    var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
+    ViewBag.Title = "Projects";
+    ViewBag.CurrentPage = "Projects";
+    ViewBag.BreadcrumbSection = "Project";
+    Layout = "~/Views/Shared/_HODLayout.cshtml";
+
+    var semesters = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? new List<GPMS.Application.DTOs.SemesterDto>();
     var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
     var currentStatus = ViewBag.CurrentStatus as string;
     var currentSearch = ViewBag.CurrentSearch as string;
-    var projects = Model?.ToList() ?? new List<GPMS.Application.DTOs.ProjectDto>();
 }
 
+<!-- Projects List Content -->
 <div class="space-y-6">
-
     <!-- Page Header -->
-    <div class="flex items-center justify-between">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Project Portfolio</h1>
-            <p class="text-sm text-slate-500 mt-0.5">
-                @(semesterList.FirstOrDefault(s => s.SemesterID == selectedSemesterId)?.SemesterCode ?? "All Semesters")
-                &middot; @projects.Count projects
-            </p>
+            <h1 class="text-2xl font-bold text-slate-800">Danh sách Đề tài</h1>
+            <p class="text-slate-500 text-sm mt-1">Quản lý toàn bộ đề tài trong hệ thống</p>
         </div>
-        <div class="flex items-center gap-2">
-            <button class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
-                <span class="material-symbols-outlined text-[18px]">cloud_download</span>
-                Export
+        <div class="flex gap-3">
+            <button class="bg-[#F37021] hover:bg-orange-600 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-orange-600">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span>Import Excel</span>
             </button>
-            <a asp-action="ProjectDetails"
-               class="flex items-center gap-2 px-4 py-2 bg-primary hover:bg-orange-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/25 transition-all no-underline">
-                <span class="material-symbols-outlined text-[18px]">add</span>
-                Create New Project
+            <a href="/HOD/CreateProject" class="bg-[#1E3A5F] hover:bg-slate-800 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm no-underline">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span>Tạo đề tài mới</span>
             </a>
         </div>
     </div>
 
-    <!-- Filter / Search Bar -->
-    <form method="get" class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <!-- Search -->
-        <div class="relative flex-1 w-full max-w-sm group">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
-                <span class="material-symbols-outlined text-[20px]">search</span>
-            </span>
-            <input type="text" name="search" value="@currentSearch"
-                   placeholder="Search by title, ID, supervisor..."
-                   class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary bg-slate-50 transition-all font-medium" />
-        </div>
-
-        <!-- Status Filter -->
-        <div class="relative">
-            <select name="status" class="appearance-none text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer">
-                <option value="">All Statuses</option>
-                    @foreach (var s in Enum.GetValues<ProjectStatus>())
+    <!-- Filters Card -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+        <form method="get" action="/HOD/Projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Semester Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HỌC KỲ</label>
+                <select name="semesterId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">Tất cả học kỳ</option>
+                    @foreach (var sem in semesters)
                     {
-                        if (currentStatus == s.ToString())
+                        if (selectedSemesterId.HasValue && sem.SemesterID == selectedSemesterId.Value)
                         {
-                            <option value="@s" selected>@s</option>
+                            <option value="@sem.SemesterID" selected>@sem.SemesterCode</option>
                         }
                         else
                         {
-                            <option value="@s">@s</option>
+                            <option value="@sem.SemesterID">@sem.SemesterCode</option>
                         }
                     }
-            </select>
-            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
-        </div>
+                </select>
+            </div>
 
-        <!-- Semester Filter -->
-        <div class="relative">
-            <select name="semesterId" class="appearance-none text-sm font-semibold text-slate-600 bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer">
-                <option value="">All Semesters</option>
-                @foreach (var sem in semesterList)
-                {
-                    if (selectedSemesterId == sem.SemesterID)
+            <!-- Specialization Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CHUYÊN NGÀNH</label>
+                <select name="majorName" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả chuyên ngành</option>
+                    <option value="Software Engineering" selected="@(ViewBag.CurrentMajor == "Software Engineering" ? "selected" : null)">Software Engineering (SE)</option>
+                    <option value="Software Testing" selected="@(ViewBag.CurrentMajor == "Software Testing" ? "selected" : null)">Software Testing (SS)</option>
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TRẠNG THÁI</label>
+                <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả trạng thái</option>
+                    @foreach (var st in Enum.GetValues(typeof(ProjectStatus)).Cast<ProjectStatus>())
                     {
-                        <option value="@sem.SemesterID" selected>@sem.SemesterCode</option>
+                        if (currentStatus == st.ToString())
+                        {
+                            <option value="@st" selected>@st</option>
+                        }
+                        else
+                        {
+                            <option value="@st">@st</option>
+                        }
                     }
-                    else
-                    {
-                        <option value="@sem.SemesterID">@sem.SemesterCode</option>
-                    }
-                }
-            </select>
-            <span class="material-symbols-outlined absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 text-[16px] pointer-events-none">expand_more</span>
-        </div>
+                </select>
+            </div>
 
-        <button type="submit" class="flex items-center gap-2 px-4 py-2.5 bg-primary text-white text-sm font-semibold rounded-xl hover:bg-orange-600 transition-all">
-            <span class="material-symbols-outlined text-[16px]">filter_alt</span>
-            Apply
-        </button>
-    </form>
+            <!-- Search -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TÌM KIẾM</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" name="search" value="@currentSearch" placeholder="Mã hoặc tên đề tài..." 
+                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 pl-10 text-sm text-slate-700 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors outline-none" />
+                </div>
+            </div>
+            
+            <!-- Hidden submit button for Enter key in Search input -->
+            <input type="submit" class="hidden" />
+        </form>
+    </div>
 
-    <!-- Data Table -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+    <!-- Projects Table -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-200">
-                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Project</th>
-                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">ID</th>
-                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Supervisor</th>
-                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
-                        <th class="py-3.5 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+            <table class="w-full text-sm text-left">
+                <thead class="bg-white border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ ĐỀ TÀI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">TÊN ĐỀ TÀI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">SỐ NHÓM</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">NGÀY TẠO</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @if (projects.Any())
+                    @if (!Model.Any())
                     {
-                        @foreach (var project in projects)
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model)
                         {
-                            var initials = string.Concat(project.ProjectName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
-                            var dotColor = project.Status switch
-                            {
-                                ProjectStatus.Active => "bg-blue-500 animate-pulse",
-                                ProjectStatus.Completed => "bg-emerald-500",
-                                ProjectStatus.Cancelled => "bg-red-500",
-                                _ => "bg-slate-300"
-                            };
-                            var statusText = project.Status switch
-                            {
-                                ProjectStatus.Active => "text-blue-600 font-medium",
-                                ProjectStatus.Completed => "text-emerald-600 font-medium",
-                                ProjectStatus.Cancelled => "text-red-500",
-                                _ => "text-slate-400"
-                            };
-                            <tr class="group hover:bg-slate-50/70 transition-colors">
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="size-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">
-                                            @initials
-                                        </div>
-                                        <div>
-                                            <p class="text-sm font-semibold text-slate-900">@project.ProjectName</p>
-                                            <p class="text-xs text-slate-400">@project.MajorName</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6 text-sm font-semibold text-primary">@project.ProjectCode</td>
-                                <td class="py-4 px-6">
-                                    @if (!string.IsNullOrEmpty(project.SupervisorName))
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-5 font-bold text-slate-800">@item.ProjectCode</td>
+                                <td class="px-6 py-5">
+                                    <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">@item.ProjectName</span>
+                                    @if (!string.IsNullOrEmpty(item.SupervisorName))
                                     {
-                                        var supInitials = string.Concat(project.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
-                                        <div class="flex items-center gap-2">
-                                            <div class="size-7 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">@supInitials</div>
-                                            <span class="text-sm text-slate-600">@project.SupervisorName</span>
+                                        <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                                            <span class="material-symbols-outlined text-[13px]">person</span> HD: @item.SupervisorName
                                         </div>
                                     }
-                                    else
-                                    {
-                                        <span class="text-sm text-slate-400 italic">Unassigned</span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    <span class="text-slate-600 font-medium whitespace-nowrap">@(item.MajorName ?? "-")</span>
+                                </td>
+                                <td class="px-6 py-5 text-center">
+                                    <span class="font-bold text-slate-800">@item.GroupCount.ToString("D2")</span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    @{
+                                        var badgeClass = item.Status switch {
+                                            ProjectStatus.Active => "text-emerald-700 bg-emerald-50 border-emerald-100",
+                                            ProjectStatus.Draft => "text-amber-700 bg-amber-50 border-amber-100",
+                                            ProjectStatus.Completed => "text-blue-700 bg-blue-50 border-blue-100",
+                                            _ => "text-slate-700 bg-slate-50 border-slate-200"
+                                        };
                                     }
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border @badgeClass">@item.Status</span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="size-2 rounded-full @dotColor"></div>
-                                        <span class="text-sm @statusText">@project.Status</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6 text-right">
-                                    <div class="flex items-center justify-end gap-1">
-                                        <a asp-action="ProjectDetails" asp-route-id="@project.ProjectID"
-                                           class="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors rounded-lg no-underline" title="View / Edit">
-                                            <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td class="px-6 py-5 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="View/Edit">
+                                            <span class="material-symbols-outlined text-[20px]">visibility</span>
                                         </a>
-                                        <button class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Delete">
-                                            <span class="material-symbols-outlined text-[18px]">delete_outline</span>
-                                        </button>
-                                        <button class="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors rounded-lg" title="More options">
-                                            <span class="material-symbols-outlined text-[18px]">more_vert</span>
+                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
                         }
                     }
-                    else
-                    {
-                        <tr>
-                            <td colspan="5" class="py-16 text-center">
-                                <span class="material-symbols-outlined text-slate-300 text-[48px] block mb-3">inbox</span>
-                                <p class="text-sm font-semibold text-slate-400">No projects found</p>
-                                <p class="text-xs text-slate-300 mt-1">Try adjusting your filters or create a new project</p>
-                            </td>
-                        </tr>
-                    }
                 </tbody>
             </table>
         </div>
 
-        <!-- Pagination Footer -->
+        <!-- Pagination -->
         <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-            <span class="text-sm text-slate-500">
-                Showing <span class="font-semibold text-slate-900">@projects.Count</span> results
-            </span>
-            <div class="flex items-center gap-2">
-                <button disabled class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed">
-                    &larr; Previous
+            <div class="text-sm font-medium text-slate-500">
+                Hiển thị <span class="font-bold text-slate-800">@Model.Count()</span> đề tài
+            </div>
+            <div class="flex items-center gap-1">
+                <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition">
+                    <span class="material-symbols-outlined text-[18px]">chevron_left</span>
                 </button>
-                <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
-                    Next &rarr;
+                <button class="w-8 h-8 flex items-center justify-center rounded-md bg-[#1E3A5F] text-white font-bold shadow-sm">1</button>
+                <button class="w-8 h-8 flex items-center justify-center rounded-md border border-slate-200 text-slate-500 bg-white hover:bg-slate-50 transition">
+                    <span class="material-symbols-outlined text-[18px]">chevron_right</span>
                 </button>
             </div>
         </div>

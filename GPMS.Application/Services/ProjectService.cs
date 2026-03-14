@@ -15,17 +15,23 @@ public class ProjectService : IProjectService
     private readonly IProjectRepository _projectRepository;
     private readonly IProjectGroupRepository _groupRepository;
     private readonly IUserRepository _userRepository;
+    private readonly ISubmissionRepository _submissionRepository;
+    private readonly IFeedbackRepository _feedbackRepository;
     private readonly IMapper _mapper;
 
     public ProjectService(
         IProjectRepository projectRepository,
         IProjectGroupRepository groupRepository,
         IUserRepository userRepository,
+        ISubmissionRepository submissionRepository,
+        IFeedbackRepository feedbackRepository,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
         _userRepository = userRepository;
+        _submissionRepository = submissionRepository;
+        _feedbackRepository = feedbackRepository;
         _mapper = mapper;
     }
 
@@ -41,6 +47,43 @@ public class ProjectService : IProjectService
         return _mapper.Map<IEnumerable<ProjectDto>>(projects);
     }
 
+    public async Task<ProjectDto?> GetProjectByStudentAsync(string studentId)
+    {
+        var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
+        return project == null ? null : _mapper.Map<ProjectDto>(project);
+    }
+
+    public async Task<IEnumerable<SubmissionItemDto>> GetDashboardSubmissionsAsync(string studentId)
+    {
+        var submissions = await _submissionRepository.GetActiveSubmissionsByStudentAsync(studentId);
+        
+        return submissions.Select(s => new SubmissionItemDto
+        {
+            RequirementID = s.Requirement.RequirementID,
+            DocumentName = s.Requirement.DocumentName,
+            Description = s.Requirement.Description,
+            Deadline = s.Requirement.Deadline,
+            
+            SubmissionID = s.Submission?.SubmissionID,
+            FileName = s.Submission?.FileName,
+            SubmittedAt = s.Submission?.SubmittedAt,
+            Status = s.Submission?.Status
+        }).ToList();
+    }
+
+    public async Task<IEnumerable<DashboardFeedbackDto>> GetDashboardFeedbacksAsync(string studentId, int count = 5)
+    {
+        var feedbacks = await _feedbackRepository.GetRecentFeedbacksByStudentAsync(studentId, count);
+
+        return feedbacks.Select(f => new DashboardFeedbackDto
+        {
+            FeedbackID = f.FeedbackID,
+            ReviewerName = f.Evaluation.Reviewer.FullName,
+            Content = f.Content,
+            CreatedAt = f.CreatedAt
+        }).ToList();
+    }
+
     public async Task<ProjectDetailDto?> GetProjectDetailAsync(int projectId)
     {
         var project = await _projectRepository.GetDetailAsync(projectId);
@@ -51,9 +94,13 @@ public class ProjectService : IProjectService
 
     public async Task CreateProjectAsync(CreateProjectDto dto)
     {
-        var allProjects = await _projectRepository.GetAllAsync();
-        var count = allProjects.Count();
-        var code = $"GP-{dto.SemesterID}-{count + 1:D3}";
+        string code = dto.ProjectCode;
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            var allProjects = await _projectRepository.GetAllAsync();
+            var count = allProjects.Count();
+            code = $"GP-{dto.SemesterID}-{count + 1:D3}";
+        }
 
         var project = new Project
         {

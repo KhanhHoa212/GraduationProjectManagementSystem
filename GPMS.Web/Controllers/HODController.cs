@@ -11,12 +11,21 @@ public class HODController : Controller
 {
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
+    private readonly IReviewRoundService _reviewRoundService;
+    private readonly IProjectGroupService _groupService;
 
-    public HODController(IProjectService projectService, ISemesterService semesterService)
+    public HODController(
+        IProjectService projectService, 
+        ISemesterService semesterService, 
+        IReviewRoundService reviewRoundService,
+        IProjectGroupService groupService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
+        _reviewRoundService = reviewRoundService;
+        _groupService = groupService;
     }
+
 
     // GET: /HOD/Index (Dashboard)
     public async Task<IActionResult> Index()
@@ -35,19 +44,34 @@ public class HODController : Controller
 
         // Recent projects for the status table
         var projects = activeSemester != null
-            ? await _projectService.GetProjectsBySemesterAsync(activeSemester.SemesterID)
-            : await _projectService.GetAllProjectsAsync();
+            ? (await _projectService.GetProjectsBySemesterAsync(activeSemester.SemesterID)).ToList()
+            : (await _projectService.GetAllProjectsAsync()).ToList();
 
-        return View(projects.Take(5));
+        ViewBag.ActiveCount = projects.Count(p => p.Status == ProjectStatus.Active);
+        ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
+        ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
+
+        return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
 
-    // GET: /HOD/Projects
-    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search)
+    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search, string? majorName)
     {
         var semesters = (await _semesterService.GetAllSemestersAsync()).ToList();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
 
-        var targetSemesterId = semesterId ?? activeSemester?.SemesterID;
+        int? targetSemesterId;
+        if (semesterId == -1)
+        {
+            targetSemesterId = null; 
+        }
+        else if (semesterId == null)
+        {
+            targetSemesterId = activeSemester?.SemesterID;
+        }
+        else
+        {
+            targetSemesterId = semesterId;
+        }
 
         IEnumerable<ProjectDto> projects = targetSemesterId.HasValue
             ? await _projectService.GetProjectsBySemesterAsync(targetSemesterId.Value)
@@ -64,11 +88,16 @@ public class HODController : Controller
                 p.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
                 (p.SupervisorName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
 
+        // Filter by major
+        if (!string.IsNullOrWhiteSpace(majorName))
+            projects = projects.Where(p => p.MajorName == majorName);
+
         ViewBag.Semesters = semesters;
-        ViewBag.SelectedSemesterId = targetSemesterId;
+        ViewBag.SelectedSemesterId = semesterId == -1 ? -1 : targetSemesterId;
         ViewBag.ActiveSemester = activeSemester;
         ViewBag.CurrentStatus = status;
         ViewBag.CurrentSearch = search;
+        ViewBag.CurrentMajor = majorName;
 
         return View(projects.ToList());
     }
@@ -152,9 +181,211 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public IActionResult Groups() => View();
-    public IActionResult GroupDetails(string id) => View();
+    public async Task<IActionResult> Groups(string? search, string? status, string? supervisor)
+    {
+        var allGroups = await _groupService.GetAllGroupsAsync();
+        var supervisors = allGroups
+            .Select(g => g.SupervisorName)
+            .Where(s => s != null && s != "Not Assigned")
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        var filteredGroups = await _groupService.GetAllGroupsAsync(search, status, supervisor);
+        
+        // Preserve filter values for the view
+        ViewData["Search"] = search;
+        ViewData["Status"] = status;
+        ViewData["Supervisor"] = supervisor;
+        ViewData["AllSupervisors"] = supervisors;
+
+        return View(filteredGroups);
+    }
+
+
+    public async Task<IActionResult> GroupDetails(int id)
+    {
+        var group = await _groupService.GetGroupDetailAsync(id);
+        if (group == null) return NotFound();
+        return View(group);
+    }
+
     public IActionResult AssignSupervisor() => View();
-    public IActionResult Import() => View();
+    public async Task<IActionResult> ReviewRounds()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        if (activeSemester == null)
+            return View(new List<ReviewRoundDto>());
+
+        var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        return View(rounds);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> CreateReviewRound()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        ViewBag.ActiveSemester = activeSemester;
+        return View();
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> CreateReviewRound(CreateReviewRoundDto dto)
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        // 1. Basic Date Range Validation
+        if (dto.StartDate >= dto.EndDate)
+        {
+            ModelState.AddModelError("EndDate", "End date must be greater than start date.");
+        }
+
+        // 2. Future Date Validation
+        if (dto.EndDate <= DateTime.Now)
+        {
+            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
+        }
+
+        // 3. Sequential Validation
+        if (activeSemester != null)
+        {
+            var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID))
+                                 .OrderBy(r => r.RoundNumber).ToList();
+
+            // Check previous round
+            var prevRound = existingRounds.LastOrDefault(r => r.RoundNumber < dto.RoundNumber);
+            if (prevRound != null && dto.StartDate < prevRound.EndDate)
+            {
+                ModelState.AddModelError("StartDate", $"Round {dto.RoundNumber} must start after Round {prevRound.RoundNumber} ends ({prevRound.EndDate:dd/MM/yyyy HH:mm}).");
+            }
+
+            // Check next round
+            var nextRound = existingRounds.FirstOrDefault(r => r.RoundNumber > dto.RoundNumber);
+            if (nextRound != null && dto.EndDate > nextRound.StartDate)
+            {
+                ModelState.AddModelError("EndDate", $"Round {dto.RoundNumber} must end before Round {nextRound.RoundNumber} starts ({nextRound.StartDate:dd/MM/yyyy HH:mm}).");
+            }
+        }
+
+        if (!ModelState.IsValid)
+        {
+            ViewBag.ActiveSemester = activeSemester;
+            return View(dto);
+        }
+
+        await _reviewRoundService.CreateReviewRoundAsync(dto);
+        TempData["SuccessMessage"] = "Review round created successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> EditReviewRound(int id)
+    {
+        var round = await _reviewRoundService.GetReviewRoundByIdAsync(id);
+        if (round == null) return NotFound();
+        
+        var dto = new CreateReviewRoundDto
+        {
+            SemesterID = round.SemesterID,
+            RoundNumber = round.RoundNumber,
+            RoundType = round.RoundType,
+            StartDate = round.StartDate,
+            EndDate = round.EndDate,
+            SubmissionDeadline = round.SubmissionDeadline,
+            Description = round.Description,
+            Status = round.Status,
+            SubmissionRequirements = round.SubmissionRequirements?.Select(req => new SubmissionRequirementDto
+            {
+                RequirementID = req.RequirementID,
+                DocumentName = req.DocumentName,
+                Description = req.Description,
+                AllowedFormats = req.AllowedFormats,
+                MaxFileSizeMB = req.MaxFileSizeMB,
+                IsRequired = req.IsRequired
+            }).ToList() ?? new List<SubmissionRequirementDto>()
+        };
+        
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        ViewBag.ActiveSemester = semesters.FirstOrDefault(s => s.SemesterID == round.SemesterID);
+        ViewBag.ReviewRoundID = id;
+
+        return View("CreateReviewRound", dto); 
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> EditReviewRound(int id, CreateReviewRoundDto dto)
+    {
+        // 1. Basic Date Range Validation
+        if (dto.StartDate >= dto.EndDate)
+        {
+            ModelState.AddModelError("EndDate", "End date must be greater than start date.");
+        }
+
+        // 2. Future Date Validation
+        var now = DateTime.Now;
+        if (dto.EndDate <= now)
+        {
+            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
+        }
+
+        // 3. Sequential Validation
+        var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID))
+                             .Where(r => r.ReviewRoundID != id) // Exclude current round being edited
+                             .OrderBy(r => r.RoundNumber).ToList();
+
+        // Check previous round
+        var prevRound = existingRounds.LastOrDefault(r => r.RoundNumber < dto.RoundNumber);
+        if (prevRound != null && dto.StartDate < prevRound.EndDate)
+        {
+            ModelState.AddModelError("StartDate", $"Round {dto.RoundNumber} must start after Round {prevRound.RoundNumber} ends ({prevRound.EndDate:dd/MM/yyyy HH:mm}).");
+        }
+
+        // Check next round
+        var nextRound = existingRounds.FirstOrDefault(r => r.RoundNumber > dto.RoundNumber);
+        if (nextRound != null && dto.EndDate > nextRound.StartDate)
+        {
+            ModelState.AddModelError("EndDate", $"Round {dto.RoundNumber} must end before Round {nextRound.RoundNumber} starts ({nextRound.StartDate:dd/MM/yyyy HH:mm}).");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            var semesters = await _semesterService.GetAllSemestersAsync();
+            ViewBag.ActiveSemester = semesters.FirstOrDefault(s => s.SemesterID == dto.SemesterID);
+            ViewBag.ReviewRoundID = id;
+            return View("CreateReviewRound", dto);
+        }
+
+        await _reviewRoundService.UpdateReviewRoundAsync(id, dto);
+        TempData["SuccessMessage"] = "Review round updated successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReviewRound(int id)
+    {
+        await _reviewRoundService.DeleteReviewRoundAsync(id);
+        TempData["SuccessMessage"] = "Review round deleted successfully.";
+        return RedirectToAction(nameof(ReviewRounds));
+    }
+
+    public IActionResult Checklists() => View();
+    public IActionResult AssignReviewer() => View();
+    public IActionResult Reports() => View();
+    
+    [HttpGet]
+    public async Task<IActionResult> CreateProject()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        ViewBag.ActiveSemester = activeSemester;
+        return View();
+    }
 }
 

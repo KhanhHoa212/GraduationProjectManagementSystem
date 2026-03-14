@@ -10,6 +10,7 @@ public interface IFeedbackRepository
     Task<IEnumerable<Feedback>> GetPendingApprovalsBySupervisorAsync(string supervisorId);
     Task<IEnumerable<Feedback>> GetVisibleFeedbacksForStudentAsync(string studentId);
     Task<Feedback?> GetByIdWithDetailsAsync(int feedbackId);
+    Task<IEnumerable<Feedback>> GetRecentFeedbacksByStudentAsync(string studentId, int count);
     Task AddAsync(Feedback feedback);
     Task UpdateApprovalAsync(FeedbackApproval approval);
     Task SaveChangesAsync();

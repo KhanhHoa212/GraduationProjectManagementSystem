@@ -11,5 +11,7 @@ public interface IReviewRoundRepository
     Task<IEnumerable<ReviewRound>> GetBySemesterAsync(int semesterId);
     Task<IEnumerable<ReviewRound>> GetUpcomingRoundsAsync(int count = 5);
     Task AddAsync(ReviewRound round);
+    void Update(ReviewRound round);
+    void Delete(ReviewRound round);
     Task SaveChangesAsync();
 }

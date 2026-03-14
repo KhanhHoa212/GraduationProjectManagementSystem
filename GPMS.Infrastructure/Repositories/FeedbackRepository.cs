@@ -3,6 +3,8 @@ using GPMS.Domain.Enums;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace GPMS.Infrastructure.Repositories;
@@ -71,6 +73,26 @@ public class FeedbackRepository : IFeedbackRepository
                 .ThenInclude(e => e.EvaluationDetails)
                     .ThenInclude(d => d.Item)
             .FirstOrDefaultAsync(f => f.FeedbackID == feedbackId);
+
+    public async Task<IEnumerable<Feedback>> GetRecentFeedbacksByStudentAsync(string studentId, int count)
+    {
+        // 1. Find the student's active group
+        var group = await _context.ProjectGroups
+            .Include(g => g.GroupMembers)
+            .Where(g => g.GroupMembers.Any(m => m.UserID == studentId))
+            .FirstOrDefaultAsync();
+
+        if (group == null)
+            return Enumerable.Empty<Feedback>();
+
+        return await _context.Feedbacks
+            .Include(f => f.Evaluation)
+            .ThenInclude(e => e.Reviewer)
+            .Where(f => f.Evaluation.GroupID == group.GroupID)
+            .OrderByDescending(f => f.CreatedAt)
+            .Take(count)
+            .ToListAsync();
+    }
 
     public async Task AddAsync(Feedback feedback) => await _context.Feedbacks.AddAsync(feedback);
     public Task UpdateApprovalAsync(FeedbackApproval approval) { _context.FeedbackApprovals.Update(approval); return Task.CompletedTask; }

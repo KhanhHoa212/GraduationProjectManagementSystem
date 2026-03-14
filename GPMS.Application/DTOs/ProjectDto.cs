@@ -54,6 +54,7 @@ public class ProjectMemberDto
 // Create / Update forms
 public class CreateProjectDto
 {
+    public string ProjectCode { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
     public string? Description { get; set; }
     public int SemesterID { get; set; }
