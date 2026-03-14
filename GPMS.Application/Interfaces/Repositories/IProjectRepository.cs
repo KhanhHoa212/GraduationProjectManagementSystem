@@ -15,6 +15,8 @@ public interface IProjectRepository
     Task<IEnumerable<Project>> GetBySemesterWithDetailsAsync(int semesterId);
     Task<Project?> GetDetailAsync(int projectId);
 
+    Task<Project?> GetProjectByStudentIdAsync(string studentId);
+
     Task AddAsync(Project project);
     Task UpdateAsync(Project project);
     Task SaveChangesAsync();

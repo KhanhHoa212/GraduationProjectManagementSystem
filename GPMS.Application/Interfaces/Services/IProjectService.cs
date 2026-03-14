@@ -10,6 +10,11 @@ public interface IProjectService
     Task CreateProjectAsync(CreateProjectDto dto);
     Task UpdateProjectAsync(UpdateProjectDto dto);
     Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null);
+    
+    // Student Dashboard
+    Task<ProjectDto?> GetProjectByStudentAsync(string studentId);
+    Task<IEnumerable<SubmissionItemDto>> GetDashboardSubmissionsAsync(string studentId);
+    Task<IEnumerable<DashboardFeedbackDto>> GetDashboardFeedbacksAsync(string studentId, int count = 5);
 
     // Member management
     Task<IEnumerable<StudentSearchDto>> SearchStudentsAsync(string query);
