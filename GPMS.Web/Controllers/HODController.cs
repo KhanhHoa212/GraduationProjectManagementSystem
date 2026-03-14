@@ -103,18 +103,21 @@ public class HODController : Controller
     }
 
     // GET: /HOD/ProjectDetails/{id}
-    public async Task<IActionResult> ProjectDetails(int? id)
+    public async Task<IActionResult> ProjectDetails(int id)
+    {
+        var project = await _projectService.GetProjectDetailAsync(id);
+        if (project == null) return NotFound();
+
+        return View(project);
+    }
+
+    // GET: /HOD/EditProject/{id}
+    public async Task<IActionResult> EditProject(int id)
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         ViewBag.Semesters = semesters;
 
-        if (id == null)
-        {
-            // Create mode - return empty view
-            return View(new ProjectDetailDto());
-        }
-
-        var project = await _projectService.GetProjectDetailAsync(id.Value);
+        var project = await _projectService.GetProjectDetailAsync(id);
         if (project == null) return NotFound();
 
         return View(project);
@@ -383,9 +386,12 @@ public class HODController : Controller
     public async Task<IActionResult> CreateProject()
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
+        ViewBag.Semesters = semesters;
+        
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         ViewBag.ActiveSemester = activeSemester;
-        return View();
+        
+        return View("EditProject", new ProjectDetailDto());
     }
 }
 

@@ -155,10 +155,13 @@
                                 <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td class="px-6 py-5 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="View/Edit">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="Xem chi tiết">
                                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                                         </a>
-                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
+                                        <a href="/HOD/EditProject/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Chỉnh sửa">
+                                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                                        </a>
+                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>
