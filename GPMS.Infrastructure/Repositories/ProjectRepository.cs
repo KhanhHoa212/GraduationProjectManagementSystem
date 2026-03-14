@@ -56,6 +56,18 @@ public class ProjectRepository : IProjectRepository
                     .ThenInclude(m => m.User)
             .FirstOrDefaultAsync(p => p.ProjectID == projectId);
 
+    public async Task<Project?> GetProjectByStudentIdAsync(string studentId) =>
+        await _context.Projects
+            .Include(p => p.Major)
+            .Include(p => p.Semester)
+            .Include(p => p.ProjectSupervisors)
+                .ThenInclude(ps => ps.Lecturer)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.GroupMembers)
+            .Where(p => p.ProjectGroups.Any(g => g.GroupMembers.Any(m => m.UserID == studentId)))
+            .OrderByDescending(p => p.CreatedAt)
+            .FirstOrDefaultAsync();
+
     public async Task AddAsync(Project project) =>
         await _context.Projects.AddAsync(project);
 

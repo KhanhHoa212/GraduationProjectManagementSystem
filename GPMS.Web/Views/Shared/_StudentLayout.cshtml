@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - GPMS</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Sidebar Styles */
+        #student-sidebar {
+            width: 256px;
+            min-width: 256px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+            border-right: 1px solid #e5e7eb;
+            transition: transform 0.3s ease;
+        }
+
+        #student-main {
+            margin-left: 256px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+        }
+
+        .sidebar-nav-item:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+            text-decoration: none;
+        }
+
+        .sidebar-nav-item.active {
+            background: #1d4ed8; /* Blue-700 */
+            color: #ffffff;
+            font-weight: 600;
+        }
+
+        .sidebar-nav-item.active .material-symbols-outlined {
+            color: #ffffff;
+        }
+
+        .sidebar-nav-item .material-symbols-outlined {
+            font-size: 20px;
+            flex-shrink: 0;
+            color: #64748b;
+        }
+
+        .sidebar-section-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            padding: 0 16px;
+            margin: 24px 0 8px 0;
+        }
+
+        /* Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.2s linear;
+        }
+        #loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .spinner-border.text-primary { color: #1d4ed8; width: 3rem; height: 3rem; }
+
+        /* Scrollbar */
+        .sidebar-nav::-webkit-scrollbar { width: 4px; }
+        .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+        .sidebar-nav::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+
+        .main-content-area::-webkit-scrollbar { width: 6px; }
+        .main-content-area::-webkit-scrollbar-track { background: #f8f9fa; }
+        .main-content-area::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 6px; }
+
+        @@media (max-width: 768px) {
+            #student-sidebar { transform: translateX(-100%); }
+            #student-sidebar.open { transform: translateX(0); }
+            #student-main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body class="bg-[#f8f9fa] text-slate-900">
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="flex flex-col items-center gap-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden"></span>
+            </div>
+            <p class="text-primary font-bold animate-pulse text-sm tracking-wide uppercase">Processing...</p>
+        </div>
+    </div>
+
+    <div class="flex">
+        <!-- ===== STUDENT SIDEBAR ===== -->
+        <aside id="student-sidebar">
+            <!-- Logo / Brand -->
+            <div class="px-6 py-6 border-b border-gray-100">
+                <a asp-controller="Home" asp-action="Index" class="flex items-center gap-3 no-underline">
+                    <div class="size-8 rounded bg-[#1d4ed8] flex items-center justify-center flex-shrink-0">
+                        <span class="material-symbols-outlined text-white text-[20px] filled">school</span>
+                    </div>
+                    <span class="text-[#0f172a] text-lg font-bold tracking-tight">FPT GPMS</span>
+                </a>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 overflow-y-auto sidebar-nav px-4 py-4">
+
+                <span class="sidebar-section-label">Menu</span>
+
+                <a asp-controller="Student" asp-action="Index"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Student" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                    <span class="material-symbols-outlined">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">folder</span>
+                    <span>My Project</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">description</span>
+                    <span>Submissions</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">calendar_today</span>
+                    <span>Schedule</span>
+                </a>
+
+                <a href="#" class="sidebar-nav-item">
+                    <span class="material-symbols-outlined">menu_book</span>
+                    <span>Resources</span>
+                </a>
+            </nav>
+
+            <!-- Need Help Box -->
+            <div class="p-4 mt-auto">
+                <div class="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-2 text-blue-700 font-semibold">
+                        <span class="material-symbols-outlined">support_agent</span>
+                        <span class="text-sm">Need Help?</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Contact your academic advisor for guidance.
+                    </p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- ===== MAIN CONTENT ===== -->
+        <div id="student-main" class="flex-1">
+            <!-- Top Header Bar -->
+            <header class="sticky top-0 z-50 h-[72px] bg-white border-b border-gray-200 flex items-center justify-between px-8">
+                <!-- Mobile menu toggle -->
+                <button id="sidebar-toggle" class="md:hidden p-2 text-slate-500 rounded-lg">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+
+                <!-- Breadcrumbs -->
+                <div class="flex items-center gap-2 text-sm">
+                    <a asp-controller="Home" asp-action="Index" class="text-slate-500 hover:text-slate-700 no-underline font-medium">Home</a>
+                    <span class="text-slate-400">/</span>
+                    <span class="text-slate-900 font-semibold">Dashboard</span>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-6">
+                    <!-- Notifications -->
+                    <button class="relative text-slate-500 hover:text-slate-700 transition-colors">
+                        <span class="material-symbols-outlined text-[24px]">notifications</span>
+                        <span class="absolute top-0 right-0 size-2 bg-red-500 rounded-full border border-white"></span>
+                    </button>
+
+                    <!-- User Profile -->
+                    <div class="flex items-center gap-3 pl-6 border-l border-gray-200">
+                        <div class="text-right hidden sm:block leading-tight">
+                            @if (User.Identity?.IsAuthenticated == true)
+                            {
+                                <p class="text-sm font-semibold text-slate-900">@User.Identity.Name</p>
+                                <p class="text-xs text-slate-500">Student</p>
+                            }
+                            else
+                            {
+                                <p class="text-sm font-semibold text-slate-900">Nguyen Van B</p>
+                                <p class="text-xs text-slate-500">SE123456</p>
+                            }
+                        </div>
+                        <div class="size-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 font-bold border-2 border-white shadow-sm ring-1 ring-gray-100">
+                            <span class="material-symbols-outlined">person</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto main-content-area p-8">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Mobile sidebar overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-90 hidden md:hidden"></div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('loading-overlay');
+            const sidebar = document.getElementById('student-sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            // Mobile sidebar toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('hidden');
+                });
+            }
+            if (sidebarOverlay) {
+                sidebarOverlay.addEventListener('click', function () {
+                    sidebar.classList.remove('open');
+                    sidebarOverlay.classList.add('hidden');
+                });
+            }
+
+            // Loading overlay on form submit
+            document.querySelectorAll('form').forEach(form => {
+                form.addEventListener('submit', function () {
+                    if (this.checkValidity()) {
+                        overlay.classList.add('active');
+                    }
+                });
+            });
+
+            // Loading overlay on navigation links
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"])').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+                        setTimeout(() => overlay.classList.add('active'), 50);
+                    }
+                });
+            });
+
+            // Hide spinner on back/forward
+            window.addEventListener('pageshow', function (event) {
+                overlay.classList.remove('active');
+            });
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
