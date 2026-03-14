@@ -1,5 +1,6 @@
+@model GPMS.Application.DTOs.Lecturer.LecturerProjectGroupDetailViewModel
 @{
-    ViewData["Title"] = "Group " + ViewBag.GroupId;
+    ViewData["Title"] = "Group " + Model.GroupId;
     Layout = "_LecturerLayout";
 }
 
@@ -53,11 +54,11 @@
         <div class="flex-grow-1">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <h1 class="fw-bold mb-2" style="font-size: 22px; color: var(--text-heading); letter-spacing: -0.3px;">AI-Driven Logistics Optimization</h1>
+                    <h1 class="fw-bold mb-2" style="font-size: 22px; color: var(--text-heading); letter-spacing: -0.3px;">@Model.ProjectName</h1>
                     <div class="text-muted d-flex align-items-center gap-2 mb-4" style="font-size: 14px;">
-                        <span class="fw-semibold text-body">Group ID: GRP-2024-08</span>
+                        <span class="fw-semibold text-body">Group: @Model.GroupName</span>
                         <span>•</span>
-                        <span>Year 4 Computer Science</span>
+                        <span>Semester: @Model.Semester</span>
                     </div>
                 </div>
                 <button type="button" class="btn btn-primary d-flex align-items-center gap-2">
@@ -77,18 +78,13 @@
                 <div class="col-md-8">
                     <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">STUDENT MEMBERS</div>
                     <div class="d-flex flex-wrap gap-2">
-                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                            <img src="https://ui-avatars.com/api/?name=AL&background=FDBA74&color=fff" width="18" height="18" class="rounded-circle" />
-                            Alex Low (Leader)
-                        </div>
-                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                             <img src="https://ui-avatars.com/api/?name=MT&background=FCA5A5&color=fff" width="18" height="18" class="rounded-circle" />
-                            Maria Tan
-                        </div>
-                        <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                             <img src="https://ui-avatars.com/api/?name=JW&background=FCD34D&color=fff" width="18" height="18" class="rounded-circle" />
-                            John Wu
-                        </div>
+                        @foreach (var member in Model.Members)
+                        {
+                            <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-2 px-2 py-1 rounded-pill" style="font-size: 12px;">
+                                <img src="@member.AvatarUrl" width="18" height="18" class="rounded-circle" />
+                                @member.FullName @(member.RoleInGroup == "Leader" ? "(Leader)" : "")
+                            </div>
+                        }
                     </div>
                 </div>
             </div>
@@ -172,10 +168,20 @@
                     </div>
                 </div>
 
-                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id="FB-100" })" class="btn btn-primary w-100 py-2 d-flex justify-content-center align-items-center gap-2 fw-bold" style="font-size: 14px;">
-                    View Feedback to Approve
-                    <span class="material-symbols-outlined fs-5">arrow_forward</span>
-                </a>
+                @if (Model.PendingFeedbackId.HasValue)
+                {
+                    <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = Model.PendingFeedbackId.Value })"
+                       class="btn btn-primary w-100 py-2 d-flex justify-content-center align-items-center gap-2 fw-bold" style="font-size: 14px;">
+                        View Feedback to Approve
+                        <span class="material-symbols-outlined fs-5">arrow_forward</span>
+                    </a>
+                }
+                else
+                {
+                    <button class="btn btn-secondary w-100 py-2 d-flex justify-content-center align-items-center gap-2 fw-bold" style="font-size: 14px;" disabled>
+                        No Pending Feedback
+                    </button>
+                }
             </div>
         </div>
 

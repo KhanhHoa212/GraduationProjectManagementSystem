@@ -113,22 +113,30 @@ public class GpmsDbContext : DbContext
         // 8. Projects & Groups
         modelBuilder.Entity<Project>().HasData(
             new Project { ProjectID = 100, ProjectCode = "PRJ-01", ProjectName = "AI Traffic Analyzer", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 },
-            new Project { ProjectID = 101, ProjectCode = "PRJ-02", ProjectName = "Smart Healthcare System", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 }
+            new Project { ProjectID = 101, ProjectCode = "PRJ-02", ProjectName = "Smart Healthcare System", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 },
+            new Project { ProjectID = 102, ProjectCode = "PRJ-03", ProjectName = "E-Commerce Platform", Status = ProjectStatus.Active, SemesterID = 1, MajorID = 1 }
         );
         modelBuilder.Entity<ProjectGroup>().HasData(
-            new ProjectGroup { GroupID = 100, ProjectID = 100, GroupName = "Group 1", CreatedAt = DateTime.Now },
-            new ProjectGroup { GroupID = 101, ProjectID = 101, GroupName = "Group 2", CreatedAt = DateTime.Now }
+            new ProjectGroup { GroupID = 100, ProjectID = 100, GroupName = "Group AI-01", CreatedAt = new DateTime(2025, 1, 5) },
+            new ProjectGroup { GroupID = 101, ProjectID = 101, GroupName = "Group HC-01", CreatedAt = new DateTime(2025, 1, 5) },
+            new ProjectGroup { GroupID = 102, ProjectID = 102, GroupName = "Group EC-01", CreatedAt = new DateTime(2025, 1, 5) }
         );
 
         // 9. Members & Supervisors
         modelBuilder.Entity<GroupMember>().HasData(
-            new GroupMember { GroupID = 100, RoleInGroup = GroupRole.Member, UserID = "SE180001" },
+            // Group 100 (AI Traffic Analyzer) - GV001 mentor
+            new GroupMember { GroupID = 100, RoleInGroup = GroupRole.Leader, UserID = "SE180001" },
             new GroupMember { GroupID = 100, RoleInGroup = GroupRole.Member, UserID = "SE180002" },
-            new GroupMember { GroupID = 101, RoleInGroup = GroupRole.Member, UserID = "SE180003" }
+            // Group 101 (Smart Healthcare) - GV002 mentor
+            new GroupMember { GroupID = 101, RoleInGroup = GroupRole.Leader, UserID = "SE180003" },
+            new GroupMember { GroupID = 101, RoleInGroup = GroupRole.Member, UserID = "SE180004" },
+            // Group 102 (E-Commerce) - GV001 mentor
+            new GroupMember { GroupID = 102, RoleInGroup = GroupRole.Leader, UserID = "SE180005" }
         );
         modelBuilder.Entity<ProjectSupervisor>().HasData(
-            new ProjectSupervisor { ProjectID = 100, Role = ProjectRole.Main, LecturerID = "GV001", AssignedAt = DateTime.Now },
-            new ProjectSupervisor { ProjectID = 101, Role = ProjectRole.Main, LecturerID = "GV002", AssignedAt = DateTime.Now }
+            new ProjectSupervisor { ProjectID = 100, Role = ProjectRole.Main, LecturerID = "GV001", AssignedAt = new DateTime(2025, 1, 5) },
+            new ProjectSupervisor { ProjectID = 101, Role = ProjectRole.Main, LecturerID = "GV002", AssignedAt = new DateTime(2025, 1, 5) },
+            new ProjectSupervisor { ProjectID = 102, Role = ProjectRole.Main, LecturerID = "GV001", AssignedAt = new DateTime(2025, 1, 5) }
         );
 
         // 10. Reviews & Checklists
@@ -146,24 +154,44 @@ public class GpmsDbContext : DbContext
 
         // 11. Review Assignments & Feedback
         modelBuilder.Entity<ReviewSessionInfo>().HasData(
-            new ReviewSessionInfo { SessionID = 1, ReviewRoundID = 1, GroupID = 101, RoomID = 1, MeetLink = "https://meet.google.com/abc-defg-hij", ScheduledAt = DateTime.Now.AddDays(1) },
-            new ReviewSessionInfo { SessionID = 2, ReviewRoundID = 1, GroupID = 100, RoomID = 2, MeetLink = "https://meet.google.com/xyz-uvw-qrs", ScheduledAt = DateTime.Now.AddDays(5) }
+            new ReviewSessionInfo { SessionID = 1, ReviewRoundID = 1, GroupID = 101, RoomID = 1, MeetLink = "https://meet.google.com/abc-defg-hij", ScheduledAt = new DateTime(2025, 3, 10, 10, 0, 0) },
+            new ReviewSessionInfo { SessionID = 2, ReviewRoundID = 1, GroupID = 100, RoomID = 2, MeetLink = "https://meet.google.com/xyz-uvw-qrs", ScheduledAt = new DateTime(2025, 3, 12, 14, 0, 0) },
+            new ReviewSessionInfo { SessionID = 3, ReviewRoundID = 1, GroupID = 102, RoomID = 1, MeetLink = "https://meet.google.com/pqr-stu-vwx", ScheduledAt = new DateTime(2025, 3, 14, 9, 0, 0) }
         );
         modelBuilder.Entity<ReviewerAssignment>().HasData(
-            // GV001 is reviewing Group 101 (Not their own group!)
-            new ReviewerAssignment { AssignmentID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, AssignedAt = DateTime.Now },
-            // GV001 is reviewing Group 100 on Defense
-            new ReviewerAssignment { AssignmentID = 2, GroupID = 100, ReviewerID = "GV001", ReviewRoundID = 2, AssignedAt = DateTime.Now }
+            // GV001 reviews Group 101 (supervised by GV002)
+            new ReviewerAssignment { AssignmentID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, AssignedAt = new DateTime(2025, 3, 1) },
+            // GV002 reviews Group 100 (supervised by GV001)
+            new ReviewerAssignment { AssignmentID = 2, GroupID = 100, ReviewerID = "GV002", ReviewRoundID = 1, AssignedAt = new DateTime(2025, 3, 1) },
+            // GV001 reviews Group 102 on round 2 defense (not yet evaluated)
+            new ReviewerAssignment { AssignmentID = 3, GroupID = 102, ReviewerID = "GV003", ReviewRoundID = 2, AssignedAt = new DateTime(2025, 3, 1) }
         );
 
         modelBuilder.Entity<Evaluation>().HasData(
-            new Evaluation { EvaluationID = 1, GroupID = 101, ReviewerID = "GV002", ReviewRoundID = 1, TotalScore = 8.5m, Status = EvaluationStatus.Submitted, SubmittedAt = DateTime.Now.AddDays(-2) }
+            // GV001 reviewed Group 101 (GV002 is supervisor → GV002 must approve)
+            new Evaluation { EvaluationID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, TotalScore = 8.5m, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 10, 11, 0, 0) },
+            // GV002 reviewed Group 100 (GV001 is supervisor → GV001 must approve)
+            new Evaluation { EvaluationID = 2, GroupID = 100, ReviewerID = "GV002", ReviewRoundID = 1, TotalScore = 7.0m, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 12, 15, 0, 0) }
+        );
+        modelBuilder.Entity<EvaluationDetail>().HasData(
+            // Scores for Evaluation 1 (GV001 reviewed Group 101)
+            new EvaluationDetail { EvaluationID = 1, ItemID = 1, Score = 4.5m, Comment = "Solid microservices architecture" },
+            new EvaluationDetail { EvaluationID = 1, ItemID = 2, Score = 4.0m, Comment = "Code is clean but lacks unit tests" },
+            // Scores for Evaluation 2 (GV002 reviewed Group 100)
+            new EvaluationDetail { EvaluationID = 2, ItemID = 1, Score = 3.5m, Comment = "Architecture needs refinement" },
+            new EvaluationDetail { EvaluationID = 2, ItemID = 2, Score = 3.5m, Comment = "Average code quality for this stage" }
         );
         modelBuilder.Entity<Feedback>().HasData(
-            new Feedback { FeedbackID = 1, EvaluationID = 1, Content = "Great architecture. Code needs more comments.", CreatedAt = DateTime.Now.AddDays(-2) }
+            // Feedback from GV001's evaluation of Group 101 → awaiting GV002 approval
+            new Feedback { FeedbackID = 1, EvaluationID = 1, Content = "Great architecture decisions. The code quality is above average but needs more inline comments and unit tests for the core business logic modules. Overall this is a solid submission.", CreatedAt = new DateTime(2025, 3, 10, 11, 30, 0) },
+            // Feedback from GV002's evaluation of Group 100 → awaiting GV001 approval
+            new Feedback { FeedbackID = 2, EvaluationID = 2, Content = "The AI model design needs more justification. The architecture diagram is unclear for the traffic ingestion pipeline. Please revise the technical report with more detailed diagrams before the next round.", CreatedAt = new DateTime(2025, 3, 12, 15, 30, 0) }
         );
         modelBuilder.Entity<FeedbackApproval>().HasData(
-            new FeedbackApproval { FeedbackID = 1, SupervisorID = "GV002", ApprovalStatus = ApprovalStatus.Pending, SupervisorComment = "" }
+            // Pending for GV002 (supervisor of Group 101) to approve
+            new FeedbackApproval { FeedbackID = 1, SupervisorID = "GV002", ApprovalStatus = ApprovalStatus.Pending, SupervisorComment = "" },
+            // Pending for GV001 (supervisor of Group 100) to approve
+            new FeedbackApproval { FeedbackID = 2, SupervisorID = "GV001", ApprovalStatus = ApprovalStatus.Pending, SupervisorComment = "" }
         );
     }
 }

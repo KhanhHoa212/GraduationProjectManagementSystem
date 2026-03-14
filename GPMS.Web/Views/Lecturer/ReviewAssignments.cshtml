@@ -1,246 +1,108 @@
+@using GPMS.Application.DTOs.Lecturer
+@model LecturerReviewAssignmentsViewModel
 @{
     ViewData["Title"] = "Review Assignments";
     Layout = "_LecturerLayout";
 }
 
-<div class="d-flex justify-content-between align-items-end mb-4 flex-wrap gap-3">
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="page-title">Review Assignments</h1>
-        <p class="page-subtitle text-muted mb-0">Academic Year 2023/24 • Semester 2 • Reviewer Panel</p>
+        <h1 class="page-title">My Review Assignments</h1>
+        <p class="page-subtitle text-muted mb-0">Groups you have been assigned to evaluate.</p>
     </div>
-    
-    <div class="d-flex gap-3">
-        <div>
-            <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">ROUND FILTER</label>
-            <div class="btn-group border rounded bg-white shadow-sm" role="group">
-                <input type="radio" class="btn-check" name="roundFilter" id="rAll" autocomplete="off" checked>
-                <label class="btn btn-outline-light text-body border-0 shadow-none hover-bg-light fw-medium px-4" for="rAll">All</label>
+</div>
 
-                <input type="radio" class="btn-check" name="roundFilter" id="r1" autocomplete="off">
-                <label class="btn btn-outline-light text-body border-0 shadow-none hover-bg-light fw-medium px-4 border-start border-end" for="r1">Round 1</label>
-
-                <input type="radio" class="btn-check" name="roundFilter" id="r2" autocomplete="off">
-                <label class="btn btn-outline-light text-body border-0 shadow-none hover-bg-light fw-medium px-4" for="r2">Round 2</label>
-            </div>
+<!-- Stats Bar -->
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card-panel text-center py-3">
+            <div class="fw-bold" style="font-size:28px;">@Model.PendingEvaluationsCount</div>
+            <div class="text-muted" style="font-size:12px;">PENDING</div>
         </div>
-        
-        <div style="min-width: 180px;">
-            <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">STATUS</label>
-            <select class="form-select bg-white shadow-sm py-2">
-                <option value="all">All Statuses</option>
-                <option value="not-started">Not Started</option>
-                <option value="in-progress">In Progress</option>
-                <option value="submitted">Submitted</option>
-            </select>
+    </div>
+    <div class="col-md-4">
+        <div class="card-panel text-center py-3">
+            <div class="fw-bold" style="font-size:28px;">@Model.ScheduledTodayCount</div>
+            <div class="text-muted" style="font-size:12px;">SCHEDULED TODAY</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card-panel text-center py-3">
+            <div class="fw-bold" style="font-size:28px;">@Model.CompletedReviewsCount</div>
+            <div class="text-muted" style="font-size:12px;">COMPLETED</div>
         </div>
     </div>
 </div>
 
-<div class="card-panel p-0 mb-4 overflow-hidden border">
-    <div class="table-responsive">
-        <table class="table mb-0 align-middle">
-            <thead>
-                <tr>
-                    <th scope="col" style="width: 25%;">GROUP & PROJECT</th>
-                    <th scope="col" style="width: 10%;">ROUND TYPE</th>
-                    <th scope="col" style="width: 15%;">SCHEDULE</th>
-                    <th scope="col" style="width: 15%;">VENUE / LINK</th>
-                    <th scope="col" style="width: 10%;">SUBMISSION</th>
-                    <th scope="col" style="width: 10%;">EVALUATION</th>
-                    <th scope="col" style="width: 15%;" class="text-end pe-4">ACTION</th>
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Row 1 -->
-                <tr>
-                    <td>
-                        <div class="fw-bold mb-1" style="color: var(--fpt-orange); font-size: 15px;">Group G14</div>
-                        <div class="text-muted" style="font-size: 12px; max-width: 200px; white-space: normal;">Autonomous Drone Navigation System</div>
-                    </td>
-                    <td>
-                        <span class="badge text-primary bg-primary-subtle px-2 py-1" style="font-size: 11px; font-weight: 600;">Round 1 - Proposal</span>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-body mb-1" style="font-size: 13px;">Oct 24, 2023</div>
-                        <div class="text-muted" style="font-size: 11px;">10:00 AM - 11:00 AM</div>
-                    </td>
-                    <td>
-                        <a href="https://meet.google.com" target="_blank" class="d-flex align-items-center gap-1 text-decoration-none text-orange-600 fw-semibold" style="color: var(--fpt-orange); font-size: 13px;">
-                            <span class="material-symbols-outlined fs-5">video_camera_front</span>
-                            G-Meet Link
-                        </a>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="d-inline-block rounded-circle bg-success" style="width: 6px; height: 6px;"></span>
-                            <span class="fw-medium text-body" style="font-size: 13px;">Submitted</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge pending px-2 py-1">Pending</span>
-                    </td>
-                    <td class="text-end pe-4">
-                        <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = "EV-201" })" class="btn btn-sm btn-primary py-2 px-3 fw-bold border-0 shadow-sm" style="font-size: 12px; background: #fff !important; color: var(--fpt-orange) !important; border: 1.5px solid var(--border-color) !important;">
-                            Start Evaluation
-                        </a> <!-- Using a secondary-like button styled visually to match screenshot -->
-                    </td>
-                </tr>
-
-                <!-- Row 2 -->
-                <tr>
-                    <td>
-                        <div class="fw-bold mb-1" style="color: var(--fpt-orange); font-size: 15px;">Group G08</div>
-                        <div class="text-muted" style="font-size: 12px; max-width: 200px; white-space: normal;">Blockchain Health Records</div>
-                    </td>
-                    <td>
-                        <span class="status-badge offline px-2 py-1">Round 2 - Midterm</span>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-body mb-1" style="font-size: 13px;">Oct 25, 2023</div>
-                        <div class="text-muted" style="font-size: 11px;">02:30 PM - 03:30 PM</div>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-1 text-body fw-semibold" style="font-size: 13px;">
-                            <span class="material-symbols-outlined fs-5 text-muted">meeting_room</span>
-                            Room Lab-302
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="d-inline-block rounded-circle bg-success" style="width: 6px; height: 6px;"></span>
-                            <span class="fw-medium text-body" style="font-size: 13px;">Submitted</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge online px-2 py-1 bg-primary-subtle text-primary">In Progress</span>
-                    </td>
-                    <td class="text-end pe-4">
-                         <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = "EV-202" })" class="btn btn-sm text-orange-600 fw-bold border-0 shadow-sm px-3 py-2" style="font-size: 12px; background: #FFF7F2; color: var(--fpt-orange);">
-                            Continue
-                        </a>
-                    </td>
-                </tr>
-
-                <!-- Row 3 -->
-                <tr>
-                    <td>
-                        <div class="fw-bold mb-1" style="color: var(--fpt-orange); font-size: 15px;">Group G21</div>
-                        <div class="text-muted" style="font-size: 12px; max-width: 200px; white-space: normal;">Smart Irrigation IoT</div>
-                    </td>
-                    <td>
-                        <span class="badge text-primary bg-primary-subtle px-2 py-1" style="font-size: 11px; font-weight: 600;">Round 1 - Proposal</span>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-body mb-1" style="font-size: 13px;">Oct 26, 2023</div>
-                        <div class="text-muted" style="font-size: 11px;">09:00 AM - 10:00 AM</div>
-                    </td>
-                    <td>
-                        <a href="https://zoom.us" target="_blank" class="d-flex align-items-center gap-1 text-decoration-none text-orange-600 fw-semibold" style="color: var(--fpt-orange); font-size: 13px;">
-                            <span class="material-symbols-outlined fs-5">video_camera_front</span>
-                            Zoom Link
-                        </a>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="d-inline-block rounded-circle bg-secondary opacity-50" style="width: 6px; height: 6px;"></span>
-                            <span class="fw-medium text-muted" style="font-size: 13px;">Not Submitted</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="badge bg-secondary text-white opacity-75 px-2 py-1">Unavailable</span>
-                    </td>
-                    <td class="text-end pe-4">
-                        <button class="btn btn-sm btn-light fw-bold px-3 py-2 text-muted" style="font-size: 12px;" disabled>
-                            Start Evaluation
-                        </button>
-                    </td>
-                </tr>
-
-                 <!-- Row 4 -->
-                <tr>
-                    <td>
-                        <div class="fw-bold mb-1" style="color: var(--fpt-orange); font-size: 15px;">Group G03</div>
-                        <div class="text-muted" style="font-size: 12px; max-width: 200px; white-space: normal;">AI Traffic Management</div>
-                    </td>
-                    <td>
-                        <span class="status-badge approved px-2 py-1">Final Presentation</span>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-body mb-1" style="font-size: 13px;">Oct 20, 2023</div>
-                        <div class="text-muted" style="font-size: 11px;">03:00 PM - 04:00 PM</div>
-                    </td>
-                    <td>
-                         <div class="d-flex align-items-center gap-1 text-body fw-semibold" style="font-size: 13px;">
-                            <span class="material-symbols-outlined fs-5 text-muted">meeting_room</span>
-                            Main Hall A
-                        </div>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="d-inline-block rounded-circle bg-success" style="width: 6px; height: 6px;"></span>
-                            <span class="fw-medium text-body" style="font-size: 13px;">Submitted</span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="status-badge approved px-2 py-1">Completed</span>
-                    </td>
-                    <td class="text-end pe-4">
-                         <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = "EV-203" })" class="btn btn-sm text-orange-600 fw-bold border-0 shadow-sm px-3 py-2" style="font-size: 12px; background: #FFF7F2; color: var(--fpt-orange);">
-                            Review Grades
-                        </a>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<div class="card-panel border p-0 overflow-hidden shadow-sm">
+    <div class="p-4 border-bottom">
+        <h2 class="section-title mb-0">Assignments</h2>
     </div>
 
-    <!-- Pagination -->
-    <div class="p-3 border-top d-flex align-items-center justify-content-between bg-white">
-        <div class="text-muted" style="font-size: 13px;">
-            Showing <span class="fw-bold text-body">1 - 4</span> of <span class="fw-bold text-body">24</span> assignments
+    @if (!Model.Assignments.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <span class="material-symbols-outlined fs-1 d-block mb-2">assignment</span>
+            <p>No review assignments at this time.</p>
         </div>
-        <div class="d-flex gap-2">
-            <button class="btn btn-sm btn-light border px-3 shadow-none fw-medium" disabled>Previous</button>
-            <button class="btn btn-sm btn-light border px-3 shadow-none fw-medium text-body bg-white">Next</button>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-0">
+            @foreach (var a in Model.Assignments)
+            {
+                var isCompleted = a.EvaluationStatus == "Submitted";
+                var borderColor = isCompleted ? "#22C55E" : "var(--fpt-orange)";
+                <div class="p-4 border-bottom d-flex align-items-center gap-4" style="border-left: 4px solid @borderColor;">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <h6 class="mb-0 fw-bold" style="font-size:15px;">@a.GroupName</h6>
+                            <span class="text-muted">·</span>
+                            <span class="text-muted" style="font-size:13px;">@a.ProjectName</span>
+                        </div>
+                        <div class="d-flex gap-3 text-muted" style="font-size:12px;">
+                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.ReviewRoundName</span>
+                            @if (a.ScheduledAt.HasValue)
+                            {
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
+                            }
+                            @if (!string.IsNullOrEmpty(a.Venue))
+                            {
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">location_on</span> @a.Venue</span>
+                            }
+                            @if (a.IsOnline && !string.IsNullOrEmpty(a.Location))
+                            {
+                                <a href="@a.Location" target="_blank" class="text-decoration-none" style="color:var(--fpt-orange);">
+                                    <span class="material-symbols-outlined align-middle" style="font-size:14px;">videocam</span> Join Meeting
+                                </a>
+                            }
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        @{
+                            var statusBadge = a.EvaluationStatus == "Submitted" ? "bg-success-subtle text-success"
+                                : a.EvaluationStatus == "Draft" ? "bg-warning-subtle text-warning"
+                                : "bg-secondary-subtle text-secondary";
+                        }
+                        <span class="badge @statusBadge">@a.EvaluationStatus</span>
+                        @if (!isCompleted)
+                        {
+                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentId })"
+                               class="btn btn-primary btn-sm d-flex align-items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                                Start Evaluation
+                            </a>
+                        }
+                        else if (a.EvaluationId.HasValue)
+                        {
+                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentId })"
+                               class="btn btn-outline-secondary btn-sm">
+                                View
+                            </a>
+                        }
+                    </div>
+                </div>
+            }
         </div>
-    </div>
-</div>
-
-<div class="row g-4 mt-2">
-    <!-- Quick Stats -->
-    <div class="col-md-4">
-        <div class="card-panel h-100 mb-0 d-flex flex-row align-items-center gap-4 py-4 border bg-white shadow-sm">
-            <div class="rounded-circle d-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis" style="width: 56px; height: 56px;">
-                <span class="material-symbols-outlined fs-3">pending_actions</span>
-            </div>
-            <div>
-                <div class="text-muted fw-bold mb-1" style="font-size: 11px; letter-spacing: 0.5px;">PENDING EVALUATIONS</div>
-                <div class="fw-bold" style="font-size: 28px; line-height: 1; letter-spacing: -1px;">12</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card-panel h-100 mb-0 d-flex flex-row align-items-center gap-4 py-4 border bg-white shadow-sm">
-            <div class="rounded-circle d-flex align-items-center justify-content-center bg-primary-subtle text-primary" style="width: 56px; height: 56px;">
-                <span class="material-symbols-outlined fs-3">today</span>
-            </div>
-            <div>
-                 <div class="text-muted fw-bold mb-1" style="font-size: 11px; letter-spacing: 0.5px;">SCHEDULED TODAY</div>
-                <div class="fw-bold" style="font-size: 28px; line-height: 1; letter-spacing: -1px;">4</div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card-panel h-100 mb-0 d-flex flex-row align-items-center gap-4 py-4 border bg-white shadow-sm">
-            <div class="rounded-circle d-flex align-items-center justify-content-center bg-success-subtle text-success" style="width: 56px; height: 56px;">
-                <span class="material-symbols-outlined fs-3">check_circle</span>
-            </div>
-            <div>
-                 <div class="text-muted fw-bold mb-1" style="font-size: 11px; letter-spacing: 0.5px;">COMPLETED REVIEWS</div>
-                <div class="fw-bold" style="font-size: 28px; line-height: 1; letter-spacing: -1px;">08</div>
-            </div>
-        </div>
-    </div>
+    }
 </div>

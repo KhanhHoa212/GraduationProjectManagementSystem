@@ -1,283 +1,212 @@
+@using GPMS.Application.DTOs.Lecturer
+@model LecturerEvaluationFormViewModel
 @{
-    ViewData["Title"] = "Group 12 - Final Defense";
+    ViewData["Title"] = "Evaluation Form";
     Layout = "_LecturerLayout";
+    var isReadOnly = !string.IsNullOrEmpty(Model.Status) && Model.Status == "Submitted";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
     <div>
         <h1 class="page-title">Evaluation Form</h1>
-        <p class="page-subtitle text-muted mb-0">Grading final defense for Group 12: Smart Campus IoT Solution</p>
+        <p class="page-subtitle text-muted mb-0">@Model.GroupName — Round @Model.ReviewRoundName</p>
     </div>
-    
-    <!-- Action buttons (top right) -->
-    <div class="d-flex gap-2">
-        <button type="button" class="btn btn-secondary bg-white shadow-sm border px-4">
-            Save Draft
-        </button>
-        <button type="button" class="btn btn-primary px-4 fw-bold disabled" id="topSubmitBtn">
-            Submit Evaluation
-        </button>
+    <div class="d-flex align-items-center gap-3">
+        <span class="badge @(isReadOnly ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") py-2 px-3" style="font-size:13px;">
+            @Model.Status
+        </span>
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Right Panel (35% Width): Info and Documents -->
-    <div class="col-lg-4 order-lg-last d-flex flex-column gap-section">
-        
-        <!-- Group Info Card -->
-        <div class="card-panel mb-0 border shadow-sm" style="border-top-width: 4px !important; border-top-color: var(--fpt-orange) !important;">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <span class="status-badge pending px-2 py-1 mb-2">IN PROGRESS</span>
-            </div>
-            
-            <h2 class="fw-bold fs-5 mb-2" style="color: var(--text-heading); letter-spacing: -0.3px;">Group 12: Smart Campus IoT Solution</h2>
-            <div class="text-muted mb-4" style="font-size: 13px;">Computer Science • Final Year Project</div>
+<form asp-action="SubmitEvaluation" asp-controller="Lecturer" method="post" id="evaluationForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" name="EvaluationId" value="@Model.EvaluationId" />
+    <input type="hidden" name="AssignmentId" value="@Model.AssignmentId" />
+    <input type="hidden" name="GroupId" value="@Model.GroupId" />
 
-            <div class="row g-3 mb-4">
-                <div class="col-12">
-                     <div class="text-muted mb-1" style="font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">SUPERVISOR</div>
-                     <div class="fw-medium" style="font-size: 13px;">Prof. Sarah Jenkins</div>
-                </div>
-                <div class="col-6">
-                     <div class="text-muted mb-1" style="font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">DEFENSE DATE</div>
-                     <div class="fw-medium text-body" style="font-size: 13px;">Oct 24, 2023</div>
-                </div>
-                <div class="col-6">
-                     <div class="text-muted mb-1" style="font-size: 10px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">STUDENTS</div>
-                     <div class="fw-medium text-body" style="font-size: 13px;">4 Members</div>
-                </div>
-            </div>
+    <div class="row g-4">
+        <!-- Left Panel (65%): Checklist / Rubric -->
+        <div class="col-lg-8 order-lg-first d-flex flex-column gap-section">
 
-            <div class="border-top pt-3">
-                <div class="text-muted mb-2 d-flex align-items-center gap-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">
-                    <span class="material-symbols-outlined fs-6">group</span> TEAM MEMBERS
+            <!-- Checklist Table -->
+            <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
+                <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined" style="color:var(--fpt-orange)">checklist</span>
+                    <h2 class="section-title mb-0">@(string.IsNullOrEmpty(Model.ChecklistTitle) ? "Evaluation Criteria" : Model.ChecklistTitle)</h2>
                 </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                        <img src="https://ui-avatars.com/api/?name=AL&background=E5E7EB&color=374151" width="16" height="16" class="rounded-circle" /> AL
-                    </div>
-                    <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                        <img src="https://ui-avatars.com/api/?name=MN&background=E5E7EB&color=374151" width="16" height="16" class="rounded-circle" /> MN
-                    </div>
-                    <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                        <img src="https://ui-avatars.com/api/?name=KT&background=E5E7EB&color=374151" width="16" height="16" class="rounded-circle" /> KT
-                    </div>
-                    <div class="badge bg-light text-body border fw-medium d-flex align-items-center gap-1 px-2 py-1 rounded-pill" style="font-size: 12px;">
-                        <img src="https://ui-avatars.com/api/?name=JS&background=E5E7EB&color=374151" width="16" height="16" class="rounded-circle" /> JS
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Documents Card -->
-        <div class="card-panel mb-0 border shadow-sm">
-            <h2 class="section-title d-flex align-items-center gap-2 mb-4">
-                <span class="material-symbols-outlined fs-5">attachment</span>
-                Project Documents
-            </h2>
-
-            <div class="d-flex flex-column gap-3">
-                <!-- Document 1 -->
-                <div class="border rounded p-3 d-flex align-items-center gap-3 hover-bg-light cursor-pointer transition-all">
-                    <div class="bg-danger-subtle text-danger rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
-                        <span class="material-symbols-outlined fs-5">picture_as_pdf</span>
-                    </div>
-                    <div class="flex-grow-1 min-width-0">
-                        <div class="fw-bold text-truncate" style="font-size: 13px;">Final_Report_v2.pdf</div>
-                        <div class="text-muted" style="font-size: 11px;">4.2 MB • Oct 20</div>
-                    </div>
-                    <button class="btn btn-sm btn-link text-muted p-1 hover-primary shadow-none">
-                        <span class="material-symbols-outlined fs-5">download</span>
-                    </button>
-                </div>
-
-                <!-- Document 2 -->
-                <div class="border rounded p-3 d-flex align-items-center gap-3 hover-bg-light cursor-pointer transition-all">
-                    <div class="bg-primary-subtle text-primary rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
-                        <span class="material-symbols-outlined fs-5">description</span>
-                    </div>
-                    <div class="flex-grow-1 min-width-0">
-                        <div class="fw-bold text-truncate" style="font-size: 13px;">System_Architecture.docx</div>
-                        <div class="text-muted" style="font-size: 11px;">1.8 MB • Oct 18</div>
-                    </div>
-                    <button class="btn btn-sm btn-link text-muted p-1 hover-primary shadow-none">
-                        <span class="material-symbols-outlined fs-5">download</span>
-                    </button>
-                </div>
-
-                <!-- Document 3 Link -->
-                <div class="border rounded p-3 d-flex align-items-center gap-3 hover-bg-light cursor-pointer transition-all">
-                    <div class="bg-dark text-white rounded d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
-                        <span class="material-symbols-outlined fs-5">code</span>
-                    </div>
-                    <div class="flex-grow-1 min-width-0">
-                        <div class="fw-bold text-truncate" style="font-size: 13px;">Project_GitHub_Repo</div>
-                        <div class="text-muted" style="font-size: 11px;">Repository Link</div>
-                    </div>
-                    <a href="#" class="btn btn-sm btn-link text-muted p-1 hover-primary shadow-none">
-                        <span class="material-symbols-outlined fs-5">open_in_new</span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Left Panel (65% Width): Rubric & Feedback -->
-    <div class="col-lg-8 order-lg-first d-flex flex-column gap-section">
-        
-        <!-- Checklist Table Form -->
-        <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
-            <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-                <h2 class="section-title mb-0 fs-5">Evaluation Criteria</h2>
-                <div class="text-end">
-                    <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">RUNNING SCORE</div>
-                    <div class="d-flex align-items-baseline gap-1">
-                        <span class="fw-bold fs-3 text-body" id="totalScoreDisplay" style="line-height: 1;">0.0</span>
-                        <span class="text-muted">/ 100</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="table-responsive">
                 <table class="table mb-0 align-middle">
                     <thead>
                         <tr class="bg-light">
-                            <th style="width: 45%; padding-left: 24px;">CRITERION</th>
-                            <th style="width: 10%; text-align: center;">MAX</th>
-                            <th style="width: 15%;">SCORE</th>
-                            <th style="width: 30%; padding-right: 24px;">COMMENTS <span class="text-danger">*</span></th>
+                            <th class="px-4" style="width:50%;">CRITERIA</th>
+                            <th style="width:15%; text-align:center;">MAX</th>
+                            <th style="width:35%;">SCORE</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- CRIT 1 -->
-                        <tr>
-                            <td style="padding-left: 24px;">
-                                <div class="fw-bold text-body mb-1" style="font-size: 13px;">Problem Definition</div>
-                                <div class="text-muted" style="font-size: 12px; white-space: normal;">Clarity of the problem statement and research objectives.</div>
-                            </td>
-                            <td class="text-center text-muted fw-bold" style="font-size: 13px;">20</td>
-                            <td>
-                                <input type="number" class="form-control text-center eval-score-input" min="0" max="20" step="0.5" placeholder="0 - 20" style="max-width: 80px;" />
-                            </td>
-                            <td style="padding-right: 24px;">
-                                <textarea class="form-control hover-bg-light" rows="1" placeholder="Add specific feedback..." style="font-size: 13px;"></textarea>
-                            </td>
-                        </tr>
-                        <!-- CRIT 2 -->
-                        <tr>
-                            <td style="padding-left: 24px;">
-                                <div class="fw-bold text-body mb-1" style="font-size: 13px;">Methodology & Design</div>
-                                <div class="text-muted" style="font-size: 12px; white-space: normal;">Soundness of the approach and technical architecture.</div>
-                            </td>
-                            <td class="text-center text-muted fw-bold" style="font-size: 13px;">30</td>
-                            <td>
-                                <input type="number" class="form-control text-center eval-score-input" min="0" max="30" step="0.5" placeholder="0 - 30" style="max-width: 80px;" />
-                            </td>
-                            <td style="padding-right: 24px;">
-                                <textarea class="form-control hover-bg-light" rows="1" placeholder="Add specific feedback..." style="font-size: 13px;"></textarea>
-                            </td>
-                        </tr>
-                        <!-- CRIT 3 -->
-                        <tr>
-                            <td style="padding-left: 24px;">
-                                <div class="fw-bold text-body mb-1" style="font-size: 13px;">Implementation Quality</div>
-                                <div class="text-muted" style="font-size: 12px; white-space: normal;">Completeness of code and quality of the prototype.</div>
-                            </td>
-                            <td class="text-center text-muted fw-bold" style="font-size: 13px;">30</td>
-                            <td>
-                                <input type="number" class="form-control text-center eval-score-input" min="0" max="30" step="0.5" placeholder="0 - 30" style="max-width: 80px;" />
-                            </td>
-                            <td style="padding-right: 24px;">
-                                <textarea class="form-control hover-bg-light" rows="1" placeholder="Add specific feedback..." style="font-size: 13px;"></textarea>
-                            </td>
-                        </tr>
-                        <!-- CRIT 4 -->
-                        <tr class="border-transparent">
-                            <td style="padding-left: 24px;">
-                                <div class="fw-bold text-body mb-1" style="font-size: 13px;">Presentation & Q&A</div>
-                                <div class="text-muted" style="font-size: 12px; white-space: normal;">Clarity of speech and ability to answer technical questions.</div>
-                            </td>
-                            <td class="text-center text-muted fw-bold" style="font-size: 13px;">20</td>
-                            <td>
-                                <input type="number" class="form-control text-center eval-score-input" min="0" max="20" step="0.5" placeholder="0 - 20" style="max-width: 80px;" />
-                            </td>
-                            <td style="padding-right: 24px;">
-                                <textarea class="form-control hover-bg-light" rows="1" placeholder="Add specific feedback..." style="font-size: 13px;"></textarea>
-                            </td>
-                        </tr>
+                        @if (!Model.Criteria.Any())
+                        {
+                            <tr>
+                                <td colspan="3" class="text-center text-muted py-4">No evaluation criteria found for this round.</td>
+                            </tr>
+                        }
+                        @foreach (var criterion in Model.Criteria)
+                        {
+                            var existingScore = Model.Scores.ContainsKey(criterion.Id) ? Model.Scores[criterion.Id] : (decimal?)null;
+                            <tr class="criterion-row">
+                                <td class="px-4">
+                                    <div class="fw-medium text-body" style="font-size:14px;">@criterion.Name</div>
+                                    @if (!string.IsNullOrEmpty(criterion.Description))
+                                    {
+                                        <div class="text-muted" style="font-size:12px;">@criterion.Description</div>
+                                    }
+                                </td>
+                                <td class="text-center text-muted fw-bold">@criterion.MaxScore</td>
+                                <td>
+                                    <input type="number" 
+                                           class="form-control score-input" 
+                                           name="Scores[@criterion.Id]"
+                                           min="0" max="@criterion.MaxScore" step="0.5"
+                                           value="@(existingScore?.ToString("F1") ?? "")"
+                                           placeholder="0–@criterion.MaxScore"
+                                           data-max="@criterion.MaxScore"
+                                           @(isReadOnly ? "readonly" : "")
+                                           required />
+                                </td>
+                            </tr>
+                        }
                     </tbody>
+                    <tfoot>
+                        <tr style="background:#FFF7F2;">
+                            <td class="px-4 fw-bold text-body" colspan="2">Total Score</td>
+                            <td class="fw-bold" style="color:var(--fpt-orange); font-size:16px;" id="totalScoreDisplay">— / @Model.Criteria.Sum(c => c.MaxScore)</td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
 
-            <!-- Total Bar -->
-            <div class="p-4 d-flex justify-content-between align-items-center" style="background-color: #FFF7F2;">
-                <div class="fw-bold text-body fs-6 ms-auto">Total Calculation: <span class="ms-4 text-orange-600 fs-4 fw-bold" id="bottomTotalDisplay" style="color:var(--fpt-orange)">0.0</span></div>
+            <!-- Overall Feedback -->
+            <div class="card-panel border mb-0 shadow-sm">
+                <h2 class="section-title mb-3">Overall Comments</h2>
+                <textarea name="OverallFeedback" class="form-control" rows="6"
+                          placeholder="Write your overall feedback for this group..."
+                          @(isReadOnly ? "readonly" : "")>@Model.OverallFeedback</textarea>
             </div>
+
+            <!-- Submit -->
+            @if (!isReadOnly)
+            {
+                <div class="d-flex justify-content-end gap-3">
+                    <button type="submit" name="saveAction" value="draft" class="btn btn-outline-secondary px-4">
+                        <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">save</span>
+                        Save Draft
+                    </button>
+                    <button type="submit" name="saveAction" value="submit" class="btn btn-primary px-4">
+                        <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">send</span>
+                        Submit Evaluation
+                    </button>
+                </div>
+            }
         </div>
 
-        <!-- Overall Feedback Textarea -->
-        <div class="card-panel border mb-0 shadow-sm">
-            <h2 class="section-title fs-6 mb-4">Overall Reviewer Comments & Feedback <span class="text-danger">*</span></h2>
-            
-            <textarea class="form-control" rows="8" placeholder="Enter comprehensive feedback for the group... This will be sent to the supervisor for final approval." required></textarea>
-            
-            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                <div class="d-flex align-items-center gap-2 text-muted" style="font-size: 12px;">
-                    <span class="material-symbols-outlined fs-6">info</span>
-                    Once submitted, scores are final and will be shared with the supervisor.
+        <!-- Right Panel (35%): Group Info & Documents -->
+        <div class="col-lg-4 order-lg-last d-flex flex-column gap-section">
+
+            <!-- Group Info Card -->
+            <div class="card-panel mb-0 border shadow-sm" style="border-top-width: 4px !important; border-top-color: var(--fpt-orange) !important;">
+                <div class="text-muted mb-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP INFO</div>
+                <h4 class="fw-bold text-body mb-1" style="font-size: 16px;">@Model.GroupName</h4>
+                <p class="text-muted mb-3" style="font-size: 13px;">@Model.ProjectName</p>
+                <div class="d-flex flex-column gap-2">
+                    <div class="d-flex gap-2 align-items-start">
+                        <span class="material-symbols-outlined text-muted" style="font-size: 16px; margin-top: 1px;">person</span>
+                        <div>
+                            <div class="text-muted" style="font-size: 11px; letter-spacing: 0.5px;">SUPERVISOR</div>
+                            <div class="fw-medium text-body" style="font-size: 13px;">@Model.SupervisorName</div>
+                        </div>
+                    </div>
+                    @if (Model.DefenseDate != default)
+                    {
+                        <div class="d-flex gap-2 align-items-start">
+                            <span class="material-symbols-outlined text-muted" style="font-size: 16px; margin-top: 1px;">event</span>
+                            <div>
+                                <div class="text-muted" style="font-size: 11px; letter-spacing: 0.5px;">SCHEDULED DATE</div>
+                                <div class="fw-medium text-body" style="font-size: 13px;">@Model.DefenseDate.ToString("MMM dd, yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    }
                 </div>
-                
-                <div class="d-flex gap-2">
-                    <button class="btn btn-secondary px-4 fw-semibold border shadow-sm">Save Draft</button>
-                    <!-- Modal trigger mapped directly for UI demonstration -->
-                    <button class="btn btn-primary px-4 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#confirmSubmitModal">Submit Evaluation</button>
+                <hr class="my-3 text-muted" style="opacity: 0.2;">
+                <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">MEMBERS</div>
+                <div class="d-flex flex-column gap-2">
+                    @foreach (var m in Model.Members)
+                    {
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="@m.AvatarUrl" class="rounded-circle" width="28" height="28" />
+                            <div>
+                                <div class="fw-medium text-body" style="font-size: 13px;">@m.FullName</div>
+                                <div class="text-muted" style="font-size: 11px;">@m.RoleInGroup</div>
+                            </div>
+                        </div>
+                    }
+                    @if (!Model.Members.Any())
+                    {
+                        <p class="text-muted mb-0" style="font-size:12px;">No member info available.</p>
+                    }
                 </div>
             </div>
-        </div>
 
+            <!-- Project Documents -->
+            <div class="card-panel mb-0 border shadow-sm">
+                <div class="text-muted mb-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">PROJECT DOCUMENTS</div>
+                @if (!Model.Documents.Any())
+                {
+                    <p class="text-muted mb-0" style="font-size:13px;">No documents submitted yet.</p>
+                }
+                else
+                {
+                    <div class="d-flex flex-column gap-2">
+                        @foreach (var doc in Model.Documents)
+                        {
+                            <a href="@doc.Url" target="_blank" class="d-flex align-items-center gap-3 p-2 rounded hover-bg-light border text-decoration-none text-body">
+                                <div class="rounded p-2" style="background: #FFF7F2;">
+                                    <span class="material-symbols-outlined" style="color:var(--fpt-orange); font-size:18px;">description</span>
+                                </div>
+                                <div class="flex-grow-1 overflow-hidden">
+                                    <div class="fw-medium text-truncate" style="font-size: 13px;">@doc.FileName</div>
+                                    <div class="text-muted" style="font-size: 11px;">@doc.DocumentType · @(doc.SizeInBytes / 1024)KB</div>
+                                </div>
+                                <span class="material-symbols-outlined text-muted" style="font-size:18px;">download</span>
+                            </a>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
     </div>
-</div>
-
-<!-- Submit Confirmation Modal -->
-<div class="modal fade" id="confirmSubmitModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Submit Final Evaluation</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted" style="font-size: 14px;">Are you sure you want to submit your evaluation? You will not be able to edit these scores once submitted.</p>
-                <div class="p-3 bg-orange-50 border rounded text-center mb-2" style="background:#FFF7F2;">
-                    <div class="text-muted fw-bold" style="font-size: 11px;">FINAL COMPUTED SCORE</div>
-                    <div class="fw-bold fs-2 text-orange-600" style="color:var(--fpt-orange)">0.0 / 100</div>
-                </div>
-            </div>
-            <div class="modal-footer border-0 pt-0 flex-nowrap">
-                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Go Back</button>
-                <button type="button" class="btn btn-primary w-50 m-0 ms-2">Confirm & Submit</button>
-            </div>
-        </div>
-    </div>
-</div>
+</form>
 
 @section Scripts {
     <script>
-        // Specific listener to update the bottom total based on the same JS logic from the master js file
-        document.addEventListener('DOMContentLoaded', () => {
-            const inputs = document.querySelectorAll('.eval-score-input');
-            const bottomTotal = document.getElementById('bottomTotalDisplay');
+        const scoreInputs = document.querySelectorAll('.score-input');
+        const totalDisplay = document.getElementById('totalScoreDisplay');
+        const maxTotal = @Model.Criteria.Sum(c => c.MaxScore);
 
-            inputs.forEach(input => {
-                input.addEventListener('input', () => {
-                    let total = 0;
-                    inputs.forEach(inp => {
-                        const val = parseFloat(inp.value);
-                        if (!isNaN(val)) total += val;
-                    });
-                    if(bottomTotal) bottomTotal.innerText = total.toFixed(1);
-                });
+        function updateTotal() {
+            let total = 0;
+            let allFilled = true;
+            scoreInputs.forEach(input => {
+                const val = parseFloat(input.value);
+                if (isNaN(val)) { allFilled = false; return; }
+                const max = parseFloat(input.dataset.max);
+                if (val > max) input.value = max;
+                if (val < 0) input.value = 0;
+                total += parseFloat(input.value) || 0;
             });
-        });
+            if (totalDisplay) {
+                totalDisplay.textContent = allFilled ? `${total.toFixed(1)} / ${maxTotal}` : `– / ${maxTotal}`;
+            }
+        }
+        scoreInputs.forEach(i => i.addEventListener('input', updateTotal));
+        updateTotal();
     </script>
 }

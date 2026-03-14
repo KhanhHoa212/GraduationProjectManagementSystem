@@ -1,3 +1,5 @@
+@using GPMS.Application.DTOs.Lecturer
+@model LecturerFeedbackApprovalDetailViewModel
 @{
     ViewData["Title"] = "Feedback Approval Detail";
     Layout = "_LecturerLayout";
@@ -6,16 +8,16 @@
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
     <div>
         <h1 class="page-title">Feedback Approval Detail</h1>
-        <p class="page-subtitle text-muted mb-0">Reviewing Final Year Project Round 1 - Submission from Group A</p>
+        <p class="page-subtitle text-muted mb-0">Reviewing Round @Model.ReviewRoundName - Submission from @Model.GroupName</p>
     </div>
     <div class="d-flex gap-3">
         <div class="px-4 py-2 bg-white border rounded text-center">
             <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">ROUND</div>
-            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">1 <span class="text-muted fw-normal" style="font-size: 14px;">/ 4</span></div>
+            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.CurrentRoundIndex <span class="text-muted fw-normal" style="font-size: 14px;">/ @Model.TotalRounds</span></div>
         </div>
         <div class="px-4 py-2 bg-white border rounded text-center">
             <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">GROUP ID</div>
-            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">GRP-A2024</div>
+            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.GroupIdString</div>
         </div>
     </div>
 </div>
@@ -41,65 +43,51 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td class="fw-medium" style="font-size: 13px;">Project Scope & Feasibility</td>
-                        <td class="text-center text-muted" style="font-size: 13px;">20%</td>
-                        <td class="text-center fw-medium" style="font-size: 13px;">8.5 <span class="text-muted">/ 10</span></td>
-                        <td class="text-center fw-bold text-body" style="font-size: 14px;">1.7</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-medium" style="font-size: 13px;">Methodology & Design</td>
-                        <td class="text-center text-muted" style="font-size: 13px;">30%</td>
-                        <td class="text-center fw-medium" style="font-size: 13px;">7.0 <span class="text-muted">/ 10</span></td>
-                        <td class="text-center fw-bold text-body" style="font-size: 14px;">2.1</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-medium" style="font-size: 13px;">Presentation Quality</td>
-                        <td class="text-center text-muted" style="font-size: 13px;">20%</td>
-                        <td class="text-center fw-medium" style="font-size: 13px;">9.0 <span class="text-muted">/ 10</span></td>
-                        <td class="text-center fw-bold text-body" style="font-size: 14px;">1.8</td>
-                    </tr>
-                    <tr>
-                        <td class="fw-medium" style="font-size: 13px;">Team Collaboration</td>
-                        <td class="text-center text-muted" style="font-size: 13px;">30%</td>
-                        <td class="text-center fw-medium" style="font-size: 13px;">8.0 <span class="text-muted">/ 10</span></td>
-                        <td class="text-center fw-bold text-body" style="font-size: 14px;">2.4</td>
-                    </tr>
+                    @foreach (var s in Model.Scores)
+                    {
+                        <tr>
+                            <td class="fw-medium" style="font-size: 13px;">@s.CriteriaName</td>
+                            <td class="text-center text-muted" style="font-size: 13px;">@s.WeightPercentage%</td>
+                            <td class="text-center fw-medium" style="font-size: 13px;">@s.Score <span class="text-muted">/ @s.MaxScore</span></td>
+                            <td class="text-center fw-bold text-body" style="font-size: 14px;">@s.WeightedScore.ToString("F2")</td>
+                        </tr>
+                    }
                 </tbody>
                 <tfoot>
                     <tr style="background-color: #FFF7F2;">
                         <td colspan="3" class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">Total Score</td>
-                        <td class="text-center fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 18px;">8.0 <span style="font-size: 14px; font-weight: 500;">/ 10.0</span></td>
+                        <td class="text-center fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 18px;">@Model.TotalScore.ToString("F1") <span style="font-size: 14px; font-weight: 500;">/ @Model.MaxTotalScore.ToString("F1")</span></td>
                     </tr>
                 </tfoot>
             </table>
         </div>
 
         <!-- Feedback Content Editor -->
-        <div class="card-panel mb-0 border">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">edit_note</span>
-                    <h2 class="section-title mb-0">Evaluation Feedback Content</h2>
+        <form asp-action="ApproveFeedback" asp-controller="Lecturer" method="post" class="mb-0" id="feedbackActionForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="feedbackId" value="@Model.FeedbackId" />
+            <input type="hidden" name="decision" id="decisionInput" value="" />
+
+            <div class="card-panel mb-0 border">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">edit_note</span>
+                        <h2 class="section-title mb-0">Evaluation Feedback Content</h2>
+                    </div>
+                    <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px; letter-spacing: 0.5px;">EDITABLE</span>
                 </div>
-                <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px; letter-spacing: 0.5px;">EDITABLE</span>
+                
+                <div class="mb-3">
+                    <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">FEEDBACK TO GROUP MEMBERS</label>
+                    <textarea class="form-control hover-bg-light" name="comments" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">@Model.FeedbackContent</textarea>
+                </div>
+                
+                <div class="d-flex align-items-start gap-2 mt-3 text-muted">
+                    <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
+                    <p class="mb-0" style="font-size: 12px;">You can modify this text before clicking 'Approve with Edits'.</p>
+                </div>
             </div>
-            
-            <div class="mb-3">
-                <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">FEEDBACK TO GROUP MEMBERS</label>
-                <textarea class="form-control hover-bg-light" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">The project shows strong initial research and clear understanding of the core problem. The methodology is sound, but needs more detailed risk assessment for the implementation phase. Great presentation skills, however, the group should focus on more concrete KPIs for the upcoming round.
-
-Strong Points:
-- Excellent visual documentation
-- Thorough stakeholder analysis</textarea>
-            </div>
-            
-            <div class="d-flex align-items-start gap-2 mt-3 text-muted">
-                <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
-                <p class="mb-0" style="font-size: 12px;">You can modify this text before clicking 'Approve with Edits'.</p>
-            </div>
-        </div>
-
+        </form>
     </div>
 
     <!-- Right Column: Actions & Meta -->
@@ -108,29 +96,21 @@ Strong Points:
         <!-- Group Members -->
         <div class="card-panel mb-0 border">
             <div class="text-muted mb-3 pb-2 border-bottom" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP MEMBERS</div>
-            
             <div class="d-flex flex-column gap-3">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=JW&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
-                    <div style="line-height: 1.2;">
-                        <div class="fw-bold text-body" style="font-size: 13px;">James Wilson</div>
-                        <div class="text-muted mt-1" style="font-size: 11px;">Project Lead</div>
+                @foreach (var m in Model.Members)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="@m.AvatarUrl" class="rounded-circle" width="36" height="36" />
+                        <div style="line-height: 1.2;">
+                            <div class="fw-bold text-body" style="font-size: 13px;">@m.FullName</div>
+                            <div class="text-muted mt-1" style="font-size: 11px;">@m.RoleInGroup</div>
+                        </div>
                     </div>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=SC&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
-                    <div style="line-height: 1.2;">
-                        <div class="fw-bold text-body" style="font-size: 13px;">Sarah Chen</div>
-                        <div class="text-muted mt-1" style="font-size: 11px;">Tech Lead</div>
-                    </div>
-                </div>
-                <div class="d-flex align-items-center gap-3">
-                    <img src="https://ui-avatars.com/api/?name=MR&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
-                    <div style="line-height: 1.2;">
-                        <div class="fw-bold text-body" style="font-size: 13px;">Michael Ross</div>
-                        <div class="text-muted mt-1" style="font-size: 11px;">Documentation</div>
-                    </div>
-                </div>
+                }
+                @if (!Model.Members.Any())
+                {
+                    <p class="text-muted mb-0" style="font-size:13px;">No member info available.</p>
+                }
             </div>
         </div>
 
@@ -141,12 +121,13 @@ Strong Points:
                 Decision Panel
             </h2>
 
-            <!-- Original Submitter Info (Hidden to stay true to screenshot, or we can just show action buttons) -->
-            <button class="btn btn-primary w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 fs-6 shadow-sm" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">
+            <button type="button" class="btn btn-primary w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 fs-6 shadow-sm"
+                    onclick="submitDecision('Approve')" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">
                 <span class="material-symbols-outlined fs-5">check_circle</span>
                 Approve Feedback
             </button>
-            <button class="btn btn-secondary w-100 py-3 mb-4 d-flex align-items-center justify-content-center gap-2" style="font-size: 15px; font-weight: 600;" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">
+            <button type="button" class="btn btn-secondary w-100 py-3 mb-4 d-flex align-items-center justify-content-center gap-2" style="font-size: 15px; font-weight: 600;"
+                    onclick="submitDecision('ApproveWithEdits')" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">
                 <span class="material-symbols-outlined fs-5 text-orange-600" style="color:var(--fpt-orange)">edit</span>  
                 <span class="text-orange-600" style="color:var(--fpt-orange)">Approve with Edits</span>
             </button>
@@ -156,7 +137,8 @@ Strong Points:
                 <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted" style="font-size: 10px; font-weight: 700; letter-spacing: 1px;">OR</span>
             </div>
 
-            <button class="btn btn-danger w-100 py-3 d-flex align-items-center justify-content-center gap-2 bg-danger-subtle border-0" style="background:#FEF2F2;" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
+            <button type="button" class="btn btn-danger w-100 py-3 d-flex align-items-center justify-content-center gap-2 bg-danger-subtle border-0" style="background:#FEF2F2;"
+                    onclick="submitDecision('Reject')" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
                 <span class="material-symbols-outlined fs-5">block</span>
                 Reject for Revision
             </button>
@@ -177,7 +159,7 @@ Strong Points:
             </div>
             <div class="modal-footer border-0 pt-0 flex-nowrap">
                 <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary w-50 m-0 ms-2">Approve</button>
+                <button type="button" class="btn btn-primary w-50 m-0 ms-2" onclick="document.getElementById('feedbackActionForm').submit()">Approve</button>
             </div>
         </div>
     </div>
@@ -193,16 +175,23 @@ Strong Points:
             </div>
             <div class="modal-body">
                 <p class="text-muted" style="font-size: 14px; margin-bottom: 20px;">Please provide a reason for rejecting this feedback. This will be sent back to the assigned Reviewer.</p>
-                
                 <div class="form-group">
                     <label class="form-label">Rejection Reason</label>
-                    <textarea class="form-control" rows="4" placeholder="Explain what needs to be changed..."></textarea>
+                    <textarea class="form-control" rows="4" name="comments" form="feedbackActionForm" placeholder="Explain what needs to be changed..."></textarea>
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 flex-nowrap">
                 <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger w-50 m-0 ms-2 border-danger text-white hover-bg-danger" style="background:#DC2626;">Confirm Reject</button>
+                <button type="button" class="btn btn-danger w-50 m-0 ms-2 text-white" style="background:#DC2626;" onclick="document.getElementById('feedbackActionForm').submit()">Confirm Reject</button>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function submitDecision(decision) {
+            document.getElementById('decisionInput').value = decision;
+        }
+    </script>
+}
