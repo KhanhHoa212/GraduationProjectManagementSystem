@@ -61,7 +61,7 @@
                             <span class="text-muted" style="font-size:13px;">@a.ProjectName</span>
                         </div>
                         <div class="d-flex gap-3 text-muted" style="font-size:12px;">
-                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.ReviewRoundName</span>
+                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.RoundType</span>
                             @if (a.ScheduledAt.HasValue)
                             {
                                 <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
@@ -87,15 +87,15 @@
                         <span class="badge @statusBadge">@a.StatusLabel</span>
                         @if (!isCompleted)
                         {
-                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentId })"
+                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
                                class="btn btn-primary btn-sm d-flex align-items-center gap-1">
                                 <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
                                 Start Evaluation
                             </a>
                         }
-                        else if (a.EvaluationId.HasValue)
+                        else if (a.EvaluationID.HasValue)
                         {
-                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentId })"
+                            <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
                                class="btn btn-outline-secondary btn-sm">
                                 View
                             </a>

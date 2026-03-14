@@ -157,6 +157,7 @@ public class LecturerService : ILecturerService
                 GroupName = f.Evaluation?.Group?.GroupName ?? "N/A",
                 ProjectName = f.Evaluation?.Group?.Project?.ProjectName ?? "N/A",
                 ReviewRoundName = f.Evaluation?.ReviewRound?.RoundNumber.ToString() ?? "N/A",
+                RoundNumber = f.Evaluation?.ReviewRound?.RoundNumber ?? 0,
                 ReviewerName = f.Evaluation?.Reviewer?.FullName ?? "N/A",
                 SubmittedAt = f.CreatedAt,
                 AutoReleaseAt = f.CreatedAt.AddHours(48),
@@ -175,13 +176,14 @@ public class LecturerService : ILecturerService
         var evaluation = feedback.Evaluation;
         var group = evaluation?.Group;
 
-        var scores = evaluation?.EvaluationDetails?.Select(d => new EvaluationScoreItemDto
-        {
-            CriteriaName = d.Item?.ItemContent ?? "Unknown",
-            Score = d.Score,
-            MaxScore = d.Item?.MaxScore ?? 10,
-            WeightPercentage = d.Item != null ? (decimal)d.Item.Weight : 100m
-        }).ToList() ?? new List<EvaluationScoreItemDto>();
+        var scores = evaluation?.EvaluationDetails?.Select(s => new EvaluationScoreItemDto
+            {
+                ItemCode = s.Item?.ItemCode ?? "N/A",
+                CriteriaName = s.Item?.ItemContent ?? "N/A",
+                Score = s.Score,
+                MaxScore = s.Item?.MaxScore ?? 10,
+                WeightPercentage = s.Item != null ? (decimal)s.Item.Weight : 100m
+            }).ToList() ?? new List<EvaluationScoreItemDto>();
 
         var members = group?.GroupMembers?.Select(m => new StudentMemberDto
         {

@@ -25,6 +25,7 @@ public class LecturerFeedbackApprovalDetailDto
 
 public class EvaluationScoreItemDto
 {
+    public string ItemCode { get; set; } = string.Empty;
     public string CriteriaName { get; set; } = string.Empty;
     public decimal Score { get; set; }
     public decimal MaxScore { get; set; }

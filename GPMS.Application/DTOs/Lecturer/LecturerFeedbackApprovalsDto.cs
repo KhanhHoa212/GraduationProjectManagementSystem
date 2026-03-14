@@ -18,6 +18,7 @@ public class PendingFeedbackItemDto
     public string GroupName { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
     public string ReviewRoundName { get; set; } = string.Empty;
+    public int RoundNumber { get; set; }
     public string ReviewerName { get; set; } = string.Empty;
     public DateTime SubmittedAt { get; set; }
     public DateTime AutoReleaseAt { get; set; }

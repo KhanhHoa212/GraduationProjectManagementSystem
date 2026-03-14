@@ -9,12 +9,12 @@ namespace GPMS.Web.ViewModels.Lecturer
     // -------------------------------------------------------
     public class LecturerDashboardViewModel
     {
-        public int GroupsMentoring { get; set; }
-        public int PendingApprovals { get; set; }
-        public int AssignedReviews { get; set; }
-        public int UpcomingDeadlines { get; set; }
+        public int MentoringGroupsCount { get; set; }
+        public int PendingApprovalsCount { get; set; }
+        public int AssignedReviewsCount { get; set; }
+        public int UpcomingDeadlinesCount { get; set; }
         public List<RecentActivityItem> RecentActivities { get; set; } = new();
-        public List<ScheduleItem> TodaySchedule { get; set; } = new();
+        public List<ScheduleItem> TodaysSchedule { get; set; } = new();
     }
 
     public class RecentActivityItem
@@ -22,18 +22,19 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public DateTime Timestamp { get; set; }
-        public string IconName { get; set; } = "notifications";
-        public string IconColor { get; set; } = "var(--fpt-orange)";
+        public string Icon { get; set; } = "notifications";
+        public string IconBgColor { get; set; } = "var(--fpt-orange)";
         public string? ActionUrl { get; set; }
-        public string? ActionLabel { get; set; }
+        public string? ActionText { get; set; }
     }
 
     public class ScheduleItem
     {
-        public DateTime ScheduledAt { get; set; }
+        public DateTime StartTime { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
-        public bool IsActive { get; set; }
+        public int DurationMinutes { get; set; }
+        public bool IsHighlight { get; set; }
         public string? MeetLink { get; set; }
     }
 
@@ -55,6 +56,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public List<string> MemberNames { get; set; } = new();
         public int CurrentRound { get; set; }
         public string RoundType { get; set; } = string.Empty;
+        public string Semester { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public int ProgressPercent { get; set; }
     }
@@ -68,7 +70,9 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string GroupName { get; set; } = string.Empty;
         public string ProjectName { get; set; } = string.Empty;
         public string ProjectCode { get; set; } = string.Empty;
+        public string Semester { get; set; } = string.Empty;
         public string SupervisorName { get; set; } = string.Empty;
+        public int? PendingFeedbackId { get; set; }
         public List<GroupMemberItem> Members { get; set; } = new();
         public List<ReviewRoundMilestone> Milestones { get; set; } = new();
     }
@@ -106,6 +110,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int FeedbackID { get; set; }
         public int EvaluationID { get; set; }
         public string GroupName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
         public string ReviewerName { get; set; } = string.Empty;
         public int RoundNumber { get; set; }
         public decimal TotalScore { get; set; }
@@ -135,24 +140,28 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string GroupName { get; set; } = string.Empty;
         public int GroupID { get; set; }
         public string ReviewerName { get; set; } = string.Empty;
-        public int RoundNumber { get; set; }
+        public string ReviewRoundName { get; set; } = string.Empty;
+        public int CurrentRoundIndex { get; set; }
+        public int TotalRounds { get; set; }
         public decimal TotalScore { get; set; }
+        public decimal MaxTotalScore { get; set; }
         public DateTime SubmittedAt { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; }
         public string FeedbackContent { get; set; } = string.Empty;
         public string? SupervisorComment { get; set; }
         public List<GroupMemberItem> GroupMembers { get; set; } = new();
-        public List<EvalDetailRow> EvaluationDetails { get; set; } = new();
+        public List<EvalDetailRow> Scores { get; set; } = new();
     }
 
     public class EvalDetailRow
     {
         public string ItemCode { get; set; } = string.Empty;
-        public string ItemContent { get; set; } = string.Empty;
+        public string CriteriaName { get; set; } = string.Empty;
         public decimal MaxScore { get; set; }
-        public decimal Weight { get; set; }
+        public decimal WeightPercentage { get; set; }
+        public decimal Weight => WeightPercentage / 100m;
         public decimal Score { get; set; }
-        public decimal WeightedScore => MaxScore > 0 ? Math.Round(Score * Weight / MaxScore, 2) : 0;
+        public decimal WeightedScore { get; set; }
     }
 
     // -------------------------------------------------------
@@ -161,6 +170,9 @@ namespace GPMS.Web.ViewModels.Lecturer
     public class ReviewAssignmentsViewModel
     {
         public List<ReviewAssignmentRow> Assignments { get; set; } = new();
+        public int PendingEvaluationsCount { get; set; }
+        public int ScheduledTodayCount { get; set; }
+        public int CompletedReviewsCount { get; set; }
     }
 
     public class ReviewAssignmentRow

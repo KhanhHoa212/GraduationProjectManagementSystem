@@ -65,7 +65,7 @@
         <!-- Feedback Content Editor -->
         <form asp-action="ApproveFeedback" asp-controller="Lecturer" method="post" class="mb-0" id="feedbackActionForm">
             @Html.AntiForgeryToken()
-            <input type="hidden" name="feedbackId" value="@Model.FeedbackId" />
+            <input type="hidden" name="feedbackId" value="@Model.FeedbackID" />
             <input type="hidden" name="decision" id="decisionInput" value="" />
 
             <div class="card-panel mb-0 border">

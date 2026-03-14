@@ -31,26 +31,27 @@ public class LecturerController : Controller
         var dto = await _lecturerService.GetDashboardDataAsync(GetUserId());
         var vm = new LecturerDashboardViewModel
         {
-            GroupsMentoring = dto.MentoringGroupsCount,
-            PendingApprovals = dto.PendingApprovalsCount,
-            AssignedReviews = dto.AssignedReviewsCount,
-            UpcomingDeadlines = dto.UpcomingDeadlinesCount,
+            MentoringGroupsCount = dto.MentoringGroupsCount,
+            PendingApprovalsCount = dto.PendingApprovalsCount,
+            AssignedReviewsCount = dto.AssignedReviewsCount,
+            UpcomingDeadlinesCount = dto.UpcomingDeadlinesCount,
             RecentActivities = dto.RecentActivities.Select(a => new RecentActivityItem
             {
                 Title = a.Title,
                 Description = a.Description,
                 Timestamp = a.Timestamp,
-                IconName = a.Icon,
-                IconColor = a.IconBgColor,
+                Icon = a.Icon,
+                IconBgColor = a.IconBgColor,
                 ActionUrl = a.ActionUrl,
-                ActionLabel = a.ActionText
+                ActionText = a.ActionText
             }).ToList(),
-            TodaySchedule = dto.TodaysSchedule.Select(s => new ScheduleItem
+            TodaysSchedule = dto.TodaysSchedule.Select(s => new ScheduleItem
             {
                 Title = s.Title,
                 Location = s.Location,
-                ScheduledAt = s.StartTime,
-                IsActive = s.IsHighlight
+                StartTime = s.StartTime,
+                DurationMinutes = s.DurationMinutes,
+                IsHighlight = s.IsHighlight
             }).ToList()
         };
         return View(vm);
@@ -72,6 +73,7 @@ public class LecturerController : Controller
                 MemberNames = p.MemberNames,
                 CurrentRound = 1,
                 RoundType = p.CurrentRound,
+                Semester = p.Semester,
                 Status = p.Status,
                 ProgressPercent = p.ProgressPercent
             }).ToList()
@@ -90,6 +92,8 @@ public class LecturerController : Controller
             GroupID = dto.GroupId,
             GroupName = dto.GroupName,
             ProjectName = dto.ProjectName,
+            Semester = dto.Semester,
+            PendingFeedbackId = dto.PendingFeedbackId,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
@@ -113,7 +117,9 @@ public class LecturerController : Controller
                 FeedbackID = f.FeedbackId,
                 EvaluationID = f.EvaluationId,
                 GroupName = f.GroupName,
+                ProjectName = f.ProjectName,
                 ReviewerName = f.ReviewerName,
+                RoundNumber = f.RoundNumber,
                 SubmittedAt = f.SubmittedAt,
                 ApprovalStatus = ApprovalStatus.Pending
             }).ToList()
@@ -134,8 +140,11 @@ public class LecturerController : Controller
             GroupName = dto.GroupName,
             GroupID = dto.GroupId,
             ReviewerName = dto.ReviewerName,
-            RoundNumber = dto.CurrentRoundIndex,
+            ReviewRoundName = dto.ReviewRoundName,
+            CurrentRoundIndex = dto.CurrentRoundIndex,
+            TotalRounds = dto.TotalRounds,
             TotalScore = dto.TotalScore,
+            MaxTotalScore = dto.MaxTotalScore,
             FeedbackContent = dto.FeedbackContent,
             GroupMembers = dto.Members.Select(m => new GroupMemberItem
             {
@@ -143,12 +152,14 @@ public class LecturerController : Controller
                 FullName = m.FullName,
                 Role = m.RoleInGroup
             }).ToList(),
-            EvaluationDetails = dto.Scores.Select(s => new EvalDetailRow
+            Scores = dto.Scores.Select(s => new EvalDetailRow
             {
-                ItemContent = s.CriteriaName,
+                ItemCode = s.ItemCode,
+                CriteriaName = s.CriteriaName,
                 MaxScore = s.MaxScore,
-                Weight = s.WeightPercentage / 100m,
-                Score = s.Score
+                WeightPercentage = s.WeightPercentage,
+                Score = s.Score,
+                WeightedScore = s.WeightedScore
             }).ToList()
         };
         return View(vm);
@@ -169,12 +180,15 @@ public class LecturerController : Controller
                 GroupName = a.GroupName,
                 ProjectName = a.ProjectName,
                 RoundNumber = a.RoundNumber,
-                RoundType = a.RoundType,
+                RoundType = a.ReviewRoundName,
                 ScheduledAt = a.ScheduledAt,
                 Location = a.Location,
                 HasEvaluation = a.HasEvaluation,
                 EvaluationID = a.EvaluationId
-            }).ToList()
+            }).ToList(),
+            PendingEvaluationsCount = dto.PendingEvaluationsCount,
+            ScheduledTodayCount = dto.ScheduledTodayCount,
+            CompletedReviewsCount = dto.CompletedReviewsCount
         };
         return View(vm);
     }
