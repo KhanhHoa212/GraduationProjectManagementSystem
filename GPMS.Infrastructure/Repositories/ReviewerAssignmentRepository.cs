@@ -29,6 +29,6 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
             .ToListAsync();
 
     public async Task AddAsync(ReviewerAssignment assignment) => await _context.ReviewerAssignments.AddAsync(assignment);
-    public async Task RemoveAsync(ReviewerAssignment assignment) => _context.ReviewerAssignments.Remove(assignment);
+    public Task RemoveAsync(ReviewerAssignment assignment) { _context.ReviewerAssignments.Remove(assignment); return Task.CompletedTask; }
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }

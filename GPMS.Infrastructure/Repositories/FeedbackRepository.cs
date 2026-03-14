@@ -73,6 +73,6 @@ public class FeedbackRepository : IFeedbackRepository
             .FirstOrDefaultAsync(f => f.FeedbackID == feedbackId);
 
     public async Task AddAsync(Feedback feedback) => await _context.Feedbacks.AddAsync(feedback);
-    public async Task UpdateApprovalAsync(FeedbackApproval approval) => _context.FeedbackApprovals.Update(approval);
+    public Task UpdateApprovalAsync(FeedbackApproval approval) { _context.FeedbackApprovals.Update(approval); return Task.CompletedTask; }
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }

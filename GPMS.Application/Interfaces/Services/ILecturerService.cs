@@ -5,13 +5,13 @@ namespace GPMS.Application.Interfaces.Services;
 
 public interface ILecturerService
 {
-    Task<LecturerDashboardViewModel> GetDashboardDataAsync(string lecturerId);
-    Task<LecturerProjectsViewModel> GetMentoredProjectsAsync(string lecturerId);
-    Task<LecturerProjectGroupDetailViewModel> GetProjectGroupDetailAsync(int groupId);
-    Task<LecturerFeedbackApprovalsViewModel> GetPendingApprovalsAsync(string lecturerId);
-    Task<LecturerFeedbackApprovalDetailViewModel> GetFeedbackApprovalDetailAsync(int feedbackId);
-    Task<LecturerReviewAssignmentsViewModel> GetReviewAssignmentsAsync(string reviewerId);
-    Task<LecturerEvaluationFormViewModel> GetEvaluationFormAsync(int assignmentId);
-    Task<bool> SubmitEvaluationAsync(LecturerEvaluationFormViewModel model);
+    Task<LecturerDashboardDto> GetDashboardDataAsync(string lecturerId);
+    Task<LecturerProjectsDto> GetMentoredProjectsAsync(string lecturerId);
+    Task<LecturerProjectGroupDetailDto> GetProjectGroupDetailAsync(int groupId);
+    Task<LecturerFeedbackApprovalsDto> GetPendingApprovalsAsync(string lecturerId);
+    Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(int feedbackId);
+    Task<LecturerReviewAssignmentsDto> GetReviewAssignmentsAsync(string reviewerId);
+    Task<LecturerEvaluationFormDto> GetEvaluationFormAsync(int assignmentId);
+    Task<bool> SubmitEvaluationAsync(EvaluationSubmitDto model);
     Task<bool> ApproveFeedbackAsync(int feedbackId, string decision, string comments);
 }

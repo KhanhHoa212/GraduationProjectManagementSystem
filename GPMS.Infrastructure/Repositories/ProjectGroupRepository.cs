@@ -21,13 +21,14 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task<IEnumerable<ProjectGroup>> GetBySupervisorAsync(string supervisorId) =>
         await _context.ProjectGroups
-            .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
             .Include(pg => pg.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
             .Include(pg => pg.GroupMembers)
                 .ThenInclude(m => m.User)
             .Include(pg => pg.Evaluations)
                 .ThenInclude(e => e.Feedback)
-                    .ThenInclude(f => f.FeedbackApproval)
+                    .ThenInclude(f => f!.FeedbackApproval)
+            .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
             .ToListAsync();
 
     public async Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId) =>

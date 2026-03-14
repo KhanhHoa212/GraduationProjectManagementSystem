@@ -33,23 +33,22 @@ public class LecturerService : ILecturerService
         _evaluationRepo = evaluationRepo;
     }
 
-    public async Task<LecturerDashboardViewModel> GetDashboardDataAsync(string lecturerId)
+    public async Task<LecturerDashboardDto> GetDashboardDataAsync(string lecturerId)
     {
-        // TODO: Implement actual data fetching via repositories
         var groups = await _groupRepo.GetBySupervisorAsync(lecturerId);
         var pendingFeedbacks = await _feedbackRepo.GetPendingApprovalsBySupervisorAsync(lecturerId);
         var assignments = await _assignmentRepo.GetByReviewerAsync(lecturerId);
 
-        return new LecturerDashboardViewModel
+        return new LecturerDashboardDto
         {
             MentoringGroupsCount = groups.Count(),
             PendingApprovalsCount = pendingFeedbacks.Count(),
             AssignedReviewsCount = assignments.Count(),
-            UpcomingDeadlinesCount = 3, // Mocked for now
+            UpcomingDeadlinesCount = 3, // Mocked
 
-            RecentActivities = new List<DashboardActivityItem>
+            RecentActivities = new List<DashboardActivityItemDto>
             {
-                new DashboardActivityItem
+                new DashboardActivityItemDto
                 {
                     Title = "Group G04 - AI Ethics",
                     Description = "New final project report submitted for your approval.",
@@ -59,82 +58,82 @@ public class LecturerService : ILecturerService
                     ActionUrl = "/Lecturer/FeedbackApprovalDetail",
                     ActionText = "Review Now"
                 },
-                new DashboardActivityItem
+                new DashboardActivityItemDto
                 {
                     Title = "Review Assignment",
                     Description = "You were assigned to review \"Smart Irrigation IoT\" by Group G12.",
                     Timestamp = DateTime.Now.AddHours(-2),
                     Icon = "chat",
-                    IconBgColor = "#6C757D", // Secondary gray
+                    IconBgColor = "#6C757D",
                     ActionUrl = null,
                     ActionText = null
                 }
             },
-            TodaysSchedule = new List<DashboardScheduleItem>
+            TodaysSchedule = new List<DashboardScheduleItemDto>
             {
-                new DashboardScheduleItem
+                new DashboardScheduleItemDto
                 {
                     Title = "Mentoring Session G04",
                     Location = "Virtual Room A",
                     DurationMinutes = 45,
-                    StartTime = DateTime.Today.AddHours(10), // 10:00 AM
+                    StartTime = DateTime.Today.AddHours(10),
                     IsHighlight = true
                 },
-                new DashboardScheduleItem
+                new DashboardScheduleItemDto
                 {
                     Title = "Peer Review Meeting",
                     Location = "Office 302",
                     DurationMinutes = 60,
-                    StartTime = DateTime.Today.AddHours(14), // 02:00 PM
+                    StartTime = DateTime.Today.AddHours(14),
                     IsHighlight = false
                 }
             }
         };
     }
 
-    public async Task<LecturerProjectsViewModel> GetMentoredProjectsAsync(string lecturerId)
+    public async Task<LecturerProjectsDto> GetMentoredProjectsAsync(string lecturerId)
     {
         var groups = await _groupRepo.GetBySupervisorAsync(lecturerId);
-        var vm = new LecturerProjectsViewModel();
+        var dto = new LecturerProjectsDto();
 
         foreach (var group in groups)
         {
-            vm.Projects.Add(new LecturerProjectItem
+            dto.Projects.Add(new LecturerProjectItemDto
             {
                 GroupId = group.GroupID,
                 ProjectName = group.Project?.ProjectName ?? "N/A",
                 GroupName = group.GroupName,
-                Semester = "SP25", // Mocked or get from Project.Semester
+                Semester = "SP25",
                 SupervisorRole = "Main",
                 MemberNames = group.GroupMembers.Select(m => m.User?.FullName ?? "Unknown").ToList(),
                 CurrentRound = "Round 1",
-                Status = "Active"
+                Status = "Active",
+                ProgressPercent = 33
             });
         }
-        
-        return vm;
+
+        return dto;
     }
 
-    public async Task<LecturerProjectGroupDetailViewModel> GetProjectGroupDetailAsync(int groupId)
+    public async Task<LecturerProjectGroupDetailDto> GetProjectGroupDetailAsync(int groupId)
     {
         var group = await _groupRepo.GetByIdAsync(groupId);
         if (group == null) throw new Exception("Group not found");
 
-        // Find a pending feedback for this group so the view can link to the correct FeedbackID
         var pendingFeedbacks = await _feedbackRepo.GetPendingApprovalsBySupervisorAsync(string.Empty);
         var groupFeedback = pendingFeedbacks
             .Where(f => f.Evaluation?.GroupID == groupId)
             .OrderByDescending(f => f.CreatedAt)
             .FirstOrDefault();
 
-        var vm = new LecturerProjectGroupDetailViewModel
+        return new LecturerProjectGroupDetailDto
         {
             GroupId = group.GroupID,
             GroupName = group.GroupName,
             ProjectName = group.Project?.ProjectName ?? "N/A",
             Semester = "SP25",
             PendingFeedbackId = groupFeedback?.FeedbackID,
-            Members = group.GroupMembers.Select(m => new StudentMemberInfo
+            Members = group.GroupMembers.Select(m => new StudentMemberDto
             {
                 UserId = m.UserID,
                 FullName = m.User?.FullName ?? "Unknown",
@@ -142,18 +141,16 @@ public class LecturerService : ILecturerService
                 AvatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(m.User?.FullName ?? "U")}&background=E5E7EB&color=374151"
             }).ToList()
         };
-
-        return vm;
     }
 
-    public async Task<LecturerFeedbackApprovalsViewModel> GetPendingApprovalsAsync(string lecturerId)
+    public async Task<LecturerFeedbackApprovalsDto> GetPendingApprovalsAsync(string lecturerId)
     {
         var pendingFeedbacks = await _feedbackRepo.GetPendingApprovalsBySupervisorAsync(lecturerId);
-        var vm = new LecturerFeedbackApprovalsViewModel();
+        var dto = new LecturerFeedbackApprovalsDto();
 
         foreach (var f in pendingFeedbacks)
         {
-            vm.PendingFeedbacks.Add(new PendingFeedbackItem
+            dto.PendingFeedbacks.Add(new PendingFeedbackItemDto
             {
                 FeedbackId = f.FeedbackID,
                 EvaluationId = f.EvaluationID,
@@ -162,15 +159,15 @@ public class LecturerService : ILecturerService
                 ReviewRoundName = f.Evaluation?.ReviewRound?.RoundNumber.ToString() ?? "N/A",
                 ReviewerName = f.Evaluation?.Reviewer?.FullName ?? "N/A",
                 SubmittedAt = f.CreatedAt,
-                AutoReleaseAt = f.CreatedAt.AddHours(48), // Assuming 48 hr logic
+                AutoReleaseAt = f.CreatedAt.AddHours(48),
                 ApprovalStatus = "Pending"
             });
         }
 
-        return vm;
+        return dto;
     }
 
-    public async Task<LecturerFeedbackApprovalDetailViewModel> GetFeedbackApprovalDetailAsync(int feedbackId)
+    public async Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(int feedbackId)
     {
         var feedback = await _feedbackRepo.GetByIdWithDetailsAsync(feedbackId);
         if (feedback == null) throw new Exception("Feedback not found");
@@ -178,28 +175,28 @@ public class LecturerService : ILecturerService
         var evaluation = feedback.Evaluation;
         var group = evaluation?.Group;
 
-        var scores = evaluation?.EvaluationDetails?.Select(d => new EvaluationScoreItem
+        var scores = evaluation?.EvaluationDetails?.Select(d => new EvaluationScoreItemDto
         {
             CriteriaName = d.Item?.ItemContent ?? "Unknown",
             Score = d.Score,
             MaxScore = d.Item?.MaxScore ?? 10,
             WeightPercentage = d.Item != null ? (decimal)d.Item.Weight : 100m
-        }).ToList() ?? new List<EvaluationScoreItem>();
+        }).ToList() ?? new List<EvaluationScoreItemDto>();
 
-        var members = group?.GroupMembers?.Select(m => new StudentMemberInfo
+        var members = group?.GroupMembers?.Select(m => new StudentMemberDto
         {
             UserId = m.UserID,
             FullName = m.User?.FullName ?? "Unknown",
             RoleInGroup = m.RoleInGroup.ToString(),
             AvatarUrl = $"https://ui-avatars.com/api/?name={Uri.EscapeDataString(m.User?.FullName ?? "U")}&background=E5E7EB&color=374151"
-        }).ToList() ?? new List<StudentMemberInfo>();
+        }).ToList() ?? new List<StudentMemberDto>();
 
-        var vm = new LecturerFeedbackApprovalDetailViewModel
+        return new LecturerFeedbackApprovalDetailDto
         {
             FeedbackId = feedback.FeedbackID,
             EvaluationId = feedback.EvaluationID,
             GroupName = group?.GroupName ?? "N/A",
-            GroupIdString = group?.GroupID.ToString() ?? "N/A",
+            GroupId = group?.GroupID ?? 0,
             ReviewRoundName = evaluation?.ReviewRound?.RoundNumber.ToString() ?? "N/A",
             CurrentRoundIndex = evaluation?.ReviewRound?.RoundNumber ?? 1,
             TotalRounds = 4,
@@ -210,67 +207,68 @@ public class LecturerService : ILecturerService
             Scores = scores,
             Members = members
         };
-
-        return vm;
     }
 
-    public async Task<LecturerReviewAssignmentsViewModel> GetReviewAssignmentsAsync(string reviewerId)
+    public async Task<LecturerReviewAssignmentsDto> GetReviewAssignmentsAsync(string reviewerId)
     {
         var assignments = await _assignmentRepo.GetByReviewerAsync(reviewerId);
-        var vm = new LecturerReviewAssignmentsViewModel();
+        var dto = new LecturerReviewAssignmentsDto();
 
         foreach (var a in assignments)
         {
-            vm.Assignments.Add(new ReviewAssignmentItem
+            var session = a.Group?.ReviewSessions?.FirstOrDefault(rs => rs.ReviewRoundID == a.ReviewRoundID);
+            dto.Assignments.Add(new ReviewAssignmentItemDto
             {
                 AssignmentId = a.AssignmentID,
                 GroupId = a.GroupID,
                 GroupName = a.Group?.GroupName ?? "N/A",
                 ProjectName = a.Group?.Project?.ProjectName ?? "N/A",
                 ReviewRoundName = a.ReviewRound?.RoundNumber.ToString() ?? "N/A",
-                ScheduledAt = DateTime.Now, // Need session info
-                Location = "Room 101",
-                IsOnline = false,
-                EvaluationStatus = "Pending"
+                RoundNumber = a.ReviewRound?.RoundNumber ?? 0,
+                ScheduledAt = session?.ScheduledAt,
+                Location = session?.Room?.RoomCode,
+                IsOnline = false, // RoomType enum: Classroom, Lab, Hall — no Online value
+                HasEvaluation = false,
+                EvaluationId = null
             });
         }
 
-        return vm;
+        dto.PendingEvaluationsCount = dto.Assignments.Count(a => !a.HasEvaluation);
+        dto.ScheduledTodayCount = dto.Assignments.Count(a => a.ScheduledAt?.Date == DateTime.Today);
+        dto.CompletedReviewsCount = dto.Assignments.Count(a => a.HasEvaluation);
+
+        return dto;
     }
 
-    public async Task<LecturerEvaluationFormViewModel> GetEvaluationFormAsync(int assignmentId)
+    public Task<LecturerEvaluationFormDto> GetEvaluationFormAsync(int assignmentId)
     {
-        // Basic stub
-        return new LecturerEvaluationFormViewModel
+        // Stub — real implementation would load from DB
+        var dto = new LecturerEvaluationFormDto
         {
-            EvaluationId = assignmentId, // Using assignmentId for simple stub matching
-            GroupName = "A",
+            AssignmentId = assignmentId,
+            GroupName = "G01",
             ProjectName = "Stubbed Project",
             ReviewRoundName = "Round 1",
+            RoundNumber = 1,
             SupervisorName = "Prof. John Doe",
-            DefenseDate = DateTime.Now.AddDays(2),
-            Status = "Pending",
-            Members = new List<StudentMemberInfo>
+            ScheduledAt = DateTime.Now.AddDays(2),
+            Members = new List<StudentMemberDto>
             {
-                new StudentMemberInfo { FullName = "Alice", RoleInGroup = "Leader", AvatarUrl = "https://ui-avatars.com/api/?name=AL&background=E5E7EB&color=374151" }
+                new StudentMemberDto { FullName = "Alice", RoleInGroup = "Leader", AvatarUrl = "https://ui-avatars.com/api/?name=AL&background=E5E7EB&color=374151" }
             },
-            Documents = new List<ProjectDocument>
+            ChecklistItems = new List<ChecklistItemDto>
             {
-                new ProjectDocument { FileName = "Report.pdf", DocumentType = "Report", SizeInBytes = 1048576, UploadedAt = DateTime.Now }
-            },
-            Criteria = new List<EvaluationCriterion>
-            {
-                new EvaluationCriterion { Id = 1, Name = "Criteria 1", Description = "Desc 1", MaxScore = 50 },
-                new EvaluationCriterion { Id = 2, Name = "Criteria 2", Description = "Desc 2", MaxScore = 50 }
+                new ChecklistItemDto { ItemId = 1, ItemCode = "C1", ItemContent = "Criteria 1", MaxScore = 50, Weight = 50 },
+                new ChecklistItemDto { ItemId = 2, ItemCode = "C2", ItemContent = "Criteria 2", MaxScore = 50, Weight = 50 }
             }
         };
+        return Task.FromResult(dto);
     }
 
-    public async Task<bool> SubmitEvaluationAsync(LecturerEvaluationFormViewModel model)
+    public Task<bool> SubmitEvaluationAsync(EvaluationSubmitDto model)
     {
-        // TODO: Map to entity and save via _evaluationRepo and _feedbackRepo if evaluating.
-        // For now, return true simulating a successful save.
-        return await Task.FromResult(true);
+        // TODO: Map to entity and save
+        return Task.FromResult(true);
     }
 
     public async Task<bool> ApproveFeedbackAsync(int feedbackId, string decision, string comments)
@@ -278,19 +276,9 @@ public class LecturerService : ILecturerService
         var feedback = await _feedbackRepo.GetByIdAsync(feedbackId);
         if (feedback == null) return false;
 
-        if (decision == "Approve" || decision == "ApproveWithEdits")
+        if (decision == "ApproveWithEdits" && !string.IsNullOrEmpty(comments))
         {
-            if (decision == "ApproveWithEdits" && !string.IsNullOrEmpty(comments))
-            {
-                feedback.Content = comments;
-            }
-            // Update status or release flag
-            // feedback.Status = "Approved"; // assuming property exists
-        }
-        else if (decision == "Reject")
-        {
-            // feedback.Status = "Rejected"; // assuming property exists
-            // log comment reason
+            feedback.Content = comments;
         }
 
         await _feedbackRepo.SaveChangesAsync();

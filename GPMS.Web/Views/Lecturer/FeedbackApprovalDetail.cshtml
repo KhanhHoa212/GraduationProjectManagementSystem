@@ -1,5 +1,5 @@
-@using GPMS.Application.DTOs.Lecturer
-@model LecturerFeedbackApprovalDetailViewModel
+@using GPMS.Web.ViewModels.Lecturer
+@model FeedbackApprovalDetailViewModel
 @{
     ViewData["Title"] = "Feedback Approval Detail";
     Layout = "_LecturerLayout";
@@ -17,7 +17,7 @@
         </div>
         <div class="px-4 py-2 bg-white border rounded text-center">
             <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">GROUP ID</div>
-            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.GroupIdString</div>
+            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.GroupID</div>
         </div>
     </div>
 </div>
@@ -97,17 +97,17 @@
         <div class="card-panel mb-0 border">
             <div class="text-muted mb-3 pb-2 border-bottom" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP MEMBERS</div>
             <div class="d-flex flex-column gap-3">
-                @foreach (var m in Model.Members)
+                @foreach (var m in Model.GroupMembers)
                 {
                     <div class="d-flex align-items-center gap-3">
-                        <img src="@m.AvatarUrl" class="rounded-circle" width="36" height="36" />
+                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(m.FullName)&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
                         <div style="line-height: 1.2;">
                             <div class="fw-bold text-body" style="font-size: 13px;">@m.FullName</div>
-                            <div class="text-muted mt-1" style="font-size: 11px;">@m.RoleInGroup</div>
+                            <div class="text-muted mt-1" style="font-size: 11px;">@m.Role</div>
                         </div>
                     </div>
                 }
-                @if (!Model.Members.Any())
+                @if (!Model.GroupMembers.Any())
                 {
                     <p class="text-muted mb-0" style="font-size:13px;">No member info available.</p>
                 }

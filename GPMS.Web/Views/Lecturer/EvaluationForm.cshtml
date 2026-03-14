@@ -1,28 +1,27 @@
-@using GPMS.Application.DTOs.Lecturer
-@model LecturerEvaluationFormViewModel
+@using GPMS.Web.ViewModels.Lecturer
+@model EvaluationFormViewModel
 @{
     ViewData["Title"] = "Evaluation Form";
     Layout = "_LecturerLayout";
-    var isReadOnly = !string.IsNullOrEmpty(Model.Status) && Model.Status == "Submitted";
+    var isReadOnly = Model.ExistingEvaluationID.HasValue;
 }
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
     <div>
         <h1 class="page-title">Evaluation Form</h1>
-        <p class="page-subtitle text-muted mb-0">@Model.GroupName — Round @Model.ReviewRoundName</p>
+        <p class="page-subtitle text-muted mb-0">@Model.GroupName — Round @Model.RoundNumber</p>
     </div>
     <div class="d-flex align-items-center gap-3">
         <span class="badge @(isReadOnly ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") py-2 px-3" style="font-size:13px;">
-            @Model.Status
+            @(isReadOnly ? "Submitted" : "Pending")
         </span>
     </div>
 </div>
 
 <form asp-action="SubmitEvaluation" asp-controller="Lecturer" method="post" id="evaluationForm">
     @Html.AntiForgeryToken()
-    <input type="hidden" name="EvaluationId" value="@Model.EvaluationId" />
-    <input type="hidden" name="AssignmentId" value="@Model.AssignmentId" />
-    <input type="hidden" name="GroupId" value="@Model.GroupId" />
+    <input type="hidden" name="AssignmentID" value="@Model.AssignmentID" />
+    <input type="hidden" name="GroupID" value="@Model.GroupID" />
 
     <div class="row g-4">
         <!-- Left Panel (65%): Checklist / Rubric -->
@@ -32,7 +31,7 @@
             <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
                 <div class="p-3 border-bottom d-flex align-items-center gap-2">
                     <span class="material-symbols-outlined" style="color:var(--fpt-orange)">checklist</span>
-                    <h2 class="section-title mb-0">@(string.IsNullOrEmpty(Model.ChecklistTitle) ? "Evaluation Criteria" : Model.ChecklistTitle)</h2>
+                    <h2 class="section-title mb-0">Evaluation Criteria</h2>
                 </div>
                 <table class="table mb-0 align-middle">
                     <thead>
@@ -43,32 +42,28 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (!Model.Criteria.Any())
+                        @if (!Model.ChecklistItems.Any())
                         {
                             <tr>
                                 <td colspan="3" class="text-center text-muted py-4">No evaluation criteria found for this round.</td>
                             </tr>
                         }
-                        @foreach (var criterion in Model.Criteria)
+                        @foreach (var item in Model.ChecklistItems)
                         {
-                            var existingScore = Model.Scores.ContainsKey(criterion.Id) ? Model.Scores[criterion.Id] : (decimal?)null;
+                            var existingScore = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID);
                             <tr class="criterion-row">
                                 <td class="px-4">
-                                    <div class="fw-medium text-body" style="font-size:14px;">@criterion.Name</div>
-                                    @if (!string.IsNullOrEmpty(criterion.Description))
-                                    {
-                                        <div class="text-muted" style="font-size:12px;">@criterion.Description</div>
-                                    }
+                                    <div class="fw-medium text-body" style="font-size:14px;">@item.ItemCode — @item.ItemContent</div>
                                 </td>
-                                <td class="text-center text-muted fw-bold">@criterion.MaxScore</td>
+                                <td class="text-center text-muted fw-bold">@item.MaxScore</td>
                                 <td>
-                                    <input type="number" 
-                                           class="form-control score-input" 
-                                           name="Scores[@criterion.Id]"
-                                           min="0" max="@criterion.MaxScore" step="0.5"
-                                           value="@(existingScore?.ToString("F1") ?? "")"
-                                           placeholder="0–@criterion.MaxScore"
-                                           data-max="@criterion.MaxScore"
+                                    <input type="number"
+                                           class="form-control score-input"
+                                           name="scores[@item.ItemID]"
+                                           min="0" max="@item.MaxScore" step="0.5"
+                                           value="@(existingScore?.Score.ToString("F1") ?? "")"
+                                           placeholder="0–@item.MaxScore"
+                                           data-max="@item.MaxScore"
                                            @(isReadOnly ? "readonly" : "")
                                            required />
                                 </td>
@@ -78,7 +73,7 @@
                     <tfoot>
                         <tr style="background:#FFF7F2;">
                             <td class="px-4 fw-bold text-body" colspan="2">Total Score</td>
-                            <td class="fw-bold" style="color:var(--fpt-orange); font-size:16px;" id="totalScoreDisplay">— / @Model.Criteria.Sum(c => c.MaxScore)</td>
+                            <td class="fw-bold" style="color:var(--fpt-orange); font-size:16px;" id="totalScoreDisplay">— / @Model.ChecklistItems.Sum(c => c.MaxScore)</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -87,20 +82,16 @@
             <!-- Overall Feedback -->
             <div class="card-panel border mb-0 shadow-sm">
                 <h2 class="section-title mb-3">Overall Comments</h2>
-                <textarea name="OverallFeedback" class="form-control" rows="6"
+                <textarea name="ExistingFeedbackContent" class="form-control" rows="6"
                           placeholder="Write your overall feedback for this group..."
-                          @(isReadOnly ? "readonly" : "")>@Model.OverallFeedback</textarea>
+                          @(isReadOnly ? "readonly" : "")>@Model.ExistingFeedbackContent</textarea>
             </div>
 
             <!-- Submit -->
             @if (!isReadOnly)
             {
                 <div class="d-flex justify-content-end gap-3">
-                    <button type="submit" name="saveAction" value="draft" class="btn btn-outline-secondary px-4">
-                        <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">save</span>
-                        Save Draft
-                    </button>
-                    <button type="submit" name="saveAction" value="submit" class="btn btn-primary px-4">
+                    <button type="submit" class="btn btn-primary px-4">
                         <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">send</span>
                         Submit Evaluation
                     </button>
@@ -108,7 +99,7 @@
             }
         </div>
 
-        <!-- Right Panel (35%): Group Info & Documents -->
+        <!-- Right Panel (35%): Group Info -->
         <div class="col-lg-4 order-lg-last d-flex flex-column gap-section">
 
             <!-- Group Info Card -->
@@ -124,13 +115,13 @@
                             <div class="fw-medium text-body" style="font-size: 13px;">@Model.SupervisorName</div>
                         </div>
                     </div>
-                    @if (Model.DefenseDate != default)
+                    @if (Model.ScheduledAt.HasValue)
                     {
                         <div class="d-flex gap-2 align-items-start">
                             <span class="material-symbols-outlined text-muted" style="font-size: 16px; margin-top: 1px;">event</span>
                             <div>
                                 <div class="text-muted" style="font-size: 11px; letter-spacing: 0.5px;">SCHEDULED DATE</div>
-                                <div class="fw-medium text-body" style="font-size: 13px;">@Model.DefenseDate.ToString("MMM dd, yyyy HH:mm")</div>
+                                <div class="fw-medium text-body" style="font-size: 13px;">@Model.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
                             </div>
                         </div>
                     }
@@ -141,10 +132,10 @@
                     @foreach (var m in Model.Members)
                     {
                         <div class="d-flex align-items-center gap-2">
-                            <img src="@m.AvatarUrl" class="rounded-circle" width="28" height="28" />
+                            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(m.FullName)&background=E5E7EB&color=374151" class="rounded-circle" width="28" height="28" />
                             <div>
                                 <div class="fw-medium text-body" style="font-size: 13px;">@m.FullName</div>
-                                <div class="text-muted" style="font-size: 11px;">@m.RoleInGroup</div>
+                                <div class="text-muted" style="font-size: 11px;">@m.Role</div>
                             </div>
                         </div>
                     }
@@ -154,33 +145,6 @@
                     }
                 </div>
             </div>
-
-            <!-- Project Documents -->
-            <div class="card-panel mb-0 border shadow-sm">
-                <div class="text-muted mb-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">PROJECT DOCUMENTS</div>
-                @if (!Model.Documents.Any())
-                {
-                    <p class="text-muted mb-0" style="font-size:13px;">No documents submitted yet.</p>
-                }
-                else
-                {
-                    <div class="d-flex flex-column gap-2">
-                        @foreach (var doc in Model.Documents)
-                        {
-                            <a href="@doc.Url" target="_blank" class="d-flex align-items-center gap-3 p-2 rounded hover-bg-light border text-decoration-none text-body">
-                                <div class="rounded p-2" style="background: #FFF7F2;">
-                                    <span class="material-symbols-outlined" style="color:var(--fpt-orange); font-size:18px;">description</span>
-                                </div>
-                                <div class="flex-grow-1 overflow-hidden">
-                                    <div class="fw-medium text-truncate" style="font-size: 13px;">@doc.FileName</div>
-                                    <div class="text-muted" style="font-size: 11px;">@doc.DocumentType · @(doc.SizeInBytes / 1024)KB</div>
-                                </div>
-                                <span class="material-symbols-outlined text-muted" style="font-size:18px;">download</span>
-                            </a>
-                        }
-                    </div>
-                }
-            </div>
         </div>
     </div>
 </form>
@@ -189,7 +153,7 @@
     <script>
         const scoreInputs = document.querySelectorAll('.score-input');
         const totalDisplay = document.getElementById('totalScoreDisplay');
-        const maxTotal = @Model.Criteria.Sum(c => c.MaxScore);
+        const maxTotal = @Model.ChecklistItems.Sum(c => c.MaxScore);
 
         function updateTotal() {
             let total = 0;

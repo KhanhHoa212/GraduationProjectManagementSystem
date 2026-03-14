@@ -1,5 +1,5 @@
-@using GPMS.Application.DTOs.Lecturer
-@model LecturerReviewAssignmentsViewModel
+@using GPMS.Web.ViewModels.Lecturer
+@model ReviewAssignmentsViewModel
 @{
     ViewData["Title"] = "Review Assignments";
     Layout = "_LecturerLayout";
@@ -51,7 +51,7 @@
         <div class="d-flex flex-column gap-0">
             @foreach (var a in Model.Assignments)
             {
-                var isCompleted = a.EvaluationStatus == "Submitted";
+                var isCompleted = a.HasEvaluation;
                 var borderColor = isCompleted ? "#22C55E" : "var(--fpt-orange)";
                 <div class="p-4 border-bottom d-flex align-items-center gap-4" style="border-left: 4px solid @borderColor;">
                     <div class="flex-grow-1">
@@ -66,13 +66,13 @@
                             {
                                 <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
                             }
-                            @if (!string.IsNullOrEmpty(a.Venue))
+                            @if (!string.IsNullOrEmpty(a.Location))
                             {
-                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">location_on</span> @a.Venue</span>
+                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">location_on</span> @a.Location</span>
                             }
-                            @if (a.IsOnline && !string.IsNullOrEmpty(a.Location))
+                            @if (a.MeetLink != null)
                             {
-                                <a href="@a.Location" target="_blank" class="text-decoration-none" style="color:var(--fpt-orange);">
+                                <a href="@a.MeetLink" target="_blank" class="text-decoration-none" style="color:var(--fpt-orange);">
                                     <span class="material-symbols-outlined align-middle" style="font-size:14px;">videocam</span> Join Meeting
                                 </a>
                             }
@@ -80,11 +80,11 @@
                     </div>
                     <div class="d-flex align-items-center gap-3">
                         @{
-                            var statusBadge = a.EvaluationStatus == "Submitted" ? "bg-success-subtle text-success"
-                                : a.EvaluationStatus == "Draft" ? "bg-warning-subtle text-warning"
+                            var statusBadge = a.StatusLabel == "Completed" ? "bg-success-subtle text-success"
+                                : a.StatusLabel == "Overdue" ? "bg-danger-subtle text-danger"
                                 : "bg-secondary-subtle text-secondary";
                         }
-                        <span class="badge @statusBadge">@a.EvaluationStatus</span>
+                        <span class="badge @statusBadge">@a.StatusLabel</span>
                         @if (!isCompleted)
                         {
                             <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentId })"

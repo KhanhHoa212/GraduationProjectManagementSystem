@@ -33,7 +33,7 @@ public class UserRepository : IUserRepository
         await _context.Users.Where(u => u.UserRoles.Any(ur => ur.RoleName == role)).ToListAsync();
 
     public async Task AddAsync(User user) => await _context.Users.AddAsync(user);
-    public async Task UpdateAsync(User user) => _context.Users.Update(user);
+    public Task UpdateAsync(User user) { _context.Users.Update(user); return Task.CompletedTask; }
     public async Task<bool> ExistsAsync(string userId) => await _context.Users.AnyAsync(u => u.UserID == userId);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
     public async Task<User?> GetUserByResetTokenAsync(string token)
