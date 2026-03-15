@@ -24,4 +24,8 @@
     <ProjectReference Include="..\GPMS.Domain\GPMS.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Data\Seeding\Seeders\" />
+  </ItemGroup>
+
 </Project>
