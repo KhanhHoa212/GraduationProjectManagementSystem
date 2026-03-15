@@ -1,0 +1,71 @@
+@using Microsoft.AspNetCore.Http
+@model dynamic
+@{
+    int pageIndex = Model.PageIndex;
+    int totalPages = Model.TotalPages;
+    int totalItems = Model.TotalItems;
+    bool hasPreviousPage = Model.HasPreviousPage;
+    bool hasNextPage = Model.HasNextPage;
+    
+    // Calculate range showing: "Showing 1 to 10 of 45 results"
+    int pageSize = 10; // Default or could be passed
+    int startRange = ((pageIndex - 1) * pageSize) + 1;
+    int endRange = Math.Min(pageIndex * pageSize, totalItems);
+    
+    // Get current query strings to maintain filters
+    var queryData = Context.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
+}
+
+<div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
+    <div class="text-sm text-slate-500">
+        @if (totalItems > 0)
+        {
+            <span>Showing <span class="font-semibold text-slate-900">@startRange</span> to <span class="font-semibold text-slate-900">@endRange</span> of <span class="font-semibold text-slate-900">@totalItems</span> results</span>
+        }
+        else
+        {
+            <span class="italic">No results found matching your criteria.</span>
+        }
+    </div>
+    
+    @if (totalPages > 1)
+    {
+        <div class="flex items-center gap-1">
+            @if (hasPreviousPage)
+            {
+                queryData["page"] = (pageIndex - 1).ToString();
+                <a href="?@Microsoft.AspNetCore.Http.QueryString.Create(queryData)" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary transition-all no-underline flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                    Previous
+                </a>
+            }
+            else
+            {
+                <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-300 cursor-not-allowed flex items-center gap-1">
+                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                    Previous
+                </span>
+            }
+
+            <div class="flex items-center px-2">
+                <span class="text-xs font-bold text-slate-400">Page @pageIndex of @totalPages</span>
+            </div>
+
+            @if (hasNextPage)
+            {
+                queryData["page"] = (pageIndex + 1).ToString();
+                <a href="?@Microsoft.AspNetCore.Http.QueryString.Create(queryData)" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-primary transition-all no-underline flex items-center gap-1">
+                    Next
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </a>
+            }
+            else
+            {
+                <span class="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-300 cursor-not-allowed flex items-center gap-1">
+                    Next
+                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                </span>
+            }
+        </div>
+    }
+</div>
