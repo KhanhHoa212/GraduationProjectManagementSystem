@@ -1,8 +1,11 @@
-﻿@{
+@using GPMS.Application.DTOs
+@model SupervisorAssignmentDto
+@{
     ViewBag.Title = "Supervisor Assignment";
     ViewBag.CurrentPage = "AssignSupervisor";
     ViewBag.BreadcrumbSection = "Phân công Giảng viên";
     Layout = "~/Views/Shared/_HODLayout.cshtml";
+    var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
 }
 
 <div class="space-y-6">
@@ -12,10 +15,16 @@
             <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
                 <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline">GPMS</a>
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-slate-800 font-bold">Supervisor Assignment</span>
+                <span class="text-slate-800 font-bold">Phân công Giảng viên</span>
             </nav>
-            <h1 class="text-2xl font-bold text-slate-800">Supervisor Assignment</h1>
-            <p class="text-slate-500 text-sm mt-1 font-medium">Match student groups with available faculty supervisors.</p>
+            <h1 class="text-2xl font-bold text-slate-800">Phân công Giảng viên Hướng dẫn</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">
+                Kết nối nhóm sinh viên với giảng viên hướng dẫn phù hợp.
+                @if (activeSemester != null)
+                {
+                    <span class="text-[#F37021] font-bold">(@activeSemester.SemesterCode)</span>
+                }
+            </p>
         </div>
     </div>
 
@@ -25,59 +34,42 @@
         <!-- Unassigned Groups Column -->
         <div class="flex flex-col h-full">
             <div class="flex items-center gap-2 mb-6">
-                <!-- Orange 3-dots icon simulation -->
                 <div class="flex gap-0.5">
                     <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                     <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                     <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                 </div>
-                <h2 class="text-[15px] font-bold text-slate-800">Unassigned Groups (12)</h2>
+                <h2 class="text-[15px] font-bold text-slate-800">Nhóm chưa phân công (@Model.UnassignedProjects.Count)</h2>
             </div>
             
-            <!-- Group Cards Container (Scrollable) -->
             <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-main-scroll">
-                
-                <!-- Group Card 1 -->
-                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-blue-500 hover:shadow-md transition-all cursor-pointer">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-slate-500 text-xs tracking-wider">G-2023-01</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">COMPUTER SCIENCE</span>
+                @if (Model.UnassignedProjects.Any())
+                {
+                    foreach (var project in Model.UnassignedProjects)
+                    {
+                        <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-[#F37021] hover:shadow-md transition-all cursor-pointer group" onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode')">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-slate-500 text-xs tracking-wider">@project.ProjectCode</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">@project.MajorName</span>
+                            </div>
+                            <p class="font-bold text-slate-800 text-lg mb-2 group-hover:text-[#F37021] transition-colors">@project.ProjectName</p>
+                            <p class="text-sm font-medium text-slate-500 mb-4">
+                                <span class="material-symbols-outlined text-sm align-middle">groups</span>
+                                Nhóm: @project.StudentName
+                            </p>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Mới</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">check_circle</span>
+                        <p class="text-slate-500 font-medium">Tất cả các nhóm đã được phân công!</p>
                     </div>
-                    <p class="font-bold text-slate-800 text-lg mb-2">AI-Powered Smart Irrigation</p>
-                    <p class="text-sm font-medium text-slate-500 mb-4">3 Members: John Doe, Jane Smith, Mike Ross</p>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">IoT</span>
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Machine Learning</span>
-                    </div>
-                </div>
-
-                <!-- Group Card 2 -->
-                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-blue-500 hover:shadow-md transition-all cursor-pointer border-l-4 border-l-blue-500">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-slate-500 text-xs tracking-wider">G-2023-08</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SOFTWARE ENGINEERING</span>
-                    </div>
-                    <p class="font-bold text-slate-800 text-lg mb-2">Blockchain for Supply Chain</p>
-                    <p class="text-sm font-medium text-slate-500 mb-4">2 Members: Alice Wong, Bob Chen</p>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Blockchain</span>
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">NodeJS</span>
-                    </div>
-                </div>
-
-                <!-- Group Card 3 -->
-                <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-blue-500 hover:shadow-md transition-all cursor-pointer">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="font-bold text-slate-500 text-xs tracking-wider">G-2023-14</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">INFORMATION SECURITY</span>
-                    </div>
-                    <p class="font-bold text-slate-800 text-lg mb-2">Intrusion Detection System</p>
-                    <p class="text-sm font-medium text-slate-500 mb-4">4 Members: Sarah Lee + 3 others</p>
-                    <div class="flex items-center gap-2">
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Cybersecurity</span>
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Python</span>
-                    </div>
-                </div>
+                }
             </div>
         </div>
 
@@ -85,129 +77,56 @@
         <div class="flex flex-col h-full">
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-2">
-                    <span class="material-symbols-outlined text-blue-600">group</span>
-                    <h2 class="text-[15px] font-bold text-slate-800">Available Lecturers</h2>
-                </div>
-                <div class="flex gap-2">
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-bold text-[11px] uppercase tracking-wider transition-colors shadow-sm">
-                        Sort by Workload
-                    </button>
-                    <button class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 font-bold text-[11px] uppercase tracking-wider transition-colors shadow-sm flex items-center gap-1">
-                        All Expertise <span class="material-symbols-outlined text-[14px]">expand_more</span>
-                    </button>
+                    <span class="material-symbols-outlined text-[#1E3A5F]">person_search</span>
+                    <h2 class="text-[15px] font-bold text-slate-800">Giảng viên khả dụng</h2>
                 </div>
             </div>
             
-            <!-- Lecturer Cards Container (Grid) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-main-scroll">
-                
-                <!-- Lecturer Card 1 -->
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
-                            <span class="text-slate-500 font-bold text-sm">EW</span>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm leading-tight">Dr. Emily Watson</p>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Associate Professor</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Specialty: Machine Learning, Data Mining</p>
-                        </div>
-                    </div>
-                    <!-- Workload Progress -->
-                    <div class="mb-5 mt-auto">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-extrabold text-[#1E3A5F] uppercase tracking-wider">WORKLOAD CAPACITY</span>
-                            <span class="text-[10px] font-bold text-slate-600">3 / 5 GROUPS</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-[#1E3A5F] h-full rounded-full transition-all duration-500" style="width: 60%"></div>
-                        </div>
-                    </div>
-                    <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">
-                        Assign Group
-                    </button>
-                </div>
+                @foreach (var lecturer in Model.Lecturers)
+                {
+                    var isFull = lecturer.CurrentWorkload >= lecturer.MaxWorkload;
+                    var workloadPercent = (lecturer.CurrentWorkload * 100) / lecturer.MaxWorkload;
+                    var workloadColor = lecturer.CurrentWorkload >= lecturer.MaxWorkload ? "bg-red-500" : (lecturer.CurrentWorkload >= 4 ? "bg-amber-500" : "bg-[#1E3A5F]");
+                    var textColor = lecturer.CurrentWorkload >= lecturer.MaxWorkload ? "text-red-500" : (lecturer.CurrentWorkload >= 4 ? "text-amber-500" : "text-emerald-600");
+                    var initials = string.Concat(lecturer.FullName.Split(' ').Select(s => s[0]));
 
-                <!-- Lecturer Card 2 -->
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
-                            <span class="text-slate-500 font-bold text-sm">JM</span>
+                    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow @(isFull ? "opacity-75" : "")">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
+                                <span class="text-slate-500 font-bold text-sm">@initials</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm leading-tight">@lecturer.FullName</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">@lecturer.Level</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Chuyên môn: @lecturer.Specialty</p>
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm leading-tight">Dr. James Maxwell</p>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Professor</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Specialty: Network Security, Cloud</p>
+                        
+                        <div class="mb-5 mt-auto">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">TẢI CÔNG VIỆC</span>
+                                <span class="text-[10px] font-bold @textColor">@lecturer.CurrentWorkload / @lecturer.MaxWorkload NHÓM</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="@workloadColor h-full rounded-full transition-all duration-500" style="width: @workloadPercent%"></div>
+                            </div>
                         </div>
+                        
+                        @if (isFull)
+                        {
+                            <button disabled class="w-full py-2.5 border border-slate-200 bg-slate-100 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed">
+                                Đã đầy tải
+                            </button>
+                        }
+                        else
+                        {
+                            <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm" onclick="openProjectModal('@lecturer.LecturerID', '@lecturer.FullName')">
+                                Phân công nhóm
+                            </button>
+                        }
                     </div>
-                    <!-- Workload Progress -->
-                    <div class="mb-5 mt-auto">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-extrabold text-emerald-600 uppercase tracking-wider">WORKLOAD CAPACITY</span>
-                            <span class="text-[10px] font-bold text-emerald-600">1 / 5 GROUPS</span>
-                        </div>
-                        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: 20%"></div>
-                        </div>
-                    </div>
-                    <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">
-                        Assign Group
-                    </button>
-                </div>
-
-                <!-- Lecturer Card 3 -->
-                <div class="bg-slate-50 border border-slate-200/50 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.01)] p-5 flex flex-col opacity-75">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-slate-200 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
-                            <span class="text-slate-400 font-bold text-sm">SC</span>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-600 text-sm leading-tight">Dr. Sarah Connor</p>
-                            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">Lecturer</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Specialty: Software Engineering</p>
-                        </div>
-                    </div>
-                    <!-- Workload Progress -->
-                    <div class="mb-5 mt-auto">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-extrabold text-red-500 uppercase tracking-wider">WORKLOAD CAPACITY</span>
-                            <span class="text-[10px] font-bold text-red-500">5 / 5 GROUPS (FULL)</span>
-                        </div>
-                        <div class="w-full bg-red-100 rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-red-500 h-full rounded-full transition-all duration-500" style="width: 100%"></div>
-                        </div>
-                    </div>
-                    <button disabled class="w-full py-2.5 border border-slate-200 bg-slate-100 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed">
-                        Fully Occupied
-                    </button>
-                </div>
-
-                <!-- Lecturer Card 4 -->
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow">
-                    <div class="flex items-start gap-4 mb-4">
-                        <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
-                            <span class="text-slate-500 font-bold text-sm">LH</span>
-                        </div>
-                        <div>
-                            <p class="font-bold text-slate-800 text-sm leading-tight">Dr. Linda Hamilton</p>
-                            <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Senior Lecturer</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Specialty: IoT, Embedded Systems</p>
-                        </div>
-                    </div>
-                    <!-- Workload Progress -->
-                    <div class="mb-5 mt-auto">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-[10px] font-extrabold text-amber-500 uppercase tracking-wider">WORKLOAD CAPACITY</span>
-                            <span class="text-[10px] font-bold text-amber-500">4 / 5 GROUPS</span>
-                        </div>
-                        <div class="w-full bg-amber-100 rounded-full h-1.5 overflow-hidden">
-                            <div class="bg-amber-500 h-full rounded-full transition-all duration-500" style="width: 80%"></div>
-                        </div>
-                    </div>
-                    <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm">
-                        Assign Group
-                    </button>
-                </div>
+                }
             </div>
         </div>
     </div>
@@ -215,9 +134,9 @@
     <!-- Assignment Summary Section -->
     <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden mt-6">
         <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-            <h2 class="text-lg font-bold text-slate-800">Assignment Summary</h2>
+            <h2 class="text-lg font-bold text-slate-800">Bảng tổng hợp phân công</h2>
             <div class="px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full shadow-sm">
-                <span class="text-xs font-bold uppercase tracking-wider">42 Groups Assigned</span>
+                <span class="text-xs font-bold uppercase tracking-wider">@Model.AssignedProjects.Count Nhóm đã phân công</span>
             </div>
         </div>
 
@@ -225,80 +144,49 @@
             <table class="w-full text-sm text-left">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100">
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">GROUP ID</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">PROJECT TITLE</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">MAJOR</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">ASSIGNED SUPERVISOR</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">STATUS</th>
-                        <th class="py-4 px-6 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">ACTIONS</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ NHÓM</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">TÊN ĐỀ TÀI</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">GIẢNG VIÊN HƯỚNG DẪN</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
+                        <th class="py-4 px-6 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">THAO TÁC</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    <!-- Row 1 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-5 px-6 font-bold text-slate-800">G-2023-02</td>
-                        <td class="py-5 px-6 font-semibold text-slate-700 leading-snug">Smart City Traffic Management</td>
-                        <td class="py-5 px-6 text-slate-500 font-medium">Information Technology</td>
-                        <td class="py-5 px-6">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px]">EW</div>
-                                <span class="font-bold text-slate-700">Dr. Emily Watson</span>
-                            </div>
-                        </td>
-                        <td class="py-5 px-6">
-                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Confirmed</span>
-                        </td>
-                        <td class="py-5 px-6 text-center">
-                            <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Reassign">
-                                <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                                Reassign
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Row 2 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-5 px-6 font-bold text-slate-800">G-2023-05</td>
-                        <td class="py-5 px-6 font-semibold text-slate-700 leading-snug">Online Examination System</td>
-                        <td class="py-5 px-6 text-slate-500 font-medium">Software Engineering</td>
-                        <td class="py-5 px-6">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-[10px]">JM</div>
-                                <span class="font-bold text-slate-700">Dr. James Maxwell</span>
-                            </div>
-                        </td>
-                        <td class="py-5 px-6">
-                            <span class="px-2.5 py-1 bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wider rounded border border-amber-100">Pending Approval</span>
-                        </td>
-                        <td class="py-5 px-6 text-center">
-                            <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Reassign">
-                                <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                                Reassign
-                            </button>
-                        </td>
-                    </tr>
-
-                    <!-- Row 3 -->
-                    <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="py-5 px-6 font-bold text-slate-800">G-2023-09</td>
-                        <td class="py-5 px-6 font-semibold text-slate-700 leading-snug">Real-time Stock Analysis</td>
-                        <td class="py-5 px-6 text-slate-500 font-medium">Data Science</td>
-                        <td class="py-5 px-6">
-                            <div class="flex items-center gap-2">
-                                <div class="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-[10px]">SC</div>
-                                <span class="font-bold text-slate-700">Dr. Sarah Connor</span>
-                            </div>
-                        </td>
-                        <td class="py-5 px-6">
-                            <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Confirmed</span>
-                        </td>
-                        <td class="py-5 px-6 text-center">
-                            <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Reassign">
-                                <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                                Reassign
-                            </button>
-                        </td>
-                    </tr>
+                    @if (Model.AssignedProjects.Any())
+                    {
+                        foreach (var project in Model.AssignedProjects)
+                        {
+                            var initials = string.Concat(project.SupervisorName?.Split(' ').Select(s => s[0]) ?? new[] { '?' });
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-5 px-6 font-bold text-slate-800">@project.ProjectCode</td>
+                                <td class="py-5 px-6 font-semibold text-slate-700 leading-snug">@project.ProjectName</td>
+                                <td class="py-5 px-6 text-slate-500 font-medium">@project.MajorName</td>
+                                <td class="py-5 px-6">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 font-bold text-[10px]">@initials</div>
+                                        <span class="font-bold text-slate-700">@project.SupervisorName</span>
+                                    </div>
+                                </td>
+                                <td class="py-5 px-6">
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Đã xác nhận</span>
+                                </td>
+                                <td class="py-5 px-6 text-center">
+                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-[#F37021] hover:bg-orange-50 rounded-lg transition" title="Thay đổi" 
+                                            onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode')">
+                                        <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+                                        Đổi GV
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-slate-400 italic">Chưa có nhóm nào được phân công giảng viên.</td>
+                        </tr>
+                    }
                 </tbody>
             </table>
         </div>
@@ -319,3 +207,152 @@
         </div>
     </div>
 </div>
+
+<!-- Lecturer Selection Modal -->
+<div id="lecturerModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">Chọn giảng viên hướng dẫn</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Phân công cho nhóm: <span id="modalProjectCode" class="text-[#F37021] font-bold"></span></p>
+            </div>
+            <button onclick="closeLecturerModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-4 max-h-[500px] overflow-y-auto custom-main-scroll">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                @foreach (var lecturer in Model.Lecturers)
+                {
+                    var isFull = lecturer.CurrentWorkload >= lecturer.MaxWorkload;
+                    <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#1E3A5F] hover:shadow-md transition-all @(isFull ? "opacity-60 bg-slate-50" : "bg-white cursor-pointer")" 
+                         onclick="@(isFull ? "" : $"assignLecturerToProject('{lecturer.LecturerID}')")">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">
+                                @string.Concat(lecturer.FullName.Split(' ').Select(s => s[0]))
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm">@lecturer.FullName</p>
+                                <p class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tải: @lecturer.CurrentWorkload / @lecturer.MaxWorkload</p>
+                            </div>
+                        </div>
+                        @if (!isFull)
+                        {
+                            <span class="material-symbols-outlined text-[#1E3A5F] opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <button onclick="closeLecturerModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Hủy</button>
+        </div>
+    </div>
+</div>
+
+<!-- Group Selection Modal -->
+<div id="projectModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">Chọn nhóm sinh viên</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Giảng viên: <span id="modalLecturerName" class="text-[#1E3A5F] font-bold"></span></p>
+            </div>
+            <button onclick="closeProjectModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-4 max-h-[500px] overflow-y-auto custom-main-scroll">
+            <div class="space-y-3">
+                @if (Model.UnassignedProjects.Any())
+                {
+                    foreach (var project in Model.UnassignedProjects)
+                    {
+                        <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#F37021] hover:shadow-md transition-all bg-white cursor-pointer" 
+                             onclick="assignLecturerToProjectForProject('@project.ProjectID')">
+                            <div>
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-[10px] font-bold text-slate-500 tracking-wider">@project.ProjectCode</span>
+                                    <span class="px-1.5 py-0.5 bg-slate-100 text-[9px] font-bold text-slate-400 uppercase rounded">@project.MajorName</span>
+                                </div>
+                                <p class="font-bold text-slate-800 text-sm group-hover:text-[#F37021]">@project.ProjectName</p>
+                            </div>
+                            <span class="material-symbols-outlined text-[#F37021] opacity-0 group-hover:opacity-100 transition-opacity">add_circle</span>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <p class="text-center py-8 text-slate-400 italic">Không có nhóm nào chưa phân công.</p>
+                }
+            </div>
+        </div>
+        <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <button onclick="closeProjectModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Hủy</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let selectedProjectId = null;
+        let selectedLecturerId = null;
+
+        function openLecturerModal(projectId, projectCode) {
+            selectedProjectId = projectId;
+            document.getElementById('modalProjectCode').innerText = projectCode;
+            document.getElementById('lecturerModal').classList.remove('hidden');
+        }
+
+        function closeLecturerModal() {
+            document.getElementById('lecturerModal').classList.add('hidden');
+            selectedProjectId = null;
+        }
+
+        function openProjectModal(lecturerId, lecturerName) {
+            selectedLecturerId = lecturerId;
+            document.getElementById('modalLecturerName').innerText = lecturerName;
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+            selectedLecturerId = null;
+        }
+
+        function assignLecturerToProject(lecturerId) {
+            submitAssignment(selectedProjectId, lecturerId);
+        }
+
+        function assignLecturerToProjectForProject(projectId) {
+            submitAssignment(projectId, selectedLecturerId);
+        }
+
+        async function submitAssignment(projectId, lecturerId) {
+            try {
+                const response = await fetch('/HOD/ReassignSupervisor', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ProjectID: parseInt(projectId),
+                        LecturerID: lecturerId
+                    })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert(result.message || 'Có lỗi xảy ra khi phân công.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra kết nối với hệ thống.');
+            }
+        }
+    </script>
+}

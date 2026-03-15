@@ -16,9 +16,7 @@ public class ProjectDto
     // Supervisor info (main supervisor only)
     public string? SupervisorID { get; set; }
     public string? SupervisorName { get; set; }
-
-    // Group count
-    public int GroupCount { get; set; }
+    public string? StudentName { get; set; }
 }
 
 // Used in ProjectDetails view
@@ -41,6 +39,24 @@ public class ProjectDetailDto
 
     // Team members (students in all groups under this project)
     public List<ProjectMemberDto> Members { get; set; } = new();
+
+    // Submissions
+    public List<SubmissionDto> Submissions { get; set; } = new();
+
+    // Review Rounds for the semester
+    public List<ReviewRoundDto> ReviewRounds { get; set; } = new();
+}
+
+public class SubmissionDto
+{
+    public int SubmissionID { get; set; }
+    public int RequirementID { get; set; }
+    public string DocumentName { get; set; } = string.Empty;
+    public string FileName { get; set; } = string.Empty;
+    public string FileUrl { get; set; } = string.Empty;
+    public DateTime SubmittedAt { get; set; }
+    public SubmissionStatus Status { get; set; }
+    public int Version { get; set; }
 }
 
 public class ProjectMemberDto
@@ -76,4 +92,21 @@ public class StudentSearchDto
     public string FullName { get; set; } = string.Empty;
     public string? Email { get; set; }
     public bool AlreadyMember { get; set; }
+}
+
+public class SupervisorAssignmentDto
+{
+    public List<ProjectDto> UnassignedProjects { get; set; } = new();
+    public List<LecturerWorkloadDto> Lecturers { get; set; } = new();
+    public List<ProjectDto> AssignedProjects { get; set; } = new();
+}
+
+public class LecturerWorkloadDto
+{
+    public string LecturerID { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string? Level { get; set; }
+    public string? Specialty { get; set; }
+    public int CurrentWorkload { get; set; }
+    public int MaxWorkload { get; set; } = 5;
 }

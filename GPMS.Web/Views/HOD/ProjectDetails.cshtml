@@ -10,8 +10,6 @@
         ProjectStatus.Completed => "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
         _ => "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
     };
-    
-    var groupName = Model.Members.FirstOrDefault()?.GroupName ?? "Chưa có nhóm";
 }
 
 <div class="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -33,12 +31,13 @@
                         <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-[#F37021] to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
                             @Model.ProjectCode.Substring(0, Math.Min(2, Model.ProjectCode.Length))
                         </div>
+    
                         <div>
                             <div class="flex items-center gap-3">
                                 <h1 class="text-2xl font-bold text-slate-900 dark:text-white">@Model.ProjectCode · @Model.ProjectName</h1>
                                 <span class="px-3 py-1 @statusBadgeClass text-xs font-semibold rounded-full uppercase">@Model.Status</span>
                             </div>
-                            <p class="text-slate-600 dark:text-slate-400 mt-2">Nhóm: @groupName | @Model.MajorName | Học kỳ @Model.SemesterCode</p>
+                            <p class="text-slate-600 dark:text-slate-400 mt-2">@Model.MajorName | Học kỳ @Model.SemesterCode</p>
                         </div>
                     </div>
                     <a href="/HOD/EditProject/@Model.ProjectID" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium transition no-underline">
@@ -166,9 +165,37 @@
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                                        <tr>
-                                            <td colspan="5" class="py-10 text-center text-slate-500 italic">Dữ liệu nộp bài đang được cập nhật...</td>
-                                        </tr>
+                                        @if (Model.Submissions.Any())
+                                        {
+                                            foreach (var sub in Model.Submissions.OrderByDescending(s => s.SubmittedAt))
+                                            {
+                                                var statusColor = sub.Status switch {
+                                                    SubmissionStatus.OnTime => "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30",
+                                                    SubmissionStatus.Late => "text-amber-600 bg-amber-50 dark:bg-amber-900/30",
+                                                    SubmissionStatus.Replaced => "text-slate-600 bg-slate-50 dark:bg-slate-900/30",
+                                                    _ => "text-slate-600 bg-slate-50 dark:bg-slate-900/30"
+                                                };
+                                                <tr>
+                                                    <td class="py-4 px-4 font-medium text-slate-900 dark:text-white">@sub.DocumentName</td>
+                                                    <td class="py-4 px-4 text-slate-600 dark:text-slate-400">@sub.FileName</td>
+                                                    <td class="py-4 px-4 text-slate-500 dark:text-slate-400">@sub.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td class="py-4 px-4">
+                                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold @statusColor uppercase tracking-wider">@sub.Status</span>
+                                                    </td>
+                                                    <td class="py-4 px-4">
+                                                        <a href="@sub.FileUrl" target="_blank" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                                            <span class="material-symbols-outlined text-[20px]">download</span>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="py-10 text-center text-slate-500 italic">Nhóm chưa nộp tài liệu nào.</td>
+                                            </tr>
+                                        }
                                     </tbody>
                                 </table>
                             </div>
@@ -176,22 +203,8 @@
                     </div>
                 </div>
 
-                <!-- Right Column - Reviewers & Timeline -->
+                <!-- Right Column - Timeline & Reviewers -->
                 <div class="space-y-6">
-                    <!-- Reviewer Section -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div class="flex items-center gap-2 mb-6">
-                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">assignment_ind</span>
-                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Reviewer theo Vòng</h2>
-                        </div>
-
-                        <div class="space-y-4">
-                            <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border-l-4 border-slate-300">
-                                <p class="text-sm text-slate-500 italic">Thông tin hội đồng chấm sẽ xuất hiện khi các vòng Review bắt đầu.</p>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Review Timeline Section -->
                     <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
                         <div class="flex items-center gap-2 mb-6">
@@ -200,15 +213,93 @@
                         </div>
 
                         <div class="space-y-4">
-                            <div class="flex gap-4">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-slate-100 dark:border-slate-800"></div>
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                <div class="relative pl-3">
+                                    <!-- Vertical Line -->
+                                    <div class="absolute left-[17px] top-2 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 z-0"></div>
+
+                                    @foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                                    {
+                                        var isCompleted = round.Status == RoundStatus.Completed || round.EndDate < DateTime.Now;
+                                        var isActive = round.Status == RoundStatus.Ongoing || (round.StartDate <= DateTime.Now && round.EndDate >= DateTime.Now);
+                                        
+                                        var dotClass = isCompleted ? "bg-emerald-500 ring-emerald-100 dark:ring-emerald-900/30" : 
+                                                       isActive ? "bg-blue-500 ring-blue-100 dark:ring-blue-900/30 animate-pulse" : 
+                                                       "bg-slate-300 dark:bg-slate-700 ring-slate-100 dark:ring-slate-800";
+                                        
+                                        var statusText = isCompleted ? "COMPLETED" : isActive ? "IN PROGRESS" : "UPCOMING";
+                                        var statusClass = isCompleted ? "text-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20" : 
+                                                          isActive ? "text-blue-600 bg-blue-50/50 dark:bg-blue-900/20" : 
+                                                          "text-slate-500 bg-slate-50/50 dark:bg-slate-900/20";
+
+                                        <div class="relative z-10 flex gap-4 pb-8 last:pb-0">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-2.5 h-2.5 rounded-full @dotClass ring-[6px] shadow-sm mt-1.5 relative ml-[1px]"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none pt-1">Vòng @round.RoundNumber (@round.RoundType)</p>
+                                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5">
+                                                            @(isCompleted ? $"Kết thúc: {round.EndDate:dd/MM/yyyy}" : $"Hạn nộp: {round.SubmissionDeadline:dd/MM/yyyy}")
+                                                        </p>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold @statusClass uppercase tracking-widest px-2 py-0.5 rounded border border-current opacity-70">
+                                                        @statusText
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
-                                <div>
-                                    <p class="font-semibold text-slate-900 dark:text-white text-sm">Chưa có lộ trình</p>
-                                    <p class="text-xs text-slate-500 dark:text-slate-400">Học kỳ này chưa thiết lập các vòng Review.</p>
+                            }
+                            else
+                            {
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-slate-100 dark:border-slate-800"></div>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900 dark:text-white text-sm">Chưa có lộ trình</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Học kỳ này chưa thiết lập các vòng Review.</p>
+                                    </div>
                                 </div>
-                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Reviewer Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">assignment_ind</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Reviewer theo Vòng</h2>
+                        </div>
+
+                        <div class="space-y-4">
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                                {
+                                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
+                                        <div class="absolute top-0 right-0 w-16 h-16 bg-[#F37021]/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Vòng @round.RoundNumber (@round.RoundType)</span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">@round.Status</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-slate-500 italic">
+                                            <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                                            <span>Chưa phân công hội đồng...</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border-l-4 border-slate-300">
+                                    <p class="text-sm text-slate-500 italic">Thông tin hội đồng chấm sẽ xuất hiện khi các vòng Review bắt đầu.</p>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>

@@ -3,6 +3,7 @@ using GPMS.Application.Interfaces.Services;
 using GPMS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GPMS.Web.Controllers;
 
@@ -12,18 +13,15 @@ public class HODController : Controller
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
     private readonly IReviewRoundService _reviewRoundService;
-    private readonly IProjectGroupService _groupService;
 
     public HODController(
         IProjectService projectService, 
         ISemesterService semesterService, 
-        IReviewRoundService reviewRoundService,
-        IProjectGroupService groupService)
+        IReviewRoundService reviewRoundService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
-        _groupService = groupService;
     }
 
 
@@ -184,36 +182,29 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public async Task<IActionResult> Groups(string? search, string? status, string? supervisor)
-    {
-        var allGroups = await _groupService.GetAllGroupsAsync();
-        var supervisors = allGroups
-            .Select(g => g.SupervisorName)
-            .Where(s => s != null && s != "Not Assigned")
-            .Distinct()
-            .OrderBy(s => s)
-            .ToList();
 
-        var filteredGroups = await _groupService.GetAllGroupsAsync(search, status, supervisor);
+    public async Task<IActionResult> AssignSupervisor()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         
-        // Preserve filter values for the view
-        ViewData["Search"] = search;
-        ViewData["Status"] = status;
-        ViewData["Supervisor"] = supervisor;
-        ViewData["AllSupervisors"] = supervisors;
-
-        return View(filteredGroups);
+        var data = await _projectService.GetSupervisorAssignmentDataAsync(activeSemester?.SemesterID);
+        ViewBag.ActiveSemester = activeSemester;
+        
+        return View(data);
     }
 
-
-    public async Task<IActionResult> GroupDetails(int id)
+    [HttpPost]
+    public async Task<IActionResult> ReassignSupervisor([FromBody] AssignSupervisorRequest request)
     {
-        var group = await _groupService.GetGroupDetailAsync(id);
-        if (group == null) return NotFound();
-        return View(group);
-    }
+        if (request == null || request.ProjectID <= 0 || string.IsNullOrEmpty(request.LecturerID))
+            return Json(new { success = false, message = "Thông tin không hợp lệ." });
 
-    public IActionResult AssignSupervisor() => View();
+        var assignedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var (success, message) = await _projectService.AssignSupervisorAsync(request.ProjectID, request.LecturerID, assignedBy);
+        
+        return Json(new { success, message });
+    }
     public async Task<IActionResult> ReviewRounds()
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
