@@ -21,4 +21,8 @@ public interface IProjectService
     Task<(bool success, string message)> AddMemberAsync(int projectId, string userId);
     Task<bool> RemoveMemberAsync(int projectId, string userId);
     Task<(bool success, string message)> UpdateMemberRoleAsync(int projectId, string userId, string role);
+
+    // Supervisor Assignment
+    Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId);
+    Task<(bool success, string message)> AssignSupervisorAsync(int projectId, string lecturerId, string? assignedBy);
 }

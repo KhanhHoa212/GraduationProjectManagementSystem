@@ -107,7 +107,6 @@
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ ĐỀ TÀI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">TÊN ĐỀ TÀI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">SỐ NHÓM</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">NGÀY TẠO</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">THAO TÁC</th>
@@ -116,9 +115,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @if (!Model.Any())
                     {
-                        <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
-                        </tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
                     }
                     else
                     {
@@ -137,9 +134,6 @@
                                 </td>
                                 <td class="px-6 py-5">
                                     <span class="text-slate-600 font-medium whitespace-nowrap">@(item.MajorName ?? "-")</span>
-                                </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span class="font-bold text-slate-800">@item.GroupCount.ToString("D2")</span>
                                 </td>
                                 <td class="px-6 py-5">
                                     @{
