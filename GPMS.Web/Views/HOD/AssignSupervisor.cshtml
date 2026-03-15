@@ -41,13 +41,36 @@
                 </div>
                 <h2 class="text-[15px] font-bold text-slate-800">Nhóm chưa phân công (@Model.UnassignedProjects.Count)</h2>
             </div>
+
+            <!-- Project Filters -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <div class="relative flex-grow">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" id="projectSearch" placeholder="Tìm tên hoặc mã nhóm..." 
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
+                           onkeyup="filterProjects()">
+                </div>
+                <div class="sm:w-48">
+                    <select id="majorFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all" onchange="filterProjects()">
+                        <option value="">Tất cả chuyên ngành</option>
+                        @foreach (var major in Model.UnassignedProjects.Select(p => p.MajorName).Distinct().OrderBy(m => m))
+                        {
+                            <option value="@major">@major</option>
+                        }
+                    </select>
+                </div>
+            </div>
             
-            <div class="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-main-scroll">
+            <div id="unassignedProjectsContainer" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-main-scroll">
                 @if (Model.UnassignedProjects.Any())
                 {
                     foreach (var project in Model.UnassignedProjects)
                     {
-                        <div class="p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-[#F37021] hover:shadow-md transition-all cursor-pointer group" onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode')">
+                        <div class="project-card p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-[#F37021] hover:shadow-md transition-all cursor-pointer group" 
+                             data-name="@project.ProjectName.ToLower()" 
+                             data-code="@project.ProjectCode.ToLower()" 
+                             data-major="@project.MajorName"
+                             onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode', '@project.MajorName')">
                             <div class="flex items-center justify-between mb-2">
                                 <span class="font-bold text-slate-500 text-xs tracking-wider">@project.ProjectCode</span>
                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">@project.MajorName</span>
@@ -81,8 +104,27 @@
                     <h2 class="text-[15px] font-bold text-slate-800">Giảng viên khả dụng</h2>
                 </div>
             </div>
+
+            <!-- Lecturer Filters -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <div class="relative flex-grow">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" id="lecturerSearch" placeholder="Tìm tên giảng viên..." 
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none transition-all"
+                           onkeyup="filterLecturers()">
+                </div>
+                <div class="sm:w-48">
+                    <select id="specialtyFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] outline-none transition-all" onchange="filterLecturers()">
+                        <option value="">Tất cả chuyên môn</option>
+                        @foreach (var specialty in Model.Lecturers.Select(l => l.Specialty).Where(s => !string.IsNullOrEmpty(s)).Distinct().OrderBy(s => s))
+                        {
+                            <option value="@specialty">@specialty</option>
+                        }
+                    </select>
+                </div>
+            </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[600px] overflow-y-auto pr-2 custom-main-scroll">
+            <div id="lecturersContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-main-scroll">
                 @foreach (var lecturer in Model.Lecturers)
                 {
                     var isFull = lecturer.CurrentWorkload >= lecturer.MaxWorkload;
@@ -91,7 +133,9 @@
                     var textColor = lecturer.CurrentWorkload >= lecturer.MaxWorkload ? "text-red-500" : (lecturer.CurrentWorkload >= 4 ? "text-amber-500" : "text-emerald-600");
                     var initials = string.Concat(lecturer.FullName.Split(' ').Select(s => s[0]));
 
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow @(isFull ? "opacity-75" : "")">
+                    <div class="lecturer-card bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow @(isFull ? "opacity-75" : "")"
+                         data-name="@lecturer.FullName.ToLower()"
+                         data-specialty="@lecturer.Specialty">
                         <div class="flex items-start gap-4 mb-4">
                             <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
                                 <span class="text-slate-500 font-bold text-sm">@initials</span>
@@ -140,6 +184,25 @@
             </div>
         </div>
 
+        <!-- Summary Table Filters -->
+        <div class="p-4 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
+            <div class="relative flex-grow">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                <input type="text" id="summarySearch" placeholder="Tìm theo tên đề tài, mã nhóm hoặc giảng viên..." 
+                       class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                       onkeyup="filterSummaryTable()">
+            </div>
+            <div class="sm:w-64">
+                <select id="summaryLecturerFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all" onchange="filterSummaryTable()">
+                    <option value="">Tất cả giảng viên hướng dẫn</option>
+                    @foreach (var lecturerName in Model.AssignedProjects.Select(p => p.SupervisorName).Where(s => !string.IsNullOrEmpty(s)).Distinct().OrderBy(s => s))
+                    {
+                        <option value="@lecturerName">@lecturerName</option>
+                    }
+                </select>
+            </div>
+        </div>
+
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead>
@@ -158,7 +221,10 @@
                         foreach (var project in Model.AssignedProjects)
                         {
                             var initials = string.Concat(project.SupervisorName?.Split(' ').Select(s => s[0]) ?? new[] { '?' });
-                            <tr class="hover:bg-slate-50/50 transition-colors">
+                            <tr class="summary-row hover:bg-slate-50/50 transition-colors"
+                                data-name="@project.ProjectName.ToLower()"
+                                data-code="@project.ProjectCode.ToLower()"
+                                data-supervisor="@project.SupervisorName">
                                 <td class="py-5 px-6 font-bold text-slate-800">@project.ProjectCode</td>
                                 <td class="py-5 px-6 font-semibold text-slate-700 leading-snug">@project.ProjectName</td>
                                 <td class="py-5 px-6 text-slate-500 font-medium">@project.MajorName</td>
@@ -173,7 +239,7 @@
                                 </td>
                                 <td class="py-5 px-6 text-center">
                                     <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-[#F37021] hover:bg-orange-50 rounded-lg transition" title="Thay đổi" 
-                                            onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode')">
+                                            onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode', '@project.MajorName')">
                                         <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
                                         Đổi GV
                                     </button>
@@ -221,12 +287,26 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="p-4 max-h-[500px] overflow-y-auto custom-main-scroll">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="px-8 py-4 bg-slate-50/30 border-b border-slate-100">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                <input type="text" id="modalLecturerSearch" placeholder="Tìm tên hoặc chuyên môn..." 
+                       class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] outline-none transition-all"
+                       onkeyup="filterModalLecturers()">
+            </div>
+            <div class="flex items-center gap-2 mt-3">
+                <input type="checkbox" id="smartMatchToggle" class="rounded border-slate-300 text-[#1E3A5F] focus:ring-[#1E3A5F]" onchange="filterModalLecturers()">
+                <label for="smartMatchToggle" class="text-xs font-bold text-slate-600 cursor-pointer">Chỉ hiện giảng viên đúng chuyên môn</label>
+            </div>
+        </div>
+        <div class="p-4 max-h-[400px] overflow-y-auto custom-main-scroll">
+            <div id="modalLecturerList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 @foreach (var lecturer in Model.Lecturers)
                 {
                     var isFull = lecturer.CurrentWorkload >= lecturer.MaxWorkload;
-                    <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#1E3A5F] hover:shadow-md transition-all @(isFull ? "opacity-60 bg-slate-50" : "bg-white cursor-pointer")" 
+                    <div class="modal-lecturer-item p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#1E3A5F] hover:shadow-md transition-all @(isFull ? "opacity-60 bg-slate-50" : "bg-white cursor-pointer")" 
+                         data-name="@lecturer.FullName.ToLower()"
+                         data-specialty="@lecturer.Specialty"
                          onclick="@(isFull ? "" : $"assignLecturerToProject('{lecturer.LecturerID}')")">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200">
@@ -264,13 +344,23 @@
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        <div class="p-4 max-h-[500px] overflow-y-auto custom-main-scroll">
-            <div class="space-y-3">
+        <div class="px-8 py-4 bg-slate-50/30 border-b border-slate-100">
+            <div class="relative">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                <input type="text" id="modalProjectSearch" placeholder="Tìm tên đề tài hoặc mã nhóm..." 
+                       class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all"
+                       onkeyup="filterModalProjects()">
+            </div>
+        </div>
+        <div class="p-4 max-h-[400px] overflow-y-auto custom-main-scroll">
+            <div id="modalProjectList" class="space-y-3">
                 @if (Model.UnassignedProjects.Any())
                 {
                     foreach (var project in Model.UnassignedProjects)
                     {
-                        <div class="p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#F37021] hover:shadow-md transition-all bg-white cursor-pointer" 
+                        <div class="modal-project-item p-4 border border-slate-200 rounded-2xl flex items-center justify-between group hover:border-[#F37021] hover:shadow-md transition-all bg-white cursor-pointer" 
+                             data-name="@project.ProjectName.ToLower()"
+                             data-code="@project.ProjectCode.ToLower()"
                              onclick="assignLecturerToProjectForProject('@project.ProjectID')">
                             <div>
                                 <div class="flex items-center gap-2 mb-1">
@@ -314,6 +404,8 @@
         function openProjectModal(lecturerId, lecturerName) {
             selectedLecturerId = lecturerId;
             document.getElementById('modalLecturerName').innerText = lecturerName;
+            document.getElementById('modalProjectSearch').value = '';
+            filterModalProjects();
             document.getElementById('projectModal').classList.remove('hidden');
         }
 
@@ -353,6 +445,119 @@
                 console.error('Error:', error);
                 alert('Có lỗi xảy ra kết nối với hệ thống.');
             }
+        }
+
+        // --- Search and Filtering Logic ---
+
+        function filterProjects() {
+            const searchText = document.getElementById('projectSearch').value.toLowerCase();
+            const majorFilter = document.getElementById('majorFilter').value;
+            const projectCards = document.querySelectorAll('.project-card');
+
+            projectCards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const code = card.getAttribute('data-code');
+                const major = card.getAttribute('data-major');
+
+                const matchesSearch = name.includes(searchText) || code.includes(searchText);
+                const matchesMajor = majorFilter === "" || major === majorFilter;
+
+                if (matchesSearch && matchesMajor) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterLecturers() {
+            const searchText = document.getElementById('lecturerSearch').value.toLowerCase();
+            const specialtyFilter = document.getElementById('specialtyFilter').value;
+            const lecturerCards = document.querySelectorAll('.lecturer-card');
+
+            lecturerCards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                const specialty = card.getAttribute('data-specialty');
+
+                const matchesSearch = name.includes(searchText);
+                const matchesSpecialty = specialtyFilter === "" || specialty === specialtyFilter;
+
+                if (matchesSearch && matchesSpecialty) {
+                    card.classList.remove('hidden');
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+        }
+
+        let currentProjectMajor = null;
+        function openLecturerModal(projectId, projectCode, majorName) {
+            selectedProjectId = projectId;
+            currentProjectMajor = majorName;
+            document.getElementById('modalProjectCode').innerText = projectCode;
+            document.getElementById('modalLecturerSearch').value = '';
+            document.getElementById('smartMatchToggle').checked = false;
+            filterModalLecturers();
+            document.getElementById('lecturerModal').classList.remove('hidden');
+        }
+
+        function filterModalLecturers() {
+            const searchText = document.getElementById('modalLecturerSearch').value.toLowerCase();
+            const smartMatch = document.getElementById('smartMatchToggle').checked;
+            const modalLecturers = document.querySelectorAll('.modal-lecturer-item');
+
+            modalLecturers.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const specialty = item.getAttribute('data-specialty');
+
+                const matchesSearch = name.includes(searchText) || specialty?.toLowerCase().includes(searchText);
+                const matchesSmart = !smartMatch || (currentProjectMajor && specialty?.toLowerCase().includes(currentProjectMajor.toLowerCase()));
+
+                if (matchesSearch && matchesSmart) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterModalProjects() {
+            const searchText = document.getElementById('modalProjectSearch').value.toLowerCase();
+            const modalProjects = document.querySelectorAll('.modal-project-item');
+
+            modalProjects.forEach(item => {
+                const name = item.getAttribute('data-name');
+                const code = item.getAttribute('data-code');
+
+                const matchesSearch = name.includes(searchText) || code.includes(searchText);
+
+                if (matchesSearch) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        function filterSummaryTable() {
+            const searchText = document.getElementById('summarySearch').value.toLowerCase();
+            const lecturerFilter = document.getElementById('summaryLecturerFilter').value;
+            const summaryRows = document.querySelectorAll('.summary-row');
+
+            summaryRows.forEach(row => {
+                const name = row.getAttribute('data-name');
+                const code = row.getAttribute('data-code');
+                const supervisor = row.getAttribute('data-supervisor');
+
+                const matchesSearch = name.includes(searchText) || code.includes(searchText) || (supervisor && supervisor.toLowerCase().includes(searchText));
+                const matchesLecturer = lecturerFilter === "" || supervisor === lecturerFilter;
+
+                if (matchesSearch && matchesLecturer) {
+                    row.classList.remove('hidden');
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
         }
     </script>
 }
