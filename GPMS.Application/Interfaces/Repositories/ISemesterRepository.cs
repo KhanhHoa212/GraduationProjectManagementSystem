@@ -14,4 +14,5 @@ public interface ISemesterRepository
     Task DeleteAsync(int semesterId);
     Task<bool> ExistsAsync(int semesterId);
     Task SaveChangesAsync();
+    Task<Semester?> GetOverlapSemesterAsync(DateTime start, DateTime end, int? ignoreId = null);
 }

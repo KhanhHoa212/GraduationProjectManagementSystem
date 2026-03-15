@@ -32,4 +32,15 @@ public class SemesterRepository : ISemesterRepository
 
     public async Task<bool> ExistsAsync(int semesterId) => await _context.Semesters.AnyAsync(s => s.SemesterID == semesterId);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+    public async Task<Semester?> GetOverlapSemesterAsync(DateTime start, DateTime end, int? ignoreId = null)
+    {
+        var query = _context.Semesters.AsQueryable();
+
+        if (ignoreId.HasValue)
+            query = query.Where(s => s.SemesterID != ignoreId.Value);
+
+        return await query.FirstOrDefaultAsync(s =>
+            start <= s.EndDate && end >= s.StartDate
+        );
+    }
 }
