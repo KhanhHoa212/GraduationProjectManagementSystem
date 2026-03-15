@@ -53,6 +53,10 @@ builder.Services.AddControllersWithViews()
 
 builder.Services.AddRazorPages();
 
+// Memory cache (for system logs + visit tracking)
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
+
 // Add Google Authentication
 builder.Services.AddAuthentication(options =>
 {
