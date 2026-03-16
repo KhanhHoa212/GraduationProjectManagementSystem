@@ -46,8 +46,8 @@
         </a>
 
         <a asp-controller="HOD" asp-action="ReviewRounds" 
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "ReviewRounds" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
-            <span class="material-symbols-outlined @(currentAction == "ReviewRounds" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">update</span>
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "ReviewRounds" || currentAction == "CreateReviewRound" || currentAction == "EditReviewRound" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
+            <span class="material-symbols-outlined @(currentAction == "ReviewRounds" || currentAction == "CreateReviewRound" || currentAction == "EditReviewRound" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">update</span>
             <span class="text-sm font-semibold tracking-wide">Review Rounds</span>
             
         </a>

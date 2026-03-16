@@ -1,573 +1,431 @@
+@using GPMS.Application.DTOs
+@model ChecklistDto
 @{
     ViewData["Title"] = "Checklist Configuration";
     Layout = "~/Views/Shared/_HodLayout.cshtml";
+    var activeSemester = ViewBag.ActiveSemester as SemesterDto;
+    var reviewRounds = ViewBag.ReviewRounds as List<ReviewRoundDto> ?? new List<ReviewRoundDto>();
+    var selectedRoundId = (int?)ViewBag.SelectedRoundId;
 }
 
-<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+<div class="min-h-screen bg-slate-50">
     <div class="p-6">
         <div class="max-w-7xl mx-auto space-y-6">
             <!-- Header -->
-            <div class="flex items-start justify-between mb-8">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
                 <div>
                     <nav class="flex items-center gap-2 text-sm mb-4">
-                        <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 no-underline">GPMS</a>
-                        <span class="material-symbols-outlined text-[16px] text-slate-400">chevron_right</span>
-                        <span class="text-slate-900 dark:text-slate-100 font-bold">Cấu hình Checklist</span>
+                        <a href="/Hod/Dashboard" class="text-slate-600 hover:text-[#F37021] transition-colors">GPMS</a>
+                        <span class="text-slate-400">/</span>
+                        <span class="text-slate-900 font-medium">Checklist</span>
                     </nav>
-                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Cấu hình Checklist</h1>
-                    <p class="text-slate-600 dark:text-slate-400 mt-2 font-medium">Quản lý tiêu chí đánh giá cho từng vòng review</p>
+                    <h1 class="text-3xl font-bold text-slate-900">Checklist Configuration</h1>
+                    <p class="text-slate-600 mt-2">
+                        Define assessment criteria and weights for quality assurance
+                        @if (activeSemester != null)
+                        {
+                            <span class="text-[#F37021] font-bold">(@activeSemester.SemesterCode)</span>
+                        }
+                    </p>
                 </div>
-                <button class="px-6 py-2.5 bg-[#F37021] text-white rounded-xl hover:bg-[#E55D0D] font-bold shadow-lg shadow-orange-500/20 flex items-center gap-2 transition-all active:scale-95">
-                    <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
-                    Tạo checklist mới
-                </button>
-            </div>
-
-            <!-- Tab Navigation -->
-            <div class="border-b border-slate-200 dark:border-slate-800">
-                <div class="flex gap-1">
-                    <!-- Review 1 Tab -->
-                    <button class="review-tab px-6 py-4 text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-slate-200 transition-all font-bold" data-tab="review1">
-                        <div class="flex flex-col items-center">
-                            <span class="text-[15px]">Review 1</span>
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest opacity-60">Yes/No</span>
-                        </div>
+                <div class="flex flex-wrap gap-3">
+                    <button class="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-white hover:shadow-md font-bold flex items-center gap-2 transition-all">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
+                        Export PDF
                     </button>
-                    
-                    <!-- Review 2 Tab -->
-                    <button class="review-tab px-6 py-4 text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-slate-200 transition-all font-bold" data-tab="review2">
-                        <div class="flex flex-col items-center">
-                            <span class="text-[15px]">Review 2</span>
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest opacity-60">Yes/No</span>
-                        </div>
-                    </button>
-                    
-                    <!-- Review 3 Tab -->
-                    <button class="review-tab px-6 py-4 text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-900 dark:hover:text-slate-200 transition-all font-bold active" data-tab="review3">
-                        <div class="flex flex-col items-center">
-                            <div class="flex items-center gap-1">
-                                <span class="text-[15px]">Review 3</span>
-                                <span class="material-symbols-outlined text-amber-500 text-sm">star</span>
-                            </div>
-                            <span class="text-[10px] font-extrabold uppercase tracking-widest opacity-60">Rubric Based</span>
-                        </div>
+                    <button onclick="saveChecklist()" class="px-6 py-2.5 bg-[#1E3A5F] text-white rounded-xl hover:bg-slate-800 font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-900/10">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
+                        Save Configuration
                     </button>
                 </div>
             </div>
 
-            <!-- TAB CONTENT -->
-
-            <!-- REVIEW 1 TAB (Yes/No Checklist) -->
-            <div id="review1" class="tab-content hidden space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <!-- Checklist Info Card -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                    <div class="flex items-start justify-between">
-                        <div class="flex gap-5">
-                            <div class="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/30 flex items-center justify-center text-[#F37021] border border-orange-100 dark:border-orange-900/50">
-                                <span class="material-symbols-outlined text-3xl">fact_check</span>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">FPTU SE Capstone Project – Review 1 Checklist</h2>
-                                <div class="flex flex-wrap items-center gap-4 mt-3">
-                                    <span class="flex items-center gap-1.5 text-sm font-bold text-slate-500 dark:text-slate-400">
-                                        <span class="material-symbols-outlined text-base">style</span>
-                                        Dạng đánh giá: Yes / No / N/A
-                                    </span>
-                                    <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
-                                    <span class="flex items-center gap-1.5 text-sm font-bold text-[#F37021]">
-                                        <span class="material-symbols-outlined text-base">event_available</span>
-                                        Áp dụng: Round 1 · SP26 – 2025-2026
-                                    </span>
+            <!-- Round Selector & Information -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Select Round -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold text-slate-900 uppercase tracking-widest mb-4">Select Review Round</h2>
+                    <div class="space-y-2">
+                        @foreach (var round in reviewRounds)
+                        {
+                            <a href="/HOD/Checklists?roundId=@round.ReviewRoundID" 
+                               class="flex items-center justify-between p-4 rounded-xl border transition-all @(selectedRoundId == round.ReviewRoundID ? "bg-orange-50 border-[#F37021] text-[#F37021] font-bold" : "bg-slate-50 border-slate-100 text-slate-600 hover:border-slate-300 hover:bg-white")">
+                                <div class="flex items-center gap-3">
+                                    <span class="material-symbols-outlined text-xl">@(round.RoundType == GPMS.Domain.Enums.RoundType.Online ? "language" : "groups")</span>
+                                    <span>Round @round.RoundNumber: @round.RoundType</span>
                                 </div>
-                            </div>
-                        </div>
-                        <button class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
-                            <span class="material-symbols-outlined">edit</span>
-                        </button>
+                                <span class="material-symbols-outlined text-sm">@(selectedRoundId == round.ReviewRoundID ? "check_circle" : "chevron_right")</span>
+                            </a>
+                        }
+                        @if (!reviewRounds.Any())
+                        {
+                            <p class="text-sm text-slate-400 italic py-4 text-center">No rounds found for this semester.</p>
+                        }
                     </div>
                 </div>
 
-                <!-- Sections -->
-                <div class="space-y-4">
-                    <!-- Section P1 -->
-                    <div class="section-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm transition-all">
-                        <div class="section-header p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center justify-between transition">
-                            <div class="flex items-center gap-4">
-                                <span class="material-symbols-outlined toggle-icon text-slate-400 transition-transform">expand_more</span>
-                                <div class="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center font-bold text-sm">P1</div>
-                                <div>
-                                    <span class="font-bold text-slate-900 dark:text-white text-lg">Coverage of Objectives</span>
-                                    <span class="text-xs font-bold text-slate-400 ml-2 uppercase tracking-tighter">(4 câu hỏi)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="section-content">
-                            <div class="p-6 pt-0 space-y-3 border-t border-slate-100 dark:border-slate-800/50">
-                                <!-- Question rows -->
-                                <div class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl transition-colors group">
-                                    <div class="mt-1 text-slate-300 dark:text-slate-700 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="material-symbols-outlined">drag_indicator</span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-slate-800 dark:text-slate-200 font-bold">Is problem to solve stated clearly?</p>
-                                    </div>
-                                    <span class="px-2.5 py-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px] font-extrabold uppercase tracking-wider rounded border border-red-100 dark:border-red-900/50">Mandatory</span>
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                                        </button>
-                                        <button class="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl transition-colors group border-t border-slate-50 dark:border-slate-800/50">
-                                    <div class="mt-1 text-slate-300 dark:text-slate-700 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="material-symbols-outlined">drag_indicator</span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-slate-800 dark:text-slate-200 font-bold">Is a functional overview of the system provided?</p>
-                                    </div>
-                                    <span class="text-slate-300 dark:text-slate-700 text-xs">—</span>
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                                        </button>
-                                        <button class="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl transition-colors group border-t border-slate-50 dark:border-slate-800/50">
-                                    <div class="mt-1 text-slate-300 dark:text-slate-700 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="material-symbols-outlined">drag_indicator</span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-slate-800 dark:text-slate-200 font-bold">If assumptions that affect implementation have been made, are they stated?</p>
-                                    </div>
-                                    <span class="text-slate-300 dark:text-slate-700 text-xs">—</span>
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                                        </button>
-                                        <button class="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-start gap-4 p-4 hover:bg-slate-50 dark:hover:bg-slate-800/30 rounded-xl transition-colors group border-t border-slate-50 dark:border-slate-800/50">
-                                    <div class="mt-1 text-slate-300 dark:text-slate-700 cursor-move opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <span class="material-symbols-outlined">drag_indicator</span>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-slate-800 dark:text-slate-200 font-bold">Is size of system (Usecase Points) large enough for members?</p>
-                                    </div>
-                                    <span class="px-2.5 py-1 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-[10px] font-extrabold uppercase tracking-wider rounded border border-red-100 dark:border-red-900/50">Mandatory</span>
-                                    <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">edit</span>
-                                        </button>
-                                        <button class="p-2 text-slate-400 hover:text-red-500 transition-colors">
-                                            <span class="material-symbols-outlined text-[20px]">delete</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Add Question Button -->
-                                <button class="w-full py-3 mt-4 text-center text-slate-500 dark:text-slate-400 hover:text-[#F37021] dark:hover:text-orange-400 font-bold text-xs uppercase tracking-wider transition-all border border-dashed border-slate-200 dark:border-slate-800 rounded-xl hover:bg-orange-50/50 dark:hover:bg-orange-900/10">
-                                    <span class="material-symbols-outlined text-base align-middle mr-1">add_circle</span>
-                                    Thêm câu hỏi
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Section P2 -->
-                    <div class="section-card bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                        <div class="section-header p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center justify-between transition">
-                            <div class="flex items-center gap-4">
-                                <span class="material-symbols-outlined toggle-icon text-slate-400">chevron_right</span>
-                                <div class="w-10 h-10 rounded-xl bg-slate-900 dark:bg-slate-700 text-white flex items-center justify-center font-bold text-sm">P2</div>
-                                <div>
-                                    <span class="font-bold text-slate-900 dark:text-white text-lg">Practical applicability</span>
-                                    <span class="text-xs font-bold text-slate-400 ml-2 uppercase tracking-tighter">(2 câu hỏi)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="section-content hidden">
-                            <!-- Content for P2 -->
-                        </div>
-                    </div>
-
-                    <!-- Add Section Button -->
-                    <button class="w-full py-5 text-center text-[#F37021] hover:bg-orange-50 dark:hover:bg-orange-900/10 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-orange-200 dark:border-orange-900/40 rounded-2xl transition-all hover:border-[#F37021]">
-                        <span class="material-symbols-outlined text-xl align-middle mr-2">playlist_add</span>
-                        Thêm Section Mới
-                    </button>
-                </div>
-            </div>
-
-            <!-- REVIEW 2 TAB -->
-            <div id="review2" class="tab-content hidden space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center py-20">
-                    <span class="material-symbols-outlined text-6xl text-slate-200 dark:text-slate-800 mb-4">settings_suggest</span>
-                    <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200">Đang cập nhật Review 2</h3>
-                    <p class="text-slate-500 dark:text-slate-400 mt-2">Nội dung checklist cho Round 2 đang được biên soạn.</p>
-                </div>
-            </div>
-
-            <!-- REVIEW 3 TAB (Rubric Checklist) -->
-            <div id="review3" class="tab-content space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                <!-- Checklist Info + Grade Scale -->
-                <div class="bg-white dark:bg-slate-900 rounded-2xl p-8 border border-slate-200 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                    <div class="flex items-start justify-between mb-8">
-                        <div class="flex gap-5">
-                            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/30 flex items-center justify-center text-amber-500 border border-amber-100 dark:border-amber-900/50">
-                                <span class="material-symbols-outlined text-3xl">emoji_events</span>
-                            </div>
-                            <div>
-                                <h2 class="text-xl font-bold text-slate-900 dark:text-white">FPTU SE Capstone Project – Review 3 Final Checklist</h2>
-                                <div class="flex flex-wrap items-center gap-4 mt-3">
-                                    <span class="flex items-center gap-1.5 text-sm font-bold text-slate-500 dark:text-slate-400">
-                                        <span class="material-symbols-outlined text-base">analytics</span>
-                                        Dạng đánh giá: Rubric (Grade Level)
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Grade Scale -->
-                    <div>
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">Thang điểm đánh giá</p>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div class="p-5 bg-emerald-50/50 dark:bg-emerald-950/20 rounded-2xl border border-emerald-100 dark:border-emerald-800/50 text-center group hover:shadow-md transition-all">
-                                <span class="text-2xl mb-2 block">🟢</span>
-                                <p class="font-bold text-emerald-700 dark:text-emerald-400">Excellent</p>
-                                <p class="text-sm font-extrabold text-emerald-800 dark:text-emerald-300 mt-1">8.0 – 10.0</p>
-                            </div>
-                            <div class="p-5 bg-blue-50/50 dark:bg-blue-950/20 rounded-2xl border border-blue-100 dark:border-blue-800/50 text-center group hover:shadow-md transition-all">
-                                <span class="text-2xl mb-2 block">🔵</span>
-                                <p class="font-bold text-blue-700 dark:text-blue-400">Good</p>
-                                <p class="text-sm font-extrabold text-blue-800 dark:text-blue-300 mt-1">6.5 – 8.0</p>
-                            </div>
-                            <div class="p-5 bg-yellow-50/50 dark:bg-yellow-950/20 rounded-2xl border border-yellow-100 dark:border-yellow-800/50 text-center group hover:shadow-md transition-all">
-                                <span class="text-2xl mb-2 block">🟡</span>
-                                <p class="font-bold text-yellow-700 dark:text-yellow-400">Acceptable</p>
-                                <p class="text-sm font-extrabold text-yellow-800 dark:text-yellow-300 mt-1">4.0 – 6.5</p>
-                            </div>
-                            <div class="p-5 bg-red-50/50 dark:bg-red-950/20 rounded-2xl border border-red-100 dark:border-red-800/50 text-center group hover:shadow-md transition-all">
-                                <span class="text-2xl mb-2 block">🔴</span>
-                                <p class="font-bold text-red-700 dark:text-red-400">Fail</p>
-                                <p class="text-sm font-extrabold text-red-800 dark:text-red-300 mt-1">0.0 – 4.0</p>
-                            </div>
-                        </div>
-                        <div class="mt-4 flex items-center gap-2 text-xs font-bold text-slate-400">
-                            <span class="material-symbols-outlined text-base">info</span>
-                            + N/A: Tiêu chí không áp dụng cho nhóm dự án này
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Criteria Sections -->
-                <div class="space-y-4">
-                    <!-- Product Section -->
-                    <div class="rubric-section bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
-                        <div class="section-header p-6 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 flex items-center justify-between transition">
-                            <div class="flex items-center gap-4">
-                                <span class="material-symbols-outlined toggle-icon text-slate-400">expand_more</span>
-                                <span class="text-2xl">📦</span>
-                                <div>
-                                    <span class="font-bold text-slate-900 dark:text-white text-lg">Product</span>
-                                    <span class="text-xs font-bold text-slate-400 ml-2 uppercase tracking-tighter">(8 tiêu chí)</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="section-content">
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-sm">
-                                    <thead class="bg-slate-50 dark:bg-slate-800/50 border-t border-b border-slate-100 dark:border-slate-800">
-                                        <tr>
-                                            <th class="py-4 px-6 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Mã</th>
-                                            <th class="py-4 px-6 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Tên tiêu chí</th>
-                                            <th class="py-4 px-6 text-left text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Mô tả đánh giá</th>
-                                            <th class="py-4 px-6 text-right text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Thao tác</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-50 dark:divide-slate-800/50">
-                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
-                                            <td class="py-5 px-6">
-                                                <span class="px-2.5 py-1 bg-slate-900 dark:bg-slate-700 text-white text-[10px] font-extrabold rounded">P1</span>
-                                            </td>
-                                            <td class="py-5 px-6">
-                                                <p class="font-bold text-slate-800 dark:text-white">Scope: Coverage of Objectives</p>
-                                            </td>
-                                            <td class="py-5 px-6">
-                                                <div class="text-slate-500 dark:text-slate-400 text-xs space-y-1">
-                                                    <p class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-slate-300"></span> Problem to solve (innovation, creative…)</p>
-                                                    <p class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-slate-300"></span> Size of system, data complexity...</p>
-                                                </div>
-                                            </td>
-                                            <td class="py-5 px-6 text-right">
-                                                <div class="flex items-center justify-end gap-1">
-                                                    <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-[#1E3A5F] hover:shadow-sm transition-all" title="Xem chi tiết" onclick="openDetailModal()">
-                                                        <span class="material-symbols-outlined text-xl">visibility</span>
-                                                    </button>
-                                                    <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-[#F37021] hover:shadow-sm transition-all" title="Chỉnh sửa">
-                                                        <span class="material-symbols-outlined text-xl">edit</span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <!-- Repeat for P2 -->
-                                        <tr class="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors border-t border-slate-50 dark:border-slate-800/50">
-                                            <td class="py-5 px-6">
-                                                <span class="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-extrabold rounded">P2</span>
-                                            </td>
-                                            <td class="py-5 px-6">
-                                                <p class="font-bold text-slate-800 dark:text-white">Practical applicability</p>
-                                            </td>
-                                            <td class="py-5 px-6">
-                                                <div class="text-slate-500 dark:text-slate-400 text-xs space-y-1">
-                                                    <p class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-slate-300"></span> Deployed in production mode…</p>
-                                                    <p class="flex items-center gap-1.5"><span class="w-1 h-1 rounded-full bg-slate-300"></span> Have real users/customers…</p>
-                                                </div>
-                                            </td>
-                                            <td class="py-5 px-6 text-right">
-                                                <div class="flex items-center justify-end gap-1">
-                                                    <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-[#1E3A5F] hover:shadow-sm transition-all" title="Xem chi tiết">
-                                                        <span class="material-symbols-outlined text-xl">visibility</span>
-                                                    </button>
-                                                    <button class="w-9 h-9 flex items-center justify-center rounded-lg text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-[#F37021] hover:shadow-sm transition-all" title="Chỉnh sửa">
-                                                        <span class="material-symbols-outlined text-xl">edit</span>
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Optional Section -->
-                    <div class="rubric-section bg-gradient-to-r from-white to-orange-50/30 dark:from-slate-900 dark:to-orange-950/10 rounded-2xl border-2 border-orange-100 dark:border-orange-900/30 overflow-hidden shadow-sm">
-                        <div class="section-header p-6 cursor-pointer hover:bg-orange-50/50 dark:hover:bg-orange-950/20 flex items-center justify-between transition">
-                            <div class="flex items-center gap-4">
-                                <span class="material-symbols-outlined toggle-icon text-orange-400">chevron_right</span>
-                                <span class="text-2xl">🤖</span>
-                                <div>
-                                    <span class="font-bold text-slate-900 dark:text-white text-lg">AI – Apply AI in Project</span>
-                                    <span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 text-[10px] font-extrabold uppercase tracking-wider rounded ml-2">Optional</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Evaluation Info -->
-                <div class="bg-blue-600 rounded-2xl p-8 text-white shadow-lg shadow-blue-500/20 relative overflow-hidden">
-                    <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div class="max-w-md">
-                            <h3 class="text-xl font-bold flex items-center gap-2">
-                                <span class="material-symbols-outlined">analytics</span>
-                                Tổng hợp kết quả chấm
-                            </h3>
-                            <p class="text-blue-100 text-sm mt-2 font-medium opacity-90">
-                                Reviewer sẽ thực hiện chấm điểm dựa trên thang đo Rubric này. Kết quả cuối cùng được tính tự động dựa trên phân loại Grade.
+                <!-- Info Card -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                    <h2 class="text-sm font-bold text-slate-900 uppercase tracking-widest mb-6">Checklist Details</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Linked Review Round</p>
+                            @{
+                                var selectedRound = reviewRounds.FirstOrDefault(r => r.ReviewRoundID == selectedRoundId);
+                            }
+                            <p class="text-lg font-bold text-slate-900 mt-2 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#F37021]">task_alt</span>
+                                @(selectedRound != null ? $"Round {selectedRound.RoundNumber} - {selectedRound.RoundType}" : "N/A")
                             </p>
+                            @if (selectedRound != null)
+                            {
+                                <p class="text-sm text-slate-500 mt-1 font-medium italic">Status: @selectedRound.Status</p>
+                            }
                         </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center border border-white/20">
-                                <span class="material-symbols-outlined">trending_up</span>
+                        <div>
+                            <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Criteria Summary</p>
+                            <div class="mt-4 flex items-center gap-6">
+                                <div>
+                                    <span class="block text-2xl font-black text-slate-800" id="summaryItemCount">@Model.Items.Count</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Items</span>
+                                </div>
+                                <div class="w-px h-8 bg-slate-100"></div>
+                                <div>
+                                    <span class="block text-2xl font-black text-[#F37021]" id="summaryMaxScore">@Model.Items.Sum(i => i.MaxScore).ToString("0.0")</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Max Score</span>
+                                </div>
+                                <div class="w-px h-8 bg-slate-100"></div>
+                                <div>
+                                    <span class="block text-2xl font-black text-emerald-600" id="summaryTotalWeight">@Model.Items.Sum(i => i.Weight)%</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Weight</span>
+                                </div>
                             </div>
-                            <div class="text-[10px] font-extrabold tracking-widest opacity-80 uppercase">Tự động hóa 100%</div>
                         </div>
                     </div>
-                    <!-- Background decoration -->
-                    <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
+                    <div class="mt-6 pt-6 border-t border-slate-50">
+                        <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Checklist Description</p>
+                        <p class="text-sm text-slate-600 leading-relaxed font-medium"> @(Model.Description ?? "No description provided for this checklist.") </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Criteria Table Card -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-slate-400">format_list_bulleted</span>
+                        Criteria Table
+                    </h2>
+                    <button onclick="openAddCriteriaModal()" class="px-5 py-2 text-[#F37021] bg-orange-50 hover:bg-orange-100 rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
+                        <span class="material-symbols-outlined" style="font-size: 20px;">add_circle</span>
+                        Add New Criteria
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left" id="criteriaTable">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider w-12">#</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider w-32">CODE</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">CONTENT</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-28">MAX SCORE</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-28">WEIGHT (%)</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-32">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="criteriaList">
+                            @for (int i = 0; i < Model.Items.Count; i++)
+                            {
+                                var item = Model.Items[i];
+                                <tr class="criteria-row hover:bg-slate-50/50 transition-colors" data-id="@item.ItemID">
+                                    <td class="py-4 px-6 font-bold text-slate-400">@(i + 1)</td>
+                                    <td class="py-4 px-6">
+                                        <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold text-[10px] tracking-wider border border-slate-200">@item.ItemCode</span>
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-800 font-bold">@item.ItemContent</td>
+                                    <td class="py-4 px-6 text-center text-slate-700 font-black">@item.MaxScore.ToString("0.0")</td>
+                                    <td class="py-4 px-6 text-center">
+                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs border border-emerald-100">
+                                            @item.Weight %
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button onclick="editCriteria(this)" class="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 rounded-lg transition-all" title="Edit">
+                                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                                            </button>
+                                            <button onclick="removeCriteria(this)" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer Stats -->
+                <div class="flex items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100">
+                    <div>
+                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Calculated Integrity</p>
+                        <p class="text-sm font-bold text-slate-600 mt-1" id="weightWarning">
+                            <span class="material-symbols-outlined text-sm align-middle">info</span>
+                            Ensure total weight is 100%
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <span class="block text-xs font-bold text-slate-400 uppercase">Total Weight</span>
+                            <span class="text-2xl font-black text-slate-800" id="totalWeightDisplay">@Model.Items.Sum(i => i.Weight)%</span>
+                        </div>
+                        <div id="weightIndicator" class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-900/10 @(Model.Items.Sum(i => i.Weight) == 100 ? "bg-emerald-500" : "bg-red-500")">
+                            @Model.Items.Sum(i => i.Weight)
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pro Tip Card -->
+            <div class="bg-[#1E3A5F]/5 border border-[#1E3A5F]/10 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
+                <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-[#1E3A5F] flex-shrink-0">
+                    <span class="material-symbols-outlined">lightbulb</span>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-[#1E3A5F] mb-1">Configuration Tip</h4>
+                    <p class="text-xs text-[#1E3A5F]/80 font-medium leading-relaxed">
+                        Accurate scoring depends on a perfect 100% weight distribution. Use "Code" prefixes like <span class="font-bold">ARCH-</span> or <span class="font-bold">CODE-</span> to categorize your criteria for better reporting.
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Detail Modal -->
-<div id="detailModal" class="fixed inset-0 z-[100] hidden">
-    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-300">
-        <div class="px-10 py-8 bg-slate-50/50 dark:bg-slate-800/30 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+<!-- Add/Edit Criteria Modal -->
+<div id="criteriaModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
-                <span class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white text-[10px] font-extrabold rounded uppercase tracking-widest mb-2 inline-block">Tiêu chí P1</span>
-                <h2 class="text-2xl font-bold text-slate-900 dark:text-white">Scope: Coverage of Objectives</h2>
+                <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Add New Criteria</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Define assessment metric</p>
             </div>
-            <button onclick="closeDetailModal()" class="w-12 h-12 flex items-center justify-center rounded-2xl hover:bg-white dark:hover:bg-slate-800 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all hover:shadow-md">
+            <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
-        
-        <div class="px-10 py-8 max-h-[60vh] overflow-y-auto custom-main-scroll">
-            <div class="space-y-8">
-                <div>
-                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">Các yêu cầu đánh giá (Evaluation Criteria)</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Problem to solve (innovation, creative…)</span>
-                        </div>
-                        <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Completeness of requirements</span>
-                        </div>
-                        <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Size of system: weighted number of business flows</span>
-                        </div>
-                        <div class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <span class="text-sm font-bold text-slate-700 dark:text-slate-300">Coverage of objectives</span>
-                        </div>
-                    </div>
+        <div class="p-8 space-y-5">
+            <input type="hidden" id="editItemId" value="0">
+            <div class="grid grid-cols-2 gap-4">
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Criterion Code</label>
+                    <input type="text" id="itemCode" placeholder="e.g. ARCH-01" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
                 </div>
-
-                <div>
-                    <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-4">Phân loại Grade (Rubric Description)</p>
-                    <div class="space-y-4">
-                        <div class="p-5 bg-emerald-50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100 dark:border-emerald-900/30">
-                            <p class="font-bold text-emerald-800 dark:text-emerald-400 flex items-center gap-2">🟢 Excellent (8.0–10.0)</p>
-                            <p class="text-sm text-emerald-700 dark:text-emerald-300 mt-2 font-medium leading-relaxed">All of the objectives have been addressed, with few cases that may be questionable and/or additional aspects explored</p>
-                        </div>
-                        <div class="p-5 bg-blue-50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
-                            <p class="font-bold text-blue-800 dark:text-blue-400 flex items-center gap-2">🔵 Good (6.5–8.0)</p>
-                            <p class="text-sm text-blue-700 dark:text-blue-300 mt-2 font-medium leading-relaxed">The objectives have been met, at least in part but clearly not in entirety and/or there are some clear deficiencies...</p>
-                        </div>
-                        <div class="p-5 bg-yellow-50 dark:bg-yellow-900/10 rounded-2xl border border-yellow-100 dark:border-yellow-900/30">
-                            <p class="font-bold text-yellow-800 dark:text-yellow-400 flex items-center gap-2">🟡 Acceptable (4.0–6.5)</p>
-                            <p class="text-sm text-yellow-700 dark:text-yellow-300 mt-2 font-medium leading-relaxed">Key objectives are generally met with significant deficiencies...</p>
-                        </div>
-                        <div class="p-5 bg-red-50 dark:bg-red-900/10 rounded-2xl border border-red-100 dark:border-red-900/30">
-                            <p class="font-bold text-red-800 dark:text-red-400 flex items-center gap-2">🔴 Fail (0.0–4.0)</p>
-                            <p class="text-sm text-red-700 dark:text-red-300 mt-2 font-medium leading-relaxed">Very little if any of the objectives appear to be met...</p>
-                        </div>
-                    </div>
+                <div class="col-span-1">
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Max Score</label>
+                    <input type="number" id="maxScore" value="10.0" step="0.5" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
                 </div>
             </div>
+            <div>
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Weight (%)</label>
+                <input type="number" id="weight" value="10" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Content / Description</label>
+                <textarea id="itemContent" rows="3" placeholder="Describe what reviewers should check..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all resize-none"></textarea>
+            </div>
         </div>
-        
-        <div class="px-10 py-8 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
-            <button onclick="closeDetailModal()" class="px-6 py-3 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl font-bold hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-95">Đóng</button>
-            <button class="px-8 py-3 bg-[#F37021] text-white rounded-xl font-bold hover:bg-[#E55D0D] shadow-lg shadow-orange-500/20 transition-all active:scale-95">Chỉnh sửa tiêu chí</button>
+        <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
+            <button onclick="closeModal()" class="px-6 py-2.5 text-xs font-extrabold text-slate-500 hover:text-slate-700 transition-colors uppercase tracking-widest">Cancel</button>
+            <button onclick="applyCriteriaChanges()" class="px-6 py-2.5 bg-[#F37021] text-white rounded-xl font-bold text-xs shadow-lg shadow-orange-900/10 hover:bg-[#e66010] transition-all uppercase tracking-widest">Apply Changes</button>
         </div>
     </div>
 </div>
 
-<script>
-    // Tab switching
-    document.querySelectorAll('.review-tab').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-tab');
-            
-            // Hide all tab contents
-            document.querySelectorAll('.tab-content').forEach(content => {
-                content.classList.add('hidden');
-            });
-            
-            // Remove active state from all tabs
-            document.querySelectorAll('.review-tab').forEach(t => {
-                t.classList.remove('active', 'text-slate-900', 'dark:text-white', 'border-[#F37021]');
-                t.classList.add('text-slate-500', 'dark:text-slate-400', 'border-transparent');
-                t.querySelector('span:first-child').classList.remove('text-[#F37021]');
-            });
-            
-            // Show selected tab content
-            const activeContent = document.getElementById(tabName);
-            activeContent.classList.remove('hidden');
-            
-            // Add active state to current tab
-            this.classList.add('active', 'text-slate-900', 'dark:text-white', 'border-[#F37021]');
-            this.classList.remove('text-slate-500', 'dark:text-slate-400', 'border-transparent');
-        });
-    });
+@section Scripts {
+    <script>
+        let items = @Html.Raw(Json.Serialize(Model.Items));
+        let selectedRoundId = @selectedRoundId;
 
-    // Section collapse/expand
-    document.querySelectorAll('.section-header').forEach(header => {
-        header.addEventListener('click', function() {
-            const content = this.parentElement.querySelector('.section-content');
-            const icon = this.querySelector('.toggle-icon');
+        function updateSummary() {
+            const count = items.length;
+            const maxScore = items.reduce((sum, item) => sum + parseFloat(item.maxScore), 0);
+            const totalWeight = items.reduce((sum, item) => sum + parseFloat(item.weight), 0);
+
+            document.getElementById('summaryItemCount').innerText = count;
+            document.getElementById('summaryMaxScore').innerText = maxScore.toFixed(1);
+            document.getElementById('summaryTotalWeight').innerText = totalWeight + '%';
+            document.getElementById('totalWeightDisplay').innerText = totalWeight + '%';
+            document.getElementById('weightIndicator').innerText = totalWeight;
+
+            const indicator = document.getElementById('weightIndicator');
+            const warning = document.getElementById('weightWarning');
             
-            if (content) {
-                const isHidden = content.classList.contains('hidden');
-                content.classList.toggle('hidden');
+            if (totalWeight === 100) {
+                indicator.classList.remove('bg-red-500');
+                indicator.classList.add('bg-emerald-500');
+                warning.classList.remove('text-red-500');
+                warning.classList.add('text-emerald-700');
+                warning.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">check_circle</span> Perfect: Weight distribution complete.';
+            } else {
+                indicator.classList.remove('bg-emerald-500');
+                indicator.classList.add('bg-red-500');
+                warning.classList.remove('text-emerald-700');
+                warning.classList.add('text-red-500');
+                warning.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">warning</span> Total weight must equal 100%';
+            }
+        }
+
+        function renderRows() {
+            const list = document.getElementById('criteriaList');
+            list.innerHTML = '';
+            
+            items.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'criteria-row hover:bg-slate-50/50 transition-colors';
+                tr.setAttribute('data-id', item.itemID);
                 
-                if (isHidden) {
-                    icon.textContent = 'expand_more';
-                    icon.style.transform = 'rotate(0deg)';
-                } else {
-                    icon.textContent = 'chevron_right';
-                    icon.style.transform = 'rotate(-90deg)';
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-bold text-slate-400">${index + 1}</td>
+                    <td class="py-4 px-6">
+                        <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold text-[10px] tracking-wider border border-slate-200">${item.itemCode}</span>
+                    </td>
+                    <td class="py-4 px-6 text-slate-800 font-bold">${item.itemContent}</td>
+                    <td class="py-4 px-6 text-center text-slate-700 font-black">${parseFloat(item.maxScore).toFixed(1)}</td>
+                    <td class="py-4 px-6 text-center">
+                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs border border-emerald-100">
+                            ${item.weight} %
+                        </div>
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="editCriteriaByIndex(${index})" class="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 rounded-lg transition-all" title="Edit">
+                                <span class="material-symbols-outlined text-[20px]">edit_note</span>
+                            </button>
+                            <button onclick="removeCriteriaByIndex(${index})" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                                <span class="material-symbols-outlined text-[20px]">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+            updateSummary();
+        }
+
+        function openAddCriteriaModal() {
+            document.getElementById('modalTitle').innerText = 'Add New Criteria';
+            document.getElementById('editItemId').value = '-1';
+            document.getElementById('itemCode').value = '';
+            document.getElementById('itemContent').value = '';
+            document.getElementById('maxScore').value = '10.0';
+            document.getElementById('weight').value = '10';
+            document.getElementById('criteriaModal').classList.remove('hidden');
+        }
+
+        function editCriteriaByIndex(index) {
+            const item = items[index];
+            document.getElementById('modalTitle').innerText = 'Edit Criteria';
+            document.getElementById('editItemId').value = index;
+            document.getElementById('itemCode').value = item.itemCode;
+            document.getElementById('itemContent').value = item.itemContent;
+            document.getElementById('maxScore').value = item.maxScore;
+            document.getElementById('weight').value = item.weight;
+            document.getElementById('criteriaModal').classList.remove('hidden');
+        }
+
+        function applyCriteriaChanges() {
+            const index = parseInt(document.getElementById('editItemId').value);
+            const code = document.getElementById('itemCode').value;
+            const content = document.getElementById('itemContent').value;
+            const score = parseFloat(document.getElementById('maxScore').value);
+            const weight = parseFloat(document.getElementById('weight').value);
+
+            if (!code || !content) {
+                alert('Please fill in both code and content.');
+                return;
+            }
+
+            if (index === -1) {
+                // Add new
+                items.push({
+                    itemID: 0,
+                    itemCode: code,
+                    itemContent: content,
+                    maxScore: score,
+                    weight: weight,
+                    orderIndex: items.length + 1
+                });
+            } else {
+                // Update existing
+                items[index].itemCode = code;
+                items[index].itemContent = content;
+                items[index].maxScore = score;
+                items[index].weight = weight;
+            }
+
+            renderRows();
+            closeModal();
+        }
+
+        function removeCriteriaByIndex(index) {
+            if (confirm('Are you sure you want to remove this criteria?')) {
+                items.splice(index, 1);
+                // Re-order index
+                items.forEach((item, idx) => item.orderIndex = idx + 1);
+                renderRows();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('criteriaModal').classList.add('hidden');
+        }
+
+        async function saveChecklist() {
+            const totalWeight = items.reduce((sum, i) => sum + parseFloat(i.weight), 0);
+            if (totalWeight !== 100) {
+                if (!confirm(`Warning: Total weight is ${totalWeight}%, not 100%. Save anyway?`)) {
+                    return;
                 }
             }
-        });
-    });
 
-    // Modal functions
-    function openDetailModal() {
-        const modal = document.getElementById('detailModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        document.body.style.overflow = 'hidden';
-    }
+            const data = {
+                reviewRoundID: selectedRoundId,
+                title: "Assessment Checklist",
+                description: "", // Can be extended to have a desc input
+                items: items.map(i => ({
+                    itemID: i.itemID,
+                    itemCode: i.itemCode,
+                    itemContent: i.itemContent,
+                    maxScore: i.maxScore,
+                    weight: i.weight,
+                    orderIndex: i.orderIndex
+                }))
+            };
 
-    function closeDetailModal() {
-        const modal = document.getElementById('detailModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = '';
-    }
+            try {
+                const response = await fetch('/HOD/SaveChecklist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-    // Initialize first view
-    document.addEventListener('DOMContentLoaded', () => {
-        // Set Review 3 active by default as in request
-        const defaultTab = document.querySelector('.review-tab[data-tab="review3"]');
-        if (defaultTab) {
-            defaultTab.click();
+                const result = await response.json();
+                if (result.success) {
+                    alert('Checklist configuration saved successfully!');
+                    location.reload();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error saving checklist:', error);
+                alert('Connection error. Please try again.');
+            }
         }
-    });
 
-    // Close modal on escape key
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeDetailModal();
-    });
-</script>
-
-<style>
-    .review-tab.active {
-        border-bottom-width: 3px;
-        color: #0f172a;
-    }
-    
-    .dark .review-tab.active {
-        color: white;
-    }
-
-    .custom-main-scroll::-webkit-scrollbar {
-        width: 6px;
-    }
-    .custom-main-scroll::-webkit-scrollbar-track {
-        background: transparent;
-    }
-    .custom-main-scroll::-webkit-scrollbar-thumb {
-        background: #e2e8f0;
-        border-radius: 10px;
-    }
-    .dark .custom-main-scroll::-webkit-scrollbar-thumb {
-        background: #1e293b;
-    }
-    
-    .section-card:hover {
-        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    }
-</style>
+        // Initialize display
+        updateSummary();
+    </script>
+}
