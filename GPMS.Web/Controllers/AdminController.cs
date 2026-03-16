@@ -231,6 +231,123 @@ public class AdminController : Controller
             fileName);
     }
 
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ExportUsers(string? search, string? role, GPMS.Domain.Enums.UserStatus? status)
+    {
+        var users = await _userService.GetAllUsersAsync(search, role, status);
+
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Users");
+
+        ws.Cell(1, 1).Value = "User ID";
+        ws.Cell(1, 2).Value = "Full Name";
+        ws.Cell(1, 3).Value = "Email";
+        ws.Cell(1, 4).Value = "Phone";
+        ws.Cell(1, 5).Value = "Role";
+        ws.Row(1).Style.Font.Bold = true;
+        ws.Row(1).Style.Fill.BackgroundColor = XLColor.FromHtml("#F27123");
+        ws.Row(1).Style.Font.FontColor = XLColor.White;
+
+        int row = 2;
+        foreach (var u in users)
+        {
+            ws.Cell(row, 1).Value = u.UserID;
+            ws.Cell(row, 2).Value = u.FullName;
+            ws.Cell(row, 3).Value = u.Email;
+            ws.Cell(row, 4).Value = u.Phone;
+            ws.Cell(row, 5).Value = u.Roles.FirstOrDefault() ?? "Student";
+            row++;
+        }
+
+        ws.Columns().AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        var content = stream.ToArray();
+
+        return File(content, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            $"GPMS_Users_{DateTime.Now:yyyyMMdd}.xlsx");
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ImportUsers(Microsoft.AspNetCore.Http.IFormFile excelFile, string defaultRole = "Student")
+    {
+        if (excelFile == null || excelFile.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Please select a valid Excel file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            using var stream = excelFile.OpenReadStream();
+            using var workbook = new XLWorkbook(stream);
+            var worksheet = workbook.Worksheet(1);
+            var rows = worksheet.RowsUsed().Skip(1); // Skip header
+
+            int successCount = 0;
+            int skipCount = 0;
+
+            foreach (var row in rows)
+            {
+                var userId = row.Cell(1).GetValue<string>()?.Trim();
+                var fullName = row.Cell(2).GetValue<string>()?.Trim();
+                var email = row.Cell(3).GetValue<string>()?.Trim();
+                var phone = row.Cell(4).GetValue<string>()?.Trim();
+                var role = row.Cell(5).GetValue<string>()?.Trim();
+
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(email))
+                {
+                    skipCount++;
+                    continue;
+                }
+
+                if (string.IsNullOrEmpty(role)) role = defaultRole;
+
+                // 1. Validate UserID format
+                var (isValid, _) = Helpers.ValidationHelper.ValidateUserId(userId, role);
+                if (!isValid)
+                {
+                    skipCount++;
+                    continue;
+                }
+
+                // 2. Prepare DTO
+                var dto = new CreateUserDto
+                {
+                    UserID = userId.ToUpper(),
+                    Username = email, // Email used as username per user requirement
+                    Email = email,
+                    FullName = fullName ?? "N/A",
+                    Phone = phone,
+                    Role = role,
+                    Status = GPMS.Domain.Enums.UserStatus.Active
+                };
+
+                try
+                {
+                    await _userService.CreateUserAsync(dto);
+                    successCount++;
+                }
+                catch
+                {
+                    // Catch existing ID/Email or other service-level errors
+                    skipCount++;
+                }
+            }
+
+            TempData["SuccessMessage"] = $"Imported {successCount} users. Skipped {skipCount} invalid or duplicate entries.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = $"Error importing Excel: {ex.Message}";
+        }
+
+        return RedirectToAction(nameof(Index));
+    }
+
     // ── USER MANAGEMENT ───────────────────────────────────────────────────
 
     public async Task<IActionResult> Index(string? search, string? role, GPMS.Domain.Enums.UserStatus? status, int page = 1)
@@ -403,9 +520,13 @@ public class AdminController : Controller
     // ── SEMESTER MANAGEMENT ───────────────────────────────────────────────
 
     [Authorize(Roles = "Admin")]
-    public async Task<IActionResult> SemesterIndex()
+    public async Task<IActionResult> SemesterIndex(string? search, GPMS.Domain.Enums.SemesterStatus? status)
     {
-        var semesters = await _semesterService.GetAllSemestersAsync();
+        var semesters = await _semesterService.GetAllSemestersAsync(search, status);
+        
+        ViewData["CurrentSearch"] = search;
+        ViewData["CurrentStatus"] = status;
+
         var viewModels = semesters.Select(s => new SemesterViewModel
         {
             SemesterID = s.SemesterID,
