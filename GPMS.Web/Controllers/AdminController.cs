@@ -268,6 +268,8 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Create(EditUserViewModel model)
     {
+        if (model.UserID != null) model.UserID = model.UserID.ToUpper();
+
         if (!ModelState.IsValid)
         {
             return View(model);
@@ -282,7 +284,7 @@ public class AdminController : Controller
         var dto = new CreateUserDto
         {
             UserID = model.UserID,
-            Username = model.Username ?? string.Empty,
+            Username = model.Email ?? string.Empty,
             Email = model.Email ?? string.Empty,
             FullName = model.FullName,
             Phone = model.Phone,
@@ -326,7 +328,6 @@ public class AdminController : Controller
         var model = new EditUserViewModel
         {
             UserID = user.UserID,
-            Username = user.Username,
             Email = user.Email,
             FullName = user.FullName,
             Phone = user.Phone,
@@ -341,11 +342,14 @@ public class AdminController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Edit(EditUserViewModel model)
     {
+        if (model.UserID != null) model.UserID = model.UserID.ToUpper();
+
         if (!ModelState.IsValid)
         {
             return View(model);
         }
 
+        if (string.IsNullOrEmpty(model.UserID)) return BadRequest("User ID is required");
         var user = await _userService.GetUserByIdAsync(model.UserID);
         if (user == null) return NotFound();
 
@@ -359,7 +363,7 @@ public class AdminController : Controller
         var dto = new UpdateUserDto
         {
             UserID = model.UserID,
-            Username = model.Username ?? string.Empty,
+            Username = model.Email ?? string.Empty,
             Email = model.Email ?? string.Empty,
             FullName = model.FullName,
             Phone = model.Phone,
