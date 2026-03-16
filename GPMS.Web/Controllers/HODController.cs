@@ -13,15 +13,18 @@ public class HODController : Controller
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
     private readonly IReviewRoundService _reviewRoundService;
+    private readonly IChecklistService _checklistService;
 
     public HODController(
         IProjectService projectService, 
         ISemesterService semesterService, 
-        IReviewRoundService reviewRoundService)
+        IReviewRoundService reviewRoundService,
+        IChecklistService checklistService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
+        _checklistService = checklistService;
     }
 
 
@@ -369,7 +372,41 @@ public class HODController : Controller
         return RedirectToAction(nameof(ReviewRounds));
     }
 
-    public IActionResult Checklists() => View();
+    public async Task<IActionResult> Checklists(int? roundId)
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        if (activeSemester == null)
+        {
+            ViewBag.ReviewRounds = new List<ReviewRoundDto>();
+            return View(new ChecklistDto());
+        }
+
+        var rounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID)).ToList();
+        ViewBag.ReviewRounds = rounds;
+        ViewBag.ActiveSemester = activeSemester;
+
+        int targetRoundId = roundId ?? rounds.FirstOrDefault()?.ReviewRoundID ?? 0;
+        ViewBag.SelectedRoundId = targetRoundId;
+
+        if (targetRoundId == 0) return View(new ChecklistDto());
+
+        var checklist = await _checklistService.GetByRoundIdAsync(targetRoundId);
+        
+        return View(checklist ?? new ChecklistDto { ReviewRoundID = targetRoundId });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveChecklist([FromBody] SaveChecklistDto dto)
+    {
+        if (dto == null || dto.ReviewRoundID <= 0)
+            return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+
+        var (success, message) = await _checklistService.SaveChecklistAsync(dto);
+        return Json(new { success, message });
+    }
+
     public IActionResult AssignReviewer() => View();
     public IActionResult Reports() => View();
     
