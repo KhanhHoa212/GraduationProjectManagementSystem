@@ -3,6 +3,7 @@ using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
 using GPMS.Domain.Entities;
+using GPMS.Domain.Enums;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,9 +21,23 @@ public class SemesterService : ISemesterService
         _mapper = mapper;
     }
 
-    public async Task<IEnumerable<SemesterDto>> GetAllSemestersAsync()
+    public async Task<IEnumerable<SemesterDto>> GetAllSemestersAsync(string? search = null, SemesterStatus? status = null)
     {
         var semesters = await _semesterRepository.GetAllAsync();
+
+        if (status.HasValue)
+        {
+            semesters = semesters.Where(s => s.Status == status.Value);
+        }
+
+        if (!string.IsNullOrEmpty(search))
+        {
+            search = search.ToLower();
+            semesters = semesters.Where(s => 
+                s.SemesterCode.ToLower().Contains(search) || 
+                s.AcademicYear.ToLower().Contains(search));
+        }
+
         return _mapper.Map<IEnumerable<SemesterDto>>(semesters);
     }
 
