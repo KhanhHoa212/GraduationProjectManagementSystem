@@ -9,6 +9,7 @@ public class ProjectDto
     public string ProjectCode { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
     public string? MajorName { get; set; }
+    public int SemesterID { get; set; }
     public string? SemesterCode { get; set; }
     public ProjectStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -19,6 +20,9 @@ public class ProjectDto
 
     // Group count
     public int GroupCount { get; set; }
+
+    // Team members
+    public List<ProjectMemberDto> Members { get; set; } = new();
 }
 
 // Used in ProjectDetails view

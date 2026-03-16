@@ -21,22 +21,19 @@
 
         <!-- Right Section: Actions & Profile -->
         <div class="flex items-center gap-3 md:gap-5">
-            <!-- Semester Selector -->
+            <!-- Semester Indicator -->
             <div class="hidden md:flex items-center gap-3 bg-white border rounded-xl border-slate-200 px-4 py-1.5">
-                <span class="text-xs font-bold text-dark-500 uppercase tracking-widest">HỌC KỲ</span>
+                <span class="text-xs font-bold text-dark-500 uppercase tracking-widest">SEMESTER</span>
                 <div class="w-px h-4 bg-dark-300"></div>
-                <div class="relative group cursor-pointer">
-                    <select class="bg-transparent text-sm font-bold text-primary-600 outline-none appearance-none pr-6 cursor-pointer group-hover:text-primary-500 transition-colors z-10 relative">
-                        @if (activeSemester != null)
-                        {
-                            <option>@activeSemester.SemesterCode - @activeSemester.AcademicYear</option>
-                        }
-                        else
-                        {
-                            <option>Chưa cấu hình học kỳ</option>
-                        }
-                    </select>
-                    <span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-primary-500 text-base transition-transform group-hover:translate-y-[-40%]">arrow_drop_down</span>
+                <div class="text-sm font-bold text-primary-600">
+                    @if (activeSemester != null)
+                    {
+                        <span>@activeSemester.SemesterCode</span>
+                    }
+                    else
+                    {
+                        <span class="text-dark-400">N/A</span>
+                    }
                 </div>
             </div>
 
@@ -51,15 +48,15 @@
             <!-- User Profile -->
             <div class="flex items-center gap-3 pl-2 sm:pl-3 cursor-pointer group hover:bg-dark-50 p-1.5 pr-3 rounded-xl transition-colors">
                 <div class="text-right hidden sm:block">
-                    <div class="text-sm font-bold text-dark-900 group-hover:text-primary-500 transition-colors">@(User.Identity?.Name ?? "Admin User")</div>
-                    <div class="text-[11px] font-medium text-dark-500 tracking-wide mt-0.5">Head of Department</div>
+                    <div class="text-sm font-bold text-dark-900 group-hover:text-primary-500 transition-colors">@(User.Identity?.Name ?? "Student")</div>
+                    <div class="text-[11px] font-medium text-dark-500 tracking-wide mt-0.5">Student</div>
                 </div>
                 <div class="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-dark-700 group-hover:shadow-primary-500/30 group-hover:scale-105 transition-all duration-300">
-                    <span class="text-white font-bold text-base">A</span>
+                    <span class="text-white font-bold text-base">
+                         @(User.Identity?.IsAuthenticated == true ? User.Identity.Name?.Substring(0, 1).ToUpper() ?? "S" : "S")
+                    </span>
                 </div>
             </div>
         </div>
     </div>
 </header>
-
-

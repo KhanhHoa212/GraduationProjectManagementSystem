@@ -4,6 +4,8 @@ using GPMS.Application.Mapping;
 using GPMS.Application.Services;
 using GPMS.Infrastructure.Data;
 using GPMS.Infrastructure.Email;
+using GPMS.Infrastructure.Services;
+using GPMS.Application.Common.Settings;
 using GPMS.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -68,6 +70,11 @@ builder.Services.AddAuthentication(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Add Cloudinary service
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddScoped<IFileService, CloudinaryService>();
 
 var app = builder.Build();
 

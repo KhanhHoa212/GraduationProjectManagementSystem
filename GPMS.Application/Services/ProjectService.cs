@@ -17,6 +17,9 @@ public class ProjectService : IProjectService
     private readonly IUserRepository _userRepository;
     private readonly ISubmissionRepository _submissionRepository;
     private readonly IFeedbackRepository _feedbackRepository;
+    private readonly IEvaluationRepository _evaluationRepository;
+    private readonly ISemesterRepository _semesterRepository;
+    private readonly IFileService _fileService;
     private readonly IMapper _mapper;
 
     public ProjectService(
@@ -25,6 +28,9 @@ public class ProjectService : IProjectService
         IUserRepository userRepository,
         ISubmissionRepository submissionRepository,
         IFeedbackRepository feedbackRepository,
+        IEvaluationRepository evaluationRepository,
+        ISemesterRepository semesterRepository,
+        IFileService fileService,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
@@ -32,6 +38,9 @@ public class ProjectService : IProjectService
         _userRepository = userRepository;
         _submissionRepository = submissionRepository;
         _feedbackRepository = feedbackRepository;
+        _evaluationRepository = evaluationRepository;
+        _semesterRepository = semesterRepository;
+        _fileService = fileService;
         _mapper = mapper;
     }
 
@@ -50,7 +59,28 @@ public class ProjectService : IProjectService
     public async Task<ProjectDto?> GetProjectByStudentAsync(string studentId)
     {
         var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
-        return project == null ? null : _mapper.Map<ProjectDto>(project);
+        if (project == null) return null;
+
+        var dto = _mapper.Map<ProjectDto>(project);
+        
+        // Filter members to only show the user's group
+        var userGroup = project.ProjectGroups.FirstOrDefault(g => g.GroupMembers.Any(m => m.UserID == studentId));
+        if (userGroup != null)
+        {
+            dto.Members = userGroup.GroupMembers.Select(m => new ProjectMemberDto
+            {
+                UserID = m.UserID,
+                FullName = m.User?.FullName ?? string.Empty,
+                RoleInGroup = m.RoleInGroup,
+                GroupName = userGroup.GroupName
+            }).ToList();
+        }
+        else
+        {
+            dto.Members = new List<ProjectMemberDto>();
+        }
+
+        return dto;
     }
 
     public async Task<IEnumerable<SubmissionItemDto>> GetDashboardSubmissionsAsync(string studentId)
@@ -62,12 +92,40 @@ public class ProjectService : IProjectService
             RequirementID = s.Requirement.RequirementID,
             DocumentName = s.Requirement.DocumentName,
             Description = s.Requirement.Description,
+            RoundNumber = s.Requirement.ReviewRound?.RoundNumber ?? 0,
             Deadline = s.Requirement.Deadline,
             
             SubmissionID = s.Submission?.SubmissionID,
             FileName = s.Submission?.FileName,
             SubmittedAt = s.Submission?.SubmittedAt,
-            Status = s.Submission?.Status
+            Status = s.Submission?.Status,
+            FileUrl = s.Submission?.FileUrl,
+            Version = s.Submission?.Version,
+            AllowedFormats = s.Requirement.AllowedFormats,
+            MaxFileSizeMB = s.Requirement.MaxFileSizeMB
+        }).ToList();
+    }
+
+    public async Task<IEnumerable<SubmissionItemDto>> GetSubmissionsByStudentAsync(string studentId)
+    {
+        var submissions = await _submissionRepository.GetAllSubmissionsByStudentAsync(studentId);
+        
+        return submissions.Select(s => new SubmissionItemDto
+        {
+            RequirementID = s.Requirement.RequirementID,
+            DocumentName = s.Requirement.DocumentName,
+            Description = s.Requirement.Description,
+            RoundNumber = s.Requirement.ReviewRound?.RoundNumber ?? 0,
+            Deadline = s.Requirement.Deadline,
+            
+            SubmissionID = s.Submission?.SubmissionID,
+            FileName = s.Submission?.FileName,
+            SubmittedAt = s.Submission?.SubmittedAt,
+            Status = s.Submission?.Status,
+            FileUrl = s.Submission?.FileUrl,
+            Version = s.Submission?.Version,
+            AllowedFormats = s.Requirement.AllowedFormats,
+            MaxFileSizeMB = s.Requirement.MaxFileSizeMB
         }).ToList();
     }
 
@@ -239,6 +297,170 @@ public class ProjectService : IProjectService
         await _groupRepository.SaveChangesAsync();
 
         return (true, "Role updated successfully.");
+    }
+
+    public async Task<(bool success, string message)> SubmitProjectWorkAsync(string studentId, int requirementId, Microsoft.AspNetCore.Http.IFormFile file)
+    {
+        // 1. Get Student's project and group
+        var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
+        if (project == null) return (false, "Project not found for this student.");
+
+        var group = project.ProjectGroups.FirstOrDefault(g => g.GroupMembers.Any(m => m.UserID == studentId));
+        if (group == null) return (false, "You are not assigned to any group.");
+
+        var semester = await _semesterRepository.GetByIdAsync(project.SemesterID);
+        var semesterName = semester?.SemesterCode ?? "UnknownSemester";
+        var groupName = group.GroupName.Replace(" ", "_");
+
+        // 2. Build folder path: semesters/{semesterName}/groups/{groupName}
+        string folderPath = $"semesters/{semesterName}/groups/{groupName}";
+
+        // 3. Upload to Cloudinary
+        string fileUrl;
+        try
+        {
+            fileUrl = await _fileService.UploadFileAsync(file, folderPath);
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Upload failed: {ex.Message}");
+        }
+
+        if (string.IsNullOrEmpty(fileUrl))
+            return (false, "Failed to get file URL from Cloudinary.");
+
+        // 4. Save to Database
+        var requirement = await _submissionRepository.GetRequirementByIdAsync(requirementId);
+        if (requirement == null) return (false, "Submission requirement not found.");
+
+        // Determine status based on deadline
+        var status = DateTime.UtcNow <= requirement.Deadline ? SubmissionStatus.OnTime : SubmissionStatus.Late;
+
+        var existingSubmissions = await _submissionRepository.GetByGroupAndRequirementAsync(group.GroupID, requirementId);
+        var submission = existingSubmissions.OrderByDescending(s => s.Version).FirstOrDefault();
+
+        if (submission != null)
+        {
+            // Delete old file from Cloudinary
+            try
+            {
+                var oldPublicId = $"{folderPath}/{submission.FileName}";
+                await _fileService.DeleteFileAsync(oldPublicId);
+            }
+            catch (Exception ex)
+            {
+                // Log warning but continue, maybe the file was already deleted manually
+            }
+
+            submission.FileUrl = fileUrl;
+            submission.FileName = file.FileName;
+            submission.FileSizeMB = (decimal)file.Length / (1024 * 1024);
+            submission.SubmittedAt = DateTime.UtcNow;
+            submission.SubmittedBy = studentId;
+            submission.Status = status;
+            submission.Version += 1;
+        }
+        else
+        {
+            submission = new Submission
+            {
+                RequirementID = requirementId,
+                GroupID = group.GroupID,
+                FileUrl = fileUrl,
+                FileName = file.FileName,
+                FileSizeMB = (decimal)file.Length / (1024 * 1024),
+                SubmittedAt = DateTime.UtcNow,
+                SubmittedBy = studentId,
+                Status = status,
+                Version = 1
+            };
+            await _submissionRepository.AddAsync(submission);
+        }
+
+        await _submissionRepository.SaveChangesAsync();
+
+        return (true, $"File uploaded and submitted successfully as {status}. Version: {submission.Version}");
+    }
+
+    public async Task<StudentFeedbackDto> GetStudentFeedbackAsync(string studentId, int? roundId)
+    {
+        var result = new StudentFeedbackDto();
+
+        // 1. Get Student's project and group
+        var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
+        if (project == null) return result;
+
+        var group = project.ProjectGroups.FirstOrDefault(g => g.GroupMembers.Any(m => m.UserID == studentId));
+        if (group == null) return result;
+
+        // 2. Get all rounds for this semester
+        var rounds = await _semesterRepository.GetRoundsBySemesterAsync(project.SemesterID);
+        var roundList = rounds.Where(r => r.Status == RoundStatus.Completed).OrderBy(r => r.RoundNumber).ToList();
+
+        // 3. Get all evaluations for the group
+        var evaluations = await _evaluationRepository.GetByGroupWithDetailsAsync(group.GroupID);
+        var evaluationList = evaluations.ToList();
+
+        // 4. Map Rounds
+        result.Rounds = roundList.Select(r => new FeedbackRoundDto
+        {
+            ReviewRoundId = r.ReviewRoundID,
+            RoundNumber = r.RoundNumber,
+            Title = r.RoundNumber == 0 ? "Defense" : $"Round {r.RoundNumber}",
+            Status = r.Status.ToString(),
+            IsSelected = roundId.HasValue ? r.ReviewRoundID == roundId : false
+        }).ToList();
+
+        // 5. Determine default selected round (latest completed or ongoing)
+        if (!roundId.HasValue)
+        {
+            var defaultRound = roundList
+                .Where(r => evaluationList.Any(e => e.ReviewRoundID == r.ReviewRoundID))
+                .OrderByDescending(r => r.RoundNumber)
+                .FirstOrDefault();
+
+            if (defaultRound != null)
+            {
+                result.SelectedRoundId = defaultRound.ReviewRoundID;
+                var roundDto = result.Rounds.FirstOrDefault(r => r.ReviewRoundId == defaultRound.ReviewRoundID);
+                if (roundDto != null) roundDto.IsSelected = true;
+            }
+            else if (roundList.Any())
+            {
+                result.SelectedRoundId = roundList.First().ReviewRoundID;
+                result.Rounds.First().IsSelected = true;
+            }
+        }
+        else
+        {
+            result.SelectedRoundId = roundId;
+        }
+
+        // 6. Map Details for selected round
+        var selectedEval = evaluationList.FirstOrDefault(e => e.ReviewRoundID == result.SelectedRoundId);
+        if (selectedEval != null)
+        {
+            result.Summary = new FeedbackSummaryDto
+            {
+                TotalScore = selectedEval.TotalScore ?? 0,
+                MaxPossibleScore = selectedEval.EvaluationDetails.Sum(d => d.Item.MaxScore),
+                StatusText = $"Approved by {selectedEval.Reviewer.FullName}",
+                UpdatedAt = selectedEval.SubmittedAt
+            };
+
+            result.Details = selectedEval.EvaluationDetails.Select(d => new FeedbackCriteriaDto
+            {
+                ItemCode = d.Item.ItemCode,
+                Title = d.Item.ItemContent,
+                Score = d.Score,
+                MaxScore = d.Item.MaxScore,
+                Comment = d.Comment
+            }).ToList();
+
+            result.OverallFeedback = selectedEval.Feedback?.Content;
+        }
+
+        return result;
     }
 
     // ============================================================

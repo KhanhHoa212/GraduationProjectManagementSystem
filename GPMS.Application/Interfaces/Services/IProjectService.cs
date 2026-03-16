@@ -14,6 +14,7 @@ public interface IProjectService
     // Student Dashboard
     Task<ProjectDto?> GetProjectByStudentAsync(string studentId);
     Task<IEnumerable<SubmissionItemDto>> GetDashboardSubmissionsAsync(string studentId);
+    Task<IEnumerable<SubmissionItemDto>> GetSubmissionsByStudentAsync(string studentId);
     Task<IEnumerable<DashboardFeedbackDto>> GetDashboardFeedbacksAsync(string studentId, int count = 5);
 
     // Member management
@@ -21,4 +22,10 @@ public interface IProjectService
     Task<(bool success, string message)> AddMemberAsync(int projectId, string userId);
     Task<bool> RemoveMemberAsync(int projectId, string userId);
     Task<(bool success, string message)> UpdateMemberRoleAsync(int projectId, string userId, string role);
+
+    // File Uploads
+    Task<(bool success, string message)> SubmitProjectWorkAsync(string studentId, int requirementId, Microsoft.AspNetCore.Http.IFormFile file);
+
+    // Feedback
+    Task<StudentFeedbackDto> GetStudentFeedbackAsync(string studentId, int? roundId);
 }
