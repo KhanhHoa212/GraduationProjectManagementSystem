@@ -155,7 +155,20 @@
                     @RenderBody()
                 </div>
             </main>
-            
+            <div id="chatbot-container">
+                <iframe id="chatbot-iframe"
+                        src="https://gpms-bot-supporter-fe.onrender.com/"
+                        style="position: fixed;
+                               bottom: 0;
+                               right: 0;
+                               width: 60px;
+                               height: 60px;
+                               border: none;
+                               z-index: 9999;
+                               border-radius: 50%;
+                               overflow: hidden;">
+                </iframe>
+            </div>
         </div>
     </div>
 
@@ -178,6 +191,21 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
+        window.addEventListener("message", function (event) {
+            if (!event.data || typeof event.data !== "object") return;
+            const iframe = document.getElementById("chatbot-iframe");
+            if (!iframe) return;
+            if (event.data.type === "chatbot-open") {
+                iframe.style.width = "400px";
+                iframe.style.height = "500px";
+                iframe.style.borderRadius = "12px";
+            } else if (event.data.type === "chatbot-close") {
+                iframe.style.width = "60px";
+                iframe.style.height = "60px";
+                iframe.style.borderRadius = "50%";
+            }
+        }, false);
+
         document.addEventListener('DOMContentLoaded', () => {
             const sidebar = document.getElementById('main-sidebar');
             const overlay = document.getElementById('sidebar-overlay');

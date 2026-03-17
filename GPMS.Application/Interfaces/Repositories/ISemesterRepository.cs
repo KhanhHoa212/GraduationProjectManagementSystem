@@ -15,4 +15,5 @@ public interface ISemesterRepository
     Task<bool> ExistsAsync(int semesterId);
     Task<IEnumerable<ReviewRound>> GetRoundsBySemesterAsync(int semesterId);
     Task SaveChangesAsync();
+    Task<Semester?> GetOverlapSemesterAsync(DateTime start, DateTime end, int? ignoreId = null);
 }

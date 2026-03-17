@@ -1,609 +1,309 @@
 @model GPMS.Application.DTOs.ProjectDetailDto
 @using GPMS.Domain.Enums
 @{
-    ViewData["Title"] = "Project Details";
-    ViewData["BreadcrumbTitle"] = "Project Details";
-    Layout = "_HODLayout";
-    var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
-    bool isNew = Model == null || Model.ProjectID == 0;
-
-    var statusColor = Model?.Status switch
-    {
-        ProjectStatus.Active     => "bg-blue-50 text-blue-600 border-blue-100",
-        ProjectStatus.Completed  => "bg-emerald-50 text-emerald-700 border-emerald-100",
-        ProjectStatus.Cancelled  => "bg-red-50 text-red-500 border-red-100",
-        _                        => "bg-slate-100 text-slate-500 border-slate-200"
+    ViewData["Title"] = "Project Overview";
+    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    
+    var statusBadgeClass = Model.Status switch {
+        ProjectStatus.Active => "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+        ProjectStatus.Draft => "bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200",
+        ProjectStatus.Completed => "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+        _ => "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
     };
-    var dotColor = Model?.Status switch
-    {
-        ProjectStatus.Active     => "bg-blue-500 animate-pulse",
-        ProjectStatus.Completed  => "bg-emerald-500",
-        ProjectStatus.Cancelled  => "bg-red-500",
-        _                        => "bg-slate-400"
-    };
-    var memberCount = Model?.Members?.Count ?? 0;
 }
 
-<div class="max-w-7xl mx-auto space-y-6 pb-16">
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="p-6">
+        <div class="max-w-6xl mx-auto space-y-6">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex items-center gap-2 text-sm mb-6">
+                <a href="/HOD/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 no-underline">GPMS</a>
+                <span class="text-slate-400 dark:text-slate-600">/</span>
+                <a href="/HOD/Projects" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 no-underline">Projects</a>
+                <span class="text-slate-400 dark:text-slate-600">/</span>
+                <span class="text-slate-900 dark:text-slate-100 font-medium">Chi tiết</span>
+            </nav>
 
-    @* ── Alerts ─────────────────────────────────────────── *@
-    @if (TempData["SuccessMessage"] != null)
-    {
-        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
-            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
-            <p class="text-sm text-emerald-700 font-medium">@TempData["SuccessMessage"]</p>
-        </div>
-    }
-
-    @* ── PAGE HEADER ─────────────────────────────────────── *@
-    <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <a asp-action="Projects"
-               class="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-primary hover:bg-orange-50 shadow-sm transition-all no-underline">
-                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-            </a>
-            <div>
-                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
-                    @(isNew ? "Create New Project" : "Edit Project")
-                </h1>
-                <p class="text-sm text-slate-500 mt-0.5">
-                    @(isNew ? "Fill in the details to create a new graduation project" : Model!.ProjectName)
-                </p>
-            </div>
-            @if (!isNew)
-            {
-                <span class="ml-2 px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold uppercase rounded-lg border border-primary/10">
-                    @Model!.ProjectCode
-                </span>
-            }
-        </div>
-        @if (!isNew && Model != null)
-        {
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase @statusColor">
-                <span class="size-2 rounded-full @dotColor"></span>
-                @Model.Status
-            </span>
-        }
-        else
-        {
-            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
-                <span class="size-2 rounded-full bg-slate-400"></span>
-                Draft
-            </span>
-        }
-    </div>
-
-    <!-- MAIN GRID -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
-        <!-- LEFT: Form + Team Members -->
-        <div class="lg:col-span-2 space-y-6">
-
-            <!-- Project Info Card -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-primary text-[18px]">edit_document</span>
-                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Project Information</h2>
+            <!-- Project Header Section -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-[#F37021] to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
+                            @Model.ProjectCode.Substring(0, Math.Min(2, Model.ProjectCode.Length))
+                        </div>
+    
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">@Model.ProjectCode · @Model.ProjectName</h1>
+                                <span class="px-3 py-1 @statusBadgeClass text-xs font-semibold rounded-full uppercase">@Model.Status</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-400 mt-2">@Model.MajorName | Học kỳ @Model.SemesterCode</p>
+                        </div>
+                    </div>
+                    <a href="/HOD/EditProject/@Model.ProjectID" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium transition no-underline">
+                        Chỉnh sửa
+                    </a>
                 </div>
 
-                @{ var formAction = isNew ? "CreateProject" : "UpdateProject"; }
-                <form asp-action="@formAction" method="post">
-                    @Html.AntiForgeryToken()
-                    @if (!isNew && Model != null)
-                    {
-                        <input type="hidden" name="ProjectID" value="@Model.ProjectID" />
-                    }
+                <!-- Project Info Grid -->
+                <div class="grid grid-cols-3 gap-6 mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Chuyên ngành</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.MajorName</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Học kỳ</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.SemesterCode</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Ngày tạo</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
 
-                    <div class="p-8 space-y-6">
-
-                        @* Row 1: Semester + Status *@
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Academic Semester</label>
-                                @if (isNew)
-                                {
-                                    <select name="SemesterID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                        @foreach (var s in semesterList)
-                                        {
-                                            <option value="@s.SemesterID">@s.SemesterCode — @s.AcademicYear</option>
-                                        }
-                                    </select>
-                                }
-                                else
-                                {
-                                    <input type="text" value="@(Model?.SemesterCode ?? "—")" disabled
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
-                                }
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Left Column - Team & Supervisor -->
+                <div class="col-span-2 space-y-6">
+                    <!-- Team Members Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">group</span>
+                                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Team Members</h2>
                             </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
-                                <select name="Status" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                    @foreach (var s in Enum.GetValues<ProjectStatus>())
-                                    {
-                                        if (Model != null && Model.Status == s)
+                            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full">@Model.Members.Count Students</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            @if (Model.Members.Any())
+                            {
+                                foreach (var member in Model.Members)
+                                {
+                                    var initials = string.Concat(member.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                    <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                                                @initials
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-slate-900 dark:text-white">@member.FullName</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">MSSV: @member.UserID</p>
+                                            </div>
+                                        </div>
+                                        <span class="px-3 py-1 @(member.RoleInGroup == GroupRole.Leader ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300") text-xs font-semibold rounded-full">@member.RoleInGroup</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-6 text-slate-400 italic">Chưa có thành viên</div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Assigned Supervisor Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">person_check</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Assigned Supervisor</h2>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-semibold text-lg">
+                                @(Model.SupervisorName?.Split(' ').LastOrDefault()?.Substring(0, 1) ?? "S")@(Model.SupervisorName?.Split(' ').FirstOrDefault()?.Substring(0, 1) ?? "P")
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-slate-900 dark:text-white">@(Model.SupervisorName ?? "Chưa phân công")</p>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Giảng viên hướng dẫn · @Model.MajorName</p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.SupervisorName))
+                            {
+                                <button class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 text-sm font-medium transition">
+                                    View Profile
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Submissions & Evaluations Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <!-- Tabs -->
+                        <div class="flex border-b border-slate-200 dark:border-slate-800">
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-900 dark:text-white border-b-2 border-[#F37021] bg-white dark:bg-slate-900 transition">
+                                Submissions
+                            </button>
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent transition">
+                                Evaluations
+                            </button>
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent transition">
+                                Feedback
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="p-6">
+                            <!-- Submission Deadline Alert (Placeholder for now) -->
+                            <div class="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg flex items-start gap-3">
+                                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 flex-shrink-0" style="font-size: 20px;">warning</span>
+                                <div>
+                                    <p class="font-semibold text-orange-900 dark:text-orange-100">Cập nhật tiến độ</p>
+                                    <p class="text-sm text-orange-800 dark:text-orange-200">Các mốc nộp bài sắp tới sẽ được cập nhật dựa trên lộ trình Review Rounds.</p>
+                                </div>
+                            </div>
+
+                            <!-- Submission Table -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-800">
+                                        <tr>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Loại tài liệu</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Tên file</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Ngày nộp</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Trạng thái</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Tải về</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                        @if (Model.Submissions.Any())
                                         {
-                                            <option value="@s" selected>@s</option>
-                                        }
-                                        else if (Model == null && s == ProjectStatus.Draft)
-                                        {
-                                            <option value="@s" selected>@s</option>
+                                            foreach (var sub in Model.Submissions.OrderByDescending(s => s.SubmittedAt))
+                                            {
+                                                var statusColor = sub.Status switch {
+                                                    SubmissionStatus.OnTime => "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30",
+                                                    SubmissionStatus.Late => "text-amber-600 bg-amber-50 dark:bg-amber-900/30",
+                                                    SubmissionStatus.Replaced => "text-slate-600 bg-slate-50 dark:bg-slate-900/30",
+                                                    _ => "text-slate-600 bg-slate-50 dark:bg-slate-900/30"
+                                                };
+                                                <tr>
+                                                    <td class="py-4 px-4 font-medium text-slate-900 dark:text-white">@sub.DocumentName</td>
+                                                    <td class="py-4 px-4 text-slate-600 dark:text-slate-400">@sub.FileName</td>
+                                                    <td class="py-4 px-4 text-slate-500 dark:text-slate-400">@sub.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td class="py-4 px-4">
+                                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold @statusColor uppercase tracking-wider">@sub.Status</span>
+                                                    </td>
+                                                    <td class="py-4 px-4">
+                                                        <a href="@sub.FileUrl" target="_blank" class="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
+                                                            <span class="material-symbols-outlined text-[20px]">download</span>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            }
                                         }
                                         else
                                         {
-                                            <option value="@s">@s</option>
+                                            <tr>
+                                                <td colspan="5" class="py-10 text-center text-slate-500 italic">Nhóm chưa nộp tài liệu nào.</td>
+                                            </tr>
                                         }
-                                    }
-                                </select>
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
-
-                        @* Row 2: Project Title + Major (side by side) *@
-                        <div class="grid grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Project Title</label>
-                                <input type="text" name="ProjectName" value="@(Model?.ProjectName ?? "")"
-                                       placeholder="Enter project title..."
-                                       class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
-                            </div>
-                            <div>
-                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Major</label>
-                                @if (isNew)
-                                {
-                                    <select name="MajorID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                        <option value="1">Software Engineering</option>
-                                        <option value="2">Software Testing</option>
-                                    </select>
-                                }
-                                else
-                                {
-                                    <input type="text" value="@(Model?.MajorName ?? "—")" disabled
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
-                                }
-                            </div>
-                        </div>
-
-                        @* Description *@
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label>
-                            <textarea name="Description" rows="4"
-                                      placeholder="Describe the project scope and objectives..."
-                                      class="w-full border border-slate-200 bg-white rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none">@(Model?.Description ?? "")</textarea>
-                        </div>
-
                     </div>
-
-                    @* Action Buttons — always at bottom of form *@
-                    <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
-                        <a asp-action="Projects"
-                           class="px-6 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all no-underline">
-                            Cancel
-                        </a>
-                        <button type="submit"
-                                class="flex items-center gap-2 px-8 py-2.5 bg-[#F37021] hover:bg-[#d55e16] hover:-translate-y-0.5 active:scale-95 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg hover:shadow-orange-500/40 shadow-orange-500/20 transition-all duration-200">
-                            <span class="material-symbols-outlined text-[18px]">@(isNew ? "add" : "save")</span>
-                            @(isNew ? "Create Project" : "Save Changes")
-                        </button>
-                    </div>
-                </form>
-            </div>
-
-            @* ── TEAM MEMBERS CARD ─── *@
-            <div id="teamMembersCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                        <span class="material-symbols-outlined text-primary text-[18px]">group</span>
-                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Team Members</h2>
-                    </div>
-                    <span id="memberCount" class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full text-[11px] font-bold">@memberCount Members</span>
                 </div>
 
-                @if (isNew)
-                {
-                    @* CREATE MODE: lock state — can't add members before project exists *@
-                    <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
-                        <div class="flex items-center gap-3 max-w-xl opacity-50 pointer-events-none select-none">
-                            <div class="relative flex-1">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
-                                <input type="text" placeholder="Search by MSSV or name..." disabled
-                                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white cursor-not-allowed placeholder:text-slate-300" />
-                            </div>
-                            <button type="button" disabled
-                                    class="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-slate-200 text-slate-400 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-not-allowed">
-                                <span class="material-symbols-outlined text-[16px]">person_add</span>
-                                Add Member
-                            </button>
+                <!-- Right Column - Timeline & Reviewers -->
+                <div class="space-y-6">
+                    <!-- Review Timeline Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">timeline</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Review Timeline</h2>
                         </div>
-                        <div class="mt-3 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
-                            <span class="material-symbols-outlined text-[16px]">lock</span>
-                            Create the project first, then you can assign team members.
-                        </div>
-                    </div>
 
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Student ID</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="4" class="py-10 text-center text-sm text-slate-400">
-                                        No members yet — save the project first.
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                }
-                else
-                {
-                    @* EDIT MODE: fully interactive *@
+                        <div class="space-y-4">
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                <div class="relative pl-3">
+                                    <!-- Vertical Line -->
+                                    <div class="absolute left-[17px] top-2 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 z-0"></div>
 
-                    @* Toast notification *@
-                    <div id="memberToast" class="hidden mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"></div>
-
-                    @* Search + Add row *@
-                    <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
-                        <div class="flex items-center gap-3 max-w-xl">
-                            <div class="relative flex-1">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">search</span>
-                                <input id="studentSearchInput" type="text"
-                                       placeholder="Search by MSSV or name..."
-                                       autocomplete="off"
-                                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-300" />
-                                <div id="searchResults"
-                                     class="hidden absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
-                                </div>
-                            </div>
-                            <button id="addMemberBtn" type="button"
-                                    class="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-[#F37021] hover:bg-[#d55e16] hover:-translate-y-0.5 active:scale-95 text-white rounded-lg text-xs font-bold transition-all duration-200 uppercase tracking-wider shadow-md hover:shadow-lg hover:shadow-orange-500/40 shadow-orange-500/20 whitespace-nowrap">
-                                <span class="material-symbols-outlined text-[16px]">person_add</span>
-                                Add Member
-                            </button>
-                        </div>
-                        <p class="text-[11px] text-slate-400 mt-2">
-                            Type ≥ 2 characters to search. First added member becomes <span class="font-bold text-primary">Leader</span> automatically.
-                        </p>
-                    </div>
-
-                    <!-- Members Table -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-slate-50 border-b border-slate-200">
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Student ID</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
-                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="memberTableBody" class="divide-y divide-slate-100">
-                                @if (Model != null && Model.Members.Any())
-                                {
-                                    @foreach (var member in Model.Members)
+                                    @foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
                                     {
-                                        var initials = string.Concat(member.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
-                                        var isLeader = member.RoleInGroup == GroupRole.Leader;
-                                        var roleSelectClass = isLeader
-                                            ? "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20"
-                                            : "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100";
-                                        <tr id="row-@member.UserID" class="group hover:bg-slate-50/70 transition-colors">
-                                            <td class="py-4 px-6 text-sm font-semibold text-primary">@member.UserID</td>
-                                            <td class="py-4 px-6">
-                                                <div class="flex items-center gap-2.5">
-                                                    <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">@initials</div>
-                                                    <span class="text-sm font-semibold text-slate-800">@member.FullName</span>
+                                        var isCompleted = round.Status == RoundStatus.Completed || round.EndDate < DateTime.Now;
+                                        var isActive = round.Status == RoundStatus.Ongoing || (round.StartDate <= DateTime.Now && round.EndDate >= DateTime.Now);
+                                        
+                                        var dotClass = isCompleted ? "bg-emerald-500 ring-emerald-100 dark:ring-emerald-900/30" : 
+                                                       isActive ? "bg-blue-500 ring-blue-100 dark:ring-blue-900/30 animate-pulse" : 
+                                                       "bg-slate-300 dark:bg-slate-700 ring-slate-100 dark:ring-slate-800";
+                                        
+                                        var statusText = isCompleted ? "COMPLETED" : isActive ? "IN PROGRESS" : "UPCOMING";
+                                        var statusClass = isCompleted ? "text-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20" : 
+                                                          isActive ? "text-blue-600 bg-blue-50/50 dark:bg-blue-900/20" : 
+                                                          "text-slate-500 bg-slate-50/50 dark:bg-slate-900/20";
+
+                                        <div class="relative z-10 flex gap-4 pb-8 last:pb-0">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-2.5 h-2.5 rounded-full @dotClass ring-[6px] shadow-sm mt-1.5 relative ml-[1px]"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none pt-1">Vòng @round.RoundNumber (@round.RoundType)</p>
+                                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5">
+                                                            @(isCompleted ? $"Kết thúc: {round.EndDate:dd/MM/yyyy}" : $"Hạn nộp: {round.SubmissionDeadline:dd/MM/yyyy}")
+                                                        </p>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold @statusClass uppercase tracking-widest px-2 py-0.5 rounded border border-current opacity-70">
+                                                        @statusText
+                                                    </span>
                                                 </div>
-                                            </td>
-                                            <td class="py-4 px-6">
-                                                <select onchange="updateRole('@member.UserID', this)" class="@roleSelectClass">
-                                                    @if (isLeader)
-                                                    {
-                                                        <option value="Leader" selected>Leader</option>
-                                                        <option value="Member">Member</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        <option value="Leader">Leader</option>
-                                                        <option value="Member" selected>Member</option>
-                                                    }
-                                                </select>
-                                            </td>
-                                            <td class="py-4 px-6 text-right">
-                                                <button onclick="removeMember('@member.UserID')"
-                                                        class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Remove">
-                                                    <span class="material-symbols-outlined text-[18px]">person_remove</span>
-                                                </button>
-                                            </td>
-                                        </tr>
+                                            </div>
+                                        </div>
                                     }
-                                }
-                                else
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-slate-100 dark:border-slate-800"></div>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900 dark:text-white text-sm">Chưa có lộ trình</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Học kỳ này chưa thiết lập các vòng Review.</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Reviewer Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">assignment_ind</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Reviewer theo Vòng</h2>
+                        </div>
+
+                        <div class="space-y-4">
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
                                 {
-                                    <tr id="emptyRow">
-                                        <td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td>
-                                    </tr>
+                                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
+                                        <div class="absolute top-0 right-0 w-16 h-16 bg-[#F37021]/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Vòng @round.RoundNumber (@round.RoundType)</span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">@round.Status</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-slate-500 italic">
+                                            <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                                            <span>Chưa phân công hội đồng...</span>
+                                        </div>
+                                    </div>
                                 }
-                            </tbody>
-                        </table>
-                    </div>
-                }
-            </div>
-
-        </div>
-
-        @* RIGHT COLUMN: Sidebar *@
-        <div class="space-y-6 sticky top-24">
-
-            @* Supervisor Card *@
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="material-symbols-outlined text-primary text-[18px]">supervisor_account</span>
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Supervisor</h3>
-                </div>
-                @if (!isNew && !string.IsNullOrEmpty(Model?.SupervisorName))
-                {
-                    var supInitials = string.Concat(Model.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
-                    <div class="flex items-center gap-3">
-                        <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">@supInitials</div>
-                        <div>
-                            <p class="text-sm font-bold text-slate-900">@Model.SupervisorName</p>
-                            <p class="text-xs text-slate-400">@Model.MajorName</p>
+                            }
+                            else
+                            {
+                                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border-l-4 border-slate-300">
+                                    <p class="text-sm text-slate-500 italic">Thông tin hội đồng chấm sẽ xuất hiện khi các vòng Review bắt đầu.</p>
+                                </div>
+                            }
                         </div>
                     </div>
-                }
-                else
-                {
-                    <div class="flex items-center gap-3 py-1">
-                        <div class="size-10 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[20px]">person_off</span>
-                        </div>
-                        <p class="text-sm text-slate-400 italic">@(isNew ? "Available after project creation" : "No supervisor assigned")</p>
-                    </div>
-                }
-                <a asp-action="AssignSupervisor"
-                   class="mt-4 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 rounded-lg transition-all no-underline @(isNew ? "opacity-40 pointer-events-none" : "")">
-                    <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                    @(string.IsNullOrEmpty(Model?.SupervisorName) ? "Assign Supervisor" : "Change Supervisor")
-                </a>
-            </div>
-
-                <!-- Project Info -->
-            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-                <div class="flex items-center gap-2 mb-4">
-                    <span class="material-symbols-outlined text-primary text-[18px]">info</span>
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Details</h3>
-                </div>
-                <div class="space-y-3">
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-bold">Major</p>
-                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.MajorName ?? "—")</p>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-bold">Semester</p>
-                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.SemesterCode ?? "—")</p>
-                    </div>
-                    <div>
-                        <p class="text-[11px] text-slate-400 uppercase font-bold">Created</p>
-                        <p class="text-sm font-semibold text-slate-800 mt-0.5">
-                            @(isNew ? "—" : Model!.CreatedAt.ToString("MMM dd, yyyy"))
-                        </p>
-                    </div>
                 </div>
             </div>
-
-            @* Notice Card *@
-            <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
-                <span class="material-symbols-outlined text-amber-500 text-[20px] flex-shrink-0 mt-0.5">info</span>
-                <div>
-                    <p class="text-xs font-bold text-amber-700 mb-1">Notice</p>
-                    <p class="text-[11px] text-amber-600 leading-relaxed">
-                        @if (isNew)
-                        {
-                            <text>After creating the project, you can assign supervisors and add team members.</text>
-                        }
-                        else
-                        {
-                            <text>Changes to approved projects must be authorized by the HOD board before taking effect.</text>
-                        }
-                    </p>
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
-
-@* ── JAVASCRIPT: Member management — only in edit mode ─── *@
-@if (!isNew && Model != null)
-{
-    <script>
-        const PROJECT_ID = @Model.ProjectID;
-        const ANTIFORGERY_TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
-
-        let selectedStudent = null;
-        let searchTimeout = null;
-        let currentMemberCount = @memberCount;
-
-        // ── Toast ──────────────────────────────────────────
-        function showToast(message, isSuccess) {
-            const toast = document.getElementById('memberToast');
-            toast.className = `mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-red-50 text-red-600 border border-red-200'}`;
-            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isSuccess ? 'check_circle' : 'error'}</span>${message}`;
-            toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            setTimeout(() => { toast.className = 'hidden'; }, 4000);
-        }
-
-        function updateMemberCount(delta) {
-            currentMemberCount += delta;
-            document.getElementById('memberCount').textContent = `${currentMemberCount} Members`;
-        }
-
-        // ── Search Input ────────────────────────────────────
-        const searchInput = document.getElementById('studentSearchInput');
-        const searchResultsEl = document.getElementById('searchResults');
-
-        searchInput.addEventListener('input', function () {
-            clearTimeout(searchTimeout);
-            const q = this.value.trim();
-            selectedStudent = null;
-            if (q.length < 2) { searchResultsEl.classList.add('hidden'); return; }
-            searchTimeout = setTimeout(() => doSearch(q), 300);
-        });
-
-        searchInput.addEventListener('keydown', e => {
-            if (e.key === 'Escape') searchResultsEl.classList.add('hidden');
-        });
-
-        document.addEventListener('click', e => {
-            if (!searchInput.contains(e.target) && !searchResultsEl.contains(e.target))
-                searchResultsEl.classList.add('hidden');
-        });
-
-        async function doSearch(q) {
-            const res = await fetch(`/HOD/SearchStudents?q=${encodeURIComponent(q)}`);
-            const data = await res.json();
-            searchResultsEl.innerHTML = '';
-            if (!data.length) {
-                searchResultsEl.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No students found.</div>';
-            } else {
-                data.forEach(s => {
-                    const item = document.createElement('div');
-                    item.className = 'flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0';
-                    const initials = s.fullName.split(' ').slice(-2).map(w => w[0]?.toUpperCase() ?? '').join('');
-                    item.innerHTML = `
-                        <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">${initials}</div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-sm font-semibold text-slate-800 truncate">${s.fullName}</p>
-                            <p class="text-[11px] text-slate-400">${s.userID} · ${s.email ?? ''}</p>
-                        </div>`;
-                    item.addEventListener('click', () => {
-                        selectedStudent = s;
-                        searchInput.value = `${s.fullName} (${s.userID})`;
-                        searchResultsEl.classList.add('hidden');
-                    });
-                    searchResultsEl.appendChild(item);
-                });
-            }
-            searchResultsEl.classList.remove('hidden');
-        }
-
-        // ── Add Member ──────────────────────────────────────
-        document.getElementById('addMemberBtn').addEventListener('click', async () => {
-            if (!selectedStudent) {
-                showToast('Please select a student from the search results first.', false);
-                searchInput.focus();
-                return;
-            }
-            const btn = document.getElementById('addMemberBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Adding...';
-
-            const res = await fetch(`/HOD/AddMember?projectId=${PROJECT_ID}&userId=${encodeURIComponent(selectedStudent.userID)}`, {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
-            });
-            const data = await res.json();
-
-            btn.disabled = false;
-            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">person_add</span> Add Member';
-
-            if (data.success) {
-                appendMemberRow(selectedStudent);
-                searchInput.value = '';
-                selectedStudent = null;
-                showToast(data.message, true);
-            } else {
-                showToast(data.message, false);
-            }
-        });
-
-        function appendMemberRow(student) {
-            const tbody = document.getElementById('memberTableBody');
-            const emptyRow = document.getElementById('emptyRow');
-            if (emptyRow) emptyRow.remove();
-
-            const initials = student.fullName.split(' ').slice(-2).map(w => w[0]?.toUpperCase() ?? '').join('');
-            const isFirst = currentMemberCount === 0;
-            const role = isFirst ? 'Leader' : 'Member';
-            const roleClass = isFirst
-                ? 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20'
-                : 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100';
-
-            const tr = document.createElement('tr');
-            tr.id = `row-${student.userID}`;
-            tr.className = 'group hover:bg-slate-50/70 transition-colors';
-            tr.innerHTML = `
-                <td class="py-4 px-6 text-sm font-semibold text-primary">${student.userID}</td>
-                <td class="py-4 px-6">
-                    <div class="flex items-center gap-2.5">
-                        <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">${initials}</div>
-                        <span class="text-sm font-semibold text-slate-800">${student.fullName}</span>
-                    </div>
-                </td>
-                <td class="py-4 px-6">
-                    <select onchange="updateRole('${student.userID}', this)" class="${roleClass}">
-                        <option value="Leader" ${isFirst ? 'selected' : ''}>Leader</option>
-                        <option value="Member" ${!isFirst ? 'selected' : ''}>Member</option>
-                    </select>
-                </td>
-                <td class="py-4 px-6 text-right">
-                    <button onclick="removeMember('${student.userID}')"
-                            class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Remove">
-                        <span class="material-symbols-outlined text-[18px]">person_remove</span>
-                    </button>
-                </td>`;
-            tbody.appendChild(tr);
-            updateMemberCount(1);
-        }
-
-        // ── Remove Member ───────────────────────────────────
-        async function removeMember(userId) {
-            if (!confirm('Remove this member from the project?')) return;
-            const res = await fetch(`/HOD/RemoveMember?projectId=${PROJECT_ID}&userId=${encodeURIComponent(userId)}`, {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
-            });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById(`row-${userId}`)?.remove();
-                updateMemberCount(-1);
-                if (currentMemberCount === 0) {
-                    document.getElementById('memberTableBody').innerHTML =
-                        '<tr id="emptyRow"><td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td></tr>';
-                }
-                showToast('Member removed.', true);
-            } else {
-                showToast('Failed to remove member.', false);
-            }
-        }
-
-        // ── Update Role ─────────────────────────────────────
-        async function updateRole(userId, selectEl) {
-            const newRole = selectEl.value;
-            const prevValue = newRole === 'Leader' ? 'Member' : 'Leader';
-
-            const res = await fetch(`/HOD/UpdateMemberRole?projectId=${PROJECT_ID}&userId=${encodeURIComponent(userId)}&role=${newRole}`, {
-                method: 'POST',
-                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                const isLeader = newRole === 'Leader';
-                selectEl.className = `text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${
-                    isLeader ? 'bg-primary/10 text-primary border-primary/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`;
-                showToast(`Role updated to ${newRole}.`, true);
-            } else {
-                selectEl.value = prevValue;
-                showToast(data.message, false);
-            }
-        }
-    </script>
-}

@@ -37,7 +37,9 @@ public class MappingProfile : Profile
                     FullName = m.User != null ? m.User.FullName : string.Empty,
                     RoleInGroup = m.RoleInGroup,
                     GroupName = g.GroupName
-                })).ToList()));
+                })).ToList()))
+            .ForMember(dest => dest.StudentName, opt => opt.MapFrom(src => 
+                src.ProjectGroups.FirstOrDefault() != null ? src.ProjectGroups.FirstOrDefault().GroupName : null));
 
         // Project -> ProjectDetailDto
         CreateMap<Project, ProjectDetailDto>()
@@ -54,7 +56,13 @@ public class MappingProfile : Profile
                     FullName = m.User != null ? m.User.FullName : string.Empty,
                     RoleInGroup = m.RoleInGroup,
                     GroupName = g.GroupName
-                })).ToList()));
+                })).ToList()))
+            .ForMember(dest => dest.Submissions, opt => opt.MapFrom(src => 
+                src.ProjectGroups.SelectMany(g => g.Submissions).ToList()));
+
+        // Submission mapping
+        CreateMap<Submission, SubmissionDto>()
+            .ForMember(dest => dest.DocumentName, opt => opt.MapFrom(src => src.Requirement.DocumentName));
 
         // ReviewRound mapping
         CreateMap<ReviewRound, ReviewRoundDto>()
@@ -65,5 +73,6 @@ public class MappingProfile : Profile
 
         // SubmissionRequirement mapping
         CreateMap<SubmissionRequirement, SubmissionRequirementDto>().ReverseMap();
+
     }
 }

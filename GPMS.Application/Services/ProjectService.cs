@@ -20,6 +20,7 @@ public class ProjectService : IProjectService
     private readonly IEvaluationRepository _evaluationRepository;
     private readonly ISemesterRepository _semesterRepository;
     private readonly IFileService _fileService;
+    private readonly IReviewRoundService _reviewRoundService;
     private readonly IMapper _mapper;
 
     public ProjectService(
@@ -31,6 +32,7 @@ public class ProjectService : IProjectService
         IEvaluationRepository evaluationRepository,
         ISemesterRepository semesterRepository,
         IFileService fileService,
+        IReviewRoundService reviewRoundService,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
@@ -41,6 +43,7 @@ public class ProjectService : IProjectService
         _evaluationRepository = evaluationRepository;
         _semesterRepository = semesterRepository;
         _fileService = fileService;
+        _reviewRoundService = reviewRoundService;
         _mapper = mapper;
     }
 
@@ -147,7 +150,12 @@ public class ProjectService : IProjectService
         var project = await _projectRepository.GetDetailAsync(projectId);
         if (project == null) return null;
 
-        return _mapper.Map<ProjectDetailDto>(project);
+        var dto = _mapper.Map<ProjectDetailDto>(project);
+        
+        // Populate Review Rounds for the semester
+        dto.ReviewRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID)).ToList();
+
+        return dto;
     }
 
     public async Task CreateProjectAsync(CreateProjectDto dto)
@@ -186,6 +194,70 @@ public class ProjectService : IProjectService
 
         await _projectRepository.UpdateAsync(project);
         await _projectRepository.SaveChangesAsync();
+    }
+
+    public async Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId)
+    {
+        var allProjects = semesterId.HasValue
+            ? await _projectRepository.GetBySemesterWithDetailsAsync(semesterId.Value)
+            : await _projectRepository.GetAllWithDetailsAsync();
+
+        var lecturers = await _userRepository.GetByRoleAsync(RoleName.Lecturer);
+
+        var dto = new SupervisorAssignmentDto
+        {
+            UnassignedProjects = _mapper.Map<List<ProjectDto>>(allProjects.Where(p => !p.ProjectSupervisors.Any())),
+            AssignedProjects = _mapper.Map<List<ProjectDto>>(allProjects.Where(p => p.ProjectSupervisors.Any())),
+            Lecturers = lecturers.Select(l => {
+                var primaryExpertise = l.LecturerExpertises.OrderByDescending(le => le.IsPrimary).FirstOrDefault();
+                return new LecturerWorkloadDto
+                {
+                    LecturerID = l.UserID,
+                    FullName = l.FullName,
+                    Level = primaryExpertise?.Level.ToString() ?? "Basic",
+                    Specialty = primaryExpertise?.Expertise?.ExpertiseName ?? "General",
+                    CurrentWorkload = allProjects.Count(p => p.ProjectSupervisors.Any(ps => ps.LecturerID == l.UserID)),
+                    MaxWorkload = 5
+                };
+            }).ToList()
+        };
+
+        return dto;
+    }
+
+    public async Task<(bool success, string message)> AssignSupervisorAsync(int projectId, string lecturerId, string? assignedBy)
+    {
+        var project = await _projectRepository.GetDetailAsync(projectId);
+        if (project == null) return (false, "Project not found.");
+
+        var lecturer = await _userRepository.GetByIdAsync(lecturerId);
+        if (lecturer == null) return (false, "Lecturer not found.");
+
+        // Check if lecturer is actually a lecturer
+        if (!lecturer.UserRoles.Any(r => r.RoleName == RoleName.Lecturer))
+            return (false, "User is not a lecturer.");
+
+        // Remove existing main supervisors
+        var existingMain = project.ProjectSupervisors.Where(ps => ps.Role == ProjectRole.Main).ToList();
+        foreach (var ps in existingMain)
+        {
+            project.ProjectSupervisors.Remove(ps);
+        }
+
+        // Add new main supervisor
+        project.ProjectSupervisors.Add(new ProjectSupervisor
+        {
+            ProjectID = projectId,
+            LecturerID = lecturerId,
+            Role = ProjectRole.Main,
+            AssignedAt = DateTime.UtcNow,
+            AssignedBy = assignedBy
+        });
+
+        await _projectRepository.UpdateAsync(project);
+        await _projectRepository.SaveChangesAsync();
+
+        return (true, "Supervisor assigned successfully.");
     }
 
     public async Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null)

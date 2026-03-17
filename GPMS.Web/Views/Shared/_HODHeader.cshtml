@@ -21,24 +21,110 @@
 
         <!-- Right Section: Actions & Profile -->
         <div class="flex items-center gap-3 md:gap-5">
-            <!-- Semester Selector -->
-            <div class="hidden md:flex items-center gap-3 bg-white border rounded-xl border-slate-200 px-4 py-1.5">
-                <span class="text-xs font-bold text-dark-500 uppercase tracking-widest">HỌC KỲ</span>
-                <div class="w-px h-4 bg-dark-300"></div>
-                <div class="relative group cursor-pointer">
-                    <select class="bg-transparent text-sm font-bold text-primary-600 outline-none appearance-none pr-6 cursor-pointer group-hover:text-primary-500 transition-colors z-10 relative">
-                        @if (activeSemester != null)
+            <!-- Semester Selector (Custom Premium Dropdown) -->
+            <div class="relative hidden md:block" id="semester-dropdown">
+                <button type="button" 
+                        id="semester-btn"
+                        class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 hover:border-primary-400 hover:shadow-md transition-all duration-200 group">
+                    <div class="flex items-center gap-3 h-full">
+                        <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 pr-3">Học Kỳ</span>
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-sm font-bold text-primary-600">
+                                @(activeSemester?.SemesterCode ?? "N/A") - @(activeSemester?.AcademicYear ?? "N/A")
+                            </span>
+                            <span class="material-symbols-outlined text-primary-500 text-lg transition-transform duration-300 group-hover:rotate-180">expand_more</span>
+                        </div>
+                    </div>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div id="semester-menu" 
+                     class="absolute top-[calc(100%+8px)] right-0 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 hidden z-50 origin-top-right transform transition-all duration-200">
+                    
+                    <div class="px-5 py-2 mb-2 border-b border-slate-50">
+                        <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Chọn học kỳ làm việc</span>
+                    </div>
+
+                    <div class="max-h-[240px] overflow-y-auto px-2 custom-scrollbar">
+                        @foreach (var sem in semesters.OrderByDescending(s => s.StartDate))
                         {
-                            <option>@activeSemester.SemesterCode - @activeSemester.AcademicYear</option>
+                            <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-50 transition-all group/item @(sem.Status == GPMS.Domain.Enums.SemesterStatus.Active ? "bg-primary-50/50" : "")">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 @(sem.Status == GPMS.Domain.Enums.SemesterStatus.Active ? "bg-primary-500 text-white" : "bg-slate-100 text-slate-400")">
+                                    <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-sm font-bold text-slate-700 group-hover/item:text-primary-600 truncate">@sem.SemesterCode - @sem.AcademicYear</span>
+                                        @if (sem.Status == GPMS.Domain.Enums.SemesterStatus.Active)
+                                        {
+                                            <span class="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                                        }
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-[11px] text-slate-400 font-medium">@sem.StartDate.ToString("dd/MM/yyyy")</span>
+                                        <span class="text-[10px] text-slate-300">•</span>
+                                        <span class="text-[11px] text-slate-400 font-medium">@sem.EndDate.ToString("dd/MM/yyyy")</span>
+                                    </div>
+                                </div>
+                            </a>
                         }
-                        else
-                        {
-                            <option>Chưa cấu hình học kỳ</option>
-                        }
-                    </select>
-                    <span class="material-symbols-outlined absolute right-0 top-1/2 -translate-y-1/2 pointer-events-none text-primary-500 text-base transition-transform group-hover:translate-y-[-40%]">arrow_drop_down</span>
+                    </div>
+
+                    <div class="mt-3 px-4 pt-3 border-t border-slate-50 flex items-center justify-center">
+                        <a href="#" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1.5 group/manage">
+                            Quản lý học kỳ
+                            <span class="material-symbols-outlined text-sm group-hover/manage:translate-x-0.5 transition-transform">arrow_forward</span>
+                        </a>
+                    </div>
                 </div>
             </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', () => {
+                    const btn = document.getElementById('semester-btn');
+                    const menu = document.getElementById('semester-menu');
+                    const dropdown = document.getElementById('semester-dropdown');
+
+                    if (btn && menu) {
+                        btn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const isHidden = menu.classList.contains('hidden');
+                            
+                            // Close other menus if any
+                            menu.classList.toggle('hidden');
+                            
+                            if (!isHidden) {
+                                menu.classList.add('animate-out', 'fade-out', 'zoom-out-95');
+                            } else {
+                                menu.classList.remove('animate-out', 'fade-out', 'zoom-out-95');
+                                menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
+                            }
+                        });
+
+                        document.addEventListener('click', (e) => {
+                            if (!dropdown.contains(e.target)) {
+                                menu.classList.add('hidden');
+                            }
+                        });
+                    }
+                });
+            </script>
+
+            <style>
+                #semester-menu.animate-in {
+                    display: block !important;
+                    animation: enter 0.2s ease-out;
+                }
+                @@keyframes enter {
+                    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
+                    to { opacity: 1; transform: translateY(0) scale(1); }
+                }
+
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #CBD5E1; }
+            </style>
 
             <div class="h-8 w-px bg-dark-200 dark:bg-dark-700 hidden sm:block mx-1"></div>
 

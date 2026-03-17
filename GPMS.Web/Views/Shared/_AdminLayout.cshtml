@@ -188,7 +188,8 @@
 
                 <span class="sidebar-section-label">System</span>
 
-                <a href="#" class="sidebar-nav-item">
+                <a asp-controller="Admin" asp-action="SystemLogs"
+                   class="sidebar-nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" && ViewContext.RouteData.Values["action"]?.ToString() == "SystemLogs" ? "active" : "")">
                     <span class="material-symbols-outlined">history</span>
                     <span>System Logs</span>
                 </a>
@@ -304,6 +305,20 @@
             <main class="flex-1 overflow-y-auto main-content-area p-8">
                 @RenderBody()
             </main>
+            <div id="chatbot-container">
+                <iframe id="chatbot-iframe"
+                        src="https://gpms-bot-supporter-fe.onrender.com/"
+                        style="position: fixed;
+                               bottom: 0;
+                               right: 0;
+                               width: 60px;
+                               height: 60px;
+                               border: none;
+                               z-index: 9999;
+                               border-radius: 50%;
+                               overflow: hidden;">
+                </iframe>
+            </div>
         </div>
     </div>
 
@@ -315,6 +330,20 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
 
     <script>
+        window.addEventListener("message", function (event) {
+            if (!event.data || typeof event.data !== "object") return;
+            const iframe = document.getElementById("chatbot-iframe");
+            if (!iframe) return;
+            if (event.data.type === "chatbot-open") {
+                iframe.style.width = "400px";
+                iframe.style.height = "500px";
+                iframe.style.borderRadius = "12px";
+            } else if (event.data.type === "chatbot-close") {
+                iframe.style.width = "60px";
+                iframe.style.height = "60px";
+                iframe.style.borderRadius = "50%";
+            }
+        }, false);
         document.addEventListener('DOMContentLoaded', function () {
             const overlay = document.getElementById('loading-overlay');
             const sidebar = document.getElementById('admin-sidebar');
@@ -338,7 +367,7 @@
             // Loading overlay on form submit
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function () {
-                    if (this.checkValidity()) {
+                    if (this.checkValidity() && !this.classList.contains('no-spinner')) {
                         overlay.classList.add('active');
                     }
                 });
@@ -348,7 +377,7 @@
             document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"])').forEach(link => {
                 link.addEventListener('click', function (e) {
                     const href = this.getAttribute('href');
-                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
+                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey && !this.classList.contains('no-spinner')) {
                         setTimeout(() => overlay.classList.add('active'), 50);
                     }
                 });

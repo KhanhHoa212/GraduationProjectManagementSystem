@@ -107,7 +107,6 @@
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ ĐỀ TÀI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">TÊN ĐỀ TÀI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">SỐ NHÓM</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">NGÀY TẠO</th>
                         <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">THAO TÁC</th>
@@ -116,9 +115,7 @@
                 <tbody class="divide-y divide-slate-100">
                     @if (!Model.Any())
                     {
-                        <tr>
-                            <td colspan="7" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
-                        </tr>
+                            <td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
                     }
                     else
                     {
@@ -138,9 +135,6 @@
                                 <td class="px-6 py-5">
                                     <span class="text-slate-600 font-medium whitespace-nowrap">@(item.MajorName ?? "-")</span>
                                 </td>
-                                <td class="px-6 py-5 text-center">
-                                    <span class="font-bold text-slate-800">@item.GroupCount.ToString("D2")</span>
-                                </td>
                                 <td class="px-6 py-5">
                                     @{
                                         var badgeClass = item.Status switch {
@@ -155,10 +149,13 @@
                                 <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td class="px-6 py-5 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="View/Edit">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="Xem chi tiết">
                                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                                         </a>
-                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
+                                        <a href="/HOD/EditProject/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Chỉnh sửa">
+                                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                                        </a>
+                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>

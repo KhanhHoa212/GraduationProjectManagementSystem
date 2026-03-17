@@ -85,7 +85,10 @@
             function updateStatus() {
                 const startStr = startDateInput.value;
                 const endStr = endDateInput.value;
-                
+                        if (start > end) {
+            alert("Start date must be before End date");
+            return;
+        }
                 if (!startStr || !endStr) return;
 
                 const start = new Date(startStr);

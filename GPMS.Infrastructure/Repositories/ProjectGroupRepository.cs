@@ -47,6 +47,15 @@ public class ProjectGroupRepository : IProjectGroupRepository
         return Task.CompletedTask;
     }
 
+    public async Task<IEnumerable<ProjectGroup>> GetAllWithDetailsAsync() =>
+        await _context.ProjectGroups
+            .Include(g => g.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .ToListAsync();
+
     public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
         await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
 
