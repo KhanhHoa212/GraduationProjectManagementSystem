@@ -12,11 +12,36 @@
             <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">User Management</h1>
             <p class="text-slate-500 text-sm mt-1">Manage access, roles, and status for students, lecturers, and staff.</p>
         </div>
-        <a asp-action="Create"
-           class="flex items-center gap-2 rounded-xl bg-primary hover:bg-orange-600 text-white px-5 py-2.5 text-sm font-bold transition-all shadow-lg shadow-primary/25 no-underline">
-            <span class="material-symbols-outlined text-[18px]">add</span>
-            <span>Add New User</span>
-        </a>
+        
+        <div class="flex flex-wrap gap-2">
+            <!-- Export Button -->
+            <a asp-action="ExportUsers" 
+               asp-route-search='@ViewData["CurrentSearch"]' 
+               asp-route-role='@ViewData["CurrentRole"]' 
+               asp-route-status='@ViewData["CurrentStatus"]'
+               class="no-spinner flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 px-5 py-2.5 text-sm font-bold transition-all hover:bg-slate-50 no-underline shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">download</span>
+                <span>Export Excel</span>
+            </a>
+            
+            <!-- Import Button + Hidden Form -->
+            <button onclick="document.getElementById('importFile').click()"
+                    class="flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 px-5 py-2.5 text-sm font-bold transition-all hover:bg-slate-50 shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">upload_file</span>
+                <span>Import Excel</span>
+            </button>
+
+            <form asp-action="ImportUsers" method="post" enctype="multipart/form-data" id="importForm" class="hidden">
+                @Html.AntiForgeryToken()
+                <input type="file" name="excelFile" id="importFile" onchange="document.getElementById('importForm').submit()" accept=".xlsx,.xls" />
+            </form>
+
+            <a asp-action="Create"
+               class="flex items-center gap-2 rounded-xl bg-primary hover:bg-orange-600 text-white px-5 py-2.5 text-sm font-bold transition-all shadow-lg shadow-primary/25 no-underline">
+                <span class="material-symbols-outlined text-[18px]">add</span>
+                <span>Add New User</span>
+            </a>
+        </div>
     </div>
 
     <!-- Alerts -->

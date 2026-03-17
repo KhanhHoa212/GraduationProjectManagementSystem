@@ -7,7 +7,7 @@ namespace GPMS.Application.Interfaces.Services;
 
 public interface ISemesterService
 {
-    Task<IEnumerable<SemesterDto>> GetAllSemestersAsync();
+    Task<IEnumerable<SemesterDto>> GetAllSemestersAsync(string? search = null, GPMS.Domain.Enums.SemesterStatus? status = null);
     Task<SemesterDto?> GetSemesterByIdAsync(int id);
     Task<string?> CreateSemesterAsync(CreateSemesterDto dto);
     Task<string?> UpdateSemesterAsync(UpdateSemesterDto dto);

@@ -12,53 +12,74 @@
         <p class="text-[#64748b] text-[15px] mt-1">Welcome back to your project workspace. Here is what's happening today.</p>
     </div>
 
-    <!-- Active Projects List -->
-    <div class="space-y-4">
+    <!-- Project Header & Team Section -->
+    <div class="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
         @if (Model.Project == null)
         {
-            <div class="bg-white rounded-2xl p-6 border border-[#e2e8f0] shadow-sm text-center">
-                <p class="text-[#64748b] text-[15px]">You are not assigned to any projects yet.</p>
+            <div class="p-8 text-center">
+                <div class="size-16 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-4">
+                    <span class="material-symbols-outlined text-[32px]">lightbulb</span>
+                </div>
+                <p class="text-[#64748b] text-[15px] font-medium">You are not assigned to any projects yet.</p>
+                <p class="text-[#94a3b8] text-[13px] mt-1">Contact your department head if you believe this is an error.</p>
             </div>
         }
         else
         {
-            <div class="bg-white rounded-2xl p-5 border border-[#e2e8f0] shadow-sm grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <!-- Project Title -->
-                <div class="flex items-start gap-4 md:col-span-1">
-                    <div class="size-10 rounded-full bg-student-blue-light flex items-center justify-center text-student-blue shrink-0">
-                        <span class="material-symbols-outlined text-[20px] filled">lightbulb</span>
+            <!-- Project Top Info -->
+            <div class="p-8 border-b border-[#f1f5f9]">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div class="space-y-3">
+                        <span class="inline-flex items-center px-3 py-1 bg-[#1e293b] text-white text-[12px] font-bold rounded-md tracking-wider uppercase">
+                            Project Code: @(string.IsNullOrEmpty(Model.Project.ProjectCode) ? "N/A" : Model.Project.ProjectCode)
+                        </span>
+                        <h2 class="text-[28px] font-bold text-[#1e3a8a] leading-tight">@Model.Project.ProjectName</h2>
+                        <p class="text-[#64748b] text-[16px] font-medium">Major: @(Model.Project.MajorName ?? "Common")</p>
                     </div>
-                    <div>
-                        <p class="text-[13px] font-medium text-[#64748b] mb-1">Project Title</p>
-                        <h3 class="text-[16px] font-bold text-[#0f172a] leading-snug">@Model.Project.ProjectName</h3>
-                    </div>
-                </div>
-                
-                <!-- Group / Code -->
-                <div class="flex items-start gap-4 md:col-span-1">
-                    <div class="size-10 rounded-full bg-[#faf5ff] flex items-center justify-center text-[#9333ea] shrink-0">
-                        <span class="material-symbols-outlined text-[20px] filled">groups</span>
-                    </div>
-                    <div>
-                        <p class="text-[13px] font-medium text-[#64748b] mb-1">Project Code</p>
-                        <h3 class="text-[16px] font-bold text-[#0f172a]">@(string.IsNullOrEmpty(Model.Project.ProjectCode) ? "N/A" : Model.Project.ProjectCode)</h3>
-                    </div>
-                </div>
 
-                <!-- Supervisor -->
-                <div class="flex items-start gap-4 md:col-span-1 justify-between">
-                    <div class="flex items-start gap-4">
-                        <div class="size-10 rounded-full bg-[#eff6ff] flex items-center justify-center text-[#2563eb] shrink-0">
-                            <span class="material-symbols-outlined text-[20px] filled">person</span>
-                        </div>
-                        <div>
-                            <p class="text-[13px] font-medium text-[#64748b] mb-1">Supervisor</p>
-                            <h3 class="text-[16px] font-bold text-[#0f172a]">@(string.IsNullOrEmpty(Model.Project.SupervisorName) ? "Unassigned" : Model.Project.SupervisorName)</h3>
-                        </div>
+                    <!-- Avatar Stack -->
+                    <div class="flex -space-x-3 overflow-hidden">
+                        @foreach (var member in Model.Project.Members.Take(5))
+                        {
+                            var initials = string.Concat(member.FullName.Split(' ').Select(s => s[0])).ToUpper();
+                            if (initials.Length > 2) initials = initials.Substring(0, 2);
+                            
+                            <div class="size-10 rounded-full border-2 border-white bg-[#f1f5f9] flex items-center justify-center text-[13px] font-bold text-[#475569] shadow-sm cursor-help" title="@member.FullName">
+                                @initials
+                            </div>
+                        }
+                        @if (Model.Project.Members.Count > 5)
+                        {
+                            <div class="size-10 rounded-full border-2 border-white bg-blue-600 flex items-center justify-center text-[12px] font-bold text-white shadow-sm">
+                                +@(Model.Project.Members.Count - 5)
+                            </div>
+                        }
                     </div>
-                    <span class="px-2.5 py-1 @(Model.Project.Status == GPMS.Domain.Enums.ProjectStatus.Active ? "bg-[#dcfce7] text-[#166534]" : "bg-gray-100 text-gray-700") text-xs font-semibold rounded-md tracking-wide self-start shrink-0">
-                        @Model.Project.Status.ToString()
-                    </span>
+                </div>
+            </div>
+
+            <!-- Team Members Grid -->
+            <div class="p-8 bg-slate-50/30">
+                <h3 class="text-[13px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] mb-6">Team Members</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach (var member in Model.Project.Members)
+                    {
+                        var initials = string.Concat(member.FullName.Split(' ').Select(s => s[0])).ToUpper();
+                        if (initials.Length > 2) initials = initials.Substring(0, 2);
+                        var isLeader = member.RoleInGroup == GPMS.Domain.Enums.GroupRole.Leader;
+                        
+                        <div class="bg-white p-4 rounded-xl border border-[#e2e8f0] flex items-center gap-4 hover:shadow-md transition-shadow">
+                            <div class="size-12 rounded-full @(isLeader ? "bg-[#1e3a8a] text-white" : "bg-[#f1f5f9] text-[#475569]") flex items-center justify-center text-[15px] font-bold shrink-0">
+                                @initials
+                            </div>
+                            <div class="min-w-0">
+                                <h4 class="text-[15px] font-bold text-[#1e293b] truncate">@member.FullName</h4>
+                                <p class="text-[13px] font-medium @(isLeader ? "text-orange-500" : "text-[#94a3b8]")">
+                                    @(isLeader ? "Team Leader (You)" : "Member")
+                                </p>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         }
@@ -67,90 +88,89 @@
     <!-- Lower Section Grid -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         <!-- Active Submissions Table -->
-        <div class="lg:col-span-2 bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden">
-            <div class="flex justify-between items-center p-5 border-b border-[#e2e8f0]">
+        <div class="lg:col-span-2 bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden flex flex-col h-[400px]">
+            <div class="flex justify-between items-center p-5 border-b border-[#e2e8f0] flex-shrink-0">
                 <h2 class="text-[16px] font-bold text-[#0f172a]">Active Submissions</h2>
-                <a href="#" class="text-[14px] font-semibold text-[#2563eb] hover:text-[#1d4ed8]">View All</a>
+                <a asp-action="Submissions" asp-controller="Student" class="text-[14px] font-semibold text-[#2563eb] hover:text-[#1d4ed8]">View All</a>
             </div>
             
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-white">
-                        <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Deliverable</th>
-                        <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Due Date</th>
-                        <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Status</th>
-                        <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0] text-right">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[#e2e8f0]">
-                    @if (!Model.ActiveSubmissions.Any())
-                    {
+            <div class="overflow-y-auto flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead class="sticky top-0 z-10 bg-white">
                         <tr>
-                            <td colspan="4" class="py-8 px-5 text-center text-[#64748b] text-[14px]">
-                                No active submissions at this time.
-                            </td>
+                            <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Round</th>
+                            <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Deliverable</th>
+                            <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Due Date</th>
+                            <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0]">Status</th>
+                            <th class="py-3 px-5 text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider border-b border-[#e2e8f0] text-right">Action</th>
                         </tr>
-                    }
-                    else
-                    {
-                        foreach (var item in Model.ActiveSubmissions)
+                    </thead>
+                    <tbody class="divide-y divide-[#e2e8f0]">
+                        @if (!Model.ActiveSubmissions.Any())
                         {
-                            <tr class="hover:bg-[#f8fafc] transition-colors group">
-                                <td class="py-4 px-5">
-                                    <div class="flex items-start gap-3">
-                                        <div class="size-8 rounded bg-[#eff6ff] text-[#2563eb] flex items-center justify-center flex-shrink-0 mt-1">
-                                            <span class="material-symbols-outlined text-[18px]">description</span>
-                                        </div>
-                                        <div>
-                                            <p class="text-[14px] font-bold text-[#0f172a]">@item.DocumentName</p>
-                                            <p class="text-[12px] text-[#64748b]">@(string.IsNullOrEmpty(item.Description) ? "No description provided." : item.Description)</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-5">
-                                    <p class="text-[14px] font-medium text-[#334155]">@item.Deadline.ToString("MMM dd,")</p>
-                                    <p class="text-[14px] font-medium text-[#334155]">@item.Deadline.ToString("yyyy")</p>
-                                </td>
-                                <td class="py-4 px-5">
-                                    @if (item.IsSubmitted)
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#f0fdf4] text-[#16a34a] border border-[#dcfce7]">
-                                            <span class="size-1.5 rounded-full bg-[#16a34a]"></span> Submitted
-                                        </span>
-                                    }
-                                    else if (item.IsLate)
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]">
-                                            <span class="size-1.5 rounded-full bg-[#dc2626]"></span> Late
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#fffbeb] text-[#d97706] border border-[#fef3c7]">
-                                            <span class="size-1.5 rounded-full bg-[#d97706]"></span> Pending
-                                        </span>
-                                    }
-                                </td>
-                                <td class="py-4 px-5 text-right">
-                                    @if (item.IsSubmitted)
-                                    {
-                                        <button class="inline-flex items-center px-4 py-2 text-[#475569] hover:text-[#0f172a] text-[13px] font-semibold transition-colors">
-                                            View
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <button class="inline-flex items-center gap-1.5 px-4 py-2 bg-student-blue hover:bg-blue-800 text-white text-[13px] font-semibold rounded-lg transition-colors">
-                                            <span class="material-symbols-outlined text-[16px]">upload</span>
-                                            Upload
-                                        </button>
-                                    }
+                            <tr>
+                                <td colspan="5" class="py-8 px-5 text-center text-[#64748b] text-[14px]">
+                                    No active submissions at this time.
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            foreach (var item in Model.ActiveSubmissions)
+                            {
+                                <tr class="hover:bg-[#f8fafc] transition-colors group">
+                                    <td class="py-4 px-5">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-[#f1f5f9] text-[#475569] border border-[#e2e8f0]">
+                                            Round @item.RoundNumber
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-5">
+                                        <div class="flex items-start gap-3">
+                                            <div class="size-8 rounded bg-[#eff6ff] text-[#2563eb] flex items-center justify-center flex-shrink-0 mt-1">
+                                                <span class="material-symbols-outlined text-[18px]">description</span>
+                                            </div>
+                                            <div>
+                                                <p class="text-[14px] font-bold text-[#0f172a]">@item.DocumentName</p>
+                                                <p class="text-[12px] text-[#64748b]">@(string.IsNullOrEmpty(item.Description) ? "No description provided." : item.Description)</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-5">
+                                        <p class="text-[14px] font-medium text-[#334155]">@item.Deadline.ToString("MMM dd,")</p>
+                                        <p class="text-[14px] font-medium text-[#334155]">@item.Deadline.ToString("yyyy")</p>
+                                    </td>
+                                    <td class="py-4 px-5">
+                                        @if (item.IsSubmitted)
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#f0fdf4] text-[#16a34a] border border-[#dcfce7]">
+                                                <span class="size-1.5 rounded-full bg-[#16a34a]"></span> Submitted
+                                            </span>
+                                        }
+                                        else if (item.IsLate)
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]">
+                                                <span class="size-1.5 rounded-full bg-[#dc2626]"></span> Late
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-[#fffbeb] text-[#d97706] border border-[#fef3c7]">
+                                                <span class="size-1.5 rounded-full bg-[#d97706]"></span> Pending
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="py-4 px-5 text-right">
+                                        <a asp-action="Submissions" asp-controller="Student" asp-route-round="@item.RoundNumber"
+                                           class="inline-flex items-center px-4 py-2 text-[#475569] hover:text-[#2563eb] text-[13px] font-semibold transition-colors">
+                                            View
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Recent Feedback -->
@@ -189,4 +209,67 @@
             </div>
         </div>
     </div>
+    
+    <!-- Project Progress Section -->
+    <div class="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden mb-8">
+        <div class="flex justify-between items-center p-5 border-b border-[#e2e8f0]">
+            <h2 class="text-[16px] font-bold text-[#0f172a]">Project Progress</h2>
+            
+            @{
+                var ongoingRound = Model.ReviewRounds?.OrderBy(r => r.RoundNumber).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                var currentPhaseText = ongoingRound != null ? $"Round {ongoingRound.RoundNumber}" : 
+                                      (Model.ReviewRounds != null && Model.ReviewRounds.All(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed) && Model.ReviewRounds.Any() ? "Completed All Rounds" : "Not Started");
+            }
+            <span class="text-[13px] font-medium text-[#64748b]">Current Phase: @currentPhaseText</span>
+        </div>
+        
+        <div class="p-8">
+            <div class="flex items-center justify-between max-w-4xl mx-auto relative">
+                
+                @if (Model.ReviewRounds == null || !Model.ReviewRounds.Any())
+                {
+                    <div class="w-full text-center py-4">
+                        <p class="text-slate-500 font-medium">Progress timeline will be available once review rounds are scheduled.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Connector Line Background -->
+                    <div class="absolute top-6 left-[10%] right-[10%] h-[2px] bg-slate-100 -z-10"></div>
+
+                    foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                    {
+                        var isCompleted = round.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                        var isOngoing = round.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                        
+                        <div class="flex flex-col items-center flex-1 z-10">
+                            @if (isCompleted)
+                            {
+                                <div class="size-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm mb-3">
+                                    <span class="material-symbols-outlined text-[20px] font-bold">check</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-[#0f172a]">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-emerald-600 font-medium">Completed</p>
+                            }
+                            else if (isOngoing)
+                            {
+                                <div class="size-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md ring-4 ring-blue-50 mb-3">
+                                    <span class="material-symbols-outlined text-[20px]">assignment</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-blue-600">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-blue-600 font-medium">In Progress</p>
+                            }
+                            else
+                            {
+                                <div class="size-12 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-slate-500">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-slate-400 font-medium">Upcoming</p>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
 </div>

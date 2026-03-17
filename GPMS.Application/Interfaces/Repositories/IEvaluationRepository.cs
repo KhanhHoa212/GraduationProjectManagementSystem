@@ -8,6 +8,7 @@ public interface IEvaluationRepository
 {
     Task<Evaluation?> GetByIdAsync(int evaluationId);
     Task<Evaluation?> GetByReviewerAndGroupAsync(int roundId, string reviewerId, int groupId);
+    Task<IEnumerable<Evaluation>> GetByGroupWithDetailsAsync(int groupId);
     Task AddAsync(Evaluation evaluation);
     Task SaveChangesAsync();
 }

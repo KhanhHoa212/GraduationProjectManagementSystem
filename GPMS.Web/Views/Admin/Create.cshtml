@@ -37,26 +37,15 @@
                 @Html.AntiForgeryToken()
                 <div asp-validation-summary="ModelOnly" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl" role="alert"></div>
 
-                <!-- User ID & Username -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div>
-                        <label asp-for="UserID" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                            Student / User ID <span class="text-red-500">*</span>
-                        </label>
-                        <input asp-for="UserID"
-                               class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
-                               placeholder="e.g. DE000001" />
-                        <span asp-validation-for="UserID" class="text-xs text-red-500 mt-1 block"></span>
-                    </div>
-                    <div>
-                        <label asp-for="Username" class="block text-sm font-semibold text-slate-700 mb-1.5">
-                            Username <span class="text-red-500">*</span>
-                        </label>
-                        <input asp-for="Username"
-                               class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
-                               placeholder="e.g. johndoe" />
-                        <span asp-validation-for="Username" class="text-xs text-red-500 mt-1 block"></span>
-                    </div>
+                <!-- User ID -->
+                <div>
+                    <label asp-for="UserID" class="block text-sm font-semibold text-slate-700 mb-1.5">
+                        Student / User ID <span class="text-red-500">*</span>
+                    </label>
+                    <input asp-for="UserID"
+                           class="block w-full px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all text-sm"
+                           placeholder="e.g. DE000001" />
+                    <span asp-validation-for="UserID" class="text-xs text-red-500 mt-1 block"></span>
                 </div>
 
                 <!-- Full Name -->
@@ -175,4 +164,50 @@
 
 @section Scripts {
     @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userIdInput = document.querySelector('input[name="UserID"]');
+            const validationSpan = document.querySelector('span[data-valmsg-for="UserID"]');
+            const roleRadios = document.querySelectorAll('input[name="Role"]');
+
+            function validateUserID() {
+                if (!userIdInput) return;
+                
+                let value = userIdInput.value;
+                let selectedRole = document.querySelector('input[name="Role"]:checked')?.value;
+                
+                // Auto-capitalize
+                let upperValue = value.toUpperCase();
+                if (value !== upperValue) {
+                    userIdInput.value = upperValue;
+                    value = upperValue;
+                }
+
+                // Count leading letters
+                let letterCount = 0;
+                while (letterCount < value.length && /[a-zA-Z]/.test(value[letterCount])) {
+                    letterCount++;
+                }
+
+                if (letterCount >= 3 && selectedRole !== "HeadOfDept") {
+                    validationSpan.textContent = "chỉ HOD được sử dụng ID 3 kí tự";
+                    validationSpan.classList.remove('field-validation-valid');
+                    validationSpan.classList.add('field-validation-error');
+                } else {
+                    // If it was our custom message, clear it. 
+                    if (validationSpan && validationSpan.textContent === "chỉ HOD được sử dụng ID 3 kí tự") {
+                        validationSpan.textContent = "";
+                    }
+                }
+            }
+
+            if (userIdInput) {
+                userIdInput.addEventListener('input', validateUserID);
+            }
+
+            roleRadios.forEach(radio => {
+                radio.addEventListener('change', validateUserID);
+            });
+        });
+    </script>
 }

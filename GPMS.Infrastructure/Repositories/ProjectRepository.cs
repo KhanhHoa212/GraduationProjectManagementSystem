@@ -67,6 +67,7 @@ public class ProjectRepository : IProjectRepository
                 .ThenInclude(ps => ps.Lecturer)
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.GroupMembers)
+                    .ThenInclude(m => m.User)
             .Where(p => p.ProjectGroups.Any(g => g.GroupMembers.Any(m => m.UserID == studentId)))
             .OrderByDescending(p => p.CreatedAt)
             .FirstOrDefaultAsync();
