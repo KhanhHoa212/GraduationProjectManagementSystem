@@ -1,0 +1,618 @@
+@model GPMS.Application.DTOs.ProjectDetailDto
+@using GPMS.Domain.Enums
+@{
+    ViewData["Title"] = "Project Details";
+    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
+    bool isNew = Model == null || Model.ProjectID == 0;
+
+    var statusColor = Model?.Status switch
+    {
+        ProjectStatus.Active     => "bg-blue-50 text-blue-600 border-blue-100",
+        ProjectStatus.Completed  => "bg-emerald-50 text-emerald-700 border-emerald-100",
+        ProjectStatus.Cancelled  => "bg-red-50 text-red-500 border-red-100",
+        _                        => "bg-slate-100 text-slate-500 border-slate-200"
+    };
+    var dotColor = Model?.Status switch
+    {
+        ProjectStatus.Active     => "bg-blue-500 animate-pulse",
+        ProjectStatus.Completed  => "bg-emerald-500",
+        ProjectStatus.Cancelled  => "bg-red-500",
+        _                        => "bg-slate-400"
+    };
+    var memberCount = Model?.Members?.Count ?? 0;
+}
+
+<div class="max-w-7xl mx-auto space-y-6 pb-16">
+
+    @* ── Alerts ─────────────────────────────────────────── *@
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center gap-3">
+            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+            <p class="text-sm text-emerald-700 font-medium">@TempData["SuccessMessage"]</p>
+        </div>
+    }
+
+    @* ── PAGE HEADER ─────────────────────────────────────── *@
+    <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            @if (isNew)
+            {
+                <a asp-action="Projects"
+                   class="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-primary hover:bg-orange-50 shadow-sm transition-all no-underline">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </a>
+            }
+            else
+            {
+                <a asp-action="ProjectDetails" asp-route-id="@Model?.ProjectID"
+                   class="p-2 border border-slate-200 rounded-lg bg-white text-slate-400 hover:text-primary hover:bg-orange-50 shadow-sm transition-all no-underline">
+                    <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+                </a>
+            }
+            <div>
+                <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">
+                    @(isNew ? "Create New Project" : "Edit Project")
+                </h1>
+                <p class="text-sm text-slate-500 mt-0.5">
+                    @(isNew ? "Fill in the details to create a new graduation project" : Model!.ProjectName)
+                </p>
+            </div>
+            @if (!isNew)
+            {
+                <span class="ml-2 px-2.5 py-1 bg-primary/10 text-primary text-[11px] font-bold uppercase rounded-lg border border-primary/10">
+                    @Model!.ProjectCode
+                </span>
+            }
+        </div>
+        @if (!isNew && Model != null)
+        {
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase @statusColor">
+                <span class="size-2 rounded-full @dotColor"></span>
+                @Model.Status
+            </span>
+        }
+        else
+        {
+            <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[11px] font-bold uppercase bg-slate-100 text-slate-500 border-slate-200">
+                <span class="size-2 rounded-full bg-slate-400"></span>
+                Draft
+            </span>
+        }
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+        <!-- LEFT: Form + Team Members -->
+        <div class="lg:col-span-2 space-y-6">
+
+            <!-- Project Info Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary text-[18px]">edit_document</span>
+                    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Project Information</h2>
+                </div>
+
+                @{ var formAction = isNew ? "CreateProject" : "UpdateProject"; }
+                <form asp-action="@formAction" method="post">
+                    @Html.AntiForgeryToken()
+                    @if (!isNew && Model != null)
+                    {
+                        <input type="hidden" name="ProjectID" value="@Model.ProjectID" />
+                    }
+
+                    <div class="p-8 space-y-6">
+
+                        @* Row 1: Semester + Status *@
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Academic Semester</label>
+                                @if (isNew)
+                                {
+                                    <select name="SemesterID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                        @foreach (var s in semesterList)
+                                        {
+                                            <option value="@s.SemesterID">@s.SemesterCode — @s.AcademicYear</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input type="text" value="@(Model?.SemesterCode ?? "—")" disabled
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
+                                }
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Status</label>
+                                <select name="Status" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                    @foreach (var s in Enum.GetValues<ProjectStatus>())
+                                    {
+                                        if (Model != null && Model.Status == s)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else if (Model == null && s == ProjectStatus.Draft)
+                                        {
+                                            <option value="@s" selected>@s</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@s">@s</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        @* Row 2: Project Title + Major (side by side) *@
+                        <div class="grid grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Project Title</label>
+                                <input type="text" name="ProjectName" value="@(Model?.ProjectName ?? "")"
+                                       placeholder="Enter project title..."
+                                       class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Major</label>
+                                @if (isNew)
+                                {
+                                    <select name="MajorID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                        <option value="1">Software Engineering</option>
+                                        <option value="2">Software Testing</option>
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input type="text" value="@(Model?.MajorName ?? "—")" disabled
+                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
+                                }
+                            </div>
+                        </div>
+
+                        @* Description *@
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Description</label>
+                            <textarea name="Description" rows="4"
+                                      placeholder="Describe the project scope and objectives..."
+                                      class="w-full border border-slate-200 bg-white rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none">@(Model?.Description ?? "")</textarea>
+                        </div>
+
+                    </div>
+
+                    @* Action Buttons — always at bottom of form *@
+                    <div class="px-8 py-5 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <a asp-action="Projects"
+                           class="px-6 py-2.5 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-50 shadow-sm transition-all no-underline">
+                            Cancel
+                        </a>
+                        <button type="submit"
+                                class="flex items-center gap-2 px-8 py-2.5 bg-[#F37021] hover:bg-[#d55e16] hover:-translate-y-0.5 active:scale-95 text-white rounded-lg text-sm font-bold shadow-md hover:shadow-lg hover:shadow-orange-500/40 shadow-orange-500/20 transition-all duration-200">
+                            <span class="material-symbols-outlined text-[18px]">@(isNew ? "add" : "save")</span>
+                            @(isNew ? "Create Project" : "Save Changes")
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            @* ── TEAM MEMBERS CARD ─── *@
+            <div id="teamMembersCard" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-[18px]">group</span>
+                        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Team Members</h2>
+                    </div>
+                    <span id="memberCount" class="px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full text-[11px] font-bold">@memberCount Members</span>
+                </div>
+
+                @if (isNew)
+                {
+                    @* CREATE MODE: lock state — can't add members before project exists *@
+                    <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
+                        <div class="flex items-center gap-3 max-w-xl opacity-50 pointer-events-none select-none">
+                            <div class="relative flex-1">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">search</span>
+                                <input type="text" placeholder="Search by MSSV or name..." disabled
+                                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white cursor-not-allowed placeholder:text-slate-300" />
+                            </div>
+                            <button type="button" disabled
+                                    class="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-slate-200 text-slate-400 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap cursor-not-allowed">
+                                <span class="material-symbols-outlined text-[16px]">person_add</span>
+                                Add Member
+                            </button>
+                        </div>
+                        <div class="mt-3 flex items-center gap-2 text-[12px] text-amber-600 font-medium">
+                            <span class="material-symbols-outlined text-[16px]">lock</span>
+                            Create the project first, then you can assign team members.
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Student ID</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4" class="py-10 text-center text-sm text-slate-400">
+                                        No members yet — save the project first.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    @* EDIT MODE: fully interactive *@
+
+                    @* Toast notification *@
+                    <div id="memberToast" class="hidden mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"></div>
+
+                    @* Search + Add row *@
+                    <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
+                        <div class="flex items-center gap-3 max-w-xl">
+                            <div class="relative flex-1">
+                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[18px] pointer-events-none">search</span>
+                                <input id="studentSearchInput" type="text"
+                                       placeholder="Search by MSSV or name..."
+                                       autocomplete="off"
+                                       class="w-full pl-10 pr-4 py-2.5 text-sm border border-slate-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-slate-300" />
+                                <div id="searchResults"
+                                     class="hidden absolute z-50 left-0 right-0 top-[calc(100%+4px)] bg-white border border-slate-200 rounded-xl shadow-xl overflow-hidden max-h-52 overflow-y-auto">
+                                </div>
+                            </div>
+                            <button id="addMemberBtn" type="button"
+                                    class="flex-shrink-0 flex items-center gap-1.5 px-5 py-2.5 bg-[#F37021] hover:bg-[#d55e16] hover:-translate-y-0.5 active:scale-95 text-white rounded-lg text-xs font-bold transition-all duration-200 uppercase tracking-wider shadow-md hover:shadow-lg hover:shadow-orange-500/40 shadow-orange-500/20 whitespace-nowrap">
+                                <span class="material-symbols-outlined text-[16px]">person_add</span>
+                                Add Member
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-2">
+                            Type ≥ 2 characters to search. First added member becomes <span class="font-bold text-primary">Leader</span> automatically.
+                        </p>
+                    </div>
+
+                    <!-- Members Table -->
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 border-b border-slate-200">
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Student ID</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Full Name</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">Role</th>
+                                    <th class="py-3 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="memberTableBody" class="divide-y divide-slate-100">
+                                @if (Model != null && Model.Members.Any())
+                                {
+                                    @foreach (var member in Model.Members)
+                                    {
+                                        var initials = string.Concat(member.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                        var isLeader = member.RoleInGroup == GroupRole.Leader;
+                                        var roleSelectClass = isLeader
+                                            ? "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20"
+                                            : "text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100";
+                                        <tr id="row-@member.UserID" class="group hover:bg-slate-50/70 transition-colors">
+                                            <td class="py-4 px-6 text-sm font-semibold text-primary">@member.UserID</td>
+                                            <td class="py-4 px-6">
+                                                <div class="flex items-center gap-2.5">
+                                                    <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">@initials</div>
+                                                    <span class="text-sm font-semibold text-slate-800">@member.FullName</span>
+                                                </div>
+                                            </td>
+                                            <td class="py-4 px-6">
+                                                <select onchange="updateRole('@member.UserID', this)" class="@roleSelectClass">
+                                                    @if (isLeader)
+                                                    {
+                                                        <option value="Leader" selected>Leader</option>
+                                                        <option value="Member">Member</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="Leader">Leader</option>
+                                                        <option value="Member" selected>Member</option>
+                                                    }
+                                                </select>
+                                            </td>
+                                            <td class="py-4 px-6 text-right">
+                                                <button onclick="removeMember('@member.UserID')"
+                                                        class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Remove">
+                                                    <span class="material-symbols-outlined text-[18px]">person_remove</span>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr id="emptyRow">
+                                        <td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+
+        </div>
+
+        @* RIGHT COLUMN: Sidebar *@
+        <div class="space-y-6 sticky top-24">
+
+            @* Supervisor Card *@
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary text-[18px]">supervisor_account</span>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Supervisor</h3>
+                </div>
+                @if (!isNew && !string.IsNullOrEmpty(Model?.SupervisorName))
+                {
+                    var supInitials = string.Concat(Model.SupervisorName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                    <div class="flex items-center gap-3">
+                        <div class="size-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">@supInitials</div>
+                        <div>
+                            <p class="text-sm font-bold text-slate-900">@Model.SupervisorName</p>
+                            <p class="text-xs text-slate-400">@Model.MajorName</p>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex items-center gap-3 py-1">
+                        <div class="size-10 rounded-full bg-slate-100 text-slate-300 flex items-center justify-center">
+                            <span class="material-symbols-outlined text-[20px]">person_off</span>
+                        </div>
+                        <p class="text-sm text-slate-400 italic">@(isNew ? "Available after project creation" : "No supervisor assigned")</p>
+                    </div>
+                }
+                <a asp-action="AssignSupervisor"
+                   class="mt-4 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-bold text-primary hover:bg-primary/5 border border-primary/20 rounded-lg transition-all no-underline @(isNew ? "opacity-40 pointer-events-none" : "")">
+                    <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+                    @(string.IsNullOrEmpty(Model?.SupervisorName) ? "Assign Supervisor" : "Change Supervisor")
+                </a>
+            </div>
+
+                <!-- Project Info -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary text-[18px]">info</span>
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Details</h3>
+                </div>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Major</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.MajorName ?? "—")</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Semester</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">@(Model?.SemesterCode ?? "—")</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] text-slate-400 uppercase font-bold">Created</p>
+                        <p class="text-sm font-semibold text-slate-800 mt-0.5">
+                            @(isNew ? "—" : Model!.CreatedAt.ToString("MMM dd, yyyy"))
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            @* Notice Card *@
+            <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 flex gap-3">
+                <span class="material-symbols-outlined text-amber-500 text-[20px] flex-shrink-0 mt-0.5">info</span>
+                <div>
+                    <p class="text-xs font-bold text-amber-700 mb-1">Notice</p>
+                    <p class="text-[11px] text-amber-600 leading-relaxed">
+                        @if (isNew)
+                        {
+                            <text>After creating the project, you can assign supervisors and add team members.</text>
+                        }
+                        else
+                        {
+                            <text>Changes to approved projects must be authorized by the HOD board before taking effect.</text>
+                        }
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@* ── JAVASCRIPT: Member management — only in edit mode ─── *@
+@if (!isNew && Model != null)
+{
+    <script>
+        const PROJECT_ID = @Model.ProjectID;
+        const ANTIFORGERY_TOKEN = document.querySelector('input[name="__RequestVerificationToken"]')?.value ?? '';
+
+        let selectedStudent = null;
+        let searchTimeout = null;
+        let currentMemberCount = @memberCount;
+
+        // ── Toast ──────────────────────────────────────────
+        function showToast(message, isSuccess) {
+            const toast = document.getElementById('memberToast');
+            toast.className = `mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-red-50 text-red-600 border border-red-200'}`;
+            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isSuccess ? 'check_circle' : 'error'}</span>${message}`;
+            toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            setTimeout(() => { toast.className = 'hidden'; }, 4000);
+        }
+
+        function updateMemberCount(delta) {
+            currentMemberCount += delta;
+            document.getElementById('memberCount').textContent = `${currentMemberCount} Members`;
+        }
+
+        // ── Search Input ────────────────────────────────────
+        const searchInput = document.getElementById('studentSearchInput');
+        const searchResultsEl = document.getElementById('searchResults');
+
+        searchInput.addEventListener('input', function () {
+            clearTimeout(searchTimeout);
+            const q = this.value.trim();
+            selectedStudent = null;
+            if (q.length < 2) { searchResultsEl.classList.add('hidden'); return; }
+            searchTimeout = setTimeout(() => doSearch(q), 300);
+        });
+
+        searchInput.addEventListener('keydown', e => {
+            if (e.key === 'Escape') searchResultsEl.classList.add('hidden');
+        });
+
+        document.addEventListener('click', e => {
+            if (!searchInput.contains(e.target) && !searchResultsEl.contains(e.target))
+                searchResultsEl.classList.add('hidden');
+        });
+
+        async function doSearch(q) {
+            const res = await fetch(`/HOD/SearchStudents?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            searchResultsEl.innerHTML = '';
+            if (!data.length) {
+                searchResultsEl.innerHTML = '<div class="px-4 py-3 text-sm text-slate-400">No students found.</div>';
+            } else {
+                data.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = 'flex items-center gap-3 px-4 py-2.5 hover:bg-orange-50 cursor-pointer transition-colors border-b border-slate-50 last:border-0';
+                    const initials = s.fullName.split(' ').slice(-2).map(w => w[0]?.toUpperCase() ?? '').join('');
+                    item.innerHTML = `
+                        <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0">${initials}</div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-slate-800 truncate">${s.fullName}</p>
+                            <p class="text-[11px] text-slate-400">${s.userID} · ${s.email ?? ''}</p>
+                        </div>`;
+                    item.addEventListener('click', () => {
+                        selectedStudent = s;
+                        searchInput.value = `${s.fullName} (${s.userID})`;
+                        searchResultsEl.classList.add('hidden');
+                    });
+                    searchResultsEl.appendChild(item);
+                });
+            }
+            searchResultsEl.classList.remove('hidden');
+        }
+
+        // ── Add Member ──────────────────────────────────────
+        document.getElementById('addMemberBtn').addEventListener('click', async () => {
+            if (!selectedStudent) {
+                showToast('Please select a student from the search results first.', false);
+                searchInput.focus();
+                return;
+            }
+            const btn = document.getElementById('addMemberBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span> Adding...';
+
+            const res = await fetch(`/HOD/AddMember?projectId=${PROJECT_ID}&userId=${encodeURIComponent(selectedStudent.userID)}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
+            });
+            const data = await res.json();
+
+            btn.disabled = false;
+            btn.innerHTML = '<span class="material-symbols-outlined text-[16px]">person_add</span> Add Member';
+
+            if (data.success) {
+                appendMemberRow(selectedStudent);
+                searchInput.value = '';
+                selectedStudent = null;
+                showToast(data.message, true);
+            } else {
+                showToast(data.message, false);
+            }
+        });
+
+        function appendMemberRow(student) {
+            const tbody = document.getElementById('memberTableBody');
+            const emptyRow = document.getElementById('emptyRow');
+            if (emptyRow) emptyRow.remove();
+
+            const initials = student.fullName.split(' ').slice(-2).map(w => w[0]?.toUpperCase() ?? '').join('');
+            const isFirst = currentMemberCount === 0;
+            const role = isFirst ? 'Leader' : 'Member';
+            const roleClass = isFirst
+                ? 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-primary/10 text-primary border-primary/20'
+                : 'text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all bg-blue-50 text-blue-600 border-blue-100';
+
+            const tr = document.createElement('tr');
+            tr.id = `row-${student.userID}`;
+            tr.className = 'group hover:bg-slate-50/70 transition-colors';
+            tr.innerHTML = `
+                <td class="py-4 px-6 text-sm font-semibold text-primary">${student.userID}</td>
+                <td class="py-4 px-6">
+                    <div class="flex items-center gap-2.5">
+                        <div class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs flex-shrink-0 group-hover:bg-primary group-hover:text-white transition-all">${initials}</div>
+                        <span class="text-sm font-semibold text-slate-800">${student.fullName}</span>
+                    </div>
+                </td>
+                <td class="py-4 px-6">
+                    <select onchange="updateRole('${student.userID}', this)" class="${roleClass}">
+                        <option value="Leader" ${isFirst ? 'selected' : ''}>Leader</option>
+                        <option value="Member" ${!isFirst ? 'selected' : ''}>Member</option>
+                    </select>
+                </td>
+                <td class="py-4 px-6 text-right">
+                    <button onclick="removeMember('${student.userID}')"
+                            class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-colors rounded-lg" title="Remove">
+                        <span class="material-symbols-outlined text-[18px]">person_remove</span>
+                    </button>
+                </td>`;
+            tbody.appendChild(tr);
+            updateMemberCount(1);
+        }
+
+        // ── Remove Member ───────────────────────────────────
+        async function removeMember(userId) {
+            if (!confirm('Remove this member from the project?')) return;
+            const res = await fetch(`/HOD/RemoveMember?projectId=${PROJECT_ID}&userId=${encodeURIComponent(userId)}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById(`row-${userId}`)?.remove();
+                updateMemberCount(-1);
+                if (currentMemberCount === 0) {
+                    document.getElementById('memberTableBody').innerHTML =
+                        '<tr id="emptyRow"><td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td></tr>';
+                }
+                showToast('Member removed.', true);
+            } else {
+                showToast('Failed to remove member.', false);
+            }
+        }
+
+        // ── Update Role ─────────────────────────────────────
+        async function updateRole(userId, selectEl) {
+            const newRole = selectEl.value;
+            const prevValue = newRole === 'Leader' ? 'Member' : 'Leader';
+
+            const res = await fetch(`/HOD/UpdateMemberRole?projectId=${PROJECT_ID}&userId=${encodeURIComponent(userId)}&role=${newRole}`, {
+                method: 'POST',
+                headers: { 'RequestVerificationToken': ANTIFORGERY_TOKEN }
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                const isLeader = newRole === 'Leader';
+                selectEl.className = `text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${
+                    isLeader ? 'bg-primary/10 text-primary border-primary/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`;
+                showToast(`Role updated to ${newRole}.`, true);
+            } else {
+                selectEl.value = prevValue;
+                showToast(data.message, false);
+            }
+        }
+    </script>
+}

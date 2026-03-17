@@ -34,6 +34,7 @@ builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
+builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -41,6 +42,8 @@ builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
+builder.Services.AddScoped<IChecklistService, ChecklistService>();
+
 
 // Register Infrastructure (including Seeders)
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -52,6 +55,10 @@ builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
 builder.Services.AddRazorPages();
+
+// Memory cache (for system logs + visit tracking)
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
 
 // Add Google Authentication
 builder.Services.AddAuthentication(options =>

@@ -154,8 +154,21 @@
                 <div class="w-full min-h-full p-4 lg:p-6 pb-20 lg:pb-24 text-dark-900 dark:text-dark-100">
                     @RenderBody()
                 </div>
-            </main>
-            
+            </main>            
+            <div id="chatbot-container">
+                <iframe id="chatbot-iframe"
+                        src="https://gpms-bot-supporter-fe.onrender.com/"
+                        style="position: fixed;
+                               bottom: 0;
+                               right: 0;
+                               width: 60px;
+                               height: 60px;
+                               border: none;
+                               z-index: 9999;
+                               border-radius: 50%;
+                               overflow: hidden;">
+                </iframe>
+            </div>
         </div>
     </div>
 
@@ -188,6 +201,31 @@
                 mobileBtn.addEventListener('click', () => {
                     sidebar.classList.remove('-translate-x-full');
                     overlay.classList.remove('hidden');
+        window.addEventListener("message", function (event) {
+            if (!event.data || typeof event.data !== "object") return;
+            const iframe = document.getElementById("chatbot-iframe");
+            if (!iframe) return;
+            if (event.data.type === "chatbot-open") {
+                iframe.style.width = "400px";
+                iframe.style.height = "500px";
+                iframe.style.borderRadius = "12px";
+            } else if (event.data.type === "chatbot-close") {
+                iframe.style.width = "60px";
+                iframe.style.height = "60px";
+                iframe.style.borderRadius = "50%";
+            }
+        }, false);
+        document.addEventListener('DOMContentLoaded', function () {
+            const overlay = document.getElementById('loading-overlay');
+            const sidebar = document.getElementById('student-sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+            // Mobile sidebar toggle
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function () {
+                    sidebar.classList.toggle('open');
+                    sidebarOverlay.classList.toggle('hidden');
                 });
             }
 

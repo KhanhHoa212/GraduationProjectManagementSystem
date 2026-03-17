@@ -3,6 +3,7 @@ using GPMS.Application.Interfaces.Services;
 using GPMS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace GPMS.Web.Controllers;
 
@@ -12,13 +13,20 @@ public class HODController : Controller
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
     private readonly IReviewRoundService _reviewRoundService;
+    private readonly IChecklistService _checklistService;
 
-    public HODController(IProjectService projectService, ISemesterService semesterService, IReviewRoundService reviewRoundService)
+    public HODController(
+        IProjectService projectService, 
+        ISemesterService semesterService, 
+        IReviewRoundService reviewRoundService,
+        IChecklistService checklistService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
+        _checklistService = checklistService;
     }
+
 
     // GET: /HOD/Index (Dashboard)
     public async Task<IActionResult> Index()
@@ -96,18 +104,21 @@ public class HODController : Controller
     }
 
     // GET: /HOD/ProjectDetails/{id}
-    public async Task<IActionResult> ProjectDetails(int? id)
+    public async Task<IActionResult> ProjectDetails(int id)
+    {
+        var project = await _projectService.GetProjectDetailAsync(id);
+        if (project == null) return NotFound();
+
+        return View(project);
+    }
+
+    // GET: /HOD/EditProject/{id}
+    public async Task<IActionResult> EditProject(int id)
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         ViewBag.Semesters = semesters;
 
-        if (id == null)
-        {
-            // Create mode - return empty view
-            return View(new ProjectDetailDto());
-        }
-
-        var project = await _projectService.GetProjectDetailAsync(id.Value);
+        var project = await _projectService.GetProjectDetailAsync(id);
         if (project == null) return NotFound();
 
         return View(project);
@@ -174,9 +185,29 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public IActionResult Groups() => View();
-    public IActionResult GroupDetails(string id) => View();
-    public IActionResult AssignSupervisor() => View();
+
+    public async Task<IActionResult> AssignSupervisor()
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        var data = await _projectService.GetSupervisorAssignmentDataAsync(activeSemester?.SemesterID);
+        ViewBag.ActiveSemester = activeSemester;
+        
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ReassignSupervisor([FromBody] AssignSupervisorRequest request)
+    {
+        if (request == null || request.ProjectID <= 0 || string.IsNullOrEmpty(request.LecturerID))
+            return Json(new { success = false, message = "Thông tin không hợp lệ." });
+
+        var assignedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var (success, message) = await _projectService.AssignSupervisorAsync(request.ProjectID, request.LecturerID, assignedBy);
+        
+        return Json(new { success, message });
+    }
     public async Task<IActionResult> ReviewRounds()
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
@@ -341,7 +372,41 @@ public class HODController : Controller
         return RedirectToAction(nameof(ReviewRounds));
     }
 
-    public IActionResult Checklists() => View();
+    public async Task<IActionResult> Checklists(int? roundId)
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        if (activeSemester == null)
+        {
+            ViewBag.ReviewRounds = new List<ReviewRoundDto>();
+            return View(new ChecklistDto());
+        }
+
+        var rounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID)).ToList();
+        ViewBag.ReviewRounds = rounds;
+        ViewBag.ActiveSemester = activeSemester;
+
+        int targetRoundId = roundId ?? rounds.FirstOrDefault()?.ReviewRoundID ?? 0;
+        ViewBag.SelectedRoundId = targetRoundId;
+
+        if (targetRoundId == 0) return View(new ChecklistDto());
+
+        var checklist = await _checklistService.GetByRoundIdAsync(targetRoundId);
+        
+        return View(checklist ?? new ChecklistDto { ReviewRoundID = targetRoundId });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveChecklist([FromBody] SaveChecklistDto dto)
+    {
+        if (dto == null || dto.ReviewRoundID <= 0)
+            return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+
+        var (success, message) = await _checklistService.SaveChecklistAsync(dto);
+        return Json(new { success, message });
+    }
+
     public IActionResult AssignReviewer() => View();
     public IActionResult Reports() => View();
     
@@ -349,9 +414,12 @@ public class HODController : Controller
     public async Task<IActionResult> CreateProject()
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
+        ViewBag.Semesters = semesters;
+        
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         ViewBag.ActiveSemester = activeSemester;
-        return View();
+        
+        return View("EditProject", new ProjectDetailDto());
     }
 }
 

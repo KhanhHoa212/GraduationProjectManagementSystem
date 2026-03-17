@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <Folder Include="Data\Seeding\Seeders\" />
   </ItemGroup>
 
 </Project>

@@ -54,6 +54,9 @@ public class ProjectRepository : IProjectRepository
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.GroupMembers)
                     .ThenInclude(m => m.User)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Submissions)
+                    .ThenInclude(s => s.Requirement)
             .FirstOrDefaultAsync(p => p.ProjectID == projectId);
 
     public async Task<Project?> GetProjectByStudentIdAsync(string studentId) =>
