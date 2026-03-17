@@ -61,7 +61,7 @@
                             <span class="text-muted" style="font-size:13px;">@a.ProjectName</span>
                         </div>
                         <div class="d-flex gap-3 text-muted" style="font-size:12px;">
-                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.RoundType</span>
+                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.RoundNumber (@a.RoundType)</span>
                             @if (a.ScheduledAt.HasValue)
                             {
                                 <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>

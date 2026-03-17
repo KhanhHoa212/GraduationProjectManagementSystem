@@ -26,7 +26,7 @@ public class NotificationSeeder : IDataSeeder
             .Include(e => e.Group)
             .ThenInclude(pg => pg.GroupMembers)
             .Include(e => e.Feedback)
-            .ThenInclude(f => f.FeedbackApproval)
+            .ThenInclude(f => f!.FeedbackApproval)
             .Where(e => e.Feedback != null && e.Feedback.FeedbackApproval != null && e.Feedback.FeedbackApproval.ApprovalStatus == ApprovalStatus.Approved)
             .ToListAsync();
 

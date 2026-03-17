@@ -28,8 +28,8 @@ public class FeedbackRepository : IFeedbackRepository
                 .ThenInclude(e => e.Reviewer)
             .Include(f => f.Evaluation)
                 .ThenInclude(e => e.ReviewRound)
-            // Match by SupervisorID set on FeedbackApproval OR by being a ProjectSupervisor
             .Where(f => f.FeedbackApproval != null &&
+                        f.FeedbackApproval.ApprovalStatus == ApprovalStatus.Pending &&
                         (f.FeedbackApproval.SupervisorID == supervisorId ||
                          f.Evaluation.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId)))
             .OrderByDescending(f => f.CreatedAt)

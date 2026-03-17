@@ -21,14 +21,18 @@ public class LecturerController : Controller
         _lecturerService = lecturerService;
     }
 
-    private string GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "GV001";
+    private string? GetUserId() => User.FindFirstValue(ClaimTypes.NameIdentifier);
 
     // -------------------------------------------------------
     // Dashboard
     // -------------------------------------------------------
     public async Task<IActionResult> Dashboard()
     {
-        var dto = await _lecturerService.GetDashboardDataAsync(GetUserId());
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetDashboardDataAsync(userId);
         var vm = new LecturerDashboardViewModel
         {
             MentoringGroupsCount = dto.MentoringGroupsCount,
@@ -62,7 +66,11 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> Projects()
     {
-        var dto = await _lecturerService.GetMentoredProjectsAsync(GetUserId());
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetMentoredProjectsAsync(userId);
         var vm = new MentoredProjectsViewModel
         {
             Groups = dto.Projects.Select(p => new MentoredGroupRow
@@ -71,7 +79,7 @@ public class LecturerController : Controller
                 GroupName = p.GroupName,
                 ProjectName = p.ProjectName,
                 MemberNames = p.MemberNames,
-                CurrentRound = 1,
+                CurrentRound = int.TryParse(new string(p.CurrentRound.Where(char.IsDigit).ToArray()), out var roundNumber) ? roundNumber : 0,
                 RoundType = p.CurrentRound,
                 Semester = p.Semester,
                 Status = p.Status,
@@ -86,7 +94,11 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> ProjectGroupDetail(int id = 100)
     {
-        var dto = await _lecturerService.GetProjectGroupDetailAsync(id);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
         var vm = new ProjectGroupDetailViewModel
         {
             GroupID = dto.GroupId,
@@ -109,7 +121,11 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> FeedbackApprovals()
     {
-        var dto = await _lecturerService.GetPendingApprovalsAsync(GetUserId());
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetPendingApprovalsAsync(userId);
         var vm = new FeedbackApprovalsViewModel
         {
             Approvals = dto.PendingFeedbacks.Select(f => new FeedbackApprovalRow
@@ -121,7 +137,7 @@ public class LecturerController : Controller
                 ReviewerName = f.ReviewerName,
                 RoundNumber = f.RoundNumber,
                 SubmittedAt = f.SubmittedAt,
-                ApprovalStatus = ApprovalStatus.Pending
+                ApprovalStatus = f.ApprovalStatus
             }).ToList()
         };
         return View(vm);
@@ -145,6 +161,9 @@ public class LecturerController : Controller
             TotalRounds = dto.TotalRounds,
             TotalScore = dto.TotalScore,
             MaxTotalScore = dto.MaxTotalScore,
+            SubmittedAt = dto.SubmittedAt,
+            ApprovalStatus = dto.ApprovalStatus,
+            SupervisorComment = dto.SupervisorComment,
             FeedbackContent = dto.FeedbackContent,
             GroupMembers = dto.Members.Select(m => new GroupMemberItem
             {
@@ -170,7 +189,11 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> ReviewAssignments()
     {
-        var dto = await _lecturerService.GetReviewAssignmentsAsync(GetUserId());
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetReviewAssignmentsAsync(userId);
         var vm = new ReviewAssignmentsViewModel
         {
             Assignments = dto.Assignments.Select(a => new ReviewAssignmentRow
@@ -180,7 +203,7 @@ public class LecturerController : Controller
                 GroupName = a.GroupName,
                 ProjectName = a.ProjectName,
                 RoundNumber = a.RoundNumber,
-                RoundType = a.ReviewRoundName,
+                RoundType = a.RoundType,
                 ScheduledAt = a.ScheduledAt,
                 Location = a.Location,
                 HasEvaluation = a.HasEvaluation,
@@ -198,7 +221,14 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> EvaluationForm(int id = 1)
     {
-        var dto = await _lecturerService.GetEvaluationFormAsync(id);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetEvaluationFormAsync(userId, id);
+        if (dto == null)
+            return NotFound();
+
         var vm = new EvaluationFormViewModel
         {
             AssignmentID = dto.AssignmentId,
@@ -207,6 +237,7 @@ public class LecturerController : Controller
             ProjectName = dto.ProjectName,
             SupervisorName = dto.SupervisorName,
             RoundNumber = dto.RoundNumber,
+            RoundType = dto.ReviewRoundName,
             ScheduledAt = dto.ScheduledAt,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
@@ -229,6 +260,16 @@ public class LecturerController : Controller
                 ItemID = s.ItemId,
                 Score = s.Score,
                 Comment = s.Comment
+            }).ToList(),
+            CriteriaScores = dto.ChecklistItems.Select(c =>
+            {
+                var existingScore = dto.ExistingScores.FirstOrDefault(s => s.ItemId == c.ItemId);
+                return new ScoreInputRow
+                {
+                    CriteriaId = c.ItemId,
+                    Score = existingScore?.Score ?? 0m,
+                    Comment = existingScore?.Comment
+                };
             }).ToList()
         };
         return View(vm);
@@ -238,32 +279,48 @@ public class LecturerController : Controller
     // POST actions
     // -------------------------------------------------------
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> SubmitEvaluation(EvaluationFormViewModel model)
     {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
         if (!ModelState.IsValid)
-            return View("EvaluationForm", model);
+            return RedirectToAction(nameof(EvaluationForm), new { id = model.AssignmentID });
 
         var submitDto = new EvaluationSubmitDto
         {
             AssignmentId = model.AssignmentID,
-            OverallFeedback = model.ExistingFeedbackContent ?? string.Empty
+            OverallFeedback = model.ExistingFeedbackContent ?? string.Empty,
+            CriteriaScores = model.CriteriaScores.Select(s => new ScoreInputDto
+            {
+                CriteriaId = s.CriteriaId,
+                Score = s.Score,
+                Comment = s.Comment
+            }).ToList()
         };
 
-        var success = await _lecturerService.SubmitEvaluationAsync(submitDto);
+        var success = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
         if (success)
         {
             TempData["SuccessMessage"] = "Evaluation submitted successfully.";
             return RedirectToAction(nameof(ReviewAssignments));
         }
 
-        ModelState.AddModelError("", "An error occurred while submitting the evaluation.");
-        return View("EvaluationForm", model);
+        TempData["ErrorMessage"] = "Unable to submit evaluation. Please check the assignment and score inputs.";
+        return RedirectToAction(nameof(EvaluationForm), new { id = model.AssignmentID });
     }
 
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> ApproveFeedback(int feedbackId, string decision, string comments)
     {
-        var success = await _lecturerService.ApproveFeedbackAsync(feedbackId, decision, comments);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var success = await _lecturerService.ApproveFeedbackAsync(userId, feedbackId, decision, comments);
         if (success)
         {
             TempData["SuccessMessage"] = $"Feedback {decision.ToLower()} successfully.";

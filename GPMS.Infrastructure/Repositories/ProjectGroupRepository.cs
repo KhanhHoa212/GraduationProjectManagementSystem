@@ -14,13 +14,26 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public ProjectGroupRepository(GpmsDbContext context) => _context = context;
 
     public async Task<ProjectGroup?> GetByIdAsync(int groupId) =>
-        await _context.ProjectGroups.FindAsync(groupId);
+        await _context.ProjectGroups
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.Semester)
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(pg => pg.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Feedback)
+                    .ThenInclude(f => f!.FeedbackApproval)
+            .FirstOrDefaultAsync(pg => pg.GroupID == groupId);
 
     public async Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId) =>
         await _context.ProjectGroups.Where(pg => pg.ProjectID == projectId).ToListAsync();
 
     public async Task<IEnumerable<ProjectGroup>> GetBySupervisorAsync(string supervisorId) =>
         await _context.ProjectGroups
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.Semester)
             .Include(pg => pg.Project)
                 .ThenInclude(p => p.ProjectSupervisors)
             .Include(pg => pg.GroupMembers)

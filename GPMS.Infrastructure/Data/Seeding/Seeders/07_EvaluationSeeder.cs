@@ -23,8 +23,8 @@ public class EvaluationSeeder : IDataSeeder
         var assignments = await _context.ReviewerAssignments
             .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == 1)
             .Include(ra => ra.ReviewRound)
-            .ThenInclude(rr => rr.ReviewChecklist)
-            .ThenInclude(rc => rc.ChecklistItems)
+            .ThenInclude(rr => rr!.ReviewChecklist)
+            .ThenInclude(rc => rc!.ChecklistItems)
             .ToListAsync();
 
         var random = new Random();
@@ -49,7 +49,7 @@ public class EvaluationSeeder : IDataSeeder
             await _context.SaveChangesAsync();
 
             decimal totalScore = 0;
-            foreach (var item in checklist.ChecklistItems)
+            foreach (var item in checklist.ChecklistItems!)
             {
                 var maxScoreInt = (int)item.MaxScore;
                 var scoreValue = random.Next((int)(maxScoreInt * 0.7), maxScoreInt + 1);

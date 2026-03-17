@@ -19,6 +19,10 @@
             <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">GROUP ID</div>
             <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.GroupID</div>
         </div>
+        <div class="px-4 py-2 bg-white border rounded text-center">
+            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">STATUS</div>
+            <div class="fw-bold text-body" style="font-size: 16px;">@Model.ApprovalStatus</div>
+        </div>
     </div>
 </div>
 
@@ -67,6 +71,7 @@
             @Html.AntiForgeryToken()
             <input type="hidden" name="feedbackId" value="@Model.FeedbackID" />
             <input type="hidden" name="decision" id="decisionInput" value="" />
+            <input type="hidden" name="comments" id="commentsInput" value="" />
 
             <div class="card-panel mb-0 border">
                 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -79,7 +84,15 @@
                 
                 <div class="mb-3">
                     <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">FEEDBACK TO GROUP MEMBERS</label>
-                    <textarea class="form-control hover-bg-light" name="comments" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">@Model.FeedbackContent</textarea>
+                    <textarea class="form-control hover-bg-light" id="editedFeedbackInput" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">@Model.FeedbackContent</textarea>
+                </div>
+
+                <div class="d-flex justify-content-between text-muted" style="font-size:12px;">
+                    <span>Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                    @if (!string.IsNullOrWhiteSpace(Model.SupervisorComment))
+                    {
+                        <span>Last note: @Model.SupervisorComment</span>
+                    }
                 </div>
                 
                 <div class="d-flex align-items-start gap-2 mt-3 text-muted">
@@ -165,6 +178,25 @@
     </div>
 </div>
 
+<!-- Approve With Edits Modal -->
+<div class="modal fade" id="confirmApproveEditsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Approve With Edits</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted" style="font-size: 14px;">Your edited feedback will be saved and released to the group immediately.</p>
+            </div>
+            <div class="modal-footer border-0 pt-0 flex-nowrap">
+                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary w-50 m-0 ms-2" onclick="document.getElementById('feedbackActionForm').submit()">Approve</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Reject Modal -->
 <div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
@@ -177,7 +209,7 @@
                 <p class="text-muted" style="font-size: 14px; margin-bottom: 20px;">Please provide a reason for rejecting this feedback. This will be sent back to the assigned Reviewer.</p>
                 <div class="form-group">
                     <label class="form-label">Rejection Reason</label>
-                    <textarea class="form-control" rows="4" name="comments" form="feedbackActionForm" placeholder="Explain what needs to be changed..."></textarea>
+                    <textarea class="form-control" rows="4" id="rejectReasonInput" placeholder="Explain what needs to be changed..."></textarea>
                 </div>
             </div>
             <div class="modal-footer border-0 pt-0 flex-nowrap">
@@ -192,6 +224,13 @@
     <script>
         function submitDecision(decision) {
             document.getElementById('decisionInput').value = decision;
+            const commentsInput = document.getElementById('commentsInput');
+            if (decision === 'Reject') {
+                commentsInput.value = document.getElementById('rejectReasonInput').value;
+                return;
+            }
+
+            commentsInput.value = document.getElementById('editedFeedbackInput').value;
         }
     </script>
 }

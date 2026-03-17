@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GPMS.Domain.Enums;
 
 namespace GPMS.Application.DTOs.Lecturer;
 
@@ -17,6 +18,9 @@ public class LecturerFeedbackApprovalDetailDto
     public string FeedbackContent { get; set; } = string.Empty;
     public int CurrentRoundIndex { get; set; }
     public int TotalRounds { get; set; }
+    public DateTime SubmittedAt { get; set; }
+    public ApprovalStatus ApprovalStatus { get; set; }
+    public string? SupervisorComment { get; set; }
     public List<EvaluationScoreItemDto> Scores { get; set; } = new();
     public decimal TotalScore { get; set; }
     public decimal MaxTotalScore { get; set; } = 10.0m;

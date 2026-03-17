@@ -13,6 +13,23 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
     private readonly GpmsDbContext _context;
     public ReviewerAssignmentRepository(GpmsDbContext context) => _context = context;
 
+    public async Task<ReviewerAssignment?> GetByIdAsync(int assignmentId) =>
+        await _context.ReviewerAssignments
+            .Include(ra => ra.ReviewRound)
+                .ThenInclude(rr => rr.ReviewChecklist)
+                    .ThenInclude(rc => rc!.ChecklistItems)
+            .Include(ra => ra.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+                        .ThenInclude(ps => ps.Lecturer)
+            .Include(ra => ra.Group)
+                .ThenInclude(g => g.GroupMembers)
+                    .ThenInclude(m => m.User)
+            .Include(ra => ra.Group)
+                .ThenInclude(g => g.ReviewSessions)
+                    .ThenInclude(rs => rs.Room)
+            .FirstOrDefaultAsync(ra => ra.AssignmentID == assignmentId);
+
     public async Task<IEnumerable<ReviewerAssignment>> GetByRoundAndGroupAsync(int roundId, int groupId) => 
         await _context.ReviewerAssignments.Where(ra => ra.ReviewRoundID == roundId && ra.GroupID == groupId).ToListAsync();
 
@@ -24,6 +41,9 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
             .Include(ra => ra.Group)
                 .ThenInclude(g => g.ReviewSessions)
                     .ThenInclude(rs => rs.Room)
+            .Include(ra => ra.Group)
+                .ThenInclude(g => g.Evaluations)
+                    .ThenInclude(e => e.Feedback)
             .Where(ra => ra.ReviewerID == reviewerId)
             .OrderByDescending(ra => ra.ReviewRound.StartDate)
             .ToListAsync();

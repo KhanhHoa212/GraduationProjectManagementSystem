@@ -210,6 +210,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int? ExistingEvaluationID { get; set; }
         public string? ExistingFeedbackContent { get; set; }
         public List<ExistingScoreRow> ExistingScores { get; set; } = new();
+        public List<ScoreInputRow> CriteriaScores { get; set; } = new();
     }
 
     public class ChecklistItemRow
@@ -224,6 +225,13 @@ namespace GPMS.Web.ViewModels.Lecturer
     public class ExistingScoreRow
     {
         public int ItemID { get; set; }
+        public decimal Score { get; set; }
+        public string? Comment { get; set; }
+    }
+
+    public class ScoreInputRow
+    {
+        public int CriteriaId { get; set; }
         public decimal Score { get; set; }
         public string? Comment { get; set; }
     }

@@ -40,9 +40,15 @@ public class SubmissionSeeder : IDataSeeder
 
             // Status: 8 OnTime, 2 Late
             var status = groupCount < 8 ? SubmissionStatus.OnTime : SubmissionStatus.Late;
+            
+            // Use a safe base date to avoid ArgumentOutOfRangeException if deadline is default(DateTime)
+            var baseDate = round1.SubmissionDeadline > DateTime.MinValue.AddDays(7) 
+                ? round1.SubmissionDeadline 
+                : DateTime.UtcNow.AddDays(10);
+
             var submittedAt = status == SubmissionStatus.OnTime 
-                ? round1.SubmissionDeadline.AddDays(-2) 
-                : round1.SubmissionDeadline.AddHours(5);
+                ? baseDate.AddDays(-2) 
+                : baseDate.AddHours(5);
 
             foreach (var req in requirements)
             {

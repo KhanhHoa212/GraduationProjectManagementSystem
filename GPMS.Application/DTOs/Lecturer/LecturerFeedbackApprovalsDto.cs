@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GPMS.Domain.Enums;
 
 namespace GPMS.Application.DTOs.Lecturer;
 
@@ -21,6 +22,6 @@ public class PendingFeedbackItemDto
     public int RoundNumber { get; set; }
     public string ReviewerName { get; set; } = string.Empty;
     public DateTime SubmittedAt { get; set; }
-    public DateTime AutoReleaseAt { get; set; }
-    public string ApprovalStatus { get; set; } = string.Empty;
+    public DateTime? AutoReleaseAt { get; set; }
+    public ApprovalStatus ApprovalStatus { get; set; }
 }

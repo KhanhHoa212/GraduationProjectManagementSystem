@@ -6,6 +6,7 @@ namespace GPMS.Application.Interfaces.Repositories;
 
 public interface IReviewerAssignmentRepository
 {
+    Task<ReviewerAssignment?> GetByIdAsync(int assignmentId);
     Task<IEnumerable<ReviewerAssignment>> GetByRoundAndGroupAsync(int roundId, int groupId);
     Task<IEnumerable<ReviewerAssignment>> GetByReviewerAsync(string reviewerId);
     Task AddAsync(ReviewerAssignment assignment);
