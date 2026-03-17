@@ -207,5 +207,4 @@ public class AuthService : IAuthService
 
         return new AuthResultDto { Success = true };
     }
-
 }
