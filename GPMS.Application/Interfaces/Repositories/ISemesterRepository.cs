@@ -13,6 +13,7 @@ public interface ISemesterRepository
     Task UpdateAsync(Semester semester);
     Task DeleteAsync(int semesterId);
     Task<bool> ExistsAsync(int semesterId);
+    Task<IEnumerable<ReviewRound>> GetRoundsBySemesterAsync(int semesterId);
     Task SaveChangesAsync();
     Task<Semester?> GetOverlapSemesterAsync(DateTime start, DateTime end, int? ignoreId = null);
 }
