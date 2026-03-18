@@ -72,9 +72,21 @@ public class AuthService : IAuthService
         User dbUser;
         if (existingUser == null)
         {
+            string userId = Guid.NewGuid().ToString().Substring(0, 20);
+            
+            if (isAllowedDomain)
+            {
+                var prefix = email.Split('@')[0];
+                var match = System.Text.RegularExpressions.Regex.Match(prefix, @"[a-zA-Z]{2}\d{6}$");
+                if (match.Success)
+                {
+                    userId = match.Value.ToUpper();
+                }
+            }
+
             dbUser = new User
             {
-                UserID = Guid.NewGuid().ToString().Substring(0, 20),
+                UserID = userId,
                 Email = email,
                 FullName = fullName,
                 AvatarUrl = picture,
@@ -207,5 +219,4 @@ public class AuthService : IAuthService
 
         return new AuthResultDto { Success = true };
     }
-
 }

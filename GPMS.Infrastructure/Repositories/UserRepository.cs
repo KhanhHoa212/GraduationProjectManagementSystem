@@ -30,7 +30,14 @@ public class UserRepository : IUserRepository
         await _context.Users.Include(u => u.UserRoles).ToListAsync();
 
     public async Task<IEnumerable<User>> GetByRoleAsync(RoleName role) => 
-        await _context.Users.Where(u => u.UserRoles.Any(ur => ur.RoleName == role)).ToListAsync();
+        await _context.Users
+            .Include(u => u.UserRoles)
+            .Include(u => u.LecturerExpertises)
+                .ThenInclude(le => le.Expertise)
+            .Include(u => u.LecturerExpertises)
+                .ThenInclude(le => le.Expertise.Major)
+            .Where(u => u.UserRoles.Any(ur => ur.RoleName == role))
+            .ToListAsync();
 
     public async Task AddAsync(User user) => await _context.Users.AddAsync(user);
     public Task UpdateAsync(User user) { _context.Users.Update(user); return Task.CompletedTask; }

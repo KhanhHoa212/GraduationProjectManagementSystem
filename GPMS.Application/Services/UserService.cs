@@ -182,4 +182,16 @@ public class UserService : IUserService
         await _userRepository.UpdateAsync(user);
         await _userRepository.SaveChangesAsync();
     }
+
+    public async Task<(int total, int students, int lecturers, int admins, int hods)> GetUserCountsAsync()
+    {
+        var users = await _userRepository.GetAllAsync();
+        var list = users.ToList();
+        int total = list.Count;
+        int students  = list.Count(u => u.UserRoles.Any(r => r.RoleName == RoleName.Student));
+        int lecturers = list.Count(u => u.UserRoles.Any(r => r.RoleName == RoleName.Lecturer));
+        int admins    = list.Count(u => u.UserRoles.Any(r => r.RoleName == RoleName.Admin));
+        int hods      = list.Count(u => u.UserRoles.Any(r => r.RoleName == RoleName.HeadOfDept));
+        return (total, students, lecturers, admins, hods);
+    }
 }

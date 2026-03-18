@@ -90,6 +90,10 @@
 
                 const start = new Date(startStr);
                 const end = new Date(endStr);
+                        if (start > end) {
+            alert("Start date must be before End date");
+            return;
+        }
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 

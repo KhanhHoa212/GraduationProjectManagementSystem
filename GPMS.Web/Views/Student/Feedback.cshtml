@@ -1,0 +1,169 @@
+@model GPMS.Web.ViewModels.StudentFeedbackViewModel
+
+@{
+    ViewData["Title"] = "Results & Feedback";
+    Layout = "_StudentLayout";
+}
+
+<div class="max-w-6xl mx-auto space-y-6 animate-fade-in">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-[28px] font-bold text-[#1e3a8a] tracking-tight">Results & Feedback</h1>
+            <p class="text-[#64748b] text-[15px] mt-1">View evaluation results and feedback from the committee for each project phase.</p>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="flex space-x-8" aria-label="Tabs">
+            @foreach (var round in Model.Feedback.Rounds)
+            {
+                var isActive = round.IsSelected;
+
+                <a asp-action="Feedback" asp-route-roundId="@round.ReviewRoundId" 
+                   class="py-4 px-1 border-b-2 font-bold text-[15px] transition-all duration-200 flex items-center gap-2 group
+                          @(isActive ? "border-orange-500 text-orange-600" : "border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300")">
+                    @round.Title
+                    <span class="material-symbols-outlined text-[18px] text-emerald-500 filled">check_box</span>
+                </a>
+            }
+        </nav>
+    </div>
+
+    @if (Model.Feedback.Summary == null)
+    {
+        <div class="bg-white rounded-2xl border border-gray-200 p-12 text-center shadow-sm">
+            <div class="size-20 rounded-full bg-slate-50 flex items-center justify-center mx-auto mb-6 text-slate-300">
+                <span class="material-symbols-outlined text-[40px]">assignment_late</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 border-none">No Results Found</h3>
+            <p class="text-gray-500 mt-2 max-w-sm mx-auto">Evaluation results for this round are not yet available or published.</p>
+        </div>
+    }
+    else
+    {
+        <!-- Summary Card -->
+        <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+            <div class="flex items-center gap-5">
+                <div class="size-14 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-200">
+                    <span class="material-symbols-outlined text-[30px] font-bold">check</span>
+                </div>
+                <div>
+                    @{
+                        var selectedRound = Model.Feedback.Rounds.FirstOrDefault(r => r.IsSelected);
+                        var roundTitle = selectedRound?.Title.ToUpper() ?? "ROUND";
+                    }
+                    <h2 class="text-[20px] font-black text-emerald-900 tracking-tight">@roundTitle RESULTS</h2>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="material-symbols-outlined text-[16px] text-emerald-600 filled">verified_user</span>
+                        <p class="text-[14px] font-semibold text-emerald-700">@Model.Feedback.Summary.StatusText</p>
+                        <span class="text-emerald-300 mx-1">|</span>
+                        <p class="text-[13px] text-emerald-600/80">Updated at: @(Model.Feedback.Summary.UpdatedAt?.ToString("MMM dd, yyyy") ?? "N/A")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white px-6 py-4 rounded-xl border border-emerald-100 shadow-sm text-center min-w-[140px]">
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Score</p>
+                <div class="flex items-baseline justify-center gap-1">
+                    <span class="text-[32px] font-black text-gray-900">@Model.Feedback.Summary.TotalScore.ToString("F1")</span>
+                    <span class="text-[16px] font-bold text-gray-400">/ @Model.Feedback.Summary.MaxPossibleScore.ToString("F1")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Detailed Table -->
+            <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h3 class="text-[16px] font-bold text-gray-900">Detailed Scores</h3>
+                    <button class="flex items-center gap-2 text-[13px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
+                        <span class="material-symbols-outlined text-[18px]">download</span>
+                        Download PDF
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-gray-50/50">
+                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider">Criteria</th>
+                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider text-center">Max</th>
+                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider text-center">Score</th>
+                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider">Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach (var detail in Model.Feedback.Details)
+                            {
+                                var percentage = (detail.Score / detail.MaxScore) * 100;
+                                var barColor = percentage >= 80 ? "bg-emerald-500" : (percentage >= 50 ? "bg-amber-500" : "bg-rose-500");
+                                
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-5">
+                                        <p class="text-[14px] font-bold text-gray-900 mb-1">@detail.Title</p>
+                                    </td>
+                                    <td class="px-6 py-5 text-center">
+                                        <span class="text-[14px] font-bold text-gray-500">@detail.MaxScore.ToString("F1")</span>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <div class="flex flex-col items-center gap-2">
+                                            <span class="text-[15px] font-black text-blue-700">@detail.Score.ToString("F1")</span>
+                                            <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                                <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @percentage%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-5">
+                                        <p class="text-[13px] text-gray-600 italic">@(string.IsNullOrEmpty(detail.Comment) ? "---" : detail.Comment)</p>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Overall Comments -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
+                <div class="flex items-center gap-3">
+                    <div class="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[20px] filled">forum</span>
+                    </div>
+                    <h3 class="text-[16px] font-bold text-gray-900 border-none">Overall Feedback</h3>
+                </div>
+
+                <div class="relative">
+                    <div class="absolute -left-1 -top-1 text-blue-100 italic font-serif text-6xl">"</div>
+                    <div class="bg-slate-50/80 rounded-2xl p-6 border border-slate-100 relative z-10 min-h-[200px]">
+                        @if (string.IsNullOrEmpty(Model.Feedback.OverallFeedback))
+                        {
+                            <p class="text-gray-400 text-[14px] italic text-center mt-12">No overall feedback provided for this round.</p>
+                        }
+                        else
+                        {
+                            <p class="text-gray-700 text-[14px] leading-relaxed italic font-medium">
+                                @Model.Feedback.OverallFeedback
+                            </p>
+                        }
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-gray-50 flex items-center justify-between">
+                    <span class="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Source:</span>
+                    <span class="text-[13px] font-black text-gray-900">Reviewer (Anonymous)</span>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    @@keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+        animation: fadeIn 0.5s ease-out forwards;
+    }
+</style>

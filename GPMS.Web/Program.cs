@@ -4,6 +4,8 @@ using GPMS.Application.Mapping;
 using GPMS.Application.Services;
 using GPMS.Infrastructure.Data;
 using GPMS.Infrastructure.Email;
+using GPMS.Infrastructure.Services;
+using GPMS.Application.Common.Settings;
 using GPMS.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
@@ -32,6 +34,7 @@ builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
+builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -40,7 +43,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
-builder.Services.AddScoped<IProjectGroupService, ProjectGroupService>();
+builder.Services.AddScoped<IChecklistService, ChecklistService>();
 
 // Register Infrastructure (including Seeders)
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -52,6 +55,10 @@ builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
 builder.Services.AddRazorPages();
+
+// Memory cache (for system logs + visit tracking)
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpContextAccessor();
 
 // Add Google Authentication
 builder.Services.AddAuthentication(options =>
@@ -70,6 +77,11 @@ builder.Services.AddAuthentication(options =>
 builder.Services.Configure<EmailSettings>(
     builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddScoped<IEmailService, EmailService>();
+
+// Add Cloudinary service
+builder.Services.Configure<CloudinarySettings>(
+    builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.AddScoped<IFileService, CloudinaryService>();
 
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseService>();
