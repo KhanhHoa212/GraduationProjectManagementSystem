@@ -191,6 +191,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
+        // Chatbot messaging
         window.addEventListener("message", function (event) {
             if (!event.data || typeof event.data !== "object") return;
             const iframe = document.getElementById("chatbot-iframe");
@@ -212,20 +213,22 @@
             const mobileBtn = document.getElementById('mobile-menu-btn');
             const loadingOverlay = document.getElementById('loading-overlay');
 
-            if(mobileBtn) {
+            // Mobile sidebar toggle
+            if (mobileBtn) {
                 mobileBtn.addEventListener('click', () => {
                     sidebar.classList.remove('-translate-x-full');
                     overlay.classList.remove('hidden');
                 });
             }
 
-            if(overlay) {
+            if (overlay) {
                 overlay.addEventListener('click', () => {
                     sidebar.classList.add('-translate-x-full');
                     overlay.classList.add('hidden');
                 });
             }
 
+            // Form submission loading
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function () {
                     if (this.checkValidity()) {
@@ -234,6 +237,7 @@
                 });
             });
 
+            // Link click loading
             document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not([data-no-load])').forEach(link => {
                 link.addEventListener('click', function (e) {
                     const href = this.getAttribute('href');

@@ -28,7 +28,6 @@ public interface IProjectService
 
     // Feedback
     Task<StudentFeedbackDto> GetStudentFeedbackAsync(string studentId, int? roundId);
-
     // Supervisor Assignment
     Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId);
     Task<(bool success, string message)> AssignSupervisorAsync(int projectId, string lecturerId, string? assignedBy);
