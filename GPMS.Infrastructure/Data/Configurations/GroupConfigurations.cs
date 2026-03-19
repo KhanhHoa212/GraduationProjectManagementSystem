@@ -75,3 +75,30 @@ public class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMember>
             .OnDelete(DeleteBehavior.Cascade);
     }
 }
+
+public class GroupRoundProgressConfiguration : IEntityTypeConfiguration<GroupRoundProgress>
+{
+    public void Configure(EntityTypeBuilder<GroupRoundProgress> builder)
+    {
+        builder.ToTable("GroupRoundProgresses");
+        builder.HasKey(grp => new { grp.GroupID, grp.ReviewRoundID });
+
+        builder.Property(grp => grp.MentorDecision)
+            .HasConversion<string>()
+            .HasDefaultValue(MentorDecision.Pending)
+            .HasMaxLength(20);
+
+        builder.Property(grp => grp.MentorComment).HasMaxLength(500);
+        builder.Property(grp => grp.UpdatedAt).HasDefaultValueSql("GETDATE()");
+
+        builder.HasOne(grp => grp.Group)
+            .WithMany(g => g.GroupRoundProgresses)
+            .HasForeignKey(grp => grp.GroupID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(grp => grp.ReviewRound)
+            .WithMany(rr => rr.GroupRoundProgresses)
+            .HasForeignKey(grp => grp.ReviewRoundID)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}

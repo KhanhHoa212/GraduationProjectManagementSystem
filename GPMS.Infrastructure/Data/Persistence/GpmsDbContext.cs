@@ -33,6 +33,8 @@ public class GpmsDbContext : DbContext
     public DbSet<FeedbackApproval> FeedbackApprovals { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<GroupRoundProgress> GroupRoundProgresses { get; set; }
+    public DbSet<RubricDescription> RubricDescriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

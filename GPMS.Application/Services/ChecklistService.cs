@@ -37,8 +37,9 @@ public class ChecklistService : IChecklistService
                 ItemID = i.ItemID,
                 ItemCode = i.ItemCode,
                 ItemContent = i.ItemContent,
-                MaxScore = i.MaxScore,
-                Weight = i.Weight,
+                ItemName = i.ItemName,
+                ItemType = i.ItemType,
+                Section = i.Section,
                 OrderIndex = i.OrderIndex
             }).ToList()
         };
@@ -86,8 +87,9 @@ public class ChecklistService : IChecklistService
                 {
                     ItemCode = itemDto.ItemCode,
                     ItemContent = itemDto.ItemContent,
-                    MaxScore = itemDto.MaxScore,
-                    Weight = itemDto.Weight,
+                    ItemName = itemDto.ItemName,
+                    ItemType = itemDto.ItemType,
+                    Section = itemDto.Section,
                     OrderIndex = itemDto.OrderIndex
                 });
             }
@@ -98,8 +100,9 @@ public class ChecklistService : IChecklistService
                 {
                     existingItem.ItemCode = itemDto.ItemCode;
                     existingItem.ItemContent = itemDto.ItemContent;
-                    existingItem.MaxScore = itemDto.MaxScore;
-                    existingItem.Weight = itemDto.Weight;
+                    existingItem.ItemName = itemDto.ItemName;
+                    existingItem.ItemType = itemDto.ItemType;
+                    existingItem.Section = itemDto.Section;
                     existingItem.OrderIndex = itemDto.OrderIndex;
                 }
             }

@@ -61,6 +61,17 @@ public class ReviewerAssignmentSeeder : IDataSeeder
                     AssignedAt = DateTime.UtcNow,
                     IsRandom = true
                 });
+
+                // Add GroupRoundProgress (Mentor Decision)
+                // If round is already ongoing or completed, we assume it was "Accepted"
+                _context.GroupRoundProgresses.Add(new GroupRoundProgress
+                {
+                    GroupID = @group.GroupID,
+                    ReviewRoundID = round.ReviewRoundID,
+                    MentorDecision = MentorDecision.Accepted,
+                    MentorComment = "Tiến độ ổn, đồng ý cho review.",
+                    UpdatedAt = DateTime.UtcNow
+                });
             }
         }
 

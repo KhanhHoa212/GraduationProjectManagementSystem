@@ -17,8 +17,9 @@ public class ChecklistItemDto
     public int ItemID { get; set; }
     public string ItemCode { get; set; } = string.Empty;
     public string ItemContent { get; set; } = string.Empty;
-    public decimal MaxScore { get; set; }
-    public decimal Weight { get; set; }
+    public string? ItemName { get; set; }
+    public string ItemType { get; set; } = "YesNo";
+    public string? Section { get; set; }
     public int OrderIndex { get; set; }
 }
 

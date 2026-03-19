@@ -14,4 +14,5 @@ public class ProjectGroup
     public virtual ICollection<ReviewerAssignment> ReviewerAssignments { get; set; } = new List<ReviewerAssignment>();
     public virtual ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     public virtual ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+    public virtual ICollection<GroupRoundProgress> GroupRoundProgresses { get; set; } = new List<GroupRoundProgress>();
 }

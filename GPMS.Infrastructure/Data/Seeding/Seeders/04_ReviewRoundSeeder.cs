@@ -65,27 +65,44 @@ public class ReviewRoundSeeder : IDataSeeder
                 Title = $"Checklist for Round {round.RoundNumber}",
                 Description = $"Detailed evaluation criteria for Review Round {round.RoundNumber}",
                 CreatedBy = "GV001",
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                Type = round.RoundNumber == 3 ? ChecklistType.Rubric : ChecklistType.YesNo
             };
             _context.ReviewChecklists.Add(checklist);
             await _context.SaveChangesAsync();
 
             // Items
-            var items = new List<ChecklistItem>
-            {
-                new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C1", ItemContent = "Tiến độ", MaxScore = 10, OrderIndex = 1 },
-                new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C2", ItemContent = "Kỹ thuật", MaxScore = 10, OrderIndex = 2 },
-                new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C3", ItemContent = "Trình bày", MaxScore = 5, OrderIndex = 3 },
-                new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C4", ItemContent = "Tài liệu", MaxScore = 5, OrderIndex = 4 }
-            };
+            var items = new List<ChecklistItem>();
 
-            if (round.RoundNumber >= 2)
+            if (round.RoundNumber < 3)
             {
-                items.Add(new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C5", ItemContent = "Demo", MaxScore = 10, OrderIndex = 5 });
+                items.AddRange(new List<ChecklistItem>
+                {
+                    new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}Q1", ItemContent = "Sinh viên chuẩn bị đầy đủ tài liệu?", ItemType = "YesNo", Section = "Preparation", OrderIndex = 1 },
+                    new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}Q2", ItemContent = "Mã nguồn được upload lên repo đầy đủ?", ItemType = "YesNo", Section = "Technical", OrderIndex = 2 },
+                    new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}Q3", ItemContent = "Sinh viên nắm vững kiến thức đã thực hiện?", ItemType = "YesNo", Section = "Knowledge", OrderIndex = 3 }
+                });
             }
-            if (round.RoundNumber == 3)
+            else // Round 3 - Rubric
             {
-                items.Add(new ChecklistItem { ChecklistID = checklist.ChecklistID, ItemCode = $"R{round.RoundNumber}C6", ItemContent = "Phản biện", MaxScore = 10, OrderIndex = 6 });
+                var rubricItem = new ChecklistItem 
+                { 
+                    ChecklistID = checklist.ChecklistID, 
+                    ItemCode = "R3C1", 
+                    ItemName = "Product Quality", 
+                    ItemContent = "Đánh giá chất lượng sản phẩm phần mềm", 
+                    ItemType = "Rubric", 
+                    Section = "Software Product", 
+                    OrderIndex = 1 
+                };
+                items.Add(rubricItem);
+                
+                // We'll add RubricDescriptions after saving items to get IDs if needed, 
+                // but since we are using EF, we can add to the collection.
+                rubricItem.RubricDescriptions.Add(new RubricDescription { GradeLevel = "Excellent", Description = "Sản phẩm hoàn thiện, không lỗi, UX tốt." });
+                rubricItem.RubricDescriptions.Add(new RubricDescription { GradeLevel = "Good", Description = "Sản phẩm chạy tốt, còn vài lỗi nhỏ không đáng kể." });
+                rubricItem.RubricDescriptions.Add(new RubricDescription { GradeLevel = "Acceptable", Description = "Sản phẩm đáp ứng yêu cầu tối thiểu." });
+                rubricItem.RubricDescriptions.Add(new RubricDescription { GradeLevel = "Fail", Description = "Sản phẩm chưa hoàn thiện hoặc có lỗi nghiêm trọng." });
             }
 
             _context.ChecklistItems.AddRange(items);
