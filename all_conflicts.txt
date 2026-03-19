@@ -1,3 +1,0 @@
-﻿GPMS.Application/DTOs/ProjectDto.cs
-GPMS.Application/Interfaces/Services/IProjectService.cs
-GPMS.Web/Views/Shared/_StudentLayout.cshtml

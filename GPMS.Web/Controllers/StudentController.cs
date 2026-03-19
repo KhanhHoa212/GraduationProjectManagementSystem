@@ -1,3 +1,4 @@
+using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Services;
 using GPMS.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -13,11 +14,13 @@ public class StudentController : Controller
 {
     private readonly IProjectService _projectService;
     private readonly IReviewRoundService _reviewRoundService;
+    private readonly INotificationService _notificationService;
 
-    public StudentController(IProjectService projectService, IReviewRoundService reviewRoundService)
+    public StudentController(IProjectService projectService, IReviewRoundService reviewRoundService, INotificationService notificationService)
     {
         _projectService = projectService;
         _reviewRoundService = reviewRoundService;
+        _notificationService = notificationService;
     }
 
     public async Task<IActionResult> Index()
@@ -125,5 +128,73 @@ public class StudentController : Controller
         var viewModel = new StudentFeedbackViewModel { Feedback = feedbackData };
 
         return View(viewModel);
+    }
+
+    public async Task<IActionResult> Schedule()
+    {
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Auth");
+
+        var schedule = await _projectService.GetProjectDefenseScheduleAsync(studentId);
+        return View(schedule);
+    }
+
+    public async Task<IActionResult> Notifications(string type = "All")
+    {
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Auth");
+
+        var notifications = await _notificationService.GetNotificationsByRecipientAsync(studentId);
+        var unreadCount = await _notificationService.GetUnreadCountAsync(studentId);
+
+        var viewModel = new NotificationsViewModel
+        {
+            AllNotifications = notifications,
+            DeadlineNotifications = notifications.Where(n => n.Type == GPMS.Domain.Enums.NotificationType.Deadline),
+            FeedbackNotifications = notifications.Where(n => n.Type == GPMS.Domain.Enums.NotificationType.Feedback),
+            UnreadCount = unreadCount,
+            ActiveTab = type
+        };
+
+        IEnumerable<NotificationDto> filteredNotifications = type switch
+        {
+            "Unread" => viewModel.AllNotifications.Where(n => !n.IsRead),
+            "Deadline" => viewModel.DeadlineNotifications,
+            "Feedback" => viewModel.FeedbackNotifications,
+            _ => viewModel.AllNotifications
+        };
+
+        viewModel.GroupedNotifications = filteredNotifications
+            .GroupBy(n => GetDateGroupName(n.CreatedAt))
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        return View(viewModel);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> MarkAllAsRead()
+    {
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Auth");
+
+        await _notificationService.MarkAllAsReadAsync(studentId);
+        return RedirectToAction("Notifications");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ToggleReadStatus(int id, string type)
+    {
+        await _notificationService.ToggleReadStatusAsync(id);
+        return RedirectToAction("Notifications", new { type });
+    }
+
+    private string GetDateGroupName(DateTime date)
+    {
+        var today = DateTime.UtcNow.Date;
+        var yesterday = today.AddDays(-1);
+
+        if (date.Date == today) return "TODAY";
+        if (date.Date == yesterday) return "YESTERDAY";
+        return date.ToString("dd/MM/yyyy");
     }
 }

@@ -43,6 +43,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
 // Register Infrastructure (including Seeders)
