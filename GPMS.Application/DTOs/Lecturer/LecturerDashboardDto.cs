@@ -12,6 +12,7 @@ public class LecturerDashboardDto
     public int PendingApprovalsCount { get; set; }
     public int AssignedReviewsCount { get; set; }
     public int UpcomingDeadlinesCount { get; set; }
+    public string GuidanceMessage { get; set; } = string.Empty;
     public List<DashboardActivityItemDto> RecentActivities { get; set; } = new();
     public List<DashboardScheduleItemDto> TodaysSchedule { get; set; } = new();
 }
@@ -34,4 +35,6 @@ public class DashboardScheduleItemDto
     public string Location { get; set; } = string.Empty;
     public int DurationMinutes { get; set; }
     public bool IsHighlight { get; set; }
+    public string? MeetLink { get; set; }
+    public string? ActionUrl { get; set; }
 }

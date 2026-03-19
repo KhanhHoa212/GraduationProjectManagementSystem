@@ -71,9 +71,10 @@ public enum RoundStatus
 
 public enum SubmissionStatus
 {
-    OnTime,
-    Late,
-    Replaced
+    OnTime = 0,
+    Late = 1,
+    Replaced = 2,
+    NotSubmitted = 3
 }
 
 public enum EvaluationStatus
@@ -88,6 +89,20 @@ public enum ApprovalStatus
     Approved,
     Rejected,
     AutoReleased
+}
+
+public enum ChecklistInputType
+{
+    NumericScore,
+    YesNoNa,
+    GradeLevel
+}
+
+public enum MentorGateStatus
+{
+    Pending,
+    Approved,
+    Rejected
 }
 
 public enum RoomType

@@ -66,6 +66,7 @@ namespace GPMS.Web.Services
                     foreach (var approval in pendingReleases)
                     {
                         approval.IsVisibleToStudent = true;
+                        approval.AutoReleasedAt = DateTime.UtcNow;
                     }
 
                     await context.SaveChangesAsync(stoppingToken);

@@ -24,6 +24,7 @@ public class User
     public virtual ICollection<ReviewChecklist> CreatedChecklists { get; set; } = new List<ReviewChecklist>();
     public virtual ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
     public virtual ICollection<FeedbackApproval> FeedbackApprovals { get; set; } = new List<FeedbackApproval>();
+    public virtual ICollection<MentorRoundReview> MentorRoundReviews { get; set; } = new List<MentorRoundReview>();
     public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     // Self-referencing navigations for audit fields (AssignedBy)

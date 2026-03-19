@@ -1,220 +1,228 @@
-@using GPMS.Web.ViewModels.Lecturer
-@model FeedbackApprovalDetailViewModel
+@using System
+@using System.Linq
+@using GPMS.Domain.Enums
+@model GPMS.Web.ViewModels.Lecturer.FeedbackApprovalDetailViewModel
 @{
     ViewData["Title"] = "Feedback Approval Detail";
     Layout = "_LecturerLayout";
+    var isGradeRound = Model.Scores.Any(s => s.InputType == ChecklistInputType.GradeLevel);
+    var groupedScores = Model.Scores
+        .Select((score, index) => new { score, index })
+        .GroupBy(x => x.score.SectionTitle ?? "Checklist");
 }
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
     <div>
-        <h1 class="page-title">Feedback Approval Detail</h1>
-        <p class="page-subtitle text-muted mb-0">Reviewing Round @Model.ReviewRoundName - Submission from @Model.GroupName</p>
+        <h1 class="page-title">Mentor Review Approval</h1>
+        <p class="page-subtitle text-muted mb-0">@Model.GroupName - Round @Model.CurrentRoundIndex (@Model.ReviewRoundName)</p>
     </div>
-    <div class="d-flex gap-3">
-        <div class="px-4 py-2 bg-white border rounded text-center">
-            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">ROUND</div>
-            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.CurrentRoundIndex <span class="text-muted fw-normal" style="font-size: 14px;">/ @Model.TotalRounds</span></div>
-        </div>
-        <div class="px-4 py-2 bg-white border rounded text-center">
-            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">GROUP ID</div>
-            <div class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">@Model.GroupID</div>
-        </div>
-        <div class="px-4 py-2 bg-white border rounded text-center">
-            <div class="text-muted fw-bold" style="font-size: 10px; letter-spacing: 0.5px;">STATUS</div>
-            <div class="fw-bold text-body" style="font-size: 16px;">@Model.ApprovalStatus</div>
-        </div>
+    <div class="d-flex gap-2">
+        <span class="badge @(Model.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning" : Model.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger") px-3 py-2">
+            @Model.ApprovalStatus
+        </span>
+        <span class="badge @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-success-subtle text-success" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-danger-subtle text-danger" : "bg-secondary-subtle text-secondary") px-3 py-2">
+            Gate: @Model.MentorGateStatus
+        </span>
     </div>
 </div>
 
-<div class="row g-4">
-    <!-- Left Column: Scores & Feedback Content -->
-    <div class="col-lg-8 d-flex flex-column gap-section">
-        
-        <!-- Scores Table -->
-        <div class="card-panel p-0 overflow-hidden mb-0 border">
-            <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">bar_chart</span>
-                <h2 class="section-title mb-0">Evaluation Criteria Scores</h2>
-            </div>
-            
-            <table class="table mb-0 align-middle">
-                <thead>
-                    <tr>
-                        <th style="width: 45%;">CRITERIA</th>
-                        <th style="width: 15%; text-align: center;">WEIGHT</th>
-                        <th style="width: 20%; text-align: center;">SCORE</th>
-                        <th style="width: 20%; text-align: center;">WEIGHTED SCORE</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var s in Model.Scores)
-                    {
-                        <tr>
-                            <td class="fw-medium" style="font-size: 13px;">@s.CriteriaName</td>
-                            <td class="text-center text-muted" style="font-size: 13px;">@s.WeightPercentage%</td>
-                            <td class="text-center fw-medium" style="font-size: 13px;">@s.Score <span class="text-muted">/ @s.MaxScore</span></td>
-                            <td class="text-center fw-bold text-body" style="font-size: 14px;">@s.WeightedScore.ToString("F2")</td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
-                    <tr style="background-color: #FFF7F2;">
-                        <td colspan="3" class="fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 16px;">Total Score</td>
-                        <td class="text-center fw-bold text-orange-600" style="color: var(--fpt-orange); font-size: 18px;">@Model.TotalScore.ToString("F1") <span style="font-size: 14px; font-weight: 500;">/ @Model.MaxTotalScore.ToString("F1")</span></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-
-        <!-- Feedback Content Editor -->
-        <form asp-action="ApproveFeedback" asp-controller="Lecturer" method="post" class="mb-0" id="feedbackActionForm">
-            @Html.AntiForgeryToken()
-            <input type="hidden" name="feedbackId" value="@Model.FeedbackID" />
-            <input type="hidden" name="decision" id="decisionInput" value="" />
-            <input type="hidden" name="comments" id="commentsInput" value="" />
-
-            <div class="card-panel mb-0 border">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined text-orange-500" style="color:var(--fpt-orange)">edit_note</span>
-                        <h2 class="section-title mb-0">Evaluation Feedback Content</h2>
-                    </div>
-                    <span class="badge bg-light text-muted border px-2 py-1" style="font-size: 10px; letter-spacing: 0.5px;">EDITABLE</span>
-                </div>
-                
-                <div class="mb-3">
-                    <label class="form-label" style="font-size: 11px; text-transform: uppercase; font-weight: 600; color: var(--text-muted); letter-spacing: 0.5px;">FEEDBACK TO GROUP MEMBERS</label>
-                    <textarea class="form-control hover-bg-light" id="editedFeedbackInput" rows="10" style="font-family: var(--font-primary); font-size: 14px; line-height: 1.6; padding: 16px;">@Model.FeedbackContent</textarea>
-                </div>
-
-                <div class="d-flex justify-content-between text-muted" style="font-size:12px;">
-                    <span>Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</span>
-                    @if (!string.IsNullOrWhiteSpace(Model.SupervisorComment))
-                    {
-                        <span>Last note: @Model.SupervisorComment</span>
-                    }
-                </div>
-                
-                <div class="d-flex align-items-start gap-2 mt-3 text-muted">
-                    <span class="material-symbols-outlined" style="font-size: 16px;">info</span>
-                    <p class="mb-0" style="font-size: 12px;">You can modify this text before clicking 'Approve with Edits'.</p>
-                </div>
-            </div>
-        </form>
+@if (!string.IsNullOrWhiteSpace(Model.MentorGateComment))
+{
+    <div class="alert alert-info border-0 mb-4">
+        <div class="fw-semibold mb-1">Pre-review mentor comment</div>
+        <div style="font-size:13px;">@Model.MentorGateComment</div>
     </div>
+}
 
-    <!-- Right Column: Actions & Meta -->
-    <div class="col-lg-4 d-flex flex-column gap-section">
-        
-        <!-- Group Members -->
-        <div class="card-panel mb-0 border">
-            <div class="text-muted mb-3 pb-2 border-bottom" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP MEMBERS</div>
-            <div class="d-flex flex-column gap-3">
-                @foreach (var m in Model.GroupMembers)
-                {
-                    <div class="d-flex align-items-center gap-3">
-                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(m.FullName)&background=E5E7EB&color=374151" class="rounded-circle" width="36" height="36" />
-                        <div style="line-height: 1.2;">
-                            <div class="fw-bold text-body" style="font-size: 13px;">@m.FullName</div>
-                            <div class="text-muted mt-1" style="font-size: 11px;">@m.Role</div>
+<form asp-action="ApproveFeedback" asp-controller="Lecturer" method="post" id="feedbackActionForm">
+    @Html.AntiForgeryToken()
+    <input type="hidden" asp-for="FeedbackID" />
+    <input type="hidden" name="decision" id="decisionInput" value="" />
+    <input type="hidden" name="comments" id="commentsInput" value="" />
+
+    <div class="row g-4">
+        <div class="col-xl-8 d-flex flex-column gap-section">
+            @if (isGradeRound)
+            {
+                <div class="card-panel border p-0 overflow-hidden shadow-sm mb-0">
+                    <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">grading</span>
+                        <h2 class="section-title mb-0">Round 3 Review Table</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th style="min-width:80px;">Code</th>
+                                    <th style="min-width:180px;">Name</th>
+                                    <th style="min-width:240px;">Criteria</th>
+                                    <th style="min-width:150px;">Grade Level</th>
+                                    <th style="min-width:220px;">Grade</th>
+                                    <th style="min-width:220px;">Mentor Comment</th>
+                                    <th style="min-width:220px;">Reviewer Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < Model.Scores.Count; i++)
+                                {
+                                    var score = Model.Scores[i];
+                                    <tr>
+                                        <td>
+                                            <input type="hidden" asp-for="Scores[@i].ItemID" value="@score.ItemID" />
+                                            @score.ItemCode
+                                        </td>
+                                        <td>@score.ItemName</td>
+                                        <td>
+                                            <div style="white-space:pre-line; font-size:13px;">@score.CriteriaName</div>
+                                        </td>
+                                        <td><span class="badge bg-light text-body border">@score.AssessmentValue</span></td>
+                                        <td>
+                                            <div class="small text-muted">@score.GradeDescription</div>
+                                            <details class="mt-2">
+                                                <summary class="text-primary" style="cursor:pointer; font-size:12px;">Rubric reference</summary>
+                                                <div class="small text-muted mt-2">
+                                                    <div><strong>Excellent:</strong> @score.ExcellentRubric</div>
+                                                    <div class="mt-1"><strong>Good:</strong> @score.GoodRubric</div>
+                                                    <div class="mt-1"><strong>Acceptable:</strong> @score.AcceptableRubric</div>
+                                                    <div class="mt-1"><strong>Fail:</strong> @score.FailRubric</div>
+                                                </div>
+                                            </details>
+                                        </td>
+                                        <td><textarea asp-for="Scores[@i].MentorComment" class="form-control" rows="4" placeholder="Mentor comment"></textarea></td>
+                                        <td><textarea class="form-control" rows="4" readonly>@score.ReviewerComment</textarea></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="card-panel border shadow-sm mb-0">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">rule_settings</span>
+                        <h2 class="section-title mb-0">Reviewer Checklist Submission</h2>
+                    </div>
+
+                    @foreach (var sectionGroup in groupedScores)
+                    {
+                        <div class="mb-4">
+                            <div class="fw-bold mb-3" style="font-size:15px;">@sectionGroup.Key</div>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th style="min-width:320px;">Question</th>
+                                            <th style="min-width:110px;">Priority</th>
+                                            <th style="min-width:130px;">Assessment</th>
+                                            <th style="min-width:220px;">Mentor Comment</th>
+                                            <th style="min-width:220px;">Reviewer Comment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in sectionGroup)
+                                        {
+                                            var score = row.score;
+                                            var i = row.index;
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" asp-for="Scores[@i].ItemID" value="@score.ItemID" />
+                                                    <div class="fw-medium">@score.CriteriaName</div>
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrWhiteSpace(score.PriorityLabel))
+                                                    {
+                                                        <span class="badge bg-warning-subtle text-warning">@score.PriorityLabel</span>
+                                                    }
+                                                </td>
+                                                <td><span class="badge bg-light text-body border">@score.AssessmentValue</span></td>
+                                                <td><textarea asp-for="Scores[@i].MentorComment" class="form-control" rows="3" placeholder="Mentor comment"></textarea></td>
+                                                <td><textarea class="form-control" rows="3" readonly>@score.ReviewerComment</textarea></td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                }
-                @if (!Model.GroupMembers.Any())
-                {
-                    <p class="text-muted mb-0" style="font-size:13px;">No member info available.</p>
-                }
-            </div>
-        </div>
-
-        <!-- Decision Panel -->
-        <div class="card-panel mb-0 border shadow-sm section-panel-bg">
-            <h2 class="section-title d-flex align-items-center gap-2 mb-4">
-                <span class="material-symbols-outlined fs-5">gavel</span>
-                Decision Panel
-            </h2>
-
-            <button type="button" class="btn btn-primary w-100 py-3 mb-3 d-flex align-items-center justify-content-center gap-2 fs-6 shadow-sm"
-                    onclick="submitDecision('Approve')" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">
-                <span class="material-symbols-outlined fs-5">check_circle</span>
-                Approve Feedback
-            </button>
-            <button type="button" class="btn btn-secondary w-100 py-3 mb-4 d-flex align-items-center justify-content-center gap-2" style="font-size: 15px; font-weight: 600;"
-                    onclick="submitDecision('ApproveWithEdits')" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">
-                <span class="material-symbols-outlined fs-5 text-orange-600" style="color:var(--fpt-orange)">edit</span>  
-                <span class="text-orange-600" style="color:var(--fpt-orange)">Approve with Edits</span>
-            </button>
-
-            <div class="position-relative text-center mb-4">
-                <hr class="text-muted" style="opacity: 0.2;">
-                <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted" style="font-size: 10px; font-weight: 700; letter-spacing: 1px;">OR</span>
-            </div>
-
-            <button type="button" class="btn btn-danger w-100 py-3 d-flex align-items-center justify-content-center gap-2 bg-danger-subtle border-0" style="background:#FEF2F2;"
-                    onclick="submitDecision('Reject')" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">
-                <span class="material-symbols-outlined fs-5">block</span>
-                Reject for Revision
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- Approve Modal -->
-<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Approve Feedback</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted" style="font-size: 14px;">Are you sure you want to approve this feedback? It will be immediately released to the students.</p>
-            </div>
-            <div class="modal-footer border-0 pt-0 flex-nowrap">
-                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary w-50 m-0 ms-2" onclick="document.getElementById('feedbackActionForm').submit()">Approve</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Approve With Edits Modal -->
-<div class="modal fade" id="confirmApproveEditsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Approve With Edits</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted" style="font-size: 14px;">Your edited feedback will be saved and released to the group immediately.</p>
-            </div>
-            <div class="modal-footer border-0 pt-0 flex-nowrap">
-                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary w-50 m-0 ms-2" onclick="document.getElementById('feedbackActionForm').submit()">Approve</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Reject Modal -->
-<div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-danger">Reject Feedback</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p class="text-muted" style="font-size: 14px; margin-bottom: 20px;">Please provide a reason for rejecting this feedback. This will be sent back to the assigned Reviewer.</p>
-                <div class="form-group">
-                    <label class="form-label">Rejection Reason</label>
-                    <textarea class="form-control" rows="4" id="rejectReasonInput" placeholder="Explain what needs to be changed..."></textarea>
+                    }
                 </div>
+            }
+
+            <div class="card-panel border shadow-sm mb-0">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="section-title mb-0">Overall Feedback to Student Group</h2>
+                    <span class="small text-muted">Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</span>
+                </div>
+                <textarea asp-for="FeedbackContent" class="form-control" rows="8" id="editedFeedbackInput"></textarea>
             </div>
-            <div class="modal-footer border-0 pt-0 flex-nowrap">
-                <button type="button" class="btn btn-secondary w-50 m-0" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger w-50 m-0 ms-2 text-white" style="background:#DC2626;" onclick="document.getElementById('feedbackActionForm').submit()">Confirm Reject</button>
+        </div>
+
+        <div class="col-xl-4 d-flex flex-column gap-section">
+            <div class="card-panel border shadow-sm mb-0">
+                <div class="fw-semibold mb-2">Review Meta</div>
+                <div class="small text-muted mb-1">Reviewer: @Model.ReviewerName</div>
+                <div class="small text-muted mb-1">Round: @Model.CurrentRoundIndex / @Model.TotalRounds</div>
+                <div class="small text-muted mb-3">Total Score: @Model.TotalScore / @Model.MaxTotalScore</div>
+                <div class="small text-muted">Latest supervisor note: @(string.IsNullOrWhiteSpace(Model.SupervisorComment) ? "None" : Model.SupervisorComment)</div>
+            </div>
+
+            <div class="card-panel border shadow-sm mb-0">
+                <h2 class="section-title mb-3">Decision Panel</h2>
+                <button type="button" class="btn btn-primary w-100 mb-3" onclick="prepareDecision('Approve')" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">Approve</button>
+                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="prepareDecision('ApproveWithEdits')" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">Approve with Edits</button>
+                <button type="button" class="btn btn-danger w-100" onclick="prepareDecision('Reject')" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">Reject</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Approve Feedback</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">This will approve the review and make it available for student release according to the auto-release rule.</div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitApproval()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmApproveEditsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">Approve With Edits</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">Your edited overall feedback and mentor comments will be saved before approval.</div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="submitApproval()">Confirm</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger">Reject Feedback</h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Rejection Reason</label>
+                <textarea class="form-control" rows="4" id="rejectReasonInput" placeholder="Explain what the reviewer needs to revise."></textarea>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="submitApproval()">Reject</button>
             </div>
         </div>
     </div>
@@ -222,15 +230,17 @@
 
 @section Scripts {
     <script>
-        function submitDecision(decision) {
+        function prepareDecision(decision) {
             document.getElementById('decisionInput').value = decision;
-            const commentsInput = document.getElementById('commentsInput');
-            if (decision === 'Reject') {
-                commentsInput.value = document.getElementById('rejectReasonInput').value;
-                return;
-            }
+        }
 
-            commentsInput.value = document.getElementById('editedFeedbackInput').value;
+        function submitApproval() {
+            const decision = document.getElementById('decisionInput').value;
+            const commentsInput = document.getElementById('commentsInput');
+            commentsInput.value = decision === 'Reject'
+                ? document.getElementById('rejectReasonInput').value
+                : '';
+            document.getElementById('feedbackActionForm').submit();
         }
     </script>
 }

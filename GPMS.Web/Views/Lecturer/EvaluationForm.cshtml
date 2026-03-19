@@ -1,8 +1,15 @@
+@using System
+@using System.Linq
+@using GPMS.Domain.Enums
 @model GPMS.Web.ViewModels.Lecturer.EvaluationFormViewModel
 @{
     ViewData["Title"] = "Evaluation Form";
     Layout = "_LecturerLayout";
-    var isReadOnly = Model.ExistingEvaluationID.HasValue;
+    var isReadOnly = Model.ExistingEvaluationID.HasValue && !Model.CanEdit;
+    var isGradeRound = Model.ChecklistItems.Any(i => i.InputType == ChecklistInputType.GradeLevel);
+    var sectionGroups = Model.ChecklistItems
+        .Select((item, index) => new { item, index, existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID) })
+        .GroupBy(x => x.item.SectionTitle ?? "Checklist");
 }
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
@@ -10,12 +17,41 @@
         <h1 class="page-title">Evaluation Form</h1>
         <p class="page-subtitle text-muted mb-0">@Model.GroupName - Round @Model.RoundNumber (@Model.RoundType)</p>
     </div>
-    <div class="d-flex align-items-center gap-3">
-        <span class="badge @(isReadOnly ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") py-2 px-3" style="font-size:13px;">
-            @(isReadOnly ? "Submitted" : "Pending")
+    <div class="d-flex gap-2 align-items-center">
+        <span class="badge @(isReadOnly ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") px-3 py-2">
+            @(isReadOnly ? "Read Only" : "Editable")
+        </span>
+        <span class="badge @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-success-subtle text-success" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-danger-subtle text-danger" : "bg-secondary-subtle text-secondary") px-3 py-2">
+            Mentor Gate: @Model.MentorGateStatus
         </span>
     </div>
 </div>
+
+@if (!string.IsNullOrWhiteSpace(Model.MentorGateComment))
+{
+    <div class="alert @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "alert-danger" : "alert-info") border-0 mb-4">
+        <div class="fw-semibold mb-1">Mentor Progress Comment</div>
+        <div style="font-size:13px;">@Model.MentorGateComment</div>
+    </div>
+}
+
+@if (Model.MentorGateStatus != MentorGateStatus.Approved)
+{
+    <div class="alert alert-warning border-0 mb-4">
+        <div class="fw-semibold mb-1">Reviewer access is not open yet</div>
+        <div style="font-size:13px;">
+            The mentor must approve this group for the round before the reviewer can submit evaluation.
+        </div>
+    </div>
+}
+
+@if (!string.IsNullOrWhiteSpace(Model.SupervisorComment))
+{
+    <div class="alert alert-warning border-0 mb-4">
+        <div class="fw-semibold mb-1">Latest supervisor note</div>
+        <div style="font-size:13px;">@Model.SupervisorComment</div>
+    </div>
+}
 
 <form asp-action="SubmitEvaluation" asp-controller="Lecturer" method="post" id="evaluationForm">
     @Html.AntiForgeryToken()
@@ -23,70 +59,174 @@
     <input type="hidden" asp-for="GroupID" />
 
     <div class="row g-4">
-        <div class="col-lg-8 order-lg-first d-flex flex-column gap-section">
-            <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
-                <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                    <span class="material-symbols-outlined" style="color:var(--fpt-orange)">checklist</span>
-                    <h2 class="section-title mb-0">Evaluation Criteria</h2>
-                </div>
-                <table class="table mb-0 align-middle">
-                    <thead>
-                        <tr class="bg-light">
-                            <th class="px-4" style="width:50%;">CRITERIA</th>
-                            <th style="width:15%; text-align:center;">MAX</th>
-                            <th style="width:35%;">SCORE</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (!Model.ChecklistItems.Any())
-                        {
-                            <tr>
-                                <td colspan="3" class="text-center text-muted py-4">No evaluation criteria found for this round.</td>
-                            </tr>
-                        }
-                        @for (var i = 0; i < Model.ChecklistItems.Count; i++)
-                        {
-                            var item = Model.ChecklistItems[i];
-                            <tr class="criterion-row">
-                                <td class="px-4">
-                                    <div class="fw-medium text-body" style="font-size:14px;">@item.ItemCode - @item.ItemContent</div>
-                                </td>
-                                <td class="text-center text-muted fw-bold">@item.MaxScore</td>
-                                <td>
-                                    <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
-                                    <input type="hidden" asp-for="CriteriaScores[@i].Comment" />
-                                    <input asp-for="CriteriaScores[@i].Score"
-                                           class="form-control score-input"
-                                           type="number"
-                                           min="0" max="@item.MaxScore" step="0.5"
-                                           placeholder="0-@item.MaxScore"
-                                           data-max="@item.MaxScore"
-                                           readonly="@isReadOnly"
-                                           required />
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                    <tfoot>
-                        <tr style="background:#FFF7F2;">
-                            <td class="px-4 fw-bold text-body" colspan="2">Total Score</td>
-                            <td class="fw-bold" style="color:var(--fpt-orange); font-size:16px;" id="totalScoreDisplay">- / @Model.ChecklistItems.Sum(c => c.MaxScore)</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <div class="card-panel border mb-0 shadow-sm">
-                <h2 class="section-title mb-3">Overall Comments</h2>
-                <textarea asp-for="ExistingFeedbackContent" class="form-control" rows="6"
-                          placeholder="Write your overall feedback for this group..."
-                          readonly="@isReadOnly"></textarea>
-            </div>
-
-            @if (!isReadOnly)
+        <div class="col-xl-9 d-flex flex-column gap-section">
+            @if (isGradeRound)
             {
-                <div class="d-flex justify-content-end gap-3">
-                    <button type="submit" class="btn btn-primary px-4">
+                <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
+                    <div class="p-3 border-bottom d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">grading</span>
+                        <h2 class="section-title mb-0">Round 3 Rubric Evaluation</h2>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table mb-0 align-middle">
+                            <thead>
+                                <tr class="bg-light">
+                                    <th class="px-3" style="min-width:80px;">Code</th>
+                                    <th style="min-width:180px;">Name</th>
+                                    <th style="min-width:280px;">Evaluation Criteria</th>
+                                    <th style="min-width:150px;">Grade Level</th>
+                                    <th style="min-width:260px;">Grade</th>
+                                    <th style="min-width:220px;">Reviewer Comment</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (var i = 0; i < Model.ChecklistItems.Count; i++)
+                                {
+                                    var item = Model.ChecklistItems[i];
+                                    var existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID);
+                                    <tr>
+                                        <td class="px-3 fw-semibold">@item.ItemCode</td>
+                                        <td>
+                                            <div class="fw-semibold">@item.ItemName</div>
+                                            @if (!string.IsNullOrWhiteSpace(item.SectionTitle))
+                                            {
+                                                <div class="text-muted" style="font-size:12px;">@item.SectionTitle</div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div style="white-space:pre-line; font-size:13px;">@item.ItemContent</div>
+                                            <details class="mt-2">
+                                                <summary class="text-primary" style="cursor:pointer; font-size:12px;">View rubric reference</summary>
+                                                <div class="mt-2 small text-muted">
+                                                    <div><strong>Excellent:</strong> @item.ExcellentRubric</div>
+                                                    <div class="mt-1"><strong>Good:</strong> @item.GoodRubric</div>
+                                                    <div class="mt-1"><strong>Acceptable:</strong> @item.AcceptableRubric</div>
+                                                    <div class="mt-1"><strong>Fail:</strong> @item.FailRubric</div>
+                                                </div>
+                                            </details>
+                                        </td>
+                                        <td>
+                                            <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
+                                            <input type="hidden" asp-for="CriteriaScores[@i].Score" />
+                                            <select asp-for="CriteriaScores[@i].AssessmentValue"
+                                                    class="form-select grade-level-select"
+                                                    data-target="grade-desc-@i"
+                                                    data-summary="grade-summary"
+                                                    disabled="@isReadOnly"
+                                                    required>
+                                                <option value="">Select</option>
+                                                <option value="Excellent">Excellent</option>
+                                                <option value="Good">Good</option>
+                                                <option value="Acceptable">Acceptable</option>
+                                                <option value="Fail">Fail</option>
+                                                <option value="NA">N/A</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <div id="grade-desc-@i" class="small text-muted">@((existing?.GradeDescription) ?? "Rubric text will appear here based on selected grade level.")</div>
+                                            @if (!string.IsNullOrWhiteSpace(existing?.MentorComment))
+                                            {
+                                                <div class="mt-2 p-2 rounded bg-light small">
+                                                    <strong>Mentor Comment:</strong> @existing.MentorComment
+                                                </div>
+                                            }
+                                        </td>
+                                        <td>
+                                            <textarea asp-for="CriteriaScores[@i].Comment" class="form-control" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-panel border mb-0 shadow-sm">
+                    <h2 class="section-title mb-3">Summary</h2>
+                    <div class="row g-3 mb-3" id="grade-summary">
+                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Excellent">0</div><div class="small text-muted">Excellent</div></div></div>
+                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Good">0</div><div class="small text-muted">Good</div></div></div>
+                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Acceptable">0</div><div class="small text-muted">Acceptable</div></div></div>
+                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Fail">0</div><div class="small text-muted">Fail</div></div></div>
+                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="NA">0</div><div class="small text-muted">N/A</div></div></div>
+                    </div>
+                    <label class="form-label fw-semibold">Overall Reviewer Comment / Suggestion for Project Supervisor</label>
+                    <textarea asp-for="ExistingFeedbackContent" class="form-control" rows="6" readonly="@isReadOnly" placeholder="Enter your overall comment and suggestion for the mentor."></textarea>
+                </div>
+            }
+            else
+            {
+                <div class="card-panel border mb-0 shadow-sm">
+                    <div class="d-flex align-items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">rule_settings</span>
+                        <h2 class="section-title mb-0">Round @Model.RoundNumber Checklist</h2>
+                    </div>
+
+                    @foreach (var sectionGroup in sectionGroups)
+                    {
+                        <div class="mb-4">
+                            <div class="fw-bold mb-3" style="font-size:15px;">@sectionGroup.Key</div>
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0">
+                                    <thead>
+                                        <tr class="bg-light">
+                                            <th style="min-width:320px;">Question</th>
+                                            <th style="min-width:120px;">Priority</th>
+                                            <th style="min-width:210px;">Assessment</th>
+                                            <th style="min-width:220px;">Mentor Comment</th>
+                                            <th style="min-width:220px;">Reviewer Comment</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var row in sectionGroup)
+                                        {
+                                            var i = row.index;
+                                            var item = row.item;
+                                            var existing = row.existing;
+                                            var currentValue = Model.CriteriaScores.ElementAtOrDefault(i)?.AssessmentValue ?? existing?.AssessmentValue ?? string.Empty;
+                                            <tr>
+                                                <td>
+                                                    <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
+                                                    <input type="hidden" asp-for="CriteriaScores[@i].Score" />
+                                                    <div class="fw-medium">@item.ItemContent</div>
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrWhiteSpace(item.PriorityLabel))
+                                                    {
+                                                        <span class="badge bg-warning-subtle text-warning">@item.PriorityLabel</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    <input type="hidden" asp-for="CriteriaScores[@i].AssessmentValue" class="assessment-value" />
+                                                    <div class="btn-group" role="group">
+                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "Y" ? "btn-primary" : "btn-outline-secondary")" data-value="Y" data-target-index="@i" disabled="@isReadOnly">Y</button>
+                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "N" ? "btn-primary" : "btn-outline-secondary")" data-value="N" data-target-index="@i" disabled="@isReadOnly">N</button>
+                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "NA" ? "btn-primary" : "btn-outline-secondary")" data-value="NA" data-target-index="@i" disabled="@isReadOnly">NA</button>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <textarea class="form-control" rows="3" readonly>@existing?.MentorComment</textarea>
+                                                </td>
+                                                <td>
+                                                    <textarea asp-for="CriteriaScores[@i].Comment" class="form-control" rows="3" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    }
+
+                    <label class="form-label fw-semibold mt-3">Overall Reviewer Comment</label>
+                    <textarea asp-for="ExistingFeedbackContent" class="form-control" rows="6" readonly="@isReadOnly" placeholder="Write your overall reviewer comment."></textarea>
+                </div>
+            }
+
+            @if (!isReadOnly && Model.MentorGateStatus == MentorGateStatus.Approved)
+            {
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
                         <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">send</span>
                         Submit Evaluation
                     </button>
@@ -94,46 +234,25 @@
             }
         </div>
 
-        <div class="col-lg-4 order-lg-last d-flex flex-column gap-section">
-            <div class="card-panel mb-0 border shadow-sm" style="border-top-width: 4px !important; border-top-color: var(--fpt-orange) !important;">
-                <div class="text-muted mb-3" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">GROUP INFO</div>
-                <h4 class="fw-bold text-body mb-1" style="font-size: 16px;">@Model.GroupName</h4>
-                <p class="text-muted mb-3" style="font-size: 13px;">@Model.ProjectName</p>
+        <div class="col-xl-3 d-flex flex-column gap-section">
+            <div class="card-panel border shadow-sm mb-0">
+                <div class="text-muted fw-bold mb-3" style="font-size:11px; letter-spacing:1px;">GROUP INFO</div>
+                <div class="fw-bold mb-1">@Model.GroupName</div>
+                <div class="text-muted mb-3" style="font-size:13px;">@Model.ProjectName</div>
+                <div class="small text-muted mb-2">Supervisor: @Model.SupervisorName</div>
+                @if (Model.ScheduledAt.HasValue)
+                {
+                    <div class="small text-muted mb-2">Review Date: @Model.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
+                }
+                <hr />
+                <div class="text-muted fw-bold mb-2" style="font-size:11px; letter-spacing:1px;">MEMBERS</div>
                 <div class="d-flex flex-column gap-2">
-                    <div class="d-flex gap-2 align-items-start">
-                        <span class="material-symbols-outlined text-muted" style="font-size: 16px; margin-top: 1px;">person</span>
-                        <div>
-                            <div class="text-muted" style="font-size: 11px; letter-spacing: 0.5px;">SUPERVISOR</div>
-                            <div class="fw-medium text-body" style="font-size: 13px;">@Model.SupervisorName</div>
-                        </div>
-                    </div>
-                    @if (Model.ScheduledAt.HasValue)
+                    @foreach (var member in Model.Members)
                     {
-                        <div class="d-flex gap-2 align-items-start">
-                            <span class="material-symbols-outlined text-muted" style="font-size: 16px; margin-top: 1px;">event</span>
-                            <div>
-                                <div class="text-muted" style="font-size: 11px; letter-spacing: 0.5px;">SCHEDULED DATE</div>
-                                <div class="fw-medium text-body" style="font-size: 13px;">@Model.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
-                            </div>
+                        <div class="small">
+                            <div class="fw-semibold">@member.FullName</div>
+                            <div class="text-muted">@member.Role</div>
                         </div>
-                    }
-                </div>
-                <hr class="my-3 text-muted" style="opacity: 0.2;">
-                <div class="text-muted mb-2" style="font-size: 11px; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px;">MEMBERS</div>
-                <div class="d-flex flex-column gap-2">
-                    @foreach (var m in Model.Members)
-                    {
-                        <div class="d-flex align-items-center gap-2">
-                            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(m.FullName)&background=E5E7EB&color=374151" class="rounded-circle" width="28" height="28" />
-                            <div>
-                                <div class="fw-medium text-body" style="font-size: 13px;">@m.FullName</div>
-                                <div class="text-muted" style="font-size: 11px;">@m.Role</div>
-                            </div>
-                        </div>
-                    }
-                    @if (!Model.Members.Any())
-                    {
-                        <p class="text-muted mb-0" style="font-size:12px;">No member info available.</p>
                     }
                 </div>
             </div>
@@ -143,32 +262,61 @@
 
 @section Scripts {
     <script>
-        const scoreInputs = document.querySelectorAll('.score-input');
-        const totalDisplay = document.getElementById('totalScoreDisplay');
-        const maxTotal = @Model.ChecklistItems.Sum(c => c.MaxScore);
+        document.querySelectorAll('.assessment-toggle').forEach(button => {
+            button.addEventListener('click', () => {
+                const index = button.dataset.targetIndex;
+                const hidden = document.querySelector(`input[name="CriteriaScores[${index}].AssessmentValue"]`);
+                if (!hidden) return;
 
-        function updateTotal() {
-            let total = 0;
-            let allFilled = true;
-            scoreInputs.forEach(input => {
-                const val = parseFloat(input.value);
-                if (isNaN(val)) {
-                    allFilled = false;
-                    return;
+                hidden.value = button.dataset.value;
+                const group = button.parentElement.querySelectorAll('.assessment-toggle');
+                group.forEach(btn => {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                });
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-primary');
+            });
+        });
+
+        const rubricLookup = {
+            @for (var i = 0; i < Model.ChecklistItems.Count; i++)
+            {
+                var item = Model.ChecklistItems[i];
+                <text>
+                "@i": {
+                    "Excellent": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.ExcellentRubric ?? "")),
+                    "Good": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.GoodRubric ?? "")),
+                    "Acceptable": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.AcceptableRubric ?? "")),
+                    "Fail": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.FailRubric ?? "")),
+                    "NA": "Not applicable."
+                }@(i < Model.ChecklistItems.Count - 1 ? "," : "")
+                </text>
+            }
+        };
+
+        function updateGradeSummary() {
+            const counts = { Excellent: 0, Good: 0, Acceptable: 0, Fail: 0, NA: 0 };
+            document.querySelectorAll('.grade-level-select').forEach(select => {
+                if (counts[select.value] !== undefined) counts[select.value]++;
+                const targetId = select.dataset.target;
+                const descEl = document.getElementById(targetId);
+                if (descEl) {
+                    const index = targetId.split('-').pop();
+                    descEl.textContent = (rubricLookup[index] && rubricLookup[index][select.value]) || 'Rubric text will appear here based on selected grade level.';
                 }
-
-                const max = parseFloat(input.dataset.max);
-                if (val > max) input.value = max;
-                if (val < 0) input.value = 0;
-                total += parseFloat(input.value) || 0;
             });
 
-            if (totalDisplay) {
-                totalDisplay.textContent = allFilled ? `${total.toFixed(1)} / ${maxTotal}` : `- / ${maxTotal}`;
-            }
+            Object.keys(counts).forEach(key => {
+                const node = document.querySelector(`[data-grade-count="${key}"]`);
+                if (node) node.textContent = counts[key];
+            });
         }
 
-        scoreInputs.forEach(i => i.addEventListener('input', updateTotal));
-        updateTotal();
+        document.querySelectorAll('.grade-level-select').forEach(select => {
+            select.addEventListener('change', updateGradeSummary);
+        });
+
+        updateGradeSummary();
     </script>
 }

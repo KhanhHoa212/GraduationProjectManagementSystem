@@ -7,6 +7,7 @@ public interface IFeedbackRepository
 {
     Task<Feedback?> GetByIdAsync(int feedbackId);
     Task<Feedback?> GetByEvaluationIdAsync(int evaluationId);
+    Task<IEnumerable<Feedback>> GetBySupervisorAsync(string supervisorId);
     Task<IEnumerable<Feedback>> GetPendingApprovalsBySupervisorAsync(string supervisorId);
     Task<IEnumerable<Feedback>> GetVisibleFeedbacksForStudentAsync(string studentId);
     Task<Feedback?> GetByIdWithDetailsAsync(int feedbackId);

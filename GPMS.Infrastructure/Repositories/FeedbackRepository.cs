@@ -16,6 +16,23 @@ public class FeedbackRepository : IFeedbackRepository
 
     public async Task<Feedback?> GetByIdAsync(int feedbackId) => await _context.Feedbacks.FindAsync(feedbackId);
     public async Task<Feedback?> GetByEvaluationIdAsync(int evaluationId) => await _context.Feedbacks.FirstOrDefaultAsync(f => f.EvaluationID == evaluationId);
+
+    public async Task<IEnumerable<Feedback>> GetBySupervisorAsync(string supervisorId) =>
+        await _context.Feedbacks
+            .Include(f => f.FeedbackApproval)
+            .Include(f => f.Evaluation)
+                .ThenInclude(e => e.Group)
+                    .ThenInclude(g => g.Project)
+                        .ThenInclude(p => p.ProjectSupervisors)
+            .Include(f => f.Evaluation)
+                .ThenInclude(e => e.Reviewer)
+            .Include(f => f.Evaluation)
+                .ThenInclude(e => e.ReviewRound)
+            .Where(f => f.FeedbackApproval != null &&
+                        (f.FeedbackApproval.SupervisorID == supervisorId ||
+                         f.Evaluation.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId)))
+            .OrderByDescending(f => f.CreatedAt)
+            .ToListAsync();
     
     public async Task<IEnumerable<Feedback>> GetPendingApprovalsBySupervisorAsync(string supervisorId) =>
         await _context.Feedbacks
@@ -65,6 +82,8 @@ public class FeedbackRepository : IFeedbackRepository
             .Include(f => f.Evaluation)
                 .ThenInclude(e => e.Group)
                     .ThenInclude(g => g.Project)
+                        .ThenInclude(p => p.ProjectSupervisors)
+                            .ThenInclude(ps => ps.Lecturer)
             .Include(f => f.Evaluation)
                 .ThenInclude(e => e.Reviewer)
             .Include(f => f.Evaluation)

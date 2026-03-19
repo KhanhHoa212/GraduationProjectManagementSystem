@@ -33,11 +33,19 @@
             <span class="material-symbols-outlined" style="font-size: 20px;">fact_check</span>
             Feedback Approvals
         </a>
+        <a href="@Url.Action("Schedule", "Lecturer")" class="nav-item @(IsActive("Lecturer", "Schedule") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+            Schedule
+        </a>
 
         <div class="nav-group-title mt-3">Reviewer</div>
         <a href="@Url.Action("ReviewAssignments", "Lecturer")" class="nav-item @(IsActive("Lecturer", "ReviewAssignments") ? "active" : "")">
             <span class="material-symbols-outlined" style="font-size: 20px;">assignment</span>
             Review Assignments
+        </a>
+        <a href="@Url.Action("History", "Lecturer")" class="nav-item @(IsActive("Lecturer", "History") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+            History
         </a>
 
         <div class="nav-group-title mt-3">System</div>

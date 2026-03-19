@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace GPMS.Web.Controllers;
 
-[Authorize]
+[Authorize(Roles = "Lecturer")]
 public class LecturerController : Controller
 {
     private readonly ILecturerService _lecturerService;
@@ -39,6 +39,7 @@ public class LecturerController : Controller
             PendingApprovalsCount = dto.PendingApprovalsCount,
             AssignedReviewsCount = dto.AssignedReviewsCount,
             UpcomingDeadlinesCount = dto.UpcomingDeadlinesCount,
+            GuidanceMessage = dto.GuidanceMessage,
             RecentActivities = dto.RecentActivities.Select(a => new RecentActivityItem
             {
                 Title = a.Title,
@@ -55,7 +56,9 @@ public class LecturerController : Controller
                 Location = s.Location,
                 StartTime = s.StartTime,
                 DurationMinutes = s.DurationMinutes,
-                IsHighlight = s.IsHighlight
+                IsHighlight = s.IsHighlight,
+                MeetLink = s.MeetLink,
+                ActionUrl = s.ActionUrl
             }).ToList()
         };
         return View(vm);
@@ -78,12 +81,16 @@ public class LecturerController : Controller
                 GroupID = p.GroupId,
                 GroupName = p.GroupName,
                 ProjectName = p.ProjectName,
+                ProjectCode = p.ProjectCode,
                 MemberNames = p.MemberNames,
                 CurrentRound = int.TryParse(new string(p.CurrentRound.Where(char.IsDigit).ToArray()), out var roundNumber) ? roundNumber : 0,
                 RoundType = p.CurrentRound,
                 Semester = p.Semester,
                 Status = p.Status,
-                ProgressPercent = p.ProgressPercent
+                ProgressPercent = p.ProgressPercent,
+                NextSessionAt = p.NextSessionAt,
+                NextSessionLocation = p.NextSessionLocation,
+                PendingFeedbackCount = p.PendingFeedbackCount
             }).ToList()
         };
         return View(vm);
@@ -99,21 +106,82 @@ public class LecturerController : Controller
             return Challenge();
 
         var dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        var memberEmails = dto.Members
+            .Select(m => m.Email)
+            .Where(email => !string.IsNullOrWhiteSpace(email))
+            .Select(email => email!)
+            .Distinct()
+            .ToList();
         var vm = new ProjectGroupDetailViewModel
         {
             GroupID = dto.GroupId,
             GroupName = dto.GroupName,
             ProjectName = dto.ProjectName,
+            ProjectCode = dto.ProjectCode,
             Semester = dto.Semester,
+            SupervisorName = dto.SupervisorName,
             PendingFeedbackId = dto.PendingFeedbackId,
+            MessageGroupUrl = memberEmails.Any()
+                ? $"mailto:{string.Join(";", memberEmails)}?subject={Uri.EscapeDataString($"[GPMS] Update for {dto.GroupName}")}"
+                : null,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
                 FullName = m.FullName,
-                Role = m.RoleInGroup
-            }).ToList()
+                Role = m.RoleInGroup,
+                Email = m.Email ?? string.Empty
+            }).ToList(),
+            Milestones = dto.Milestones.Select(m => new ReviewRoundMilestone
+            {
+                RoundId = m.RoundId,
+                RoundNumber = m.RoundNumber,
+                Title = m.Title,
+                RoundType = m.RoundType,
+                StartDate = m.StartDate,
+                EndDate = m.EndDate,
+                Deadline = m.Deadline,
+                Status = m.Status,
+                MentorGateStatus = m.MentorGateStatus,
+                MentorGateComment = m.MentorGateComment,
+                HasSubmission = m.SubmittedAt.HasValue,
+                HasEvaluation = m.Score.HasValue,
+                SubmittedAt = m.SubmittedAt,
+                SubmissionFileName = m.SubmissionFileName,
+                SubmissionUrl = m.ReportDocumentUrl,
+                SubmissionSizeMb = m.SubmissionSizeMb,
+                SubmittedByName = m.SubmittedByName,
+                ReviewerName = m.ReviewerName,
+                Score = m.Score,
+                FeedbackStatus = m.FeedbackStatus,
+                ScheduledAt = m.ScheduledAt,
+                Location = m.Location,
+                MeetLink = m.MeetLink
+            }).ToList(),
+            NextMeeting = dto.NextMeeting == null ? null : new MeetingInfoItem
+            {
+                ScheduledAt = dto.NextMeeting.ScheduledAt,
+                Title = dto.NextMeeting.Title,
+                Location = dto.NextMeeting.Location,
+                MeetLink = dto.NextMeeting.MeetLink,
+                IsOnline = dto.NextMeeting.IsOnline
+            }
         };
         return View(vm);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ReviewRoundGate(int groupId, int roundId, MentorGateStatus decision, string? progressComment)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var success = await _lecturerService.ReviewRoundGateAsync(userId, groupId, roundId, decision, progressComment);
+        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+            ? "Mentor gate updated successfully."
+            : "Unable to update mentor gate for this round.";
+        return RedirectToAction(nameof(ProjectGroupDetail), new { id = groupId });
     }
 
     // -------------------------------------------------------
@@ -136,7 +204,9 @@ public class LecturerController : Controller
                 ProjectName = f.ProjectName,
                 ReviewerName = f.ReviewerName,
                 RoundNumber = f.RoundNumber,
+                TotalScore = 0,
                 SubmittedAt = f.SubmittedAt,
+                AutoReleaseAt = f.AutoReleaseAt,
                 ApprovalStatus = f.ApprovalStatus
             }).ToList()
         };
@@ -164,21 +234,38 @@ public class LecturerController : Controller
             SubmittedAt = dto.SubmittedAt,
             ApprovalStatus = dto.ApprovalStatus,
             SupervisorComment = dto.SupervisorComment,
+            MentorGateStatus = dto.MentorGateStatus,
+            MentorGateComment = dto.MentorGateComment,
             FeedbackContent = dto.FeedbackContent,
             GroupMembers = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
                 FullName = m.FullName,
-                Role = m.RoleInGroup
+                Role = m.RoleInGroup,
+                Email = m.Email ?? string.Empty
             }).ToList(),
             Scores = dto.Scores.Select(s => new EvalDetailRow
             {
+                ItemID = s.ItemId,
                 ItemCode = s.ItemCode,
+                ItemName = s.ItemName,
                 CriteriaName = s.CriteriaName,
+                SectionCode = s.SectionCode,
+                SectionTitle = s.SectionTitle,
+                PriorityLabel = s.PriorityLabel,
+                InputType = s.InputType,
+                AssessmentValue = s.AssessmentValue,
                 MaxScore = s.MaxScore,
                 WeightPercentage = s.WeightPercentage,
                 Score = s.Score,
-                WeightedScore = s.WeightedScore
+                WeightedScore = s.WeightedScore,
+                ReviewerComment = s.ReviewerComment,
+                MentorComment = s.MentorComment,
+                GradeDescription = s.GradeDescription,
+                ExcellentRubric = s.ExcellentRubric,
+                GoodRubric = s.GoodRubric,
+                AcceptableRubric = s.AcceptableRubric,
+                FailRubric = s.FailRubric
             }).ToList()
         };
         return View(vm);
@@ -206,12 +293,94 @@ public class LecturerController : Controller
                 RoundType = a.RoundType,
                 ScheduledAt = a.ScheduledAt,
                 Location = a.Location,
+                MeetLink = a.MeetLink,
                 HasEvaluation = a.HasEvaluation,
-                EvaluationID = a.EvaluationId
+                EvaluationID = a.EvaluationId,
+                StatusNote = a.StatusNote
             }).ToList(),
             PendingEvaluationsCount = dto.PendingEvaluationsCount,
             ScheduledTodayCount = dto.ScheduledTodayCount,
             CompletedReviewsCount = dto.CompletedReviewsCount
+        };
+        return View(vm);
+    }
+
+    public async Task<IActionResult> Schedule()
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetScheduleAsync(userId);
+        var vm = new LecturerScheduleViewModel
+        {
+            TodaySessionsCount = dto.TodaySessionsCount,
+            OnlineSessionsCount = dto.OnlineSessionsCount,
+            OfflineSessionsCount = dto.OfflineSessionsCount,
+            UpcomingDeadlinesCount = dto.UpcomingDeadlinesCount,
+            Entries = dto.Entries.Select(e => new ScheduleEntryViewModel
+            {
+                RoleLabel = e.RoleLabel,
+                GroupID = e.GroupId,
+                GroupName = e.GroupName,
+                ProjectName = e.ProjectName,
+                RoundNumber = e.RoundNumber,
+                RoundType = e.RoundType,
+                ScheduledAt = e.ScheduledAt,
+                IsOnline = e.IsOnline,
+                Location = e.Location,
+                MeetLink = e.MeetLink,
+                Guidance = e.Guidance,
+                ActionUrl = e.ActionUrl
+            }).ToList(),
+            Deadlines = dto.Deadlines.Select(d => new DeadlineAlertViewModel
+            {
+                Title = d.Title,
+                Description = d.Description,
+                DueAt = d.DueAt,
+                Severity = d.Severity,
+                ActionUrl = d.ActionUrl,
+                ActionText = d.ActionText
+            }).ToList()
+        };
+        return View(vm);
+    }
+
+    public async Task<IActionResult> History()
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var dto = await _lecturerService.GetHistoryAsync(userId);
+        var vm = new LecturerHistoryViewModel
+        {
+            ReviewHistory = dto.ReviewHistory.Select(r => new ReviewHistoryRow
+            {
+                EvaluationID = r.EvaluationId,
+                GroupID = r.GroupId,
+                GroupName = r.GroupName,
+                ProjectName = r.ProjectName,
+                RoundNumber = r.RoundNumber,
+                RoundType = r.RoundType,
+                TotalScore = r.TotalScore,
+                SubmittedAt = r.SubmittedAt,
+                ApprovalStatus = r.ApprovalStatus,
+                FeedbackPreview = r.FeedbackPreview
+            }).ToList(),
+            FeedbackHistory = dto.FeedbackHistory.Select(f => new FeedbackHistoryRow
+            {
+                FeedbackID = f.FeedbackId,
+                GroupID = f.GroupId,
+                GroupName = f.GroupName,
+                ProjectName = f.ProjectName,
+                ReviewerName = f.ReviewerName,
+                RoundNumber = f.RoundNumber,
+                ApprovalStatus = f.ApprovalStatus,
+                UpdatedAt = f.UpdatedAt,
+                IsVisibleToStudent = f.IsVisibleToStudent,
+                SupervisorComment = f.SupervisorComment
+            }).ToList()
         };
         return View(vm);
     }
@@ -243,23 +412,24 @@ public class LecturerController : Controller
             {
                 UserId = m.UserId,
                 FullName = m.FullName,
-                Role = m.RoleInGroup
-            }).ToList(),
-            ChecklistItems = dto.ChecklistItems.Select(c => new ChecklistItemRow
-            {
-                ItemID = c.ItemId,
-                ItemCode = c.ItemCode,
-                ItemContent = c.ItemContent,
-                MaxScore = c.MaxScore,
-                Weight = c.Weight
+                Role = m.RoleInGroup,
+                Email = m.Email ?? string.Empty
             }).ToList(),
             ExistingEvaluationID = dto.ExistingEvaluationId,
             ExistingFeedbackContent = dto.ExistingFeedbackContent,
+            FeedbackApprovalStatus = dto.FeedbackApprovalStatus,
+            SupervisorComment = dto.SupervisorComment,
+            MentorGateStatus = dto.MentorGateStatus,
+            MentorGateComment = dto.MentorGateComment,
+            CanEdit = dto.CanEdit,
             ExistingScores = dto.ExistingScores.Select(s => new ExistingScoreRow
             {
                 ItemID = s.ItemId,
                 Score = s.Score,
-                Comment = s.Comment
+                AssessmentValue = s.AssessmentValue,
+                Comment = s.Comment,
+                MentorComment = s.MentorComment,
+                GradeDescription = s.GradeDescription
             }).ToList(),
             CriteriaScores = dto.ChecklistItems.Select(c =>
             {
@@ -268,10 +438,28 @@ public class LecturerController : Controller
                 {
                     CriteriaId = c.ItemId,
                     Score = existingScore?.Score ?? 0m,
+                    AssessmentValue = existingScore?.AssessmentValue,
                     Comment = existingScore?.Comment
                 };
             }).ToList()
         };
+        vm.ChecklistItems = dto.ChecklistItems.Select(c => new ChecklistItemRow
+        {
+            ItemID = c.ItemId,
+            ItemCode = c.ItemCode,
+            ItemName = c.ItemName,
+            ItemContent = c.ItemContent,
+            SectionCode = c.SectionCode,
+            SectionTitle = c.SectionTitle,
+            PriorityLabel = c.PriorityLabel,
+            InputType = c.InputType,
+            MaxScore = c.MaxScore,
+            Weight = c.Weight,
+            ExcellentRubric = c.ExcellentRubric,
+            GoodRubric = c.GoodRubric,
+            AcceptableRubric = c.AcceptableRubric,
+            FailRubric = c.FailRubric
+        }).ToList();
         return View(vm);
     }
 
@@ -297,6 +485,7 @@ public class LecturerController : Controller
             {
                 CriteriaId = s.CriteriaId,
                 Score = s.Score,
+                AssessmentValue = s.AssessmentValue,
                 Comment = s.Comment
             }).ToList()
         };
@@ -314,13 +503,26 @@ public class LecturerController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> ApproveFeedback(int feedbackId, string decision, string comments)
+    public async Task<IActionResult> ApproveFeedback(FeedbackApprovalDetailViewModel model, string decision, string comments)
     {
         var userId = GetUserId();
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var success = await _lecturerService.ApproveFeedbackAsync(userId, feedbackId, decision, comments);
+        var dto = new FeedbackApprovalDecisionDto
+        {
+            FeedbackId = model.FeedbackID,
+            Decision = decision,
+            OverallFeedbackContent = model.FeedbackContent ?? string.Empty,
+            SupervisorComment = comments,
+            ItemComments = model.Scores.Select(s => new MentorChecklistCommentDto
+            {
+                ItemId = s.ItemID,
+                MentorComment = s.MentorComment
+            }).ToList()
+        };
+
+        var success = await _lecturerService.ApproveFeedbackAsync(userId, dto);
         if (success)
         {
             TempData["SuccessMessage"] = $"Feedback {decision.ToLower()} successfully.";
@@ -328,6 +530,6 @@ public class LecturerController : Controller
         }
 
         TempData["ErrorMessage"] = "An error occurred while processing the feedback approval.";
-        return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = feedbackId });
+        return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = model.FeedbackID });
     }
 }

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<comments xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><authors><author/></authors><commentList><comment ref="B9" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlSiI
+    (2025-02-10 03:19:30)
+ở tuần thứ 8 thì tất cả các nhóm đều đã có sản phẩm source code rồi, nên check các item source code như mô tả dưới</t></r></text></comment><comment ref="B15" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlShk
+    (2025-02-10 03:19:30)
+check xem thử dự án có hoạt động quản lý không ?</t></r></text></comment><comment ref="B16" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlShw
+    (2025-02-10 03:19:30)
+check dự án có bảng quản lý task được lưu trong folder chia sẻ chung của dự án không, với đầy đủ thông tin, task, phụ trách, estimate effort, plan hoàn thành. 
+
+team có thể dùng excel hoặc công cụ như jira , click up v.v.</t></r></text></comment><comment ref="B17" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlSiU
+    (2025-02-10 03:19:30)
+check xem nhóm quản lý giao tiếp giữa các thành viên như thế nào? 
+1. triển khai kế hoạch công việc hàng tuần ra sao? 
+2. báo cáo công việc tuần như thế nào? 
+tốt nhất có thể có báo cáo công việc hàng ngày</t></r></text></comment><comment ref="B19" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlSiM
+    (2025-02-10 03:19:30)
+tiến độ dự án có được báo cáo định kỳ cho mentor không? 
+nếu team có thực hiện quy trình “weekly report” và “weekly meeting” và “meeting notes” thì tất cả item này OK</t></r></text></comment><comment ref="B20" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0Q
+Comment    (2025-05-29 11:45:33)
+kiểm tra bằng chứng xem nhóm có họp với mentor định kỳ không, tránh tình huống mentor không thực hiện nhiệm vụ mentor</t></r></text></comment><comment ref="B21" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlShs
+    (2025-02-10 03:19:30)
+kiểm tra xem nhóm có hình thức gì để “hỏi” mentor không? các vấn đề hỏi là gì? kỹ năng đặt câu hỏi để xác nhận yêu cầu cũng là 1 kỹ năng quan trọng của ngành phần mềm cần rèn luyện cho sinh viên.</t></r></text></comment><comment ref="B24" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1Y
+    (2025-05-29 11:45:33)
+mục này tập trung vào ý “real user” nên nếu không có thì cũng không sao, hiếm nhóm sinh viên nào thực hiện được.
+không có real user thì mark N/A</t></r></text></comment><comment ref="B28" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH08
+    (2025-05-29 11:45:33)
+mục này kiểm tra tính ứng dụng của AI, sẽ define sau</t></r></text></comment></commentList><extLst><ext uri="GoogleSheetsCustomDataVersion2" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><go:sheetsCustomData r:id="rId1" roundtripDataSignature="AMtx7miajPp9cO3SMdiQvBmxPnDz820+IA==" xmlns:go="http://customooxmlschemas.google.com/"/></ext></extLst></comments>

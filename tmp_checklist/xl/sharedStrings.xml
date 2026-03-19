@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" count="490" uniqueCount="328"><si><t xml:space="preserve">Hoạt động review đồ án giữa kỳ này được triển khai từ kỳ SU24 </t></si><si><t xml:space="preserve">Nhằm cải thiện chất lượng sản phẩm đồ án và phát hiện sớm các nhóm </t></si><si><t xml:space="preserve">có vấn đề và hỗ trợ kịp thời </t></si><si><t xml:space="preserve">Việc review sẽ được điều phối bởi hội đồng chuyên môn, </t></si><si><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/></rPr><t xml:space="preserve">Việc review được thực hiện vào tuần </t></r><r><rPr><sz val="10"/><color rgb="FFED0000"/><rFont val="Arial"/></rPr><t>4,8,12</t></r><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/></rPr><t xml:space="preserve"> của kỳ đồ án</t></r></si><si><t xml:space="preserve">1 tuần trước buổi review: </t></si><si><t xml:space="preserve">  - hội đồng thông báo thời hạn nộp sản phẩm và đánh giá </t></si><si><t xml:space="preserve">  - nhóm sinh viên nộp tài liệu tới thời điểm hiện tại,</t></si><si><t xml:space="preserve">  - mentor sử dụng template này và đánh giá ở cột mentor </t></si><si><t xml:space="preserve">trong vòng 1 ngày sau buổi review </t></si><si><t xml:space="preserve">  - reviewer gửi lại comment, keep CC TBM và các cán bộ liên quan </t></si><si><t>FPTU SE Capstone Project- Review 1 Checklist</t></si><si><t xml:space="preserve">Project Code: </t></si><si><t>{code của nhóm, ví dụ: SE05}</t></si><si><t xml:space="preserve">Project Name: </t></si><si><t>{tên đồ án}</t></si><si><t xml:space="preserve">Reviewer(s): </t></si><si><t>{account người review vd longnx6; RinNV}</t></si><si><t xml:space="preserve">Review date: </t></si><si><t>{ngày thực hiện review}</t></si><si><t>Question</t></si><si><t>Priority</t></si><si><t>Assessment</t></si><si><t>Mentor Comment</t></si><si><t>Reviewer Comment</t></si><si><t>P1- Coverage of Objectives</t></si><si><t>Is problem to solve stated clearly?</t></si><si><t>Mandatory</t></si><si><t>Is a functional overview of the system provided?</t></si><si><t>If assumptions that affect implementation have been made, are they stated?</t></si><si><t>Is size of system (Usecase Points) larged enough for members to do  in project?</t></si><si><t>P2-Practical applicability</t></si><si><t>Does project have real users with real problems (pain/gain points)?</t></si><si><t>Does project  team work with real stakeholders ?</t></si><si><t>P3-Innovation and Creativity</t></si><si><t>Does project introduce new business model or localize successful global business models?</t></si><si><t>Does project apply new technologies,algorithms or UI/UX (AR,VR,voice interaction?</t></si><si><r><rPr><b/><sz val="10"/><color theme="1"/><rFont val="Arial"/></rPr><t>D1-URD-</t></r><r><rPr><b/><sz val="10"/><color theme="1"/><rFont val="Arial"/></rPr><t>SRS</t></r><r><rPr><b/><sz val="10"/><color theme="1"/><rFont val="Arial"/></rPr><t xml:space="preserve">-Overview
+</t></r></si><si><t>Do the requirements provide an adequate basis for design?</t></si><si><t>Is the implementation priority of each requirement included?</t></si><si><t>Are algorithms intrinsic to the use-case defined?</t></si><si><t>Is any necessary information missing from a requirement? If so, is it identified as to-be-determined marker</t></si><si><t>Does the team use workflow tools to model the system's business flow?</t></si><si><t>D1- Correctness</t></si><si><t>Do any requirements conflict with or duplicate other requirements?</t></si><si><t>Is each requirement verifiable (such as by review, testing, demonstration, or analysis)?</t></si><si><t>Is each requirement in scope for the project?</t></si><si><t>Can all of the requirements be implemented within known constraints?</t></si><si><t>D1- Quality attributes</t></si><si><t>Are all performance objectives properly specified?</t></si><si><t>Are all security and safety considerations properly specified?</t></si><si><t>Are other pertinent quality attribute goals explicitly documented and quantified, with the acceptable trade-offs specified?</t></si><si><t>Check whether interfaces with other systems are described</t></si><si><t>Check whether the required hardware is described</t></si><si><t>Check whether specific software requirements are documented</t></si><si><t>Check whether networking Issues and connectivity requirements are documented</t></si><si><t>Check whether specific communication requirements are documented</t></si><si><t>Check whether availability requirements are documented</t></si><si><t>D1- Special user requirements</t></si><si><t>Multi Language support</t></si><si><t>Is any security required?</t></si><si><t>AI- Apply AI inproject</t></si><si><t>1. Are the reasons for using AI and the specific problem that AI solves in the topic clearly stated?</t></si><si><t>2. Does the project develop an AI model or an equivalent product component such as an AI Agent or just use an AI service (such as OpenAPI, Google Gemini API).</t></si><si><t>3. Is the workflow for processing AI features in the system described briefly, clearly and reasonably?</t></si><si><t>4. Are the functional and non-functional requirements related to AI fully and clearly described in the requirements specification document?</t></si><si><t>* Comments</t></si><si><t>{mentor / review có thể bổ sung comment ở mục này}</t></si><si><t>FPTU SE Capstone Project- Review 2 Checklist</t></si><si><t xml:space="preserve">A. Software Product
+</t></si><si><t>1. Does the system architecture, including sub-systems and their interconnections, clearly documented in both deployment and process views?</t></si><si><t>2. Does the Entity-Relationship Diagram (ERD) accurately represent all entities, their relationships, and attributes within the system?</t></si><si><t>3. Are the main entity models comprehensive enough to encapsulate all required states and behaviors as illustrated in the state diagrams of key system entities?</t></si><si><t>4. Is the use of external services (such as third-party APIs) justified and implemented effectively within the project?</t></si><si><t>5. Is the source code structure organized in a manner that supports logical understanding, maintainability, and potential for future scalability?</t></si><si><t>B. Project Management</t></si><si><t>1. Are tasks fairly and appropriately distributed among members considering their interests and skills?</t></si><si><t>2. Is there effective communication and collaboration among team members?</t></si><si><t>3. Does the team meet deadlines consistently?</t></si><si><t>C. Interaction with Supervisor(s)</t></si><si><t>1. Are regular meetings with the Supervisor organized?</t></si><si><t>2. Does the team proactively discuss problems and seek guidance from the Supervisor?</t></si><si><t>3. Does the team actively receive and process feedback from the Supervisor?</t></si><si><t>4. Are updates on progress and results regularly communicated to the Supervisor?</t></si><si><t>D. Interaction with Third Parties</t></si><si><t>1. Is there effective communication with third parties such as Reviewers or businesses?</t></si><si><t>2. Does the team handle requests or feedback from third parties professionally and promptly?</t></si><si><t>3. Are contributions from third parties integrated into the project?</t></si><si><t xml:space="preserve">AI. Apply AI </t></si><si><t>System Architecture or package diagram describing AI as a separate or embedded component of the main processing logic (check report 4, system architecture section, package diagram)</t></si><si><t>Can sequence diagrams show how the system sends and receives data with AI?</t></si><si><t>sequence diagram or detailed description clearly stating where the system calls the AI, how to wait for a response, and how to handle when the AI fails</t></si><si><t>Does the database design support saving data information sent to AI and the AI results returned for later analysis or verification?</t></si><si><t>Does the class diagram show the AI calling and processing packaged into separate classes/modules such as the AI Client or Prediction Service?</t></si><si><t xml:space="preserve">{mentor/reviewer có thể bổ sung comment ở mục này} </t></si><si><t>FPTU SE Capstone Project- Review 3</t></si><si><t>Project Code</t></si><si><t>Project Name</t></si><si><t>Reviewer(s)</t></si><si><t>Review Date</t></si><si><t>I. Criteria Evaluation</t></si><si><t>Code</t></si><si><t>Name</t></si><si><t>Evaluation Criteria</t></si><si><t>Grade Level</t></si><si><t xml:space="preserve">Grade </t></si><si><t xml:space="preserve">Mentor comment </t></si><si><t>P1</t></si><si><t>Scope: Coverage of objectives</t></si><si><t>- Problem to solve (innovation, creative, …)
+- Size of system: weighted number of business flows, weighted actor and usecase count.
+- Coverage of objectives
+- Completeness of requirements</t></si><si><t>P2</t></si><si><t>Practical applicability</t></si><si><t>- Deployed in production mode for using with domains, real environtments, real data.
+- Have real users/customers
+- Have real problems: pain/gain points.
+- Working with real stakeholders.
+- Have investors invest for this project.
+- Product can be extend in futures.</t></si><si><t>P3</t></si><si><t>Innovation and Creativity</t></si><si><t>- New business models/ Localize successful global business models
+- New UI/UX: interaction by voice,AR , VR, 3D modesl ...  
+- New Techs: Drone, Flycam, Edge computing…
+- New algorithms: computer vision , deep learning …</t></si><si><t>P4</t></si><si><t>UI/UX</t></si><si><t>- Branding: logo, icon , slogan 
+- Layouts: use uniform elements and spacing.
+- Navigation: moving between screens of an app 
+- Text usage: using text with correct meaning, language, without spelling mistakes, and right typography.
+- Color system: apply color to  UI in a meaningful way</t></si><si><t>P5</t></si><si><t>Technology choices for Software Architecture</t></si><si><t xml:space="preserve">- Reasonable use of external services (3rd services- API)
+- Using up- to- date Frontend technology with good design pattern (Angular,ReactJs, VueJs Jquery ,Typescript..)
+- Using up- to- date Backend technology with good design (RestApi, grpc, GraphQl ..) 
+- Using up- to- date Mobile technology with good design
+</t></si><si><t>P6</t></si><si><t>Application of computing knowledge for Implementation</t></si><si><t xml:space="preserve">- Apply and pass source code review tool (Ex: Sonar Cloud) to check: maintainability , reliability , code coverage , code duplication...
+- Understand and apply pattern for Front- end (Typescript, MVVM…) 
+- Understand and apply pattern for Web/ Web API (MVC, 3- Layers)
+- Understand and apply pattern for Mobile App (MVVM, MVP..)
+- Understand and apply programming techniques: OOP, SOLID principles, using config file (connection string, access token), enumeration...  </t></si><si><t>P7</t></si><si><t>Complexity of algorithm/ internal processing</t></si><si><t xml:space="preserve">- Correctly state the problem to be solved
+- Choose the right algorithm to solve the problem 
+- Use the right libraries / source code / services available  to solve the problem
+- Implement and enhance existing solutions for better result.
+- Find a new way to solve the problem
+</t></si><si><t>P8</t></si><si><t>Technology choices for Deployment &amp; Maintenance</t></si><si><t xml:space="preserve">- Use git repository for source code storage with suitable branching model
+- Apply and have evidence of Continous Integration (CI)
+- Apply and have evidence of Continous Delivery 
+- Deploy on cloud computing with automation pipelines 
+- Apply system monitoring and centrallized system logging </t></si><si><t>D1</t></si><si><t>User requirement and System Requirment</t></si><si><t xml:space="preserve">- User requirements: context, problems, proposed solutions..
+- System functional requirements: usecase overview  usecase specification 
+- System nonfunctional requirements: quality attributes (performance, security, safety.. ), environtment (hardware, software, network, communication..)
+- Document: format, layout, grammar, spelling and
+punctuation.
+- Diagram: usecase diagram (actor, usecase , relationships ...), sequence diagram , activity diagram </t></si><si><t>D2</t></si><si><t>Architecture Design Document</t></si><si><t xml:space="preserve">- Strategy for: technology and 3rd services selection, quality attribues of system (performance- security- data storage...), deployment environment
+- System architecture: sub- systems and connection between theme in deployment view, process view.
+- Component design (physical view) for sub- system: component boundaries well defined, including functionality and interfaces
+- Package design (logical view) for sub- system 
+- Data design: data structure  , data flow 
+</t></si><si><t>D3</t></si><si><t>Detail Design Document</t></si><si><t>- Class design: design for each unit contain appropriate views (e.g., static structure, data definition, data flow, control flow, states, etc.), has the overall function and intent of each unit
+- Database Design: normalized, mapping with logical design , tables, fields , size and type of fields, default values..
+- Logical Design (ERD): entity , entity relationship, attributes of entity .
+- Screen design: Screen(id, name, description),Component in screen (type, required , format ..), Screen flows (screen structure and transition between screens)</t></si><si><t>D4</t></si><si><t>Testing Document</t></si><si><t xml:space="preserve">- Test plan: product to be tested, the definition of scope of testing (unit test, integration test, system test, user acceptance test), test type (black box, white box ), test deliverables.
+-  Test case specification: test conditions, test suites, test cases in test suites, detailed information of test cases(test procedures, input data, expected output, constraints..)
+- Test report: testing objectives, activities, results (number of designed, implemented, executed, and succeeded test cases..), conclusion about the quality of software product.   
+ </t></si><si><t>D5</t></si><si><t>System Deployment and Delivery Package</t></si><si><t xml:space="preserve">- Delivery package: documents , software, source code, installation guide.
+- Installabilty: check with the delivery package, other people can install system and run as a demonstration in front of the committee.
+- Script database, data inside the database. 
+- Training images of computer vision algorithm.
+- Devices and other resources are supplied for the project.
+- Acceptance notes from customers for the project from external (if required)   </t></si><si><t>AI</t></si><si><t>II. Evalutaion</t></si><si><t>Count</t></si><si><t>Suggestion for Project Supervisor</t></si><si><t>Check</t></si><si><t>Reviewer(s) Comment</t></si><si><t>Excellent</t></si><si><t xml:space="preserve">
+Reviewer đưa ra đề xuất chung cho toàn dự án đến với GVHD và team. Các đề xuất này mang tính tham khảo, quyết định cuối cùng về việc nhóm đồ án có được bảo vệ hay không sẽ thuộc về GVHD.</t></si><si><t>Good</t></si><si><t>Acceptable</t></si><si><t>Fail</t></si><si><t>N/A</t></si><si><t>Component</t></si><si><t>Criteria</t></si><si><t>Excellent 
+8- 10</t></si><si><t>Good
+ 6- 8</t></si><si><t>Acceptable
+ 4- 6</t></si><si><t>Fail
+0- 4</t></si><si><t>Product</t></si><si><t>All of the objectives have been addressed, with few cases that may be questionable and/or additional aspects explored</t></si><si><t>The objectives have been met, at least in part but clearly not in entirety and/or there are some clear deficiencies or aspects that fall short</t></si><si><t>Key objectives are generally met with significant deficiencies and/or shortcomings, but some important features are missing or inadequately implemented</t></si><si><t>Very little if any of the objectives appear to be met in any clear way</t></si><si><t xml:space="preserve">- Problem to solve (innovation, creative, …)
+- Size of system :weighted number of business flows, weighted actor and usecase count.
+- Coverage of objectives
+- Completenese of requirements
+
+
+</t></si><si><t xml:space="preserve">The capstone project's product can be a real product or already a product with a large enough user base.
+
+</t></si><si><t>The capstone project's product can be a real product with some improvement.</t></si><si><t xml:space="preserve">The capstone project's product can be a product for a small size of users group with basic functions.
+
+</t></si><si><t>The capstone project's product cannot be used for real users.</t></si><si><t xml:space="preserve"> - Have real users/customers
+- Have real problems: pain/gain points.
+- Working with real stakeholders.
+- Deployed in production mode for using with domains, real environtments,real data.
+- Product can be extend in futures.
+- Have investors invest for this project.
+</t></si><si><t>The approach to the problem statement chosen is innovative and meets the objective of the project effectively.</t></si><si><t>Understanding the purpose driving the process of innovation (Who needs this? Why?)
+Create a product with a innovation approach and provide an optimized way to use the product.</t></si><si><t>Understanding the basic purpose of innovation in the project but does not thoroughly consider the needs and interests of target users.</t></si><si><t>Just follow "directions" without understanding the purpose of innovation in the project.
+Use only typical sources of information and does not offer new ideas.</t></si><si><t>- New business models/ Localize successful global business models
+- New UI/UX: interaction by voice,AR , VR, 3D modesl ...  
+- New Techs : Drone, Flycame, Edge computing…
+- New algorithms: computer vision , deep learning …</t></si><si><t>Generally easy to use, very few unexpected outcomes</t></si><si><t>Can be used with some effort, outcomes are as expected in most cases but there are some aspects that are confusing and/or need more effort than warranted</t></si><si><t>The software's user
+interface is usable but
+at times difficult to
+comprehend, there are
+aspects of the
+software that are user
+unfriendly and/or
+illogical</t></si><si><t>Very little to any of the software is intuitive to use, there are little or no instructions, excessive effort is required to make use of the software</t></si><si><t>- Branding : logo, icon , slogan 
+- Layouts: use uniform elements and spacing.
+- Navigation: moving between screens of an app 
+- Text usage: using text with correct meaning, language, without spelling mistakes, and right typography.
+- Color system: apply color to  UI in a meaningful way</t></si><si><t>Excellent choices of technology and clearly established ability to use them with few if any caveats</t></si><si><t>Reasonable choices of technology but lacking in the capacity to integrate/make use of them, perhaps some choices could have been better in hindsight</t></si><si><t>Justifiable choices of
+technology but lacking
+in the capacity to
+integrate/make use of
+them, perhaps some
+choices could have
+been better in
+hindsight</t></si><si><t>no or little ability to make use of appropriate third party libraries or systems, inappropriate/ill- suited choices of technology</t></si><si><t>a high standard of coding and commenting is evident, the code is easy to read and appears clear to maintain, ready to be open sourced</t></si><si><t>reasonable clarity and code can be followed with some effort, comments help to understand the code, logical organization may be lacking in some ways and there may be a number of questionable expressions</t></si><si><t xml:space="preserve">Code for run only. Team doesn't care about code quality : maintainablity , security , resusability.
+Doesn't apply any detail design pattern in source code.
+Duplication code , deadcode still exists in source code.
+</t></si><si><t>Extremely hard to read, little or no attention to code formatting, lack of logical organization, little or no appreciation of coding and commenting practices</t></si><si><t xml:space="preserve">- Apply and pass source code review tool (Ex: Sonar Cloud) to check : maintainability , reliability , code coverage , code duplication...
+- Understand and apply pattern for Front- end (Typescript, MVVM…) 
+- Understand and apply pattern for Web/ Web API (MVC, 3- Layers)
+- Understand and apply pattern for Mobile App (MVVM, MVP..)
+- Understand and apply programming techniques: OOP, SOLID principles, using config file (connection string, access token), enumeration...  </t></si><si><t>Can apply computer science knowledge when and where appropriate showing sophistication, a high level of appreciation for programming intricacies</t></si><si><t>a reasonable demonstration of computer science knowledge in terms of data structures, algorithms and other applicable theory, but largely piecemeal without sophistication</t></si><si><t>showing a good grasp
+and reasonable
+ability to apply
+computer science
+knowledge to solve
+the problem in
+question, but there are
+some noticeable
+limitations that need
+to work on</t></si><si><t>no or little demonstration of anything other than basic programming skills, frequent use of superfluous and inappropriate programming approaches</t></si><si><t xml:space="preserve">Straight forward and easy to build and install, little or no effort required (works out of the box)
+</t></si><si><t>Can be built and installed with some effort, problems occurred but can be overcome with minor changes or clarifications to instructions</t></si><si><t>Take more effort to build and install the products. Too many manual and time- consuming tasks.</t></si><si><t>very difficult or impossible to build without modifications, frequent build problems, little or no instructions and more or less unable to install in any reasonable way</t></si><si><t>Document</t></si><si><t xml:space="preserve">- Requirements are grouped logically
+- Requirements are described in sufficient detail and completeness
+- Requirements are stated precisely
+- Diagrams are simple and follow standard notation (UML)
+- Full references and no Plagiarism 
+</t></si><si><t xml:space="preserve">- Requirements are grouped generally logically, some important requirements are missing and described incorrectly.
+- Requirements are described in generally detail and completeness
+- Requirements are stated precisely in most cases. 
+- Diagrams are simple and follow standard notation (UML) but have some drawing mistakes.
+- Have references but some references are missing  and no plagiarism 
+</t></si><si><t xml:space="preserve">- Requirements are reasonable but a
+little bit incoherent grouped.
+- Requiremenst are described in structured format but not detail and not completeness.
+- Missing some important diagram, some diagrams are too complex and are not follow standard notation.
+- Have very little references and no plagiarism
+</t></si><si><t xml:space="preserve"> - Requirements are not grouped logically.
+ - Insufficient content, document structure is not logical, flawed English with a lot of grammar, spelling, punctuation mistakes
+ - Diagrams are too complex and are not follow standard notation.
+ - No references
+ - Plagiarism
+ </t></si><si><t xml:space="preserve">- User requirements: context, problems, proposed solutions..
+- System functional requirements: usecase overview  usecase specification 
+- System nonfunctional requirements: quality attributes (performance, security, safety.. ), environtment (hardware, software, network, communication..)
+- Document : format, layout, grammar, spelling and
+punctuation.
+- Diagram : usecase diagram (actor, usecase , relationships ...), sequence diagram , activity diagram </t></si><si><t>- Compelling design solution showing highly original creative development of concept, innovative application of techniques and exemplary use of principles .
+- Solution shows rigorous creative inquiry and investigation throughout design process with highly successful results.</t></si><si><t>- Interesting design solution showing consistently creative development of concept, original development of technique and original application of principles.
+- Solution shows ongoing creative inquiry and exploration of design potential with largely effective results.</t></si><si><t>Fundamentally sound design solution with moderately creative use of concept, fundamentally appropriate technique, and adequate application of principles. Solution shows some effort to challenge creative boundaries with limited or uneven success.</t></si><si><t>- Does not attempt or is unable to complete design solutions. 
+- Unsuccessful design solution due to lack of creative use of concept, limited exploration of technique and/or application of principles. 
+- Little effort to challenge creative boundaries resulting in obvious or poorly developed solution.</t></si><si><t xml:space="preserve">- Strategy for:technology and 3rd services selection, quality attribues of system (performance - security- data storage...), deployment environment
+- System architecture : sub- systems and connection between theme in deployment view, process view.
+- Component design (physical view) for sub- system : component boundaries well defined, including functionality and interfaces
+- Package design (logical view) for sub- system 
+ - Data design: data structure  , data flow 
+</t></si><si><t>- Design has sufficient detail for someone else to develop the code.
+- Each unit have a unique identifier and follow style and naming convention
+- Design for each unit contains appropriate views (e.g., static structure, data definition, data flow, control flow, states, etc.)</t></si><si><t xml:space="preserve">- Design has enough information for someone else to develop the code.
+ - Each unit has a unique identifier and follows style and naming convention, but has some mistakes.
+ - Design for each unit contains only important views (e.g., static structure, data definition, data flow, control flow, states, etc.)        
+</t></si><si><t xml:space="preserve">- Need a little  effort for someone else to develop the code.
+- Unit design have mistakes in naming convention, the iconsisten style in many modules.
+- Design for each unit missing some important views </t></si><si><t>- Someone else cannot develop the code with the design.
+- Too many mistakes in unit design 
+- Design for each unit have single views only</t></si><si><t>- Class design : design for each unit contain appropriate views (e.g., static structure, data definition, data flow, control flow, states, etc.), has the overall function and intent of each unit
+- Logical Design (ERD):entity , entity relationship, attributes of entity .
+- Database Design : normalized, mapping with logical design , tables, fields , size and type of fields, default values..
+- Screen design : Screen(id, name, description),Component in screen (type, required , format ..), Screen flows (screen structure and transition between screens)</t></si><si><t>- Test plan state clearly the type of test being implemented, the test objectives and how team will conduct the test.
+- Test case have group logically in test suites.  Each test case in test suite have detail information for tester can follow and do the test execution without any support.
+- Test report organized summary of testing objectives, activities, and results. Report show understand product quality and decide whether a is on track for release.</t></si><si><t xml:space="preserve">- Test plan state generally the type of test being implemented, the test objectives, and how the team will conduct the test.
+ - Test cases have group logically in test suites but have some missing and inconsistent int test case detailed
+ - Test report does not have enough information about product quality. </t></si><si><t xml:space="preserve">- Have a test plan but need the effort to make clear information about how the team will conduct the test.
+- Test case doesn't group logically, test case detailed doesn't straightforward understand by the tester for doing test execution.
+- Test report lack of some important information about test activities and test result.   
+ </t></si><si><t>- Does not have a test plan.
+ - Test cases have a little with too many mistakes and missing detailed information. A tester cannot follow the test case specification to do the test.   
+- Test report doesn't show the summary of testing activities and quality of the software product.</t></si><si><t xml:space="preserve"> - Test plan: product to be tested, the definition of scope of testing (unit test, integration test, system test, user acceptance test), test type (black box, white box ), test deliverables.
+ -  Test case specification: test conditions, test suites, test cases in test suites, detailed information of test cases(test procedures, input data, expected output, constraints..)
+ - Test report: testing objectives, activities, results (number of designed, implemented, executed, and succeeded test cases..), conclusion about the quality of software product.   
+ </t></si><si><t xml:space="preserve">- Software package and documents are grouped in correct structure folders and naming convention.
+- Document, slides, software packages, sourcode... and all related documents  have been included in delivery package and all are the final versions.
+- Installation guides and environment configuration are described in detailed and easy to setup
+- Include script and code for automation deploy (e.g deployment as a code model).
+</t></si><si><t xml:space="preserve">- Software package and documents are grouped in correct structure folders.
+- Some files in delivery package are not up- to- date version.
+- Installation guides and environment configuration are described in detailed and can be setup by someone but take a little time to finish.
+- Apply semi- automation deploy (e.g deployment as a code model), some modules can be deploy automatically.  
+</t></si><si><t>- Software package and documents are grouped , but some folders are not followed the structure format.
+- Some important files (SRS, ADD, Souce code, software package ... ) are not the final versions.
+- Installation guides and environment configuration are described in generalled and difficult for someone can setup.
+- Do not have automation deploy, all things are manually deployed.</t></si><si><t>- Missing important file.
+- Too many files not following standard naming convention.
+- All documents are not up- to- date versions and there are too many different between the delivered version with the final version.
+- Do not have installation guide or the installation guide are not effective, someone can not follow the step to deploy system</t></si><si><t xml:space="preserve"> - Delivery package: documents , software, source code, installation guide.
+- Installabilty: check with the delivery package, other people can install system and run as a demonstration in front of the committee.
+- Script database, data inside the database. 
+- Training images of computer vision algorithm.
+- Devices and other resources are supplied for the project.
+- Acceptance notes from customers for the project from external (if required)   </t></si><si><t>Presentation</t></si><si><t>PE1</t></si><si><t>Slides: well designed and very informative
+Team: presenting responsibilities are divided evenly among team members, voices are clear, the presentation is concise and easy to follow.
+Time management: finished on time, time is wisely distributed among the
+presentation sections.</t></si><si><t>Slides: are well designed and provide
+most of needed information, there
+may be some mistakes in the slides
+but non is serious
+Team presents well but fail to focus on the key points to make the presentation more
+Time: used up all alotted time with less than 3 minutes to spare, however time could be distributed better
+among sections in hindsight.</t></si><si><t>Slides provide enough information but contain errors and typos and are not well structured
+Team: presenters are verbose but not effective, coordination between team
+member need improvements.
+Time:finished 5- 10 minutes early or 5 minutes late, rushed at the end of
+the presentation</t></si><si><t>Slides are incoherent, and either too long or too short
+Team: one or two members do most of the talking, voices are unclear and hard to understand, lacking of self- confidence.
+Time: finished with more than 15 minutes left, or more than 10
+minutes over time</t></si><si><t xml:space="preserve">- Design , content, illustration image and animation of  presentation slides.
+- Team: presenting responsibilities , voices , flow of presentation, apprearance (uniform, T- shirt, nameplate...)
+- Time handling
+</t></si><si><t>PE2</t></si><si><t>Demonstrated all the main flows of the software in a clear, logical and realistic waythe team was full
+of confidence, most scenarios and possible issues have been thought out in advance to avoid unpleasant surprise</t></si><si><t>Demonstrated most ofthe main flows of the software with some hiccups along the way, the demo went
+reasonaly well, but works need to be done to improve the clarity
+and effectiveness</t></si><si><t>was able to demonstrate the main
+flows of the software but not without
+interruptions and retries, there were
+unexpected errors here and there,
+making the demonstration a
+bumpy ride</t></si><si><t>the team was ill prepared, there were a host of problems that prevented the
+software from running as it should, making team fail to demonstrate most of the key features of the
+software</t></si><si><t xml:space="preserve">- Quantity of  main flows in demostration. 
+- Quality of main flows: contextual , continous, visible results.
+- Data using for demonstration: meaningful, enough quantity, realistic.
+- Explanation for the demonstration
+- Mistake of person, exception of software system , failure of system during the demonstration </t></si><si><t>PE3</t></si><si><t>The team answers all question concisely with spot- on clarity</t></si><si><t>The team was able to answer most
+questions correctly, but at times verbosely and unclearly.</t></si><si><t>The team was able to answer the questions with some success, but
+the answers usually lack depth and are not spot- on, sometimes show misunderstanding or misconception</t></si><si><t>The team failed to give acceptable answer to most questions</t></si><si><t>- Level of understanding of questions.
+- Detail and completeness of the answers to the questions
+- Rate of correct questions 
+- Member's assignment in answering questions</t></si><si><t>AI1</t></si><si><t>In-depth data analysis; AI adds significant scientific or practical value; problem definition with strong contribution.</t></si><si><t>Clearly analyzed why AI is needed; compared with traditional methods; considered scalability and practical applicability.</t></si><si><t>Identified a problem suitable for AI; clearly described AI problem and objectives.</t></si><si><t>Selecting problems not suitable for AI; forced application; unclear AI objectives.</t></si><si><t>1. Appropriateness of AI problem selection</t></si><si><t>AI2</t></si><si><t>Applied advanced techniques (augmentation, ensemble, transfer learning...); optimized tuning; deep result analysis.</t></si><si><t>Completed full data processing, training, parameter tuning; multi-criteria model evaluation; error analysis included.</t></si><si><t>Prepared appropriate training data; selected suitable models; basic evaluation with standard metrics.</t></si><si><t>Only using pre-built models without understanding; poor training data; no evaluation of model accuracy.</t></si><si><t>2. Quality of AI model building and training</t></si><si><t>AI3</t></si><si><t>Built MLOps pipeline for automated training, testing, deployment; ensured scalability and long-term monitoring.</t></si><si><t>AI fully integrated as system component; version control, update plan, maintenance considered.</t></si><si><t>AI model integrated into system with API or interface; initial deployment process described.</t></si><si><t>AI model operates independently, hard to integrate; no update or deployment process.</t></si><si><t>3. AI integration into software system</t></si><si><t>Câu hỏi</t></si><si><t>1. Mức độ lựa chọn và xác định vấn đề AI</t></si><si><t>Phân tích sâu đặc trưng dữ liệu, lợi ích AI mang lại, đề bài có đóng góp giá trị khoa học hoặc thực tiễn cao.</t></si><si><t>Phân tích rõ lý do cần AI, so sánh với các giải pháp truyền thống, có cân nhắc khả năng mở rộng và thực tiễn.</t></si><si><t>Xác định được bài toán phù hợp để ứng dụng AI, có mô tả rõ mục tiêu cần giải quyết.</t></si><si><t>Chọn bài toán không phù hợp với AI, áp dụng AI khiên cưỡng, không có ý nghĩa thực tế. Mục tiêu AI mơ hồ.</t></si><si><t>2. Chất lượng xây dựng và huấn luyện mô hình AI</t></si><si><t>Áp dụng kỹ thuật nâng cao (augmentation, ensemble, transfer learning...); tinh chỉnh tối ưu; phân tích chuyên sâu kết quả.</t></si><si><t>Thực hiện đầy đủ quy trình xử lý dữ liệu, huấn luyện, tinh chỉnh; đánh giá chất lượng đa tiêu chí; có phân tích sai sót.</t></si><si><t>Có chuẩn bị dữ liệu huấn luyện phù hợp; chọn mô hình hợp lý; đánh giá cơ bản với các chỉ số chất lượng.</t></si><si><t>Chỉ dùng mô hình có sẵn, thiếu hiểu biết; dữ liệu sơ sài; không đánh giá độ chính xác mô hình.</t></si><si><t>3. Tích hợp AI vào hệ thống phần mềm</t></si><si><t>Xây dựng pipeline tự động hóa (MLOps): huấn luyện, kiểm thử, triển khai; đảm bảo mở rộng và giám sát chất lượng mô hình lâu dài.</t></si><si><t>Tích hợp AI thành phần chính thức trong hệ thống; có quy trình cập nhật, quản lý version, kế hoạch bảo trì.</t></si><si><t>Mô hình AI đã được tích hợp vào hệ thống, có API hoặc giao diện sử dụng; có mô tả quy trình triển khai ban đầu.</t></si><si><t>Mô hình AI hoạt động rời rạc, khó tích hợp; không có quy trình cập nhật, triển khai.</t></si><si><t>No</t></si><si><t>Project Type</t></si><si><t>Column</t></si><si><t>APP</t></si><si><t>Application Focus</t></si><si><t>REA</t></si><si><t>Research Focus</t></si><si><t>STA</t></si><si><t>Startup (TBA)</t></si><si><t>SU21</t></si><si><t>Summer 2021</t></si><si><t xml:space="preserve">I. Criteria table for evaluation project </t></si><si><t>Application</t></si><si><t>R&amp;D</t></si><si><t>Startup</t></si><si><t>Components</t></si><si><t>Criteria Name</t></si><si><t>Rate</t></si><si><t>Y</t></si><si><t>N</t></si><si><t>Slides quality &amp;  presentation style &amp; Time management</t></si><si><t>Software product demonstration</t></si><si><t>Inquiry Handling style</t></si><si><t>II. Contribution Table</t></si><si><t>CR1</t></si><si><t>Contribution Rate reported by team</t></si><si><t>CR2</t></si><si><t>Contribution Rate reported by supervisor</t></si><si><t>CR3</t></si><si><t xml:space="preserve">Contribution Rate evaluated  by Committee </t></si><si><t xml:space="preserve">III. Project fail criteria </t></si><si><r><rPr><sz val="11"/><color theme="1"/><rFont val="Arial"/></rPr><t xml:space="preserve">1. Final score is </t></r><r><rPr><b/><sz val="11"/><color theme="1"/><rFont val="Arial"/></rPr><t>&lt;4</t></r></si><si><t>OR</t></si><si><t xml:space="preserve">Thiếu thành viên </t></si><si><r><rPr><sz val="11"/><color theme="1"/><rFont val="Arial"/></rPr><t xml:space="preserve">2. Average score of each component (Product/Document/Presentation ) is </t></r><r><rPr><b/><sz val="11"/><color theme="1"/><rFont val="Arial"/></rPr><t>&lt; 4</t></r></si><si><t>3. One of the mandatory criteria in each component is &lt; 4</t></si><si><t>IV. Student fail criteria</t></si><si><t>1. Project team fail</t></si><si><t>2. Average score of student is &lt; 4</t></si><si><t xml:space="preserve">3. Cannot handle any question </t></si><si><t>4. Contribution under 20% (4 members), 16% (5 members)</t></si><si><t>V. Grade level</t></si><si><t>Grade</t></si><si><t>Index</t></si><si><t>Min Point</t></si><si><t>Max Point</t></si><si><t xml:space="preserve">Chủ nhiệm Bộ môn: Lê Thiện Nhật Quang (quangltn3@fe.edu.vn) </t></si></sst>

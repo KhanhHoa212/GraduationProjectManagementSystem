@@ -1,3 +1,13 @@
+@using System.Security.Claims
+@using GPMS.Domain.Enums
+@inject GPMS.Application.Interfaces.Repositories.INotificationRepository NotificationRepository
+@{
+    var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+    var notifications = string.IsNullOrWhiteSpace(currentUserId)
+        ? Enumerable.Empty<GPMS.Domain.Entities.Notification>()
+        : await NotificationRepository.GetRecentByRecipientAsync(currentUserId, 5);
+    var unreadCount = notifications.Count(n => !n.IsRead);
+}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -40,30 +50,50 @@
                     <div class="position-relative">
                         <button id="notificationToggle" class="btn btn-link text-muted p-1 border-0" style="color: #6B7280;">
                             <span class="material-symbols-outlined">notifications</span>
-                            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px; margin-top: 8px; margin-left: -8px;"></span>
+                            @if (unreadCount > 0)
+                            {
+                                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle" style="width: 8px; height: 8px; margin-top: 8px; margin-left: -8px;"></span>
+                            }
                         </button>
                         
                         <!-- Notification Dropdown -->
                         <div id="notificationDropdown" class="d-none position-absolute bg-white rounded shadow-sm border" style="top: 100%; right: 0; width: 320px; z-index: 1000;">
                             <div class="p-3 border-bottom d-flex align-items-center justify-content-between">
                                 <h6 class="mb-0 fw-bold" style="font-size: 14px;">Notifications</h6>
-                                <a href="#" class="text-decoration-none" style="font-size: 12px; color: var(--fpt-orange)">Mark all read</a>
+                                <a href="@Url.Action("History", "Lecturer")" class="text-decoration-none" style="font-size: 12px; color: var(--fpt-orange)">Open history</a>
                             </div>
                             <div style="max-height: 300px; overflow-y: auto;">
-                                <!-- Single Notification -->
-                                <div class="px-3 py-2 border-bottom text-body hover-bg-light cursor-pointer">
-                                    <div class="d-flex gap-2">
-                                        <div class="text-orange-500 mt-1"><span class="material-symbols-outlined fs-6" style="color: var(--fpt-orange)">assignment</span></div>
-                                        <div>
-                                            <p class="mb-1 fw-medium" style="font-size: 13px;">New Review Assignment</p>
-                                            <p class="mb-1 text-muted" style="font-size: 12px;">You were assigned to review Group G12 for Round 1.</p>
-                                            <small class="text-muted" style="font-size: 11px;">2 hours ago</small>
+                                @if (!notifications.Any())
+                                {
+                                    <div class="px-3 py-4 text-center text-muted" style="font-size: 12px;">No notifications yet.</div>
+                                }
+                                else
+                                {
+                                    @foreach (var notification in notifications)
+                                    {
+                                        var icon = notification.Type switch
+                                        {
+                                            NotificationType.Feedback => "chat",
+                                            NotificationType.Schedule => "calendar_today",
+                                            NotificationType.Deadline => "event_busy",
+                                            NotificationType.Review => "assignment",
+                                            _ => "notifications"
+                                        };
+                                        <div class="px-3 py-2 border-bottom text-body hover-bg-light cursor-pointer">
+                                            <div class="d-flex gap-2">
+                                                <div class="mt-1"><span class="material-symbols-outlined fs-6" style="color: var(--fpt-orange)">@icon</span></div>
+                                                <div>
+                                                    <p class="mb-1 fw-medium" style="font-size: 13px;">@notification.Title</p>
+                                                    <p class="mb-1 text-muted" style="font-size: 12px;">@notification.Content</p>
+                                                    <small class="text-muted" style="font-size: 11px;">@notification.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
+                                    }
+                                }
                             </div>
                             <div class="p-2 text-center border-top">
-                                <a href="#" class="text-decoration-none text-muted" style="font-size: 12px;">View all</a>
+                                <a href="@Url.Action("History", "Lecturer")" class="text-decoration-none text-muted" style="font-size: 12px;">View all</a>
                             </div>
                         </div>
                     </div>

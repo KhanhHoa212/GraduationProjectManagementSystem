@@ -15,6 +15,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int UpcomingDeadlinesCount { get; set; }
         public List<RecentActivityItem> RecentActivities { get; set; } = new();
         public List<ScheduleItem> TodaysSchedule { get; set; } = new();
+        public string GuidanceMessage { get; set; } = string.Empty;
     }
 
     public class RecentActivityItem
@@ -36,6 +37,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int DurationMinutes { get; set; }
         public bool IsHighlight { get; set; }
         public string? MeetLink { get; set; }
+        public string? ActionUrl { get; set; }
     }
 
     // -------------------------------------------------------
@@ -59,6 +61,9 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Semester { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public int ProgressPercent { get; set; }
+        public DateTime? NextSessionAt { get; set; }
+        public string? NextSessionLocation { get; set; }
+        public int PendingFeedbackCount { get; set; }
     }
 
     // -------------------------------------------------------
@@ -73,8 +78,10 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Semester { get; set; } = string.Empty;
         public string SupervisorName { get; set; } = string.Empty;
         public int? PendingFeedbackId { get; set; }
+        public string? MessageGroupUrl { get; set; }
         public List<GroupMemberItem> Members { get; set; } = new();
         public List<ReviewRoundMilestone> Milestones { get; set; } = new();
+        public MeetingInfoItem? NextMeeting { get; set; }
     }
 
     public class GroupMemberItem
@@ -85,15 +92,40 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Role { get; set; } = "Member";
     }
 
+    public class MeetingInfoItem
+    {
+        public DateTime ScheduledAt { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string Location { get; set; } = string.Empty;
+        public string? MeetLink { get; set; }
+        public bool IsOnline { get; set; }
+    }
+
     public class ReviewRoundMilestone
     {
+        public int RoundId { get; set; }
         public int RoundNumber { get; set; }
+        public string Title { get; set; } = string.Empty;
         public string RoundType { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public DateTime Deadline { get; set; }
         public string Status { get; set; } = string.Empty;
+        public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
+        public string? MentorGateComment { get; set; }
         public bool HasSubmission { get; set; }
         public bool HasEvaluation { get; set; }
+        public DateTime? SubmittedAt { get; set; }
+        public string? SubmissionFileName { get; set; }
+        public string? SubmissionUrl { get; set; }
+        public decimal? SubmissionSizeMb { get; set; }
+        public string? SubmittedByName { get; set; }
+        public string? ReviewerName { get; set; }
+        public decimal? Score { get; set; }
+        public string? FeedbackStatus { get; set; }
+        public DateTime? ScheduledAt { get; set; }
+        public string? Location { get; set; }
+        public string? MeetLink { get; set; }
     }
 
     // -------------------------------------------------------
@@ -115,6 +147,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int RoundNumber { get; set; }
         public decimal TotalScore { get; set; }
         public DateTime SubmittedAt { get; set; }
+        public DateTime? AutoReleaseAt { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; }
         public string ApprovalStatusLabel => ApprovalStatus switch
         {
@@ -149,19 +182,35 @@ namespace GPMS.Web.ViewModels.Lecturer
         public ApprovalStatus ApprovalStatus { get; set; }
         public string FeedbackContent { get; set; } = string.Empty;
         public string? SupervisorComment { get; set; }
+        public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
+        public string? MentorGateComment { get; set; }
         public List<GroupMemberItem> GroupMembers { get; set; } = new();
         public List<EvalDetailRow> Scores { get; set; } = new();
     }
 
     public class EvalDetailRow
     {
+        public int ItemID { get; set; }
         public string ItemCode { get; set; } = string.Empty;
+        public string? ItemName { get; set; }
         public string CriteriaName { get; set; } = string.Empty;
+        public string? SectionCode { get; set; }
+        public string? SectionTitle { get; set; }
+        public string? PriorityLabel { get; set; }
+        public ChecklistInputType InputType { get; set; } = ChecklistInputType.NumericScore;
+        public string? AssessmentValue { get; set; }
         public decimal MaxScore { get; set; }
         public decimal WeightPercentage { get; set; }
         public decimal Weight => WeightPercentage / 100m;
         public decimal Score { get; set; }
         public decimal WeightedScore { get; set; }
+        public string? ReviewerComment { get; set; }
+        public string? MentorComment { get; set; }
+        public string? GradeDescription { get; set; }
+        public string? ExcellentRubric { get; set; }
+        public string? GoodRubric { get; set; }
+        public string? AcceptableRubric { get; set; }
+        public string? FailRubric { get; set; }
     }
 
     // -------------------------------------------------------
@@ -188,8 +237,10 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string? MeetLink { get; set; }
         public bool HasEvaluation { get; set; }
         public int? EvaluationID { get; set; }
-        public string StatusLabel => HasEvaluation ? "Completed" : (ScheduledAt.HasValue && ScheduledAt.Value < DateTime.Now ? "Overdue" : "Pending");
-        public string StatusBadgeClass => HasEvaluation ? "bg-success-subtle text-success" : (ScheduledAt.HasValue && ScheduledAt.Value < DateTime.Now ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning");
+        public string? StatusNote { get; set; }
+        public string StatusLabel => !string.IsNullOrWhiteSpace(StatusNote) ? StatusNote : HasEvaluation ? "Completed" : (ScheduledAt.HasValue && ScheduledAt.Value < DateTime.Now ? "Overdue" : "Pending");
+        public string StatusBadgeClass => !string.IsNullOrWhiteSpace(StatusNote) ? "bg-danger-subtle text-danger" : HasEvaluation ? "bg-success-subtle text-success" : (ScheduledAt.HasValue && ScheduledAt.Value < DateTime.Now ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning");
+        public string PrimaryActionLabel => StatusNote == "Needs Revision" ? "Revise Evaluation" : "Start Evaluation";
     }
 
     // -------------------------------------------------------
@@ -211,28 +262,122 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string? ExistingFeedbackContent { get; set; }
         public List<ExistingScoreRow> ExistingScores { get; set; } = new();
         public List<ScoreInputRow> CriteriaScores { get; set; } = new();
+        public ApprovalStatus? FeedbackApprovalStatus { get; set; }
+        public string? SupervisorComment { get; set; }
+        public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
+        public string? MentorGateComment { get; set; }
+        public bool CanEdit { get; set; } = true;
     }
 
     public class ChecklistItemRow
     {
         public int ItemID { get; set; }
         public string ItemCode { get; set; } = string.Empty;
+        public string? ItemName { get; set; }
         public string ItemContent { get; set; } = string.Empty;
+        public string? SectionCode { get; set; }
+        public string? SectionTitle { get; set; }
+        public string? PriorityLabel { get; set; }
+        public ChecklistInputType InputType { get; set; } = ChecklistInputType.NumericScore;
         public decimal MaxScore { get; set; }
         public decimal Weight { get; set; }
+        public string? ExcellentRubric { get; set; }
+        public string? GoodRubric { get; set; }
+        public string? AcceptableRubric { get; set; }
+        public string? FailRubric { get; set; }
     }
 
     public class ExistingScoreRow
     {
         public int ItemID { get; set; }
         public decimal Score { get; set; }
+        public string? AssessmentValue { get; set; }
         public string? Comment { get; set; }
+        public string? MentorComment { get; set; }
+        public string? GradeDescription { get; set; }
     }
 
     public class ScoreInputRow
     {
         public int CriteriaId { get; set; }
         public decimal Score { get; set; }
+        public string? AssessmentValue { get; set; }
         public string? Comment { get; set; }
+    }
+
+    // -------------------------------------------------------
+    // Schedule
+    // -------------------------------------------------------
+    public class LecturerScheduleViewModel
+    {
+        public int TodaySessionsCount { get; set; }
+        public int OnlineSessionsCount { get; set; }
+        public int OfflineSessionsCount { get; set; }
+        public int UpcomingDeadlinesCount { get; set; }
+        public List<ScheduleEntryViewModel> Entries { get; set; } = new();
+        public List<DeadlineAlertViewModel> Deadlines { get; set; } = new();
+    }
+
+    public class ScheduleEntryViewModel
+    {
+        public string RoleLabel { get; set; } = string.Empty;
+        public int GroupID { get; set; }
+        public string GroupName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
+        public int RoundNumber { get; set; }
+        public string RoundType { get; set; } = string.Empty;
+        public DateTime ScheduledAt { get; set; }
+        public bool IsOnline { get; set; }
+        public string Location { get; set; } = string.Empty;
+        public string? MeetLink { get; set; }
+        public string? Guidance { get; set; }
+        public string ActionUrl { get; set; } = string.Empty;
+    }
+
+    public class DeadlineAlertViewModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public DateTime DueAt { get; set; }
+        public string Severity { get; set; } = "info";
+        public string ActionUrl { get; set; } = string.Empty;
+        public string ActionText { get; set; } = string.Empty;
+    }
+
+    // -------------------------------------------------------
+    // History
+    // -------------------------------------------------------
+    public class LecturerHistoryViewModel
+    {
+        public List<ReviewHistoryRow> ReviewHistory { get; set; } = new();
+        public List<FeedbackHistoryRow> FeedbackHistory { get; set; } = new();
+    }
+
+    public class ReviewHistoryRow
+    {
+        public int EvaluationID { get; set; }
+        public int GroupID { get; set; }
+        public string GroupName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
+        public int RoundNumber { get; set; }
+        public string RoundType { get; set; } = string.Empty;
+        public decimal TotalScore { get; set; }
+        public DateTime SubmittedAt { get; set; }
+        public ApprovalStatus ApprovalStatus { get; set; }
+        public string FeedbackPreview { get; set; } = string.Empty;
+    }
+
+    public class FeedbackHistoryRow
+    {
+        public int FeedbackID { get; set; }
+        public int GroupID { get; set; }
+        public string GroupName { get; set; } = string.Empty;
+        public string ProjectName { get; set; } = string.Empty;
+        public string ReviewerName { get; set; } = string.Empty;
+        public int RoundNumber { get; set; }
+        public ApprovalStatus ApprovalStatus { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public bool IsVisibleToStudent { get; set; }
+        public string? SupervisorComment { get; set; }
     }
 }

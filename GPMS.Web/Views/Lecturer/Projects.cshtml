@@ -8,7 +8,7 @@
 <div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="page-title">My Projects</h1>
-        <p class="page-subtitle text-muted mb-0">All groups you are supervising this semester.</p>
+        <p class="page-subtitle text-muted mb-0">All groups you are supervising, their next meeting, and current feedback state.</p>
     </div>
 </div>
 
@@ -39,6 +39,7 @@
                         <th class="px-4">GROUP</th>
                         <th>PROJECT</th>
                         <th>MEMBERS</th>
+                        <th>NEXT SESSION</th>
                         <th>ROUND</th>
                         <th>STATUS</th>
                         <th class="text-end pe-4">ACTIONS</th>
@@ -53,7 +54,7 @@
                             </td>
                             <td>
                                 <div class="fw-medium" style="font-size:13px;">@g.ProjectName</div>
-                                <div class="text-muted" style="font-size:11px;">@g.Semester</div>
+                                <div class="text-muted" style="font-size:11px;">@g.ProjectCode - @g.Semester</div>
                             </td>
                             <td>
                                 <div class="d-flex flex-wrap gap-1">
@@ -69,13 +70,30 @@
                                 </div>
                             </td>
                             <td>
+                                @if (g.NextSessionAt.HasValue)
+                                {
+                                    <div class="fw-medium" style="font-size:13px;">@g.NextSessionAt.Value.ToString("MMM dd, HH:mm")</div>
+                                    <div class="text-muted" style="font-size:11px;">@g.NextSessionLocation</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size:12px;">No meeting scheduled</span>
+                                }
+                            </td>
+                            <td>
                                 <span class="badge bg-light text-body border fw-medium">@g.RoundType</span>
                             </td>
                             <td>
                                 @{
-                                    var statusClass = g.Status == "Active" ? "bg-success-subtle text-success" : "bg-secondary-subtle text-secondary";
+                                    var statusClass = g.Status.Contains("Awaiting") ? "bg-warning-subtle text-warning"
+                                        : g.Status.Contains("revision") ? "bg-danger-subtle text-danger"
+                                        : "bg-success-subtle text-success";
                                 }
                                 <span class="badge @statusClass">@g.Status</span>
+                                @if (g.PendingFeedbackCount > 0)
+                                {
+                                    <div class="text-muted mt-1" style="font-size:11px;">@g.PendingFeedbackCount pending approval</div>
+                                }
                             </td>
                             <td class="text-end pe-4">
                                 <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = g.GroupID })" class="btn btn-sm btn-outline-secondary">

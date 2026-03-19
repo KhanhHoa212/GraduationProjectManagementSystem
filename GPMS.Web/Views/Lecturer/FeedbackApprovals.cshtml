@@ -9,7 +9,7 @@
 <div class="page-header d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="page-title">Feedback Approvals</h1>
-        <p class="page-subtitle text-muted mb-0">Review and approve feedback submitted by reviewers.</p>
+        <p class="page-subtitle text-muted mb-0">Review reviewer feedback, see when it will auto-release, and open the detailed approval screen.</p>
     </div>
 </div>
 
@@ -55,18 +55,31 @@
                                     <span style="font-size:13px;">@item.ReviewerName</span>
                                 </div>
                             </td>
-                             <td><span class="badge bg-light text-body border fw-medium">Round @item.RoundNumber</span></td>
-                             <td><span class="text-body" style="font-size:13px;">@item.SubmittedAt.ToString("MMM dd, HH:mm")</span></td>
-                             <td>—</td>
-                             <td>
-                                @{  var badgeClass = item.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning" : item.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger"; }
+                            <td><span class="badge bg-light text-body border fw-medium">Round @item.RoundNumber</span></td>
+                            <td><span class="text-body" style="font-size:13px;">@item.SubmittedAt.ToString("MMM dd, HH:mm")</span></td>
+                            <td>
+                                @if (item.AutoReleaseAt.HasValue)
+                                {
+                                    <span class="text-body" style="font-size:13px;">@item.AutoReleaseAt.Value.ToString("MMM dd, HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size:13px;">After approval</span>
+                                }
+                            </td>
+                            <td>
+                                @{
+                                    var badgeClass = item.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning"
+                                        : item.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success"
+                                        : "bg-danger-subtle text-danger";
+                                }
                                 <span class="badge @badgeClass">@item.ApprovalStatusLabel</span>
-                             </td>
-                             <td class="text-end pe-4">
-                                 <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-primary">
-                                     Review
-                                 </a>
-                             </td>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-primary">
+                                    Review
+                                </a>
+                            </td>
                         </tr>
                     }
                 </tbody>

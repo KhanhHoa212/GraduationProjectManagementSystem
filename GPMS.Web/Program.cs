@@ -32,6 +32,7 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IMentorRoundReviewRepository, MentorRoundReviewRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
 builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
