@@ -21,4 +21,5 @@ public class ReviewRound
     public virtual ICollection<SubmissionRequirement> SubmissionRequirements { get; set; } = new List<SubmissionRequirement>();
     public virtual ReviewChecklist? ReviewChecklist { get; set; }
     public virtual ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
+    public virtual ICollection<GroupRoundProgress> GroupRoundProgresses { get; set; } = new List<GroupRoundProgress>();
 }

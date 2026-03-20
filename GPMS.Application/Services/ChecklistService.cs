@@ -12,11 +12,16 @@ namespace GPMS.Application.Services;
 public class ChecklistService : IChecklistService
 {
     private readonly IChecklistRepository _checklistRepository;
+    private readonly IReviewRoundRepository _roundRepository;
     private readonly IMapper _mapper;
 
-    public ChecklistService(IChecklistRepository checklistRepository, IMapper mapper)
+    public ChecklistService(
+        IChecklistRepository checklistRepository, 
+        IReviewRoundRepository roundRepository,
+        IMapper mapper)
     {
         _checklistRepository = checklistRepository;
+        _roundRepository = roundRepository;
         _mapper = mapper;
     }
 
@@ -37,9 +42,16 @@ public class ChecklistService : IChecklistService
                 ItemID = i.ItemID,
                 ItemCode = i.ItemCode,
                 ItemContent = i.ItemContent,
-                MaxScore = i.MaxScore,
-                Weight = i.Weight,
-                OrderIndex = i.OrderIndex
+                ItemName = i.ItemName,
+                ItemType = i.ItemType,
+                Section = i.Section,
+                OrderIndex = i.OrderIndex,
+                Rubrics = i.RubricDescriptions.Select(r => new RubricDescriptionDto
+                {
+                    RubricID = r.RubricID,
+                    GradeLevel = r.GradeLevel,
+                    Description = r.Description
+                }).ToList()
             }).ToList()
         };
     }
@@ -82,14 +94,28 @@ public class ChecklistService : IChecklistService
         {
             if (itemDto.ItemID == 0)
             {
-                checklist.ChecklistItems.Add(new ChecklistItem
+                var newItem = new ChecklistItem
                 {
                     ItemCode = itemDto.ItemCode,
                     ItemContent = itemDto.ItemContent,
-                    MaxScore = itemDto.MaxScore,
-                    Weight = itemDto.Weight,
+                    ItemName = itemDto.ItemName,
+                    ItemType = itemDto.ItemType,
+                    Section = itemDto.Section,
                     OrderIndex = itemDto.OrderIndex
-                });
+                };
+
+                if (itemDto.Rubrics != null && itemDto.Rubrics.Any())
+                {
+                    foreach (var r in itemDto.Rubrics)
+                    {
+                        newItem.RubricDescriptions.Add(new RubricDescription
+                        {
+                            GradeLevel = r.GradeLevel,
+                            Description = r.Description
+                        });
+                    }
+                }
+                checklist.ChecklistItems.Add(newItem);
             }
             else
             {
@@ -98,14 +124,94 @@ public class ChecklistService : IChecklistService
                 {
                     existingItem.ItemCode = itemDto.ItemCode;
                     existingItem.ItemContent = itemDto.ItemContent;
-                    existingItem.MaxScore = itemDto.MaxScore;
-                    existingItem.Weight = itemDto.Weight;
+                    existingItem.ItemName = itemDto.ItemName;
+                    existingItem.ItemType = itemDto.ItemType;
+                    existingItem.Section = itemDto.Section;
                     existingItem.OrderIndex = itemDto.OrderIndex;
+
+                    // Sync Rubrics
+                    existingItem.RubricDescriptions.Clear();
+                    if (itemDto.Rubrics != null)
+                    {
+                        foreach (var r in itemDto.Rubrics)
+                        {
+                            existingItem.RubricDescriptions.Add(new RubricDescription
+                            {
+                                GradeLevel = r.GradeLevel,
+                                Description = r.Description
+                            });
+                        }
+                    }
                 }
             }
         }
 
         await _checklistRepository.SaveChangesAsync();
         return (true, "Checklist saved successfully.");
+    }
+
+    public async Task<(bool Success, string Message)> CopyChecklistAsync(int fromSemesterId, int toSemesterId, List<int> roundNumbers)
+    {
+        // 1. Get all checklists from source semester
+        var sourceChecklists = await _checklistRepository.GetChecklistsBySemesterIdAsync(fromSemesterId);
+        
+        // 2. Get target rounds in destination semester
+        var targetRounds = await _roundRepository.GetBySemesterAsync(toSemesterId);
+
+        foreach (var roundNum in roundNumbers)
+        {
+            var sourceChecklist = sourceChecklists.FirstOrDefault(c => c.ReviewRound?.RoundNumber == roundNum);
+            var targetRound = targetRounds.FirstOrDefault(r => r.RoundNumber == roundNum);
+
+            if (sourceChecklist != null && targetRound != null)
+            {
+                // Delete existing in target if any
+                var existingTarget = await _checklistRepository.GetByRoundIdAsync(targetRound.ReviewRoundID);
+                if (existingTarget != null)
+                {
+                    _checklistRepository.Delete(existingTarget);
+                }
+
+                // Deep copy
+                var newChecklist = new ReviewChecklist
+                {
+                    ReviewRoundID = targetRound.ReviewRoundID,
+                    Title = sourceChecklist.Title,
+                    Description = sourceChecklist.Description,
+                    ChecklistItems = sourceChecklist.ChecklistItems.Select(i => new ChecklistItem
+                    {
+                        ItemCode = i.ItemCode,
+                        ItemContent = i.ItemContent,
+                        ItemName = i.ItemName,
+                        ItemType = i.ItemType,
+                        Section = i.Section,
+                        OrderIndex = i.OrderIndex,
+                        RubricDescriptions = i.RubricDescriptions.Select(r => new RubricDescription
+                        {
+                            GradeLevel = r.GradeLevel,
+                            Description = r.Description
+                        }).ToList()
+                    }).ToList()
+                };
+                await _checklistRepository.AddAsync(newChecklist);
+            }
+        }
+
+        await _checklistRepository.SaveChangesAsync();
+        return (true, "Copy completed successfully.");
+    }
+
+    public async Task<IEnumerable<ChecklistDto>> GetBySemesterIdAsync(int semesterId)
+    {
+        var checklists = await _checklistRepository.GetChecklistsBySemesterIdAsync(semesterId);
+        return checklists.Select(c => new ChecklistDto
+        {
+            ChecklistID = c.ChecklistID,
+            ReviewRoundID = c.ReviewRoundID,
+            ReviewRoundTitle = $"Round {c.ReviewRound?.RoundNumber}",
+            Title = c.Title,
+            Description = c.Description,
+            Items = c.ChecklistItems.Select(i => new ChecklistItemDto { ItemID = i.ItemID }).ToList()
+        });
     }
 }

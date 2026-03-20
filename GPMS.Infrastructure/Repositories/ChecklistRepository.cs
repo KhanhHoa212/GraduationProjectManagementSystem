@@ -15,10 +15,20 @@ public class ChecklistRepository : IChecklistRepository
         await _context.ReviewChecklists
             .Include(c => c.ReviewRound)
             .Include(c => c.ChecklistItems)
+                .ThenInclude(i => i.RubricDescriptions)
             .FirstOrDefaultAsync(c => c.ReviewRoundID == roundId);
 
     public async Task AddAsync(ReviewChecklist checklist) => await _context.ReviewChecklists.AddAsync(checklist);
     public void Update(ReviewChecklist checklist) => _context.ReviewChecklists.Update(checklist);
     public void Delete(ReviewChecklist checklist) => _context.ReviewChecklists.Remove(checklist);
+    
+    public async Task<IEnumerable<ReviewChecklist>> GetChecklistsBySemesterIdAsync(int semesterId) =>
+        await _context.ReviewChecklists
+            .Include(c => c.ReviewRound)
+            .Include(c => c.ChecklistItems)
+                .ThenInclude(i => i.RubricDescriptions)
+            .Where(c => c.ReviewRound.SemesterID == semesterId)
+            .ToListAsync();
+
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }
