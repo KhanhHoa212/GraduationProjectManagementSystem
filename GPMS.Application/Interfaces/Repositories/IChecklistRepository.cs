@@ -8,5 +8,6 @@ public interface IChecklistRepository
     Task AddAsync(ReviewChecklist checklist);
     void Update(ReviewChecklist checklist);
     void Delete(ReviewChecklist checklist);
+    Task<IEnumerable<ReviewChecklist>> GetChecklistsBySemesterIdAsync(int semesterId);
     Task SaveChangesAsync();
 }

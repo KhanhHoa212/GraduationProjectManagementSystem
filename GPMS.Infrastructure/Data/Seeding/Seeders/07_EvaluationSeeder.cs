@@ -17,11 +17,16 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
+        int semesterId = activeSemester.SemesterID;
+
         // Check for specific seeded evaluations
-        if (await _context.Evaluations.AnyAsync(e => e.ReviewRound.SemesterID == 1)) return;
+        if (await _context.Evaluations.AnyAsync(e => e.ReviewRound.SemesterID == semesterId)) return;
 
         var assignments = await _context.ReviewerAssignments
-            .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == 1)
+            .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == semesterId)
             .Include(ra => ra.ReviewRound)
             .ThenInclude(rr => rr.ReviewChecklist)
             .ThenInclude(rc => rc.ChecklistItems)

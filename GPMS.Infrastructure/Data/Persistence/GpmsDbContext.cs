@@ -66,15 +66,15 @@ public class GpmsDbContext : DbContext
 
         // 4. Semester
         modelBuilder.Entity<Semester>().HasData(
-            new Semester 
-            { 
-                SemesterID = 1, 
-                SemesterCode = "SP25", 
-                AcademicYear = "2024-2025", 
-                StartDate = new DateTime(2025, 1, 1), 
-                EndDate = new DateTime(2025, 4, 30), 
-                Status = SemesterStatus.Active 
-            }
+            new Semester { SemesterID = 1, SemesterCode = "SP24", AcademicYear = "2023-2024", StartDate = new DateTime(2024, 1, 1), EndDate = new DateTime(2024, 4, 30), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 2, SemesterCode = "SU24", AcademicYear = "2023-2024", StartDate = new DateTime(2024, 5, 1), EndDate = new DateTime(2024, 8, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 3, SemesterCode = "FALL24", AcademicYear = "2024-2025", StartDate = new DateTime(2024, 9, 1), EndDate = new DateTime(2024, 12, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 4, SemesterCode = "SP25", AcademicYear = "2024-2025", StartDate = new DateTime(2025, 1, 1), EndDate = new DateTime(2025, 4, 30), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 5, SemesterCode = "SU25", AcademicYear = "2024-2025", StartDate = new DateTime(2025, 5, 1), EndDate = new DateTime(2025, 8, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 6, SemesterCode = "FALL25", AcademicYear = "2025-2026", StartDate = new DateTime(2025, 9, 1), EndDate = new DateTime(2025, 12, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 7, SemesterCode = "SP26", AcademicYear = "2025-2026", StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 4, 30), Status = SemesterStatus.Active },
+            new Semester { SemesterID = 8, SemesterCode = "SU26", AcademicYear = "2025-2026", StartDate = new DateTime(2026, 5, 1), EndDate = new DateTime(2026, 8, 31), Status = SemesterStatus.Upcoming },
+            new Semester { SemesterID = 9, SemesterCode = "FALL26", AcademicYear = "2026-2027", StartDate = new DateTime(2026, 9, 1), EndDate = new DateTime(2026, 12, 31), Status = SemesterStatus.Upcoming }
         );
 
         // 5. Rooms

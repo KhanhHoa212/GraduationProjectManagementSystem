@@ -17,12 +17,17 @@ public class ReviewerAssignmentSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
+        int semesterId = activeSemester.SemesterID;
+
         // Check if assignments exist for potential seeded rounds (Round 1 or 2)
-        if (await _context.ReviewerAssignments.AnyAsync(ra => ra.ReviewRound.SemesterID == 1)) return;
+        if (await _context.ReviewerAssignments.AnyAsync(ra => ra.ReviewRound.SemesterID == semesterId)) return;
 
         var groups = await _context.ProjectGroups.Where(g => g.GroupName.StartsWith("Team ")).ToListAsync();
         var rounds = await _context.ReviewRounds
-            .Where(r => r.SemesterID == 1 && (r.Status == RoundStatus.Completed || r.Status == RoundStatus.Ongoing))
+            .Where(r => r.SemesterID == semesterId && (r.Status == RoundStatus.Completed || r.Status == RoundStatus.Ongoing))
             .ToListAsync();
         var lecturers = await _context.UserRoles
             .Where(r => r.RoleName == RoleName.Lecturer)

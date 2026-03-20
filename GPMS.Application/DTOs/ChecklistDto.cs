@@ -21,6 +21,14 @@ public class ChecklistItemDto
     public string ItemType { get; set; } = "YesNo";
     public string? Section { get; set; }
     public int OrderIndex { get; set; }
+    public List<RubricDescriptionDto> Rubrics { get; set; } = new();
+}
+
+public class RubricDescriptionDto
+{
+    public int RubricID { get; set; }
+    public string GradeLevel { get; set; } = string.Empty; // Excellent, Good, Acceptable, Fail
+    public string Description { get; set; } = string.Empty;
 }
 
 public class SaveChecklistDto
@@ -29,4 +37,11 @@ public class SaveChecklistDto
     public string Title { get; set; } = "Review Checklist";
     public string? Description { get; set; }
     public List<ChecklistItemDto> Items { get; set; } = new();
+}
+
+public class CopyChecklistRequest
+{
+    public int FromSemesterId { get; set; }
+    public int ToSemesterId { get; set; }
+    public List<int> RoundNumbers { get; set; } = new();
 }

@@ -17,9 +17,12 @@ public class GroupSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
         if (await _context.ProjectGroups.AnyAsync(g => g.GroupName.StartsWith("Team "))) return;
 
-        var projects = await _context.Projects.Where(p => p.ProjectCode.StartsWith("SP25SE")).ToListAsync();
+        var projects = await _context.Projects.Where(p => p.SemesterID == activeSemester.SemesterID).ToListAsync();
         var students = await _context.Users
             .Where(u => u.UserID.StartsWith("SE18"))
             .OrderBy(u => u.UserID)
