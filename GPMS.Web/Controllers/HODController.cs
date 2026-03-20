@@ -372,7 +372,7 @@ public class HODController : Controller
         return RedirectToAction(nameof(ReviewRounds));
     }
 
-    public async Task<IActionResult> Checklists(int? roundId)
+    public async Task<IActionResult> Checklists()
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
@@ -380,21 +380,51 @@ public class HODController : Controller
         if (activeSemester == null)
         {
             ViewBag.ReviewRounds = new List<ReviewRoundDto>();
-            return View(new ChecklistDto());
+            ViewBag.Semesters = semesters;
+            return View();
         }
 
-        var rounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID)).ToList();
+        var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        var checklists = await _checklistService.GetBySemesterIdAsync(activeSemester.SemesterID);
+
         ViewBag.ReviewRounds = rounds;
+        ViewBag.Checklists = checklists;
         ViewBag.ActiveSemester = activeSemester;
+        ViewBag.Semesters = semesters;
 
-        int targetRoundId = roundId ?? rounds.FirstOrDefault()?.ReviewRoundID ?? 0;
-        ViewBag.SelectedRoundId = targetRoundId;
+        return View();
+    }
 
-        if (targetRoundId == 0) return View(new ChecklistDto());
+    public async Task<IActionResult> ChecklistDetails(int id)
+    {
+        var checklist = await _checklistService.GetByRoundIdAsync(id);
+        if (checklist == null) return NotFound();
 
-        var checklist = await _checklistService.GetByRoundIdAsync(targetRoundId);
-        
-        return View(checklist ?? new ChecklistDto { ReviewRoundID = targetRoundId });
+        return View(checklist);
+    }
+
+    public async Task<IActionResult> EditChecklist(int id)
+    {
+        var checklist = await _checklistService.GetByRoundIdAsync(id);
+        if (checklist == null)
+        {
+            // Create a shell if it doesn't exist
+            var round = await _reviewRoundService.GetReviewRoundByIdAsync(id);
+            if (round == null) return NotFound();
+            checklist = new ChecklistDto { ReviewRoundID = id, ReviewRoundTitle = $"Round {round.RoundNumber}" };
+        }
+
+        return View(checklist);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CopyChecklists([FromBody] CopyChecklistRequest request)
+    {
+        if (request == null || request.FromSemesterId <= 0 || request.ToSemesterId <= 0)
+            return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
+
+        var (success, message) = await _checklistService.CopyChecklistAsync(request.FromSemesterId, request.ToSemesterId, request.RoundNumbers);
+        return Json(new { success, message });
     }
 
     [HttpPost]
