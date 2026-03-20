@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, SubmissionSeeder>();
         services.AddScoped<IDataSeeder, EvaluationSeeder>();
         services.AddScoped<IDataSeeder, NotificationSeeder>();
+        services.AddScoped<IDataSeeder, LecturerWorkflowTestSeeder>();
         services.AddScoped<DataSeederRunner>();
 
         return services;

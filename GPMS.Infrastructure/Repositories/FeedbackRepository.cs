@@ -5,6 +5,7 @@ using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace GPMS.Infrastructure.Repositories;
@@ -112,6 +113,13 @@ public class FeedbackRepository : IFeedbackRepository
             .Take(count)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyList<FeedbackApproval>> GetApprovalsPendingAutoReleaseAsync(DateTime approvedBeforeUtc, CancellationToken cancellationToken = default) =>
+        await _context.FeedbackApprovals
+            .Where(fa => fa.ApprovalStatus == ApprovalStatus.Approved &&
+                         !fa.IsVisibleToStudent &&
+                         fa.ApprovedAt <= approvedBeforeUtc)
+            .ToListAsync(cancellationToken);
 
     public async Task AddAsync(Feedback feedback) => await _context.Feedbacks.AddAsync(feedback);
     public Task UpdateApprovalAsync(FeedbackApproval approval) { _context.FeedbackApprovals.Update(approval); return Task.CompletedTask; }
