@@ -514,9 +514,7 @@ public class ProjectService : IProjectService
         {
             result.Summary = new FeedbackSummaryDto
             {
-                TotalScore = selectedEval.TotalScore ?? 0,
-                MaxPossibleScore = selectedEval.EvaluationDetails.Sum(d => d.Item.MaxScore),
-                StatusText = $"Approved by {selectedEval.Reviewer.FullName}",
+                StatusText = $"Submitted by {selectedEval.Reviewer.FullName}",
                 UpdatedAt = selectedEval.SubmittedAt
             };
 
@@ -524,12 +522,11 @@ public class ProjectService : IProjectService
             {
                 ItemCode = d.Item.ItemCode,
                 Title = d.Item.ItemContent,
-                Score = d.Score,
-                MaxScore = d.Item.MaxScore,
+                Assessment = d.Assessment,
                 Comment = d.Comment
             }).ToList();
 
-            result.OverallFeedback = selectedEval.Feedback?.Content;
+            result.OverallFeedback = selectedEval.OverallComment;
         }
 
         return result;

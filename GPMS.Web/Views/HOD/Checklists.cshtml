@@ -21,7 +21,7 @@
                     </nav>
                     <h1 class="text-3xl font-bold text-slate-900">Checklist Configuration</h1>
                     <p class="text-slate-600 mt-2">
-                        Define assessment criteria and weights for quality assurance
+                        Define qualitative assessment criteria and rubrics
                         @if (activeSemester != null)
                         {
                             <span class="text-[#F37021] font-bold">(@activeSemester.SemesterCode)</span>
@@ -29,10 +29,6 @@
                     </p>
                 </div>
                 <div class="flex flex-wrap gap-3">
-                    <button class="px-6 py-2.5 border border-slate-300 text-slate-700 rounded-xl hover:bg-white hover:shadow-md font-bold flex items-center gap-2 transition-all">
-                        <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
-                        Export PDF
-                    </button>
                     <button onclick="saveChecklist()" class="px-6 py-2.5 bg-[#1E3A5F] text-white rounded-xl hover:bg-slate-800 font-bold flex items-center gap-2 transition-all shadow-lg shadow-blue-900/10">
                         <span class="material-symbols-outlined" style="font-size: 20px;">save</span>
                         Save Configuration
@@ -57,10 +53,6 @@
                                 <span class="material-symbols-outlined text-sm">@(selectedRoundId == round.ReviewRoundID ? "check_circle" : "chevron_right")</span>
                             </a>
                         }
-                        @if (!reviewRounds.Any())
-                        {
-                            <p class="text-sm text-slate-400 italic py-4 text-center">No rounds found for this semester.</p>
-                        }
                     </div>
                 </div>
 
@@ -75,36 +67,28 @@
                             }
                             <p class="text-lg font-bold text-slate-900 mt-2 flex items-center gap-2">
                                 <span class="material-symbols-outlined text-[#F37021]">task_alt</span>
-                                @(selectedRound != null ? $"Round {selectedRound.RoundNumber} - {selectedRound.RoundType}" : "N/A")
+                                @(selectedRound != null ? $"Round {selectedRound.RoundNumber} - {selectedRound.RoundType}" : "Select a round")
                             </p>
-                            @if (selectedRound != null)
-                            {
-                                <p class="text-sm text-slate-500 mt-1 font-medium italic">Status: @selectedRound.Status</p>
-                            }
                         </div>
                         <div>
-                            <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Criteria Summary</p>
+                            <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">Configuration Summary</p>
                             <div class="mt-4 flex items-center gap-6">
                                 <div>
                                     <span class="block text-2xl font-black text-slate-800" id="summaryItemCount">@Model.Items.Count</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Items</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Total Items</span>
                                 </div>
                                 <div class="w-px h-8 bg-slate-100"></div>
                                 <div>
-                                    <span class="block text-2xl font-black text-[#F37021]" id="summaryMaxScore">@Model.Items.Sum(i => i.MaxScore).ToString("0.0")</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Max Score</span>
+                                    <span class="block text-2xl font-black text-[#F37021]" id="summaryYesNoCount">@Model.Items.Count(i => i.ItemType == "YesNo")</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Yes/No Items</span>
                                 </div>
                                 <div class="w-px h-8 bg-slate-100"></div>
                                 <div>
-                                    <span class="block text-2xl font-black text-emerald-600" id="summaryTotalWeight">@Model.Items.Sum(i => i.Weight)%</span>
-                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Weight</span>
+                                    <span class="block text-2xl font-black text-emerald-600" id="summaryRubricCount">@Model.Items.Count(i => i.ItemType == "Rubric")</span>
+                                    <span class="text-[10px] font-bold text-slate-400 uppercase">Rubric Items</span>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="mt-6 pt-6 border-t border-slate-50">
-                        <p class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider mb-2">Checklist Description</p>
-                        <p class="text-sm text-slate-600 leading-relaxed font-medium"> @(Model.Description ?? "No description provided for this checklist.") </p>
                     </div>
                 </div>
             </div>
@@ -114,11 +98,11 @@
                 <div class="flex items-center justify-between p-6 border-b border-slate-100">
                     <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
                         <span class="material-symbols-outlined text-slate-400">format_list_bulleted</span>
-                        Criteria Table
+                        Assessment Criteria
                     </h2>
                     <button onclick="openAddCriteriaModal()" class="px-5 py-2 text-[#F37021] bg-orange-50 hover:bg-orange-100 rounded-xl font-bold text-sm flex items-center gap-2 transition-all">
                         <span class="material-symbols-outlined" style="font-size: 20px;">add_circle</span>
-                        Add New Criteria
+                        Add Item
                     </button>
                 </div>
 
@@ -128,9 +112,9 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100">
                                 <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider w-12">#</th>
                                 <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider w-32">CODE</th>
-                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">CONTENT</th>
-                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-28">MAX SCORE</th>
-                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-28">WEIGHT (%)</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider">TITLE / SECTION</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider w-1/3">CONTENT</th>
+                                <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-28">TYPE</th>
                                 <th class="py-4 px-6 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider text-center w-32">ACTIONS</th>
                             </tr>
                         </thead>
@@ -143,19 +127,22 @@
                                     <td class="py-4 px-6">
                                         <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold text-[10px] tracking-wider border border-slate-200">@item.ItemCode</span>
                                     </td>
-                                    <td class="py-4 px-6 text-slate-800 font-bold">@item.ItemContent</td>
-                                    <td class="py-4 px-6 text-center text-slate-700 font-black">@item.MaxScore.ToString("0.0")</td>
-                                    <td class="py-4 px-6 text-center">
-                                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs border border-emerald-100">
-                                            @item.Weight %
-                                        </div>
-                                    </td>
                                     <td class="py-4 px-6">
+                                        <div class="font-bold text-slate-800">@item.ItemName</div>
+                                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">@item.Section</div>
+                                    </td>
+                                    <td class="py-4 px-6 text-slate-600">@item.ItemContent</td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider @(item.ItemType == "Rubric" ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-blue-100 text-blue-700 border border-blue-200")">
+                                            @item.ItemType
+                                        </span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
                                         <div class="flex items-center justify-center gap-1">
-                                            <button onclick="editCriteria(this)" class="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 rounded-lg transition-all" title="Edit">
+                                            <button onclick="editCriteriaByIndex(@i)" class="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 rounded-lg transition-all" title="Edit">
                                                 <span class="material-symbols-outlined text-[20px]">edit_note</span>
                                             </button>
-                                            <button onclick="removeCriteria(this)" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete">
+                                            <button onclick="removeCriteriaByIndex(@i)" class="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all" title="Delete">
                                                 <span class="material-symbols-outlined text-[20px]">delete</span>
                                             </button>
                                         </div>
@@ -164,39 +151,6 @@
                             }
                         </tbody>
                     </table>
-                </div>
-
-                <!-- Footer Stats -->
-                <div class="flex items-center justify-between p-6 bg-slate-50/50 border-t border-slate-100">
-                    <div>
-                        <p class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Calculated Integrity</p>
-                        <p class="text-sm font-bold text-slate-600 mt-1" id="weightWarning">
-                            <span class="material-symbols-outlined text-sm align-middle">info</span>
-                            Ensure total weight is 100%
-                        </p>
-                    </div>
-                    <div class="flex items-center gap-6">
-                        <div class="text-right">
-                            <span class="block text-xs font-bold text-slate-400 uppercase">Total Weight</span>
-                            <span class="text-2xl font-black text-slate-800" id="totalWeightDisplay">@Model.Items.Sum(i => i.Weight)%</span>
-                        </div>
-                        <div id="weightIndicator" class="w-14 h-14 rounded-full flex items-center justify-center text-white font-black text-sm shadow-lg shadow-emerald-900/10 @(Model.Items.Sum(i => i.Weight) == 100 ? "bg-emerald-500" : "bg-red-500")">
-                            @Model.Items.Sum(i => i.Weight)
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Pro Tip Card -->
-            <div class="bg-[#1E3A5F]/5 border border-[#1E3A5F]/10 rounded-2xl p-6 flex items-start gap-4 shadow-sm">
-                <div class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-[#1E3A5F] flex-shrink-0">
-                    <span class="material-symbols-outlined">lightbulb</span>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-[#1E3A5F] mb-1">Configuration Tip</h4>
-                    <p class="text-xs text-[#1E3A5F]/80 font-medium leading-relaxed">
-                        Accurate scoring depends on a perfect 100% weight distribution. Use "Code" prefixes like <span class="font-bold">ARCH-</span> or <span class="font-bold">CODE-</span> to categorize your criteria for better reporting.
-                    </p>
                 </div>
             </div>
         </div>
@@ -209,37 +163,44 @@
     <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
         <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
-                <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Add New Criteria</h3>
-                <p class="text-xs text-slate-500 font-medium mt-1">Define assessment metric</p>
+                <h3 id="modalTitle" class="text-xl font-bold text-slate-800">Assessment Item</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Define requirement details</p>
             </div>
             <button onclick="closeModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
         <div class="p-8 space-y-5">
-            <input type="hidden" id="editItemId" value="0">
+            <input type="hidden" id="editItemId" value="-1">
             <div class="grid grid-cols-2 gap-4">
                 <div class="col-span-1">
-                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Criterion Code</label>
-                    <input type="text" id="itemCode" placeholder="e.g. ARCH-01" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Item Code</label>
+                    <input type="text" id="itemCode" placeholder="e.g. R1-01" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] outline-none transition-all">
                 </div>
                 <div class="col-span-1">
-                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Max Score</label>
-                    <input type="number" id="maxScore" value="10.0" step="0.5" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
+                    <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Type</label>
+                    <select id="itemType" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] outline-none transition-all">
+                        <option value="YesNo">Yes/No/NA</option>
+                        <option value="Rubric">Rubric (R3)</option>
+                    </select>
                 </div>
             </div>
             <div>
-                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Weight (%)</label>
-                <input type="number" id="weight" value="10" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all">
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Item Name</label>
+                <input type="text" id="itemName" placeholder="e.g. Final Presentation" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] outline-none transition-all">
             </div>
             <div>
-                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Content / Description</label>
-                <textarea id="itemContent" rows="3" placeholder="Describe what reviewers should check..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all resize-none"></textarea>
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Section / Group</label>
+                <input type="text" id="section" placeholder="e.g. Documentation" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold focus:bg-white focus:border-[#F37021] outline-none transition-all">
+            </div>
+            <div>
+                <label class="block text-[10px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 ml-1">Evaluation Content / Question</label>
+                <textarea id="itemContent" rows="3" placeholder="Enter evaluation details..." class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium focus:bg-white focus:border-[#F37021] outline-none transition-all resize-none"></textarea>
             </div>
         </div>
         <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-            <button onclick="closeModal()" class="px-6 py-2.5 text-xs font-extrabold text-slate-500 hover:text-slate-700 transition-colors uppercase tracking-widest">Cancel</button>
-            <button onclick="applyCriteriaChanges()" class="px-6 py-2.5 bg-[#F37021] text-white rounded-xl font-bold text-xs shadow-lg shadow-orange-900/10 hover:bg-[#e66010] transition-all uppercase tracking-widest">Apply Changes</button>
+            <button onclick="closeModal()" class="px-6 py-2.5 text-xs font-extrabold text-slate-500 hover:text-slate-700 uppercase tracking-widest">Cancel</button>
+            <button onclick="applyCriteriaChanges()" class="px-6 py-2.5 bg-[#F37021] text-white rounded-xl font-bold text-xs shadow-lg hover:bg-[#e66010] transition-all uppercase tracking-widest">Apply Changes</button>
         </div>
     </div>
 </div>
@@ -247,35 +208,16 @@
 @section Scripts {
     <script>
         let items = @Html.Raw(Json.Serialize(Model.Items));
-        let selectedRoundId = @selectedRoundId;
+        let selectedRoundId = @(selectedRoundId ?? 0);
 
         function updateSummary() {
             const count = items.length;
-            const maxScore = items.reduce((sum, item) => sum + parseFloat(item.maxScore), 0);
-            const totalWeight = items.reduce((sum, item) => sum + parseFloat(item.weight), 0);
+            const yesNoCount = items.filter(i => i.itemType === 'YesNo').length;
+            const rubricCount = items.filter(i => i.itemType === 'Rubric').length;
 
             document.getElementById('summaryItemCount').innerText = count;
-            document.getElementById('summaryMaxScore').innerText = maxScore.toFixed(1);
-            document.getElementById('summaryTotalWeight').innerText = totalWeight + '%';
-            document.getElementById('totalWeightDisplay').innerText = totalWeight + '%';
-            document.getElementById('weightIndicator').innerText = totalWeight;
-
-            const indicator = document.getElementById('weightIndicator');
-            const warning = document.getElementById('weightWarning');
-            
-            if (totalWeight === 100) {
-                indicator.classList.remove('bg-red-500');
-                indicator.classList.add('bg-emerald-500');
-                warning.classList.remove('text-red-500');
-                warning.classList.add('text-emerald-700');
-                warning.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">check_circle</span> Perfect: Weight distribution complete.';
-            } else {
-                indicator.classList.remove('bg-emerald-500');
-                indicator.classList.add('bg-red-500');
-                warning.classList.remove('text-emerald-700');
-                warning.classList.add('text-red-500');
-                warning.innerHTML = '<span class="material-symbols-outlined text-sm align-middle">warning</span> Total weight must equal 100%';
-            }
+            document.getElementById('summaryYesNoCount').innerText = yesNoCount;
+            document.getElementById('summaryRubricCount').innerText = rubricCount;
         }
 
         function renderRows() {
@@ -287,19 +229,26 @@
                 tr.className = 'criteria-row hover:bg-slate-50/50 transition-colors';
                 tr.setAttribute('data-id', item.itemID);
                 
+                const typeClass = item.itemType === 'Rubric' 
+                    ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                    : 'bg-blue-100 text-blue-700 border border-blue-200';
+
                 tr.innerHTML = `
                     <td class="py-4 px-6 font-bold text-slate-400">${index + 1}</td>
                     <td class="py-4 px-6">
-                        <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold text-[10px] tracking-wider border border-slate-200">${item.itemCode}</span>
-                    </td>
-                    <td class="py-4 px-6 text-slate-800 font-bold">${item.itemContent}</td>
-                    <td class="py-4 px-6 text-center text-slate-700 font-black">${parseFloat(item.maxScore).toFixed(1)}</td>
-                    <td class="py-4 px-6 text-center">
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 rounded-lg font-bold text-xs border border-emerald-100">
-                            ${item.weight} %
-                        </div>
+                        <span class="px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg font-bold text-[10px] tracking-wider border border-slate-200">${item.itemCode || ''}</span>
                     </td>
                     <td class="py-4 px-6">
+                        <div class="font-bold text-slate-800">${item.itemName || 'Untitled'}</div>
+                        <div class="text-[10px] text-slate-400 font-bold uppercase mt-0.5">${item.section || 'General'}</div>
+                    </td>
+                    <td class="py-4 px-6 text-slate-600 font-medium text-xs leading-relaxed">${item.itemContent}</td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider ${typeClass}">
+                            ${item.itemType}
+                        </span>
+                    </td>
+                    <td class="py-4 px-6 text-center">
                         <div class="flex items-center justify-center gap-1">
                             <button onclick="editCriteriaByIndex(${index})" class="p-2 text-slate-400 hover:text-[#1E3A5F] hover:bg-slate-100 rounded-lg transition-all" title="Edit">
                                 <span class="material-symbols-outlined text-[20px]">edit_note</span>
@@ -316,54 +265,55 @@
         }
 
         function openAddCriteriaModal() {
-            document.getElementById('modalTitle').innerText = 'Add New Criteria';
+            document.getElementById('modalTitle').innerText = 'Add New Item';
             document.getElementById('editItemId').value = '-1';
             document.getElementById('itemCode').value = '';
+            document.getElementById('itemName').value = '';
+            document.getElementById('section').value = '';
+            document.getElementById('itemType').value = 'YesNo';
             document.getElementById('itemContent').value = '';
-            document.getElementById('maxScore').value = '10.0';
-            document.getElementById('weight').value = '10';
             document.getElementById('criteriaModal').classList.remove('hidden');
         }
 
         function editCriteriaByIndex(index) {
             const item = items[index];
-            document.getElementById('modalTitle').innerText = 'Edit Criteria';
+            document.getElementById('modalTitle').innerText = 'Edit Assessment Item';
             document.getElementById('editItemId').value = index;
-            document.getElementById('itemCode').value = item.itemCode;
-            document.getElementById('itemContent').value = item.itemContent;
-            document.getElementById('maxScore').value = item.maxScore;
-            document.getElementById('weight').value = item.weight;
+            document.getElementById('itemCode').value = item.itemCode || '';
+            document.getElementById('itemName').value = item.itemName || '';
+            document.getElementById('section').value = item.section || '';
+            document.getElementById('itemType').value = item.itemType || 'YesNo';
+            document.getElementById('itemContent').value = item.itemContent || '';
             document.getElementById('criteriaModal').classList.remove('hidden');
         }
 
         function applyCriteriaChanges() {
             const index = parseInt(document.getElementById('editItemId').value);
             const code = document.getElementById('itemCode').value;
+            const name = document.getElementById('itemName').value;
+            const sect = document.getElementById('section').value;
+            const type = document.getElementById('itemType').value;
             const content = document.getElementById('itemContent').value;
-            const score = parseFloat(document.getElementById('maxScore').value);
-            const weight = parseFloat(document.getElementById('weight').value);
 
             if (!code || !content) {
                 alert('Please fill in both code and content.');
                 return;
             }
 
+            const itemData = {
+                itemCode: code,
+                itemName: name,
+                section: sect,
+                itemType: type,
+                itemContent: content
+            };
+
             if (index === -1) {
-                // Add new
-                items.push({
-                    itemID: 0,
-                    itemCode: code,
-                    itemContent: content,
-                    maxScore: score,
-                    weight: weight,
-                    orderIndex: items.length + 1
-                });
+                itemData.itemID = 0;
+                itemData.orderIndex = items.length + 1;
+                items.push(itemData);
             } else {
-                // Update existing
-                items[index].itemCode = code;
-                items[index].itemContent = content;
-                items[index].maxScore = score;
-                items[index].weight = weight;
+                items[index] = { ...items[index], ...itemData };
             }
 
             renderRows();
@@ -371,9 +321,8 @@
         }
 
         function removeCriteriaByIndex(index) {
-            if (confirm('Are you sure you want to remove this criteria?')) {
+            if (confirm('Are you sure you want to remove this assessment item?')) {
                 items.splice(index, 1);
-                // Re-order index
                 items.forEach((item, idx) => item.orderIndex = idx + 1);
                 renderRows();
             }
@@ -384,23 +333,22 @@
         }
 
         async function saveChecklist() {
-            const totalWeight = items.reduce((sum, i) => sum + parseFloat(i.weight), 0);
-            if (totalWeight !== 100) {
-                if (!confirm(`Warning: Total weight is ${totalWeight}%, not 100%. Save anyway?`)) {
-                    return;
-                }
+            if (selectedRoundId === 0) {
+                alert('Please select a review round first.');
+                return;
             }
 
             const data = {
                 reviewRoundID: selectedRoundId,
                 title: "Assessment Checklist",
-                description: "", // Can be extended to have a desc input
+                description: "Evaluation criteria for project review",
                 items: items.map(i => ({
                     itemID: i.itemID,
                     itemCode: i.itemCode,
+                    itemName: i.itemName,
+                    section: i.section,
+                    itemType: i.itemType,
                     itemContent: i.itemContent,
-                    maxScore: i.maxScore,
-                    weight: i.weight,
                     orderIndex: i.orderIndex
                 }))
             };
@@ -425,7 +373,7 @@
             }
         }
 
-        // Initialize display
-        updateSummary();
+        // Initialize
+        if (items.length > 0) updateSummary();
     </script>
 }

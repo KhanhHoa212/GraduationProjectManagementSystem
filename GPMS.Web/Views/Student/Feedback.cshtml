@@ -25,7 +25,7 @@
                    class="py-4 px-1 border-b-2 font-bold text-[15px] transition-all duration-200 flex items-center gap-2 group
                           @(isActive ? "border-orange-500 text-orange-600" : "border-transparent text-gray-400 hover:text-gray-600 hover:border-gray-300")">
                     @round.Title
-                    <span class="material-symbols-outlined text-[18px] text-emerald-500 filled">check_box</span>
+                    <span class="material-symbols-outlined text-[18px] text-emerald-500 filled">@(round.Status == "Completed" ? "check_box" : "pending")</span>
                 </a>
             }
         </nav>
@@ -65,10 +65,9 @@
             </div>
 
             <div class="bg-white px-6 py-4 rounded-xl border border-emerald-100 shadow-sm text-center min-w-[140px]">
-                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Score</p>
+                <p class="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
                 <div class="flex items-baseline justify-center gap-1">
-                    <span class="text-[32px] font-black text-gray-900">@Model.Feedback.Summary.TotalScore.ToString("F1")</span>
-                    <span class="text-[16px] font-bold text-gray-400">/ @Model.Feedback.Summary.MaxPossibleScore.ToString("F1")</span>
+                    <span class="text-[24px] font-black text-emerald-600">PASSED</span>
                 </div>
             </div>
         </div>
@@ -77,42 +76,31 @@
             <!-- Detailed Table -->
             <div class="lg:col-span-2 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="text-[16px] font-bold text-gray-900">Detailed Scores</h3>
-                    <button class="flex items-center gap-2 text-[13px] font-bold text-blue-600 hover:text-blue-700 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">download</span>
-                        Download PDF
-                    </button>
+                    <h3 class="text-[16px] font-bold text-gray-900">Detailed Assessments</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
                             <tr class="bg-gray-50/50">
                                 <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider">Criteria</th>
-                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider text-center">Max</th>
-                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider text-center">Score</th>
+                                <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider text-center w-32">Assessment</th>
                                 <th class="px-6 py-4 text-[12px] font-bold text-gray-400 uppercase tracking-wider">Comment</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach (var detail in Model.Feedback.Details)
                             {
-                                var percentage = (detail.Score / detail.MaxScore) * 100;
-                                var barColor = percentage >= 80 ? "bg-emerald-500" : (percentage >= 50 ? "bg-amber-500" : "bg-rose-500");
-                                
                                 <tr class="hover:bg-slate-50/50 transition-colors">
                                     <td class="px-6 py-5">
-                                        <p class="text-[14px] font-bold text-gray-900 mb-1">@detail.Title</p>
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded text-[10px] font-bold border border-slate-200">@detail.ItemCode</span>
+                                            <p class="text-[14px] font-bold text-gray-900">@detail.Title</p>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-5 text-center">
-                                        <span class="text-[14px] font-bold text-gray-500">@detail.MaxScore.ToString("F1")</span>
-                                    </td>
-                                    <td class="px-6 py-5">
-                                        <div class="flex flex-col items-center gap-2">
-                                            <span class="text-[15px] font-black text-blue-700">@detail.Score.ToString("F1")</span>
-                                            <div class="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                                <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @percentage%"></div>
-                                            </div>
-                                        </div>
+                                        <span class="px-3 py-1 bg-blue-50 text-blue-700 rounded-full font-black text-xs border border-blue-100 uppercase">
+                                            @detail.Assessment
+                                        </span>
                                     </td>
                                     <td class="px-6 py-5">
                                         <p class="text-[13px] text-gray-600 italic">@(string.IsNullOrEmpty(detail.Comment) ? "---" : detail.Comment)</p>
@@ -151,7 +139,7 @@
 
                 <div class="pt-4 border-t border-gray-50 flex items-center justify-between">
                     <span class="text-[12px] font-bold text-gray-400 uppercase tracking-widest">Source:</span>
-                    <span class="text-[13px] font-black text-gray-900">Reviewer (Anonymous)</span>
+                    <span class="text-[13px] font-black text-gray-900">Review Committee</span>
                 </div>
             </div>
         </div>

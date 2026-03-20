@@ -1,3 +1,5 @@
+using GPMS.Domain.Enums;
+
 namespace GPMS.Domain.Entities;
 
 public class ReviewChecklist
@@ -8,6 +10,7 @@ public class ReviewChecklist
     public string? Description { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public ChecklistType Type { get; set; } = ChecklistType.YesNo;
 
     // Navigation
     public virtual ReviewRound ReviewRound { get; set; } = null!;
