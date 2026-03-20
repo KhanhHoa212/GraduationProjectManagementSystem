@@ -15,4 +15,5 @@ public class ProjectGroup
     public virtual ICollection<Submission> Submissions { get; set; } = new List<Submission>();
     public virtual ICollection<Evaluation> Evaluations { get; set; } = new List<Evaluation>();
     public virtual ICollection<MentorRoundReview> MentorRoundReviews { get; set; } = new List<MentorRoundReview>();
+    public virtual ICollection<GroupRoundProgress> GroupRoundProgresses { get; set; } = new List<GroupRoundProgress>();
 }

@@ -17,11 +17,16 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
+        int semesterId = activeSemester.SemesterID;
+
         // Check for specific seeded evaluations
-        if (await _context.Evaluations.AnyAsync(e => e.ReviewRound.SemesterID == 1)) return;
+        if (await _context.Evaluations.AnyAsync(e => e.ReviewRound.SemesterID == semesterId)) return;
 
         var assignments = await _context.ReviewerAssignments
-            .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == 1)
+            .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == semesterId)
             .Include(ra => ra.ReviewRound)
             .ThenInclude(rr => rr!.ReviewChecklist)
             .ThenInclude(rc => rc!.ChecklistItems)
@@ -42,30 +47,39 @@ public class EvaluationSeeder : IDataSeeder
                 ReviewerID = ra.ReviewerID,
                 Status = EvaluationStatus.Submitted,
                 SubmittedAt = DateTime.UtcNow.AddDays(-1),
-                TotalScore = 0 // Will update after adding details
+                OverallComment = "Nội dung bài làm đáp ứng yêu cầu của round này."
             };
 
             _context.Evaluations.Add(evaluation);
             await _context.SaveChangesAsync();
 
+<<<<<<< HEAD
             decimal totalScore = 0;
             foreach (var item in checklist.ChecklistItems!)
+=======
+            foreach (var item in checklist.ChecklistItems)
+>>>>>>> develop
             {
-                var maxScoreInt = (int)item.MaxScore;
-                var scoreValue = random.Next((int)(maxScoreInt * 0.7), maxScoreInt + 1);
-                var score = (decimal)scoreValue;
+                string assessment = "Yes"; // Default for YesNo
+                if (item.ItemType == "Rubric")
+                {
+                    var grades = new[] { "Excellent", "Good", "Acceptable" };
+                    assessment = grades[random.Next(grades.Length)];
+                }
+                else
+                {
+                    var answers = new[] { "Yes", "Yes", "No", "N/A" };
+                    assessment = answers[random.Next(answers.Length)];
+                }
                 
-                totalScore += score;
                 _context.EvaluationDetails.Add(new EvaluationDetail
                 {
                     EvaluationID = evaluation.EvaluationID,
                     ItemID = item.ItemID,
-                    Score = score,
-                    Comment = $"Đạt yêu cầu: {item.ItemContent}"
+                    Assessment = assessment,
+                    Comment = $"Đánh giá cho tiêu chí: {item.ItemContent}"
                 });
             }
-
-            evaluation.TotalScore = totalScore;
 
             // Feedback
             var feedback = new Feedback

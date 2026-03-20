@@ -21,8 +21,8 @@ appsettings.json
 secrets.json
 .env
 
-# Migrations
-**/Migrations/
+# # Migrations
+# **/Migrations/
 
 # Build and Publish
 bin/

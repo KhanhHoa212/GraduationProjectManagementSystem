@@ -17,12 +17,17 @@ public class ReviewerAssignmentSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
+        int semesterId = activeSemester.SemesterID;
+
         // Check if assignments exist for potential seeded rounds (Round 1 or 2)
-        if (await _context.ReviewerAssignments.AnyAsync(ra => ra.ReviewRound.SemesterID == 1)) return;
+        if (await _context.ReviewerAssignments.AnyAsync(ra => ra.ReviewRound.SemesterID == semesterId)) return;
 
         var groups = await _context.ProjectGroups.Where(g => g.GroupName.StartsWith("Team ")).ToListAsync();
         var rounds = await _context.ReviewRounds
-            .Where(r => r.SemesterID == 1 && (r.Status == RoundStatus.Completed || r.Status == RoundStatus.Ongoing))
+            .Where(r => r.SemesterID == semesterId && (r.Status == RoundStatus.Completed || r.Status == RoundStatus.Ongoing))
             .ToListAsync();
         var lecturers = await _context.UserRoles
             .Where(r => r.RoleName == RoleName.Lecturer)
@@ -60,6 +65,17 @@ public class ReviewerAssignmentSeeder : IDataSeeder
                     AssignedBy = "ADMIN001",
                     AssignedAt = DateTime.UtcNow,
                     IsRandom = true
+                });
+
+                // Add GroupRoundProgress (Mentor Decision)
+                // If round is already ongoing or completed, we assume it was "Accepted"
+                _context.GroupRoundProgresses.Add(new GroupRoundProgress
+                {
+                    GroupID = @group.GroupID,
+                    ReviewRoundID = round.ReviewRoundID,
+                    MentorDecision = MentorDecision.Accepted,
+                    MentorComment = "Tiến độ ổn, đồng ý cho review.",
+                    UpdatedAt = DateTime.UtcNow
                 });
             }
         }

@@ -127,3 +127,17 @@ public enum NotificationType
     Review,
     System
 }
+
+public enum ChecklistType
+{
+    YesNo,
+    Rubric
+}
+
+public enum MentorDecision
+{
+    Pending,
+    Accepted,
+    Rejected,
+    Stopped
+}

@@ -23,8 +23,6 @@ public class FeedbackRoundDto
 
 public class FeedbackSummaryDto
 {
-    public decimal TotalScore { get; set; }
-    public decimal MaxPossibleScore { get; set; }
     public string StatusText { get; set; } = string.Empty; // e.g., "Approved by Supervisor"
     public DateTime? UpdatedAt { get; set; }
 }
@@ -33,7 +31,6 @@ public class FeedbackCriteriaDto
 {
     public string ItemCode { get; set; } = string.Empty;
     public string Title { get; set; } = string.Empty;
-    public decimal Score { get; set; }
-    public decimal MaxScore { get; set; }
+    public string? Assessment { get; set; }
     public string? Comment { get; set; }
 }

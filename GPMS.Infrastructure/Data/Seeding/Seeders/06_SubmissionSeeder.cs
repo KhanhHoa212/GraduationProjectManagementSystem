@@ -17,11 +17,17 @@ public class SubmissionSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
+        if (activeSemester == null) return;
+
+        int semesterId = activeSemester.SemesterID;
+        string semesterCode = activeSemester.SemesterCode;
+
         // Check for specific seeded submissions
-        if (await _context.Submissions.AnyAsync(s => s.FileUrl.Contains("/uploads/SP25/"))) return;
+        if (await _context.Submissions.AnyAsync(s => s.FileUrl.Contains($"/uploads/{semesterCode}/"))) return;
 
         var round1 = await _context.ReviewRounds
-            .FirstOrDefaultAsync(r => r.RoundNumber == 1 && r.SemesterID == 1);
+            .FirstOrDefaultAsync(r => r.RoundNumber == 1 && r.SemesterID == semesterId);
         if (round1 == null) return;
 
         var requirements = await _context.SubmissionRequirements
@@ -59,7 +65,7 @@ public class SubmissionSeeder : IDataSeeder
                     RequirementID = req.RequirementID,
                     SubmittedBy = leaderMember.UserID,
                     SubmittedAt = submittedAt,
-                    FileUrl = $"/uploads/SP25/Round1/{@group.GroupID}/{fileName}",
+                    FileUrl = $"/uploads/{semesterCode}/Round1/{@group.GroupID}/{fileName}",
                     FileName = fileName,
                     FileSizeMB = 5,
                     Status = status,

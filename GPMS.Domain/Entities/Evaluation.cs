@@ -8,9 +8,9 @@ public class Evaluation
     public int ReviewRoundID { get; set; }
     public string ReviewerID { get; set; } = string.Empty;
     public int GroupID { get; set; }
-    public decimal? TotalScore { get; set; }
     public EvaluationStatus Status { get; set; } = EvaluationStatus.Draft;
     public DateTime? SubmittedAt { get; set; }
+    public string? OverallComment { get; set; }
 
     // Navigation
     public virtual ReviewRound ReviewRound { get; set; } = null!;

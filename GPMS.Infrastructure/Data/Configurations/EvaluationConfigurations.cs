@@ -15,6 +15,11 @@ public class ReviewChecklistConfiguration : IEntityTypeConfiguration<ReviewCheck
         builder.Property(rc => rc.Description).HasMaxLength(500);
         builder.Property(rc => rc.CreatedAt).HasDefaultValueSql("GETDATE()");
 
+        builder.Property(rc => rc.Type)
+            .HasConversion<string>()
+            .HasDefaultValue(ChecklistType.YesNo)
+            .HasMaxLength(20);
+
         builder.HasIndex(rc => rc.ReviewRoundID).IsUnique();
 
         builder.HasOne(rc => rc.ReviewRound)
@@ -37,8 +42,9 @@ public class ChecklistItemConfiguration : IEntityTypeConfiguration<ChecklistItem
         builder.HasKey(ci => ci.ItemID);
         builder.Property(ci => ci.ItemCode).IsRequired().HasMaxLength(20).IsUnicode(false);
         builder.Property(ci => ci.ItemContent).IsRequired().HasMaxLength(500);
-        builder.Property(ci => ci.MaxScore).HasPrecision(5, 2);
-        builder.Property(ci => ci.Weight).HasPrecision(5, 2).HasDefaultValue(1.0);
+        builder.Property(ci => ci.ItemName).HasMaxLength(200);
+        builder.Property(ci => ci.ItemType).IsRequired().HasMaxLength(10).HasDefaultValue("YesNo");
+        builder.Property(ci => ci.Section).HasMaxLength(100);
         builder.Property(ci => ci.OrderIndex).HasDefaultValue(1);
 
         builder.HasOne(ci => ci.Checklist)
@@ -54,7 +60,7 @@ public class EvaluationConfiguration : IEntityTypeConfiguration<Evaluation>
     {
         builder.ToTable("Evaluations");
         builder.HasKey(e => e.EvaluationID);
-        builder.Property(e => e.TotalScore).HasPrecision(6, 2);
+        builder.Property(e => e.OverallComment).HasColumnType("nvarchar(max)");
         
         builder.Property(e => e.Status)
             .HasConversion<string>()
@@ -86,7 +92,7 @@ public class EvaluationDetailConfiguration : IEntityTypeConfiguration<Evaluation
     {
         builder.ToTable("EvaluationDetails");
         builder.HasKey(ed => new { ed.EvaluationID, ed.ItemID });
-        builder.Property(ed => ed.Score).HasPrecision(5, 2);
+        builder.Property(ed => ed.Assessment).HasMaxLength(20);
         builder.Property(ed => ed.Comment).HasColumnType("nvarchar(max)");
 
         builder.HasOne(ed => ed.Evaluation)
@@ -98,5 +104,21 @@ public class EvaluationDetailConfiguration : IEntityTypeConfiguration<Evaluation
             .WithMany(ci => ci.EvaluationDetails)
             .HasForeignKey(ed => ed.ItemID)
             .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class RubricDescriptionConfiguration : IEntityTypeConfiguration<RubricDescription>
+{
+    public void Configure(EntityTypeBuilder<RubricDescription> builder)
+    {
+        builder.ToTable("RubricDescriptions");
+        builder.HasKey(rd => rd.RubricID);
+        builder.Property(rd => rd.GradeLevel).IsRequired().HasMaxLength(20);
+        builder.Property(rd => rd.Description).IsRequired().HasColumnType("nvarchar(max)");
+
+        builder.HasOne(rd => rd.Item)
+            .WithMany(ci => ci.RubricDescriptions)
+            .HasForeignKey(rd => rd.ItemID)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
