@@ -144,14 +144,14 @@ public class LecturerController : Controller
                 MentorGateStatus = m.MentorGateStatus,
                 MentorGateComment = m.MentorGateComment,
                 HasSubmission = m.SubmittedAt.HasValue,
-                HasEvaluation = m.Score.HasValue,
+                HasEvaluation = m.FeedbackStatus != null,
                 SubmittedAt = m.SubmittedAt,
                 SubmissionFileName = m.SubmissionFileName,
                 SubmissionUrl = m.ReportDocumentUrl,
                 SubmissionSizeMb = m.SubmissionSizeMb,
                 SubmittedByName = m.SubmittedByName,
                 ReviewerName = m.ReviewerName,
-                Score = m.Score,
+
                 FeedbackStatus = m.FeedbackStatus,
                 ScheduledAt = m.ScheduledAt,
                 Location = m.Location,
@@ -204,7 +204,7 @@ public class LecturerController : Controller
                 ProjectName = f.ProjectName,
                 ReviewerName = f.ReviewerName,
                 RoundNumber = f.RoundNumber,
-                TotalScore = 0,
+
                 SubmittedAt = f.SubmittedAt,
                 AutoReleaseAt = f.AutoReleaseAt,
                 ApprovalStatus = f.ApprovalStatus
@@ -229,8 +229,7 @@ public class LecturerController : Controller
             ReviewRoundName = dto.ReviewRoundName,
             CurrentRoundIndex = dto.CurrentRoundIndex,
             TotalRounds = dto.TotalRounds,
-            TotalScore = dto.TotalScore,
-            MaxTotalScore = dto.MaxTotalScore,
+
             SubmittedAt = dto.SubmittedAt,
             ApprovalStatus = dto.ApprovalStatus,
             SupervisorComment = dto.SupervisorComment,
@@ -249,23 +248,18 @@ public class LecturerController : Controller
                 ItemID = s.ItemId,
                 ItemCode = s.ItemCode,
                 ItemName = s.ItemName,
-                CriteriaName = s.CriteriaName,
-                SectionCode = s.SectionCode,
-                SectionTitle = s.SectionTitle,
-                PriorityLabel = s.PriorityLabel,
-                InputType = s.InputType,
-                AssessmentValue = s.AssessmentValue,
-                MaxScore = s.MaxScore,
-                WeightPercentage = s.WeightPercentage,
-                Score = s.Score,
-                WeightedScore = s.WeightedScore,
+                ItemContent = s.ItemContent,
+                Section = s.Section,
+                ItemType = s.ItemType,
+                Assessment = s.Assessment,
                 ReviewerComment = s.ReviewerComment,
                 MentorComment = s.MentorComment,
                 GradeDescription = s.GradeDescription,
-                ExcellentRubric = s.ExcellentRubric,
-                GoodRubric = s.GoodRubric,
-                AcceptableRubric = s.AcceptableRubric,
-                FailRubric = s.FailRubric
+                RubricDescriptions = s.RubricDescriptions.Select(r => new RubricDescriptionViewModel
+                {
+                    GradeLevel = r.GradeLevel,
+                    Description = r.Description
+                }).ToList()
             }).ToList()
         };
         return View(vm);
@@ -363,7 +357,7 @@ public class LecturerController : Controller
                 ProjectName = r.ProjectName,
                 RoundNumber = r.RoundNumber,
                 RoundType = r.RoundType,
-                TotalScore = r.TotalScore,
+
                 SubmittedAt = r.SubmittedAt,
                 ApprovalStatus = r.ApprovalStatus,
                 FeedbackPreview = r.FeedbackPreview
@@ -425,8 +419,7 @@ public class LecturerController : Controller
             ExistingScores = dto.ExistingScores.Select(s => new ExistingScoreRow
             {
                 ItemID = s.ItemId,
-                Score = s.Score,
-                AssessmentValue = s.AssessmentValue,
+                Assessment = s.Assessment,
                 Comment = s.Comment,
                 MentorComment = s.MentorComment,
                 GradeDescription = s.GradeDescription
@@ -437,8 +430,7 @@ public class LecturerController : Controller
                 return new ScoreInputRow
                 {
                     CriteriaId = c.ItemId,
-                    Score = existingScore?.Score ?? 0m,
-                    AssessmentValue = existingScore?.AssessmentValue,
+                    Assessment = existingScore?.Assessment,
                     Comment = existingScore?.Comment
                 };
             }).ToList()
@@ -448,17 +440,13 @@ public class LecturerController : Controller
             ItemID = c.ItemId,
             ItemCode = c.ItemCode,
             ItemName = c.ItemName,
-            ItemContent = c.ItemContent,
-            SectionCode = c.SectionCode,
-            SectionTitle = c.SectionTitle,
-            PriorityLabel = c.PriorityLabel,
-            InputType = c.InputType,
-            MaxScore = c.MaxScore,
-            Weight = c.Weight,
-            ExcellentRubric = c.ExcellentRubric,
-            GoodRubric = c.GoodRubric,
-            AcceptableRubric = c.AcceptableRubric,
-            FailRubric = c.FailRubric
+            ItemType = c.ItemType,
+            Section = c.Section,
+            RubricDescriptions = c.RubricDescriptions.Select(r => new RubricDescriptionViewModel
+            {
+                GradeLevel = r.GradeLevel,
+                Description = r.Description
+            }).ToList()
         }).ToList();
         return View(vm);
     }
@@ -484,8 +472,7 @@ public class LecturerController : Controller
             CriteriaScores = model.CriteriaScores.Select(s => new ScoreInputDto
             {
                 CriteriaId = s.CriteriaId,
-                Score = s.Score,
-                AssessmentValue = s.AssessmentValue,
+                Assessment = s.Assessment,
                 Comment = s.Comment
             }).ToList()
         };

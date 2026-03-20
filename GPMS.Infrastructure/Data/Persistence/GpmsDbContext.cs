@@ -173,9 +173,10 @@ public class GpmsDbContext : DbContext
             new ReviewChecklist { ChecklistID = 1, ReviewRoundID = 1, Title = "Cross Review 1 Checklist", Description = "Evaluate early stage architecture" }
         );
         modelBuilder.Entity<ChecklistItem>().HasData(
-            new ChecklistItem { ItemID = 1, ChecklistID = 1, ItemCode = "ARCH-01", ItemContent = "Is the architecture solid?", MaxScore = 5, Weight = 50, OrderIndex = 1 },
-            new ChecklistItem { ItemID = 2, ChecklistID = 1, ItemCode = "CODE-01", ItemContent = "Code quality for MVP", MaxScore = 5, Weight = 50, OrderIndex = 2 }
+            new ChecklistItem { ItemID = 1, ChecklistID = 1, ItemCode = "ARCH-01", ItemContent = "Is the architecture solid?", ItemType = "Rubric", Section = "Architecture", OrderIndex = 1 },
+            new ChecklistItem { ItemID = 2, ChecklistID = 1, ItemCode = "CODE-01", ItemContent = "Code quality for MVP", ItemType = "Rubric", Section = "Implementation", OrderIndex = 2 }
         );
+
 
         // 11. Review Assignments & Feedback
         modelBuilder.Entity<ReviewSessionInfo>().HasData(
@@ -194,18 +195,19 @@ public class GpmsDbContext : DbContext
 
         modelBuilder.Entity<Evaluation>().HasData(
             // GV001 reviewed Group 101 (GV002 is supervisor → GV002 must approve)
-            new Evaluation { EvaluationID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, TotalScore = 8.5m, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 10, 11, 0, 0) },
+            new Evaluation { EvaluationID = 1, GroupID = 101, ReviewerID = "GV001", ReviewRoundID = 1, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 10, 11, 0, 0) },
             // GV002 reviewed Group 100 (GV001 is supervisor → GV001 must approve)
-            new Evaluation { EvaluationID = 2, GroupID = 100, ReviewerID = "GV002", ReviewRoundID = 1, TotalScore = 7.0m, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 12, 15, 0, 0) }
+            new Evaluation { EvaluationID = 2, GroupID = 100, ReviewerID = "GV002", ReviewRoundID = 1, Status = EvaluationStatus.Submitted, SubmittedAt = new DateTime(2025, 3, 12, 15, 0, 0) }
         );
         modelBuilder.Entity<EvaluationDetail>().HasData(
             // Scores for Evaluation 1 (GV001 reviewed Group 101)
-            new EvaluationDetail { EvaluationID = 1, ItemID = 1, Score = 4.5m, Comment = "Solid microservices architecture" },
-            new EvaluationDetail { EvaluationID = 1, ItemID = 2, Score = 4.0m, Comment = "Code is clean but lacks unit tests" },
+            new EvaluationDetail { EvaluationID = 1, ItemID = 1, Assessment = "Good", Comment = "Solid microservices architecture" },
+            new EvaluationDetail { EvaluationID = 1, ItemID = 2, Assessment = "Good", Comment = "Code is clean but lacks unit tests" },
             // Scores for Evaluation 2 (GV002 reviewed Group 100)
-            new EvaluationDetail { EvaluationID = 2, ItemID = 1, Score = 3.5m, Comment = "Architecture needs refinement" },
-            new EvaluationDetail { EvaluationID = 2, ItemID = 2, Score = 3.5m, Comment = "Average code quality for this stage" }
+            new EvaluationDetail { EvaluationID = 2, ItemID = 1, Assessment = "Acceptable", Comment = "Architecture needs refinement" },
+            new EvaluationDetail { EvaluationID = 2, ItemID = 2, Assessment = "Acceptable", Comment = "Average code quality for this stage" }
         );
+
         modelBuilder.Entity<Feedback>().HasData(
             // Feedback from GV001's evaluation of Group 101 → awaiting GV002 approval
             new Feedback { FeedbackID = 1, EvaluationID = 1, Content = "Great architecture decisions. The code quality is above average but needs more inline comments and unit tests for the core business logic modules. Overall this is a solid submission.", CreatedAt = new DateTime(2025, 3, 10, 11, 30, 0) },

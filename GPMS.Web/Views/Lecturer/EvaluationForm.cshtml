@@ -6,10 +6,10 @@
     ViewData["Title"] = "Evaluation Form";
     Layout = "_LecturerLayout";
     var isReadOnly = Model.ExistingEvaluationID.HasValue && !Model.CanEdit;
-    var isGradeRound = Model.ChecklistItems.Any(i => i.InputType == ChecklistInputType.GradeLevel);
+    var isGradeRound = Model.ChecklistItems.Any(i => i.ItemType == "Grade");
     var sectionGroups = Model.ChecklistItems
         .Select((item, index) => new { item, index, existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID) })
-        .GroupBy(x => x.item.SectionTitle ?? "Checklist");
+        .GroupBy(x => x.item.Section ?? "Checklist");
 }
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
@@ -88,9 +88,9 @@
                                         <td class="px-3 fw-semibold">@item.ItemCode</td>
                                         <td>
                                             <div class="fw-semibold">@item.ItemName</div>
-                                            @if (!string.IsNullOrWhiteSpace(item.SectionTitle))
+                                            @if (!string.IsNullOrWhiteSpace(item.Section))
                                             {
-                                                <div class="text-muted" style="font-size:12px;">@item.SectionTitle</div>
+                                                <div class="text-muted" style="font-size:12px;">@item.Section</div>
                                             }
                                         </td>
                                         <td>
@@ -98,17 +98,16 @@
                                             <details class="mt-2">
                                                 <summary class="text-primary" style="cursor:pointer; font-size:12px;">View rubric reference</summary>
                                                 <div class="mt-2 small text-muted">
-                                                    <div><strong>Excellent:</strong> @item.ExcellentRubric</div>
-                                                    <div class="mt-1"><strong>Good:</strong> @item.GoodRubric</div>
-                                                    <div class="mt-1"><strong>Acceptable:</strong> @item.AcceptableRubric</div>
-                                                    <div class="mt-1"><strong>Fail:</strong> @item.FailRubric</div>
+                                                    <div><strong>Excellent:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
+                                                    <div class="mt-1"><strong>Good:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
+                                                    <div class="mt-1"><strong>Acceptable:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
+                                                    <div class="mt-1"><strong>Fail:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
                                                 </div>
                                             </details>
                                         </td>
                                         <td>
                                             <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
-                                            <input type="hidden" asp-for="CriteriaScores[@i].Score" />
-                                            <select asp-for="CriteriaScores[@i].AssessmentValue"
+                                            <select asp-for="CriteriaScores[@i].Assessment"
                                                     class="form-select grade-level-select"
                                                     data-target="grade-desc-@i"
                                                     data-summary="grade-summary"
@@ -183,21 +182,15 @@
                                             var i = row.index;
                                             var item = row.item;
                                             var existing = row.existing;
-                                            var currentValue = Model.CriteriaScores.ElementAtOrDefault(i)?.AssessmentValue ?? existing?.AssessmentValue ?? string.Empty;
+                                            var currentValue = Model.CriteriaScores.ElementAtOrDefault(i)?.Assessment ?? existing?.Assessment ?? string.Empty;
                                             <tr>
                                                 <td>
                                                     <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
-                                                    <input type="hidden" asp-for="CriteriaScores[@i].Score" />
                                                     <div class="fw-medium">@item.ItemContent</div>
                                                 </td>
+                                                <td></td>
                                                 <td>
-                                                    @if (!string.IsNullOrWhiteSpace(item.PriorityLabel))
-                                                    {
-                                                        <span class="badge bg-warning-subtle text-warning">@item.PriorityLabel</span>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    <input type="hidden" asp-for="CriteriaScores[@i].AssessmentValue" class="assessment-value" />
+                                                    <input type="hidden" asp-for="CriteriaScores[@i].Assessment" class="assessment-value" />
                                                     <div class="btn-group" role="group">
                                                         <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "Y" ? "btn-primary" : "btn-outline-secondary")" data-value="Y" data-target-index="@i" disabled="@isReadOnly">Y</button>
                                                         <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "N" ? "btn-primary" : "btn-outline-secondary")" data-value="N" data-target-index="@i" disabled="@isReadOnly">N</button>
@@ -265,7 +258,7 @@
         document.querySelectorAll('.assessment-toggle').forEach(button => {
             button.addEventListener('click', () => {
                 const index = button.dataset.targetIndex;
-                const hidden = document.querySelector(`input[name="CriteriaScores[${index}].AssessmentValue"]`);
+                const hidden = document.querySelector(`input[name="CriteriaScores[${index}].Assessment"]`);
                 if (!hidden) return;
 
                 hidden.value = button.dataset.value;
@@ -285,10 +278,10 @@
                 var item = Model.ChecklistItems[i];
                 <text>
                 "@i": {
-                    "Excellent": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.ExcellentRubric ?? "")),
-                    "Good": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.GoodRubric ?? "")),
-                    "Acceptable": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.AcceptableRubric ?? "")),
-                    "Fail": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.FailRubric ?? "")),
+                    "Excellent": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description ?? "")),
+                    "Good": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description ?? "")),
+                    "Acceptable": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description ?? "")),
+                    "Fail": @Html.Raw(System.Text.Json.JsonSerializer.Serialize(item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description ?? "")),
                     "NA": "Not applicable."
                 }@(i < Model.ChecklistItems.Count - 1 ? "," : "")
                 </text>

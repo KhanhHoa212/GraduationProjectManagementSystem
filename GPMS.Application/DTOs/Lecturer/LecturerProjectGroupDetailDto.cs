@@ -50,8 +50,8 @@ public class MilestoneDetailDto
     public decimal? SubmissionSizeMb { get; set; }
     public string? SubmittedByName { get; set; }
     public string? ReviewerName { get; set; }
-    public decimal? Score { get; set; }
     public string? FeedbackStatus { get; set; }
+
     public DateTime? ScheduledAt { get; set; }
     public string? Location { get; set; }
     public string? MeetLink { get; set; }

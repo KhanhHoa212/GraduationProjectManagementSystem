@@ -28,9 +28,7 @@ namespace GPMS.Web.ViewModels
         public int ItemID { get; set; }
         public string ItemCode { get; set; } = string.Empty;
         public string ItemContent { get; set; } = string.Empty;
-        public decimal MaxScore { get; set; }
-        public decimal Weight { get; set; }
-        public decimal? Score { get; set; }
+        public string? Assessment { get; set; }
         public string? Comment { get; set; }
     }
 
@@ -54,7 +52,7 @@ namespace GPMS.Web.ViewModels
         public string GroupName { get; set; } = string.Empty;
         public string ReviewerName { get; set; } = string.Empty;
         public string RoundName { get; set; } = string.Empty;
-        public decimal? Score { get; set; }
+
         public string Content { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; }
     }
@@ -76,7 +74,7 @@ namespace GPMS.Web.ViewModels
         public int FeedbackID { get; set; }
         public string ProjectName { get; set; } = string.Empty;
         public string RoundName { get; set; } = string.Empty;
-        public decimal? Score { get; set; }
+
         public string Content { get; set; } = string.Empty;
         public DateTime SubmittedAt { get; set; }
         public string ReviewerName { get; set; } = string.Empty;

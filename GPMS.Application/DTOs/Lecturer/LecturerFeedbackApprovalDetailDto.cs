@@ -24,8 +24,6 @@ public class LecturerFeedbackApprovalDetailDto
     public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
     public string? MentorGateComment { get; set; }
     public List<EvaluationScoreItemDto> Scores { get; set; } = new();
-    public decimal TotalScore { get; set; }
-    public decimal MaxTotalScore { get; set; } = 10.0m;
     public List<StudentMemberDto> Members { get; set; } = new();
 }
 
@@ -34,24 +32,16 @@ public class EvaluationScoreItemDto
     public int ItemId { get; set; }
     public string ItemCode { get; set; } = string.Empty;
     public string? ItemName { get; set; }
-    public string CriteriaName { get; set; } = string.Empty;
-    public string? SectionCode { get; set; }
-    public string? SectionTitle { get; set; }
-    public string? PriorityLabel { get; set; }
-    public ChecklistInputType InputType { get; set; } = ChecklistInputType.NumericScore;
-    public string? AssessmentValue { get; set; }
-    public decimal Score { get; set; }
-    public decimal MaxScore { get; set; }
-    public decimal WeightPercentage { get; set; }
-    public decimal WeightedScore => Score * (WeightPercentage / 100);
+    public string ItemContent { get; set; } = string.Empty;
+    public string? Section { get; set; }
+    public string? ItemType { get; set; }
+    public string? Assessment { get; set; }
     public string? ReviewerComment { get; set; }
     public string? MentorComment { get; set; }
     public string? GradeDescription { get; set; }
-    public string? ExcellentRubric { get; set; }
-    public string? GoodRubric { get; set; }
-    public string? AcceptableRubric { get; set; }
-    public string? FailRubric { get; set; }
+    public List<RubricDescriptionDto> RubricDescriptions { get; set; } = new();
 }
+
 
 public class FeedbackApprovalDecisionDto
 {

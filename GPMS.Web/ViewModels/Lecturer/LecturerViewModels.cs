@@ -121,7 +121,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public decimal? SubmissionSizeMb { get; set; }
         public string? SubmittedByName { get; set; }
         public string? ReviewerName { get; set; }
-        public decimal? Score { get; set; }
+
         public string? FeedbackStatus { get; set; }
         public DateTime? ScheduledAt { get; set; }
         public string? Location { get; set; }
@@ -145,7 +145,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ProjectName { get; set; } = string.Empty;
         public string ReviewerName { get; set; } = string.Empty;
         public int RoundNumber { get; set; }
-        public decimal TotalScore { get; set; }
+
         public DateTime SubmittedAt { get; set; }
         public DateTime? AutoReleaseAt { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; }
@@ -176,8 +176,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ReviewRoundName { get; set; } = string.Empty;
         public int CurrentRoundIndex { get; set; }
         public int TotalRounds { get; set; }
-        public decimal TotalScore { get; set; }
-        public decimal MaxTotalScore { get; set; }
+
         public DateTime SubmittedAt { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; }
         public string FeedbackContent { get; set; } = string.Empty;
@@ -193,24 +192,14 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int ItemID { get; set; }
         public string ItemCode { get; set; } = string.Empty;
         public string? ItemName { get; set; }
-        public string CriteriaName { get; set; } = string.Empty;
-        public string? SectionCode { get; set; }
-        public string? SectionTitle { get; set; }
-        public string? PriorityLabel { get; set; }
-        public ChecklistInputType InputType { get; set; } = ChecklistInputType.NumericScore;
-        public string? AssessmentValue { get; set; }
-        public decimal MaxScore { get; set; }
-        public decimal WeightPercentage { get; set; }
-        public decimal Weight => WeightPercentage / 100m;
-        public decimal Score { get; set; }
-        public decimal WeightedScore { get; set; }
+        public string ItemContent { get; set; } = string.Empty;
+        public string? Section { get; set; }
+        public string? ItemType { get; set; }
+        public string? Assessment { get; set; }
         public string? ReviewerComment { get; set; }
         public string? MentorComment { get; set; }
         public string? GradeDescription { get; set; }
-        public string? ExcellentRubric { get; set; }
-        public string? GoodRubric { get; set; }
-        public string? AcceptableRubric { get; set; }
-        public string? FailRubric { get; set; }
+        public List<RubricDescriptionViewModel> RubricDescriptions { get; set; } = new();
     }
 
     // -------------------------------------------------------
@@ -275,23 +264,21 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ItemCode { get; set; } = string.Empty;
         public string? ItemName { get; set; }
         public string ItemContent { get; set; } = string.Empty;
-        public string? SectionCode { get; set; }
-        public string? SectionTitle { get; set; }
-        public string? PriorityLabel { get; set; }
-        public ChecklistInputType InputType { get; set; } = ChecklistInputType.NumericScore;
-        public decimal MaxScore { get; set; }
-        public decimal Weight { get; set; }
-        public string? ExcellentRubric { get; set; }
-        public string? GoodRubric { get; set; }
-        public string? AcceptableRubric { get; set; }
-        public string? FailRubric { get; set; }
+        public string? ItemType { get; set; }
+        public string? Section { get; set; }
+        public List<RubricDescriptionViewModel> RubricDescriptions { get; set; } = new();
+    }
+
+    public class RubricDescriptionViewModel
+    {
+        public string GradeLevel { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
     }
 
     public class ExistingScoreRow
     {
         public int ItemID { get; set; }
-        public decimal Score { get; set; }
-        public string? AssessmentValue { get; set; }
+        public string? Assessment { get; set; }
         public string? Comment { get; set; }
         public string? MentorComment { get; set; }
         public string? GradeDescription { get; set; }
@@ -300,8 +287,7 @@ namespace GPMS.Web.ViewModels.Lecturer
     public class ScoreInputRow
     {
         public int CriteriaId { get; set; }
-        public decimal Score { get; set; }
-        public string? AssessmentValue { get; set; }
+        public string? Assessment { get; set; }
         public string? Comment { get; set; }
     }
 
@@ -361,7 +347,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ProjectName { get; set; } = string.Empty;
         public int RoundNumber { get; set; }
         public string RoundType { get; set; } = string.Empty;
-        public decimal TotalScore { get; set; }
+
         public DateTime SubmittedAt { get; set; }
         public ApprovalStatus ApprovalStatus { get; set; }
         public string FeedbackPreview { get; set; } = string.Empty;

@@ -53,12 +53,8 @@ public class EvaluationSeeder : IDataSeeder
             _context.Evaluations.Add(evaluation);
             await _context.SaveChangesAsync();
 
-<<<<<<< HEAD
-            decimal totalScore = 0;
-            foreach (var item in checklist.ChecklistItems!)
-=======
             foreach (var item in checklist.ChecklistItems)
->>>>>>> develop
+
             {
                 string assessment = "Yes"; // Default for YesNo
                 if (item.ItemType == "Rubric")

@@ -1,0 +1,15 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  GPMS.Common -> C:\Users\ASUS\OneDrive\Máy tính\Workspace\Theory\2026_Spring\GraduationProjectManagementSystem\GPMS.Common\bin\Debug\net8.0\GPMS.Common.dll
+  GPMS.Domain -> C:\Users\ASUS\OneDrive\Máy tính\Workspace\Theory\2026_Spring\GraduationProjectManagementSystem\GPMS.Domain\bin\Debug\net8.0\GPMS.Domain.dll
+  GPMS.Application -> C:\Users\ASUS\OneDrive\Máy tính\Workspace\Theory\2026_Spring\GraduationProjectManagementSystem\GPMS.Application\bin\Debug\net8.0\GPMS.Application.dll
+  GPMS.Infrastructure -> C:\Users\ASUS\OneDrive\Máy tính\Workspace\Theory\2026_Spring\GraduationProjectManagementSystem\GPMS.Infrastructure\bin\Debug\net8.0\GPMS.Infrastructure.dll
+  GPMS.Web -> C:\Users\ASUS\OneDrive\Máy tính\Workspace\Theory\2026_Spring\GraduationProjectManagementSystem\GPMS.Web\bin\Debug\net8.0\GPMS.Web.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.39
+
+Workload updates are available. Run `dotnet workload list` for more information.

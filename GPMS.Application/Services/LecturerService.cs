@@ -253,7 +253,6 @@ public class LecturerService : ILecturerService
                     SubmissionSizeMb = submission?.FileSizeMB,
                     SubmittedByName = submission?.Submitter?.FullName,
                     ReviewerName = reviewerAssignment?.Reviewer?.FullName ?? evaluation?.Reviewer?.FullName,
-                    Score = evaluation?.TotalScore,
                     FeedbackStatus = evaluation?.Feedback?.FeedbackApproval?.ApprovalStatus.ToString(),
                     ScheduledAt = session?.ScheduledAt,
                     Location = session != null ? ResolveLocation(session) : null,
@@ -327,8 +326,6 @@ public class LecturerService : ILecturerService
             MentorGateComment = mentorGate?.ProgressComment,
             ReviewerName = evaluation.Reviewer.FullName,
             FeedbackContent = feedback.Content,
-            TotalScore = evaluation.TotalScore ?? 0m,
-            MaxTotalScore = evaluation.EvaluationDetails.Sum(s => s.Item?.MaxScore ?? 0m),
             Scores = evaluation.EvaluationDetails
                 .OrderBy(s => s.Item.OrderIndex)
                 .Select(s => new EvaluationScoreItemDto
@@ -336,22 +333,18 @@ public class LecturerService : ILecturerService
                     ItemId = s.ItemID,
                     ItemCode = s.Item.ItemCode,
                     ItemName = s.Item.ItemName,
-                    CriteriaName = s.Item.ItemContent,
-                    SectionCode = s.Item.SectionCode,
-                    SectionTitle = s.Item.SectionTitle,
-                    PriorityLabel = s.Item.PriorityLabel,
-                    InputType = s.Item.InputType,
-                    AssessmentValue = s.AssessmentValue,
-                    Score = s.Score,
-                    MaxScore = s.Item.MaxScore,
-                    WeightPercentage = s.Item.Weight,
+                    ItemContent = s.Item.ItemContent,
+                    Section = s.Item.Section,
+                    ItemType = s.Item.ItemType,
+                    Assessment = s.Assessment,
                     ReviewerComment = s.Comment,
                     MentorComment = s.MentorComment,
                     GradeDescription = s.GradeDescription,
-                    ExcellentRubric = s.Item.ExcellentRubric,
-                    GoodRubric = s.Item.GoodRubric,
-                    AcceptableRubric = s.Item.AcceptableRubric,
-                    FailRubric = s.Item.FailRubric
+                    RubricDescriptions = s.Item.RubricDescriptions.Select(r => new RubricDescriptionDto
+                    {
+                        GradeLevel = r.GradeLevel,
+                        Description = r.Description
+                    }).ToList()
                 })
                 .ToList(),
             Members = group.GroupMembers.Select(m => new StudentMemberDto
@@ -448,7 +441,6 @@ public class LecturerService : ILecturerService
                 ProjectName = e.Group?.Project?.ProjectName ?? "N/A",
                 RoundNumber = e.ReviewRound?.RoundNumber ?? 0,
                 RoundType = e.ReviewRound?.RoundType.ToString() ?? "N/A",
-                TotalScore = e.TotalScore ?? 0m,
                 SubmittedAt = e.SubmittedAt ?? DateTime.MinValue,
                 ApprovalStatus = e.Feedback?.FeedbackApproval?.ApprovalStatus ?? ApprovalStatus.Pending,
                 FeedbackPreview = Truncate(e.Feedback?.Content, 100)
@@ -523,16 +515,13 @@ public class LecturerService : ILecturerService
                     ItemCode = ci.ItemCode,
                     ItemName = ci.ItemName,
                     ItemContent = ci.ItemContent,
-                    SectionCode = ci.SectionCode,
-                    SectionTitle = ci.SectionTitle,
-                    PriorityLabel = ci.PriorityLabel,
-                    InputType = ci.InputType,
-                    MaxScore = ci.MaxScore,
-                    Weight = ci.Weight,
-                    ExcellentRubric = ci.ExcellentRubric,
-                    GoodRubric = ci.GoodRubric,
-                    AcceptableRubric = ci.AcceptableRubric,
-                    FailRubric = ci.FailRubric
+                    Section = ci.Section,
+                    ItemType = ci.ItemType,
+                    RubricDescriptions = ci.RubricDescriptions.Select(r => new RubricDescriptionDto
+                    {
+                        GradeLevel = r.GradeLevel,
+                        Description = r.Description
+                    }).ToList()
                 }).ToList() ?? new List<ChecklistItemDto>(),
             ExistingEvaluationId = existingEvaluation?.EvaluationID,
             ExistingFeedbackContent = existingEvaluation?.Feedback?.Content,
@@ -541,8 +530,7 @@ public class LecturerService : ILecturerService
                 .Select(d => new ExistingScoreDto
                 {
                     ItemId = d.ItemID,
-                    Score = d.Score,
-                    AssessmentValue = d.AssessmentValue,
+                    Assessment = d.Assessment,
                     Comment = d.Comment,
                     MentorComment = d.MentorComment,
                     GradeDescription = d.GradeDescription
@@ -587,8 +575,8 @@ public class LecturerService : ILecturerService
                 return false;
             }
 
-            var normalizedAssessmentValue = NormalizeAssessmentValue(item, input.AssessmentValue);
-            if (item.InputType != ChecklistInputType.NumericScore && string.IsNullOrWhiteSpace(normalizedAssessmentValue))
+            var normalizedAssessmentValue = NormalizeAssessmentValue(item, input.Assessment);
+            if (item.ItemType != "NumericScore" && string.IsNullOrWhiteSpace(normalizedAssessmentValue))
             {
                 return false;
             }
@@ -596,8 +584,7 @@ public class LecturerService : ILecturerService
             normalizedScores.Add(new ScoreInputDto
             {
                 CriteriaId = item.ItemID,
-                Score = NormalizeScore(item, input),
-                AssessmentValue = normalizedAssessmentValue,
+                Assessment = input.Assessment,
                 Comment = input.Comment?.Trim()
             });
         }
@@ -614,7 +601,7 @@ public class LecturerService : ILecturerService
             assignment.ReviewRoundID,
             reviewerId,
             assignment.GroupID);
-        var totalScore = normalizedScores.Sum(s => s.Score);
+
         var now = DateTime.UtcNow;
 
         if (existingEvaluation == null)
@@ -624,16 +611,14 @@ public class LecturerService : ILecturerService
                 ReviewRoundID = assignment.ReviewRoundID,
                 ReviewerID = reviewerId,
                 GroupID = assignment.GroupID,
-                TotalScore = totalScore,
                 Status = EvaluationStatus.Submitted,
                 SubmittedAt = now,
                 EvaluationDetails = normalizedScores.Select(score => new EvaluationDetail
                 {
                     ItemID = score.CriteriaId,
-                    Score = score.Score,
-                    AssessmentValue = score.AssessmentValue,
+                    Assessment = score.Assessment,
                     Comment = score.Comment,
-                    GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.AssessmentValue)
+                    GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.Assessment)
                 }).ToList(),
                 Feedback = new Feedback
                 {
@@ -661,7 +646,6 @@ public class LecturerService : ILecturerService
             return false;
         }
 
-        existingEvaluation.TotalScore = totalScore;
         existingEvaluation.Status = EvaluationStatus.Submitted;
         existingEvaluation.SubmittedAt = now;
 
@@ -674,18 +658,16 @@ public class LecturerService : ILecturerService
                 {
                     EvaluationID = existingEvaluation.EvaluationID,
                     ItemID = score.CriteriaId,
-                    Score = score.Score,
-                    AssessmentValue = score.AssessmentValue,
+                    Assessment = score.Assessment,
                     Comment = score.Comment,
-                    GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.AssessmentValue)
+                    GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.Assessment)
                 });
             }
             else
             {
-                detail.Score = score.Score;
-                detail.AssessmentValue = score.AssessmentValue;
+                detail.Assessment = score.Assessment;
                 detail.Comment = score.Comment;
-                detail.GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.AssessmentValue);
+                detail.GradeDescription = ResolveGradeDescription(checklistItems.First(ci => ci.ItemID == score.CriteriaId), score.Assessment);
             }
         }
 
@@ -1053,59 +1035,21 @@ public class LecturerService : ILecturerService
         }
     }
 
-    private static decimal NormalizeScore(ChecklistItem item, ScoreInputDto input)
-    {
-        return item.InputType switch
-        {
-            ChecklistInputType.YesNoNa => input.AssessmentValue?.Trim().ToUpperInvariant() switch
-            {
-                "Y" => 1m,
-                "YES" => 1m,
-                _ => 0m
-            },
-            ChecklistInputType.GradeLevel => input.AssessmentValue?.Trim() switch
-            {
-                "Excellent" => 4m,
-                "Good" => 3m,
-                "Acceptable" => 2m,
-                "Fail" => 1m,
-                _ => 0m
-            },
-            _ => Math.Min(item.MaxScore, Math.Max(0m, input.Score))
-        };
-    }
+
 
     private static string? NormalizeAssessmentValue(ChecklistItem item, string? rawValue)
     {
         if (string.IsNullOrWhiteSpace(rawValue))
         {
-            return item.InputType == ChecklistInputType.NumericScore ? null : string.Empty;
+            return string.Empty;
         }
 
-        return item.InputType switch
-        {
-            ChecklistInputType.YesNoNa => rawValue.Trim().ToUpperInvariant() switch
-            {
-                "YES" => "Y",
-                "NO" => "N",
-                "N/A" => "NA",
-                _ => rawValue.Trim().ToUpperInvariant()
-            },
-            ChecklistInputType.GradeLevel => rawValue.Trim(),
-            _ => null
-        };
+        return rawValue.Trim();
     }
 
     private static string? ResolveGradeDescription(ChecklistItem item, string? assessmentValue)
     {
-        return assessmentValue switch
-        {
-            "Excellent" => item.ExcellentRubric,
-            "Good" => item.GoodRubric,
-            "Acceptable" => item.AcceptableRubric,
-            "Fail" => item.FailRubric,
-            _ => null
-        };
+        return item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == assessmentValue)?.Description;
     }
 
     private static string ResolveMilestoneStatus(ReviewRound round, Submission? submission, Evaluation? evaluation, MentorRoundReview? mentorGate)

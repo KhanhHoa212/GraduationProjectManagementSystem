@@ -24,6 +24,13 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         await EnsureLecturerCredentialAsync("GV002", "gv002");
         await EnsureLecturerCredentialAsync("GV003", "gv003");
 
+        var groups = await _context.ProjectGroups.OrderBy(g => g.GroupID).ToListAsync();
+        if (groups.Count < 3) return;
+
+        int gId0 = groups[0].GroupID;
+        int gId1 = groups[1].GroupID;
+        int gId2 = groups[2].GroupID;
+
         var round1 = await EnsureRoundAsync(
             roundNumber: 1,
             roundType: RoundType.Online,
@@ -61,30 +68,30 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         var round3Report = await EnsureRequirementAsync(round3, "Final Report", ".pdf,.docx", 25);
         var round3Slides = await EnsureRequirementAsync(round3, "Defense Slides", ".pdf,.ppt,.pptx", 30);
 
-        await EnsureSubmissionAsync(groupId: 100, requirementId: round1Report.RequirementID, fileName: "Group100_R1_Report.pdf", fileUrl: "/uploads/test-data/group100/round1-report.pdf", fileSizeMb: 4.2m);
-        await EnsureSubmissionAsync(groupId: 101, requirementId: round1Report.RequirementID, fileName: "Group101_R1_Report.pdf", fileUrl: "/uploads/test-data/group101/round1-report.pdf", fileSizeMb: 4.6m);
+        await EnsureSubmissionAsync(groupId: gId0, requirementId: round1Report.RequirementID, fileName: "Group100_R1_Report.pdf", fileUrl: "/uploads/test-data/group100/round1-report.pdf", fileSizeMb: 4.2m);
+        await EnsureSubmissionAsync(groupId: gId1, requirementId: round1Report.RequirementID, fileName: "Group101_R1_Report.pdf", fileUrl: "/uploads/test-data/group101/round1-report.pdf", fileSizeMb: 4.6m);
 
-        await EnsureSubmissionAsync(groupId: 100, requirementId: round2Report.RequirementID, fileName: "Group100_R2_Interim_Report.pdf", fileUrl: "/uploads/test-data/group100/round2-interim-report.pdf", fileSizeMb: 5.1m);
-        await EnsureSubmissionAsync(groupId: 100, requirementId: round2Code.RequirementID, fileName: "Group100_R2_Source.zip", fileUrl: "/uploads/test-data/group100/round2-source.zip", fileSizeMb: 24.5m);
-        await EnsureSubmissionAsync(groupId: 101, requirementId: round2Report.RequirementID, fileName: "Group101_R2_Interim_Report.pdf", fileUrl: "/uploads/test-data/group101/round2-interim-report.pdf", fileSizeMb: 4.9m);
-        await EnsureSubmissionAsync(groupId: 101, requirementId: round2Code.RequirementID, fileName: "Group101_R2_Source.zip", fileUrl: "/uploads/test-data/group101/round2-source.zip", fileSizeMb: 22.8m);
+        await EnsureSubmissionAsync(groupId: gId0, requirementId: round2Report.RequirementID, fileName: "Group100_R2_Interim_Report.pdf", fileUrl: "/uploads/test-data/group100/round2-interim-report.pdf", fileSizeMb: 5.1m);
+        await EnsureSubmissionAsync(groupId: gId0, requirementId: round2Code.RequirementID, fileName: "Group100_R2_Source.zip", fileUrl: "/uploads/test-data/group100/round2-source.zip", fileSizeMb: 24.5m);
+        await EnsureSubmissionAsync(groupId: gId1, requirementId: round2Report.RequirementID, fileName: "Group101_R2_Interim_Report.pdf", fileUrl: "/uploads/test-data/group101/round2-interim-report.pdf", fileSizeMb: 4.9m);
+        await EnsureSubmissionAsync(groupId: gId1, requirementId: round2Code.RequirementID, fileName: "Group101_R2_Source.zip", fileUrl: "/uploads/test-data/group101/round2-source.zip", fileSizeMb: 22.8m);
 
-        await EnsureSubmissionAsync(groupId: 102, requirementId: round3Report.RequirementID, fileName: "Group102_R3_Final_Report.pdf", fileUrl: "/uploads/test-data/group102/final-report.pdf", fileSizeMb: 8.3m);
-        await EnsureSubmissionAsync(groupId: 102, requirementId: round3Slides.RequirementID, fileName: "Group102_R3_Defense_Slides.pdf", fileUrl: "/uploads/test-data/group102/defense-slides.pdf", fileSizeMb: 3.4m);
+        await EnsureSubmissionAsync(groupId: gId2, requirementId: round3Report.RequirementID, fileName: "Group102_R3_Final_Report.pdf", fileUrl: "/uploads/test-data/group102/final-report.pdf", fileSizeMb: 8.3m);
+        await EnsureSubmissionAsync(groupId: gId2, requirementId: round3Slides.RequirementID, fileName: "Group102_R3_Defense_Slides.pdf", fileUrl: "/uploads/test-data/group102/defense-slides.pdf", fileSizeMb: 3.4m);
 
-        await EnsureReviewSessionAsync(round2.ReviewRoundID, 100, today.AddDays(1).AddHours(9), "https://meet.google.com/gpms-r2-ai01", null, "Round 2 interim review for Group 100.");
-        await EnsureReviewSessionAsync(round2.ReviewRoundID, 101, today.AddDays(1).AddHours(14), "https://meet.google.com/gpms-r2-hc01", null, "Round 2 interim review for Group 101.");
-        await EnsureReviewSessionAsync(round3.ReviewRoundID, 102, today.AddDays(12).AddHours(8), null, 3, "Final defense in Hall-A.");
+        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId0, today.AddDays(1).AddHours(9), "https://meet.google.com/gpms-r2-ai01", null, "Round 2 interim review for Group 100.");
+        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId1, today.AddDays(1).AddHours(14), "https://meet.google.com/gpms-r2-hc01", null, "Round 2 interim review for Group 101.");
+        await EnsureReviewSessionAsync(round3.ReviewRoundID, gId2, today.AddDays(12).AddHours(8), null, 3, "Final defense in Hall-A.");
 
-        await EnsureAssignmentAsync(round2.ReviewRoundID, 100, "GV002");
-        await EnsureAssignmentAsync(round2.ReviewRoundID, 101, "GV001");
-        await EnsureAssignmentAsync(round3.ReviewRoundID, 102, "GV003");
+        await EnsureAssignmentAsync(round2.ReviewRoundID, gId0, "GV002");
+        await EnsureAssignmentAsync(round2.ReviewRoundID, gId1, "GV001");
+        await EnsureAssignmentAsync(round3.ReviewRoundID, gId2, "GV003");
 
-        await EnsureMentorGateAsync(round1.ReviewRoundID, 100, "GV001", MentorGateStatus.Approved, "Ready for Round 1 external review.");
-        await EnsureMentorGateAsync(round1.ReviewRoundID, 101, "GV002", MentorGateStatus.Approved, "Proceed to Round 1 reviewer evaluation.");
-        await EnsureMentorGateAsync(round2.ReviewRoundID, 100, "GV001", MentorGateStatus.Approved, "Documents are complete. Reviewer can continue.");
-        await EnsureMentorGateAsync(round2.ReviewRoundID, 101, "GV002", MentorGateStatus.Approved, "Interim progress is acceptable for reviewer checking.");
-        await EnsureMentorGateAsync(round3.ReviewRoundID, 102, "GV001", MentorGateStatus.Approved, "Eligible for final defense rehearsal and rubric review.");
+        await EnsureMentorGateAsync(round1.ReviewRoundID, gId0, "GV001", MentorGateStatus.Approved, "Ready for Round 1 external review.");
+        await EnsureMentorGateAsync(round1.ReviewRoundID, gId1, "GV002", MentorGateStatus.Approved, "Proceed to Round 1 reviewer evaluation.");
+        await EnsureMentorGateAsync(round2.ReviewRoundID, gId0, "GV001", MentorGateStatus.Approved, "Documents are complete. Reviewer can continue.");
+        await EnsureMentorGateAsync(round2.ReviewRoundID, gId1, "GV002", MentorGateStatus.Approved, "Interim progress is acceptable for reviewer checking.");
+        await EnsureMentorGateAsync(round3.ReviewRoundID, gId2, "GV001", MentorGateStatus.Approved, "Eligible for final defense rehearsal and rubric review.");
 
         await PatchRound1AssessmentValuesAsync(round1.ReviewRoundID);
         await _context.SaveChangesAsync();
@@ -201,17 +208,22 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
 
             item.ItemName = seedItem.ItemName;
             item.ItemContent = seedItem.ItemContent;
-            item.SectionCode = seedItem.SectionCode;
-            item.SectionTitle = seedItem.SectionTitle;
-            item.PriorityLabel = seedItem.PriorityLabel;
-            item.InputType = seedItem.InputType;
-            item.MaxScore = seedItem.MaxScore;
-            item.Weight = seedItem.Weight;
-            item.ExcellentRubric = seedItem.ExcellentRubric;
-            item.GoodRubric = seedItem.GoodRubric;
-            item.AcceptableRubric = seedItem.AcceptableRubric;
-            item.FailRubric = seedItem.FailRubric;
+            item.Section = seedItem.SectionTitle;
+            item.ItemType = seedItem.InputType.ToString();
             item.OrderIndex = seedItem.OrderIndex;
+
+            // Clear and re-add rubrics
+            var existingRubrics = await _context.RubricDescriptions.Where(r => r.ItemID == item.ItemID).ToListAsync();
+            _context.RubricDescriptions.RemoveRange(existingRubrics);
+
+            if (!string.IsNullOrWhiteSpace(seedItem.ExcellentRubric))
+                _context.RubricDescriptions.Add(new RubricDescription { Item = item, GradeLevel = "Excellent", Description = seedItem.ExcellentRubric });
+            if (!string.IsNullOrWhiteSpace(seedItem.GoodRubric))
+                _context.RubricDescriptions.Add(new RubricDescription { Item = item, GradeLevel = "Good", Description = seedItem.GoodRubric });
+            if (!string.IsNullOrWhiteSpace(seedItem.AcceptableRubric))
+                _context.RubricDescriptions.Add(new RubricDescription { Item = item, GradeLevel = "Acceptable", Description = seedItem.AcceptableRubric });
+            if (!string.IsNullOrWhiteSpace(seedItem.FailRubric))
+                _context.RubricDescriptions.Add(new RubricDescription { Item = item, GradeLevel = "Fail", Description = seedItem.FailRubric });
         }
 
         await _context.SaveChangesAsync();
@@ -364,8 +376,7 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
 
         foreach (var detail in details)
         {
-            detail.Item.InputType = ChecklistInputType.YesNoNa;
-            detail.AssessmentValue ??= detail.Score >= (detail.Item.MaxScore / 2m) ? "Y" : "N";
+            detail.Assessment ??= "Y";
         }
     }
 

@@ -5,10 +5,10 @@
 @{
     ViewData["Title"] = "Feedback Approval Detail";
     Layout = "_LecturerLayout";
-    var isGradeRound = Model.Scores.Any(s => s.InputType == ChecklistInputType.GradeLevel);
+    var isGradeRound = Model.Scores.Any(s => s.ItemType == "Grade");
     var groupedScores = Model.Scores
         .Select((score, index) => new { score, index })
-        .GroupBy(x => x.score.SectionTitle ?? "Checklist");
+        .GroupBy(x => x.score.Section ?? "Checklist");
 }
 
 <div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
@@ -73,18 +73,18 @@
                                         </td>
                                         <td>@score.ItemName</td>
                                         <td>
-                                            <div style="white-space:pre-line; font-size:13px;">@score.CriteriaName</div>
+                                            <div style="white-space:pre-line; font-size:13px;">@score.ItemContent</div>
                                         </td>
-                                        <td><span class="badge bg-light text-body border">@score.AssessmentValue</span></td>
+                                        <td><span class="badge bg-light text-body border">@score.Assessment</span></td>
                                         <td>
                                             <div class="small text-muted">@score.GradeDescription</div>
                                             <details class="mt-2">
                                                 <summary class="text-primary" style="cursor:pointer; font-size:12px;">Rubric reference</summary>
                                                 <div class="small text-muted mt-2">
-                                                    <div><strong>Excellent:</strong> @score.ExcellentRubric</div>
-                                                    <div class="mt-1"><strong>Good:</strong> @score.GoodRubric</div>
-                                                    <div class="mt-1"><strong>Acceptable:</strong> @score.AcceptableRubric</div>
-                                                    <div class="mt-1"><strong>Fail:</strong> @score.FailRubric</div>
+                                                    <div><strong>Excellent:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
+                                                    <div class="mt-1"><strong>Good:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
+                                                    <div class="mt-1"><strong>Acceptable:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
+                                                    <div class="mt-1"><strong>Fail:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
                                                 </div>
                                             </details>
                                         </td>
@@ -128,15 +128,10 @@
                                             <tr>
                                                 <td>
                                                     <input type="hidden" asp-for="Scores[@i].ItemID" value="@score.ItemID" />
-                                                    <div class="fw-medium">@score.CriteriaName</div>
+                                                    <div class="fw-medium">@score.ItemContent</div>
                                                 </td>
-                                                <td>
-                                                    @if (!string.IsNullOrWhiteSpace(score.PriorityLabel))
-                                                    {
-                                                        <span class="badge bg-warning-subtle text-warning">@score.PriorityLabel</span>
-                                                    }
-                                                </td>
-                                                <td><span class="badge bg-light text-body border">@score.AssessmentValue</span></td>
+
+                                                <td><span class="badge bg-light text-body border">@score.Assessment</span></td>
                                                 <td><textarea asp-for="Scores[@i].MentorComment" class="form-control" rows="3" placeholder="Mentor comment"></textarea></td>
                                                 <td><textarea class="form-control" rows="3" readonly>@score.ReviewerComment</textarea></td>
                                             </tr>
@@ -163,7 +158,7 @@
                 <div class="fw-semibold mb-2">Review Meta</div>
                 <div class="small text-muted mb-1">Reviewer: @Model.ReviewerName</div>
                 <div class="small text-muted mb-1">Round: @Model.CurrentRoundIndex / @Model.TotalRounds</div>
-                <div class="small text-muted mb-3">Total Score: @Model.TotalScore / @Model.MaxTotalScore</div>
+
                 <div class="small text-muted">Latest supervisor note: @(string.IsNullOrWhiteSpace(Model.SupervisorComment) ? "None" : Model.SupervisorComment)</div>
             </div>
 

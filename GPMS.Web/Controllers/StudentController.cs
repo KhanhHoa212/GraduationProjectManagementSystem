@@ -70,7 +70,6 @@ public class StudentController : Controller
                 FeedbackID = f.FeedbackID,
                 ProjectName = f.Evaluation.Group.Project?.ProjectName ?? "N/A",
                 RoundName = $"Round {f.Evaluation.ReviewRound.RoundNumber}",
-                Score = f.Evaluation.TotalScore,
                 Content = f.Content,
                 SubmittedAt = f.Evaluation.SubmittedAt ?? f.CreatedAt,
                 ReviewerName = "Hidden Reviewer",
@@ -79,11 +78,10 @@ public class StudentController : Controller
                     ItemID = d.ItemID,
                     ItemCode = d.Item.ItemCode,
                     ItemContent = d.Item.ItemContent,
-                    MaxScore = d.Item.MaxScore,
-                    Weight = d.Item.Weight,
-                    Score = d.Score,
+                    Assessment = d.Assessment,
                     Comment = d.Comment
                 }).ToList()
+
             }).ToList()
         };
 

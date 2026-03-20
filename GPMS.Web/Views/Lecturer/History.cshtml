@@ -32,7 +32,7 @@
                                 <span class="badge bg-light text-body border">@item.ApprovalStatus</span>
                             </div>
                             <div class="text-muted mb-2" style="font-size:12px;">Submitted: @item.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</div>
-                            <div class="fw-medium mb-2">Score: @item.TotalScore.ToString("F1")</div>
+
                             <div class="text-muted" style="font-size:12px;">@item.FeedbackPreview</div>
                             <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = item.GroupID })" class="btn btn-sm btn-outline-secondary mt-2">Open group</a>
                         </div>
