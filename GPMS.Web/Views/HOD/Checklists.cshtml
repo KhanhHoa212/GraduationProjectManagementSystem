@@ -1,8 +1,8 @@
-@using GPMS.Application.DTOs
+﻿@using GPMS.Application.DTOs
 @using GPMS.Domain.Enums
 @{
     ViewData["Title"] = "Cấu hình Checklist";
-    Layout = "_HODLayout";
+    Layout = "_Layout";
     var rounds = ViewBag.ReviewRounds as IEnumerable<ReviewRoundDto> ?? new List<ReviewRoundDto>();
     var checklists = ViewBag.Checklists as IEnumerable<ChecklistDto> ?? new List<ChecklistDto>();
     var activeSemester = ViewBag.ActiveSemester as SemesterDto;

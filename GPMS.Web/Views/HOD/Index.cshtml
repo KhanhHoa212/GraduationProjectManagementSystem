@@ -1,9 +1,9 @@
-@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+﻿@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
 @{
     ViewBag.Title = "Dashboard";
     ViewBag.CurrentPage = "Dashboard";
     ViewBag.BreadcrumbSection = "Dashboard";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
 
     int totalProjects = ViewBag.TotalProjects ?? 0;
     int missingSup = ViewBag.MissingSupervisor ?? 0;

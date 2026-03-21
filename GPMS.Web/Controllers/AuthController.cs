@@ -22,8 +22,10 @@ public class AuthController : Controller
 
     private IActionResult GetRedirect(UserDto user)
     {
-        if (user.Roles.Contains("Admin") || user.Roles.Contains("HeadOfDept"))
+        if (user.Roles.Contains("Admin"))
             return RedirectToAction("Index", "Admin");
+        if (user.Roles.Contains("HeadOfDept"))
+            return RedirectToAction("Index", "HOD");
         if (user.Roles.Contains("Lecturer"))
             return RedirectToAction("Dashboard", "Lecturer");
         if (user.Roles.Contains("Student"))

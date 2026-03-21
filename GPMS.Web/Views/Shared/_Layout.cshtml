@@ -1,30 +1,106 @@
-﻿<!DOCTYPE html>
-<html lang="en" class="light">
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GPMS Admin</title>
-
+    <title>@(ViewData["BreadcrumbTitle"] ?? ViewData["Title"] ?? "Portal") - GPMS</title>
+    
+    <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" rel="stylesheet" />
-    <link rel="stylesheet" href="~/css/tailwind.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+        
+    <!-- Material Symbols Outlined -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Lecturer Specific CSS (Bootstrap) -->
+    @if (User.IsInRole("Lecturer"))
+    {
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+        <link rel="stylesheet" href="~/css/lecturer-portal.css" asp-append-version="true" />
+    }
+        
+    <!-- Tailwind CSS v3 via CDN (For development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        primary: {
+                            50: '#FEF5F1',
+                            100: '#FDE9E1',
+                            200: '#FBD3C3',
+                            300: '#F8BDA5',
+                            400: '#F59980',
+                            500: '#F37021', // FPT Orange
+                            600: '#E55E0F',
+                            700: '#C24B08',
+                            800: '#9B3F0A',
+                            900: '#7E360C',
+                        },
+                        dark: {
+                            50: '#F8FAFC',
+                            100: '#F1F5F9',
+                            200: '#E2E8F0',
+                            300: '#CBD5E1',
+                            400: '#94A3B8',
+                            500: '#64748B',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1E293B',
+                            900: '#0F172A',
+                        },
+                        background: {
+                            light: '#f6f6f8',
+                            dark: '#101622',
+                        },
+                        sidebar: '#1a2236',
+                    },
+                }
+            }
+        }
+    </script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        body {
+            @@apply bg-[#F5F7FA] dark:bg-dark-900 text-dark-900 dark:text-white transition-colors duration-300;
+        }
+
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
         }
-        
-        /* Loading Spinner Overlay Styles */
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .card {
+            @@apply bg-white dark:bg-dark-800 rounded-[12px] shadow-[0_4px_12px_rgba(0,0,0,0.05)] border border-transparent dark:border-dark-700 transition-all duration-300;
+        }
+
+        .btn-primary {
+            @@apply bg-primary-500 hover:bg-primary-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2;
+        }
+
+        .btn-secondary {
+            @@apply bg-dark-100 dark:bg-dark-700 hover:bg-dark-200 dark:hover:bg-dark-600 text-dark-900 dark:text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2;
+        }
+
+        /* Loading overlay */
         #loading-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.7);
-            z-index: 9999;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(255,255,255,0.7);
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -33,143 +109,171 @@
             transition: visibility 0s, opacity 0.2s linear;
         }
         .dark #loading-overlay {
-            background: rgba(16, 22, 34, 0.7);
+            background: rgba(15, 23, 42, 0.7);
         }
         #loading-overlay.active {
             visibility: visible;
             opacity: 1;
         }
-        .spinner-border.text-orange { color: #F27123; width: 3rem; height: 3rem; }
+        
     </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body class="bg-background-light dark:bg-background-dark min-h-screen flex flex-col transition-colors duration-200">
+<body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden">
+    
     <!-- Loading Overlay -->
     <div id="loading-overlay">
-        <div class="flex flex-col items-center gap-4">
-            <div class="spinner-border text-orange" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <p class="text-primary font-bold animate-pulse text-lg tracking-wide uppercase">Processing...</p>
+        <div class="flex flex-col items-center gap-4 bg-white dark:bg-dark-800 p-6 rounded-2xl shadow-xl border border-dark-100 dark:border-dark-700">
+            <div class="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin"></div>
+            <p class="text-primary-500 font-bold animate-pulse text-sm tracking-widest uppercase">Processing...</p>
         </div>
     </div>
 
-    <!-- Top Navigation Bar -->
-    <header class="sticky top-0 z-50 w-full border-b border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-[#1a2230] px-6 lg:px-10 py-3 shadow-sm">
-        <div class="flex items-center justify-between whitespace-nowrap">
-            <div class="flex items-center gap-4 text-[#0d121b] dark:text-white">
-                @if (User.IsInRole("Admin") || User.IsInRole("HeadOfDept"))
-                {
-                    <a asp-controller="Admin" asp-action="Dashboard" class="flex items-center gap-4 no-underline text-inherit hover:opacity-80 transition-opacity">
-                        <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <span class="material-symbols-outlined text-2xl font-bold">school</span>
-                        </div>
-                        <h2 class="text-lg font-extrabold leading-tight tracking-[-0.015em]">GPMS</h2>
-                    </a>
-                }
-                else
-                {
-                    <a asp-controller="Home" asp-action="Index" class="flex items-center gap-4 no-underline text-inherit hover:opacity-80 transition-opacity">
-                        <div class="size-8 flex items-center justify-center rounded-lg bg-primary/10 text-primary">
-                            <span class="material-symbols-outlined text-2xl font-bold">school</span>
-                        </div>
-                        <h2 class="text-lg font-extrabold leading-tight tracking-[-0.015em]">GPMS</h2>
-                    </a>
-                }
-            </div>
+    <!-- Main Layout wrapper -->
+    <div class="flex h-screen overflow-hidden w-full">
+        
+        <!-- Sidebar Navigation -->
+        <div id="main-sidebar" class="z-50 transition-transform duration-300 w-64 shrink-0 shadow-2xl lg:shadow-[2px_0_10px_rgba(0,0,0,0.1)] lg:relative absolute top-0 left-0 bg-sidebar dark:bg-dark-800 h-full -translate-x-full lg:translate-x-0">
+            @await Html.PartialAsync("_Sidebar")
+        </div>
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 hidden lg:hidden transition-opacity"></div>
+
+        <!-- Main Content Column -->
+        <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
             
-            <div class="flex flex-1 justify-end gap-8">
-                <div class="hidden md:flex items-center gap-8">
-                    <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Home" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Admin" asp-action="Dashboard">Dashboard</a>
+            <!-- Top Header -->
+            @await Html.PartialAsync("_Header")
+            
+            <!-- Page Content Body -->
+            <main class="flex-1 overflow-y-auto overflow-x-hidden custom-main-scroll bg-[#F5F7FA] dark:bg-dark-900">
+                <div class="w-full min-h-full p-4 lg:p-8 pb-24 text-dark-900 dark:text-dark-100 relative">
                     
-                    @if (User.IsInRole("Admin") || User.IsInRole("HeadOfDept"))
+                    @if (TempData["SuccessMessage"] != null)
                     {
-                        <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Admin" asp-action="Index">Users</a>
-                    }
-                    
-                    <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors no-underline" href="#">Projects</a>
-                    <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors no-underline" href="#">Reports</a>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button class="flex items-center justify-center text-[#4c669a] dark:text-gray-400 hover:text-primary">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
-                    
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
-                             <div class="flex flex-col items-end hidden sm:flex">
-                                <span class="text-xs font-bold text-[#0d121b] dark:text-white">@User.Identity.Name</span>
-                                <a asp-controller="Auth" asp-action="Logout" class="text-[10px] text-red-500 hover:underline font-bold uppercase tracking-wider no-underline">Logout</a>
-                            </div>
-                            <div class="bg-primary/10 flex items-center justify-center rounded-full size-9 border-2 border-white dark:border-gray-700 shadow-sm text-primary">
-                                <span class="material-symbols-outlined">person</span>
-                            </div>
+                        <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
+                            <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                            <span class="font-medium text-sm">@TempData["SuccessMessage"]</span>
                         </div>
                     }
-                    else
+                    @if (TempData["ErrorMessage"] != null)
                     {
-                         <a asp-controller="Auth" asp-action="Login" class="rounded-lg bg-primary hover:bg-[#d95d12] text-white h-9 px-4 flex items-center text-sm font-bold transition-all no-underline">
-                            Sign In
-                         </a>
+                        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
+                            <span class="material-symbols-outlined text-red-500">error</span>
+                            <span class="font-medium text-sm">@TempData["ErrorMessage"]</span>
+                        </div>
                     }
+
+                    @RenderBody()
                 </div>
-            </div>
+            </main>
+            
         </div>
-    </header>
+    </div>
 
-    <!-- Main Content Container -->
-    <main class="flex-1 w-full max-w-[1440px] mx-auto">
-        @RenderBody()
-    </main>
+    <!-- Chatbot iframe (Global) -->
+    <div id="chatbot-container">
+        <iframe id="chatbot-iframe"
+                src="https://gpms-bot-supporter-fe.onrender.com/"
+                style="position: fixed;
+                       bottom: 24px;
+                       right: 24px;
+                       width: 60px;
+                       height: 60px;
+                       border: none;
+                       z-index: 9990;
+                       border-radius: 50%;
+                       overflow: hidden;
+                       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
+        </iframe>
+    </div>
 
-    <footer class="w-full max-w-[1440px] mx-auto px-10 py-8 border-t border-slate-200 dark:border-slate-800">
-        <div class="flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-slate-500 dark:text-slate-400">
-            <div class="flex items-center gap-4">
-                <span>© 2026 GPMS. All rights reserved.</span>
-                <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded font-mono">v2.4.0</span>
-            </div>
-            <div class="flex gap-6">
-                <a class="hover:text-primary transition-colors no-underline" href="#">Privacy Policy</a>
-                <a class="hover:text-primary transition-colors no-underline" href="#">Terms of Service</a>
-            </div>
-        </div>
-    </footer>
+    <!-- Scrollbar Styling for Main Content -->
+    <style>
+        .custom-main-scroll::-webkit-scrollbar { width: 8px; height: 8px; }
+        .custom-main-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-main-scroll::-webkit-scrollbar-thumb { 
+            background-color: theme('colors.dark.200'); 
+            border-radius: 10px; 
+            border: 2px solid theme('colors.dark.50'); 
+        }
+        .dark .custom-main-scroll::-webkit-scrollbar-thumb { 
+            background-color: theme('colors.dark.600'); 
+            border: 2px solid theme('colors.dark.900');
+        }
+        .custom-main-scroll::-webkit-scrollbar-thumb:hover { background-color: theme('colors.dark.400'); }
+        .dark .custom-main-scroll::-webkit-scrollbar-thumb:hover { background-color: theme('colors.dark.500'); }
+    </style>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const overlay = document.getElementById('loading-overlay');
-            
-            // Show spinner on form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const loadingOverlay = document.getElementById('loading-overlay');
+
+            if(mobileBtn) {
+                mobileBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
+                });
+            }
+
+            if(overlay) {
+                overlay.addEventListener('click', () => {
+                    sidebar.classList.add('-translate-x-full');
+                    overlay.classList.add('hidden');
+                });
+            }
+
+            // Global Loading Overlay hook
             document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function() {
-                    // Check if form is valid if it has validation
-                    if (this.checkValidity()) {
-                        overlay.classList.add('active');
+                form.addEventListener('submit', function () {
+                    if (this.checkValidity() && !this.classList.contains('no-spinner')) {
+                        loadingOverlay.classList.add('active');
                     }
                 });
             });
 
-            // Show spinner on navigation links
-            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"])').forEach(link => {
-                link.addEventListener('click', function(e) {
+            document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not([data-no-load])').forEach(link => {
+                link.addEventListener('click', function (e) {
                     const href = this.getAttribute('href');
-                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey) {
-                        setTimeout(() => overlay.classList.add('active'), 50);
+                    if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey && !this.classList.contains('no-spinner')) {
+                        setTimeout(() => loadingOverlay.classList.add('active'), 50);
                     }
                 });
             });
 
-            // Ensure spinner is hidden on back/forward
-            window.addEventListener('pageshow', function(event) {
-                overlay.classList.remove('active');
+            window.addEventListener('pageshow', () => {
+                loadingOverlay.classList.remove('active');
             });
         });
+
+        // Chatbot communication
+        window.addEventListener("message", function (event) {
+            if (!event.data || typeof event.data !== "object") return;
+            const iframe = document.getElementById("chatbot-iframe");
+            if (!iframe) return;
+            if (event.data.type === "chatbot-open") {
+                iframe.style.width = "400px";
+                iframe.style.height = "520px";
+                iframe.style.borderRadius = "16px";
+            } else if (event.data.type === "chatbot-close") {
+                iframe.style.width = "60px";
+                iframe.style.height = "60px";
+                iframe.style.borderRadius = "50%";
+            }
+        }, false);
     </script>
+    
+    <!-- Lecturer Specific JS (Bootstrap) -->
+    @if (User.IsInRole("Lecturer"))
+    {
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="~/js/lecturer-portal.js" asp-append-version="true"></script>
+    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

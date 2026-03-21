@@ -1,8 +1,8 @@
-@using GPMS.Application.DTOs
+﻿@using GPMS.Application.DTOs
 @model ChecklistDto
 @{
     ViewData["Title"] = "Chi tiết Checklist";
-    Layout = "_HODLayout";
+    Layout = "_Layout";
     var isRubric = Model.Items.Any(i => i.ItemType == "Rubric");
     var sections = Model.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key);
 }

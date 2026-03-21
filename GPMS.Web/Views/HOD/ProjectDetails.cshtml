@@ -1,8 +1,8 @@
-@model GPMS.Application.DTOs.ProjectDetailDto
+﻿@model GPMS.Application.DTOs.ProjectDetailDto
 @using GPMS.Domain.Enums
 @{
     ViewData["Title"] = "Project Overview";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
     
     var statusBadgeClass = Model.Status switch {
         ProjectStatus.Active => "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
