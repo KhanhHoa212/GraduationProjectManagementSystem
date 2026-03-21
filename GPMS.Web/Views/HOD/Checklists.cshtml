@@ -56,78 +56,118 @@
             var isRubric = round.RoundNumber == 3;
 
             <div id="content-@round.RoundNumber" class="tab-content @(round.RoundNumber != 1 ? "hidden" : "") animate-fadeIn">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex justify-between items-start hover:shadow-md transition-shadow">
-                    <div class="flex-grow">
-                        <div class="flex items-center gap-3 mb-3">
-                            <span class="px-2 py-1 rounded bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-wider">
-                                Round @round.RoundNumber
-                            </span>
-                            <h2 class="text-xl font-bold text-gray-800">@(checklist?.Title ?? $"Review {round.RoundNumber} Checklist")</h2>
+                <!-- Summary & Actions -->
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i class="ri-folder-info-line text-2xl"></i>
                         </div>
-                        
-                        <p class="text-gray-500 text-sm leading-relaxed mb-4 max-w-2xl">
-                            @(checklist?.Description ?? (isRubric ? "Đánh giá tiêu chí định tính và bảng mô tả Rubric cho từng mức độ. Hình thức: Excellent / Good / Acceptable / Fail." : "Đánh giá các hạng mục công việc định kỳ. Hình thức chấm điểm: Yes / No / N.A."))
-                        </p>
-
-                        <div class="flex items-center gap-6 text-xs text-gray-400">
-                            <span class="flex items-center gap-1.5">
-                                <i class="ri-calendar-line text-indigo-400"></i>
-                                @round.StartDate.ToString("dd/MM/yyyy") – @round.EndDate.ToString("dd/MM/yyyy")
-                            </span>
-                            @if (checklist != null)
-                            {
-                                <span class="flex items-center gap-1.5">
-                                    <i class="ri-list-check text-green-400"></i>
-                                    @checklist.Items.Count tiêu chí
-                                </span>
-                                <span class="flex items-center gap-1.5">
-                                    <i class="ri-node-tree text-orange-400"></i>
-                                    @checklist.Items.Select(i => i.Section).Distinct().Count() nhóm (sections)
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="flex items-center gap-1.5 text-orange-400 font-medium">
-                                    <i class="ri-error-warning-line"></i>
-                                    Chưa được cấu hình nội dung
-                                </span>
-                            }
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">@(checklist?.Title ?? $"Review {round.RoundNumber} Checklist")</h2>
+                            <p class="text-sm text-gray-500">@round.StartDate.ToString("dd/MM/yyyy") – @round.EndDate.ToString("dd/MM/yyyy")</p>
                         </div>
                     </div>
-
-                    <div class="relative dropdown-container">
-                        <button onclick="toggleDropdown(@round.RoundNumber)" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 transition-colors">
-                            <i class="ri-more-2-line text-xl"></i>
-                        </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="dropdown-@round.RoundNumber" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 hidden z-10 animate-scaleIn">
-                            @if (checklist != null)
-                            {
-                                <a href="/HOD/ChecklistDetails/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                                    <i class="ri-eye-line text-indigo-500"></i>
-                                    Xem chi tiết
-                                </a>
-                                <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                                    <i class="ri-edit-line text-blue-500"></i>
-                                    Chỉnh sửa nội dung
-                                </a>
-                            }
-                            else
-                            {
-                                <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors font-medium">
-                                    <i class="ri-add-line"></i>
-                                    Tạo mới Checklist
-                                </a>
-                            }
-                            <div class="border-t border-gray-50 my-1"></div>
-                            <button onclick="openCopyModal()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 transition-colors text-left">
-                                <i class="ri-file-copy-line"></i>
-                                Copy từ kỳ học khác
-                            </button>
-                        </div>
+                    <div class="flex gap-2">
+                        <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg font-medium text-sm hover:bg-blue-50 transition-colors flex items-center gap-2">
+                             <i class="ri-edit-line"></i> Chỉnh sửa cấu trúc
+                        </a>
                     </div>
                 </div>
+
+                @if (checklist == null || !checklist.Items.Any())
+                {
+                    <div class="bg-white rounded-2xl border-2 border-dashed border-gray-100 p-12 flex flex-col items-center text-center">
+                        <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 mb-4">
+                            <i class="ri-error-warning-line text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-800 mb-2">Chưa có nội dung cho vòng review này</h3>
+                        <p class="text-gray-500 max-w-sm mb-6">Vui lòng cấu hình bộ tiêu chí đánh giá để Reviewer có thể bắt đầu chấm bài.</p>
+                        <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-all">
+                            + Thiết lập ngay
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    if (isRubric)
+                    {
+                        <!-- Rubric Scale Info -->
+                        <div class="bg-indigo-900 text-white rounded-xl p-6 mb-6 shadow-sm">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span> <span class="text-xs font-bold">Excellent: 8-10</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span> <span class="text-xs font-bold">Good: 6-8</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> <span class="text-xs font-bold">Acceptable: 4-6</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500"></span> <span class="text-xs font-bold">Fail: 0-4</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Rubric Items by Section -->
+                        @foreach (var group in checklist.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key))
+                        {
+                            <div class="mb-6">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="ri-bookmark-3-line"></i> @group.Key
+                                    <span class="h-px bg-indigo-100 flex-grow"></span>
+                                </h3>
+                                <div class="grid gap-4">
+                                    @foreach (var item in group.OrderBy(i => i.OrderIndex))
+                                    {
+                                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden group">
+                                            <div class="p-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] font-bold text-gray-400">@item.ItemCode</span>
+                                                    <h4 class="font-bold text-gray-700">@item.ItemName</h4>
+                                                </div>
+                                                <button onclick="toggleRubric('@item.ItemID')" class="text-xs text-indigo-600 font-bold hover:underline">Chi tiết Rubric</button>
+                                            </div>
+                                            <div class="p-4">
+                                                <p class="text-sm text-gray-600 leading-relaxed mb-3">@item.ItemContent</p>
+                                                <div id="rubric-@item.ItemID" class="hidden grid grid-cols-1 md:grid-cols-4 gap-2 animate-fadeIn">
+                                                    @foreach (var level in new[] { "Excellent", "Good", "Acceptable", "Fail" })
+                                                    {
+                                                        var rb = item.Rubrics.FirstOrDefault(r => r.GradeLevel == level);
+                                                        <div class="p-2 rounded bg-gray-50 border border-gray-100 italic text-[10px] text-gray-500">
+                                                            <div class="font-bold uppercase text-gray-400 mb-1">@level</div>
+                                                            @rb?.Description
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Yes/No Items by Section -->
+                        <div class="space-y-4">
+                            @foreach (var group in checklist.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key))
+                            {
+                                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div class="p-4 bg-gray-50/50 flex justify-between items-center">
+                                        <h3 class="font-bold text-gray-700">@group.Key</h3>
+                                        <span class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold">@group.Count() TIÊU CHÍ</span>
+                                    </div>
+                                    <div class="divide-y border-t border-gray-50">
+                                        @foreach (var item in group.OrderBy(i => i.OrderIndex))
+                                        {
+                                            <div class="p-4 flex gap-4 items-start group">
+                                                <div class="text-[10px] font-mono font-bold text-gray-300 group-hover:text-blue-500 pt-1">@item.ItemCode</div>
+                                                <p class="text-sm text-gray-600 flex-grow leading-relaxed">@item.ItemContent</p>
+                                                <div class="flex gap-1 pt-1 opacity-40">
+                                                    <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">Y</span>
+                                                    <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">N</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
             </div>
         }
     </div>
@@ -230,6 +270,11 @@
     function closeCopyModal() {
         document.getElementById('copyModal').classList.add('hidden');
         document.getElementById('copyModal').classList.remove('flex');
+    }
+
+    function toggleRubric(itemId) {
+        const el = document.getElementById('rubric-' + itemId);
+        el.classList.toggle('hidden');
     }
 
     async function executeCopy() {
