@@ -31,6 +31,7 @@ public class GpmsDbContext : DbContext
     public DbSet<EvaluationDetail> EvaluationDetails { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
     public DbSet<FeedbackApproval> FeedbackApprovals { get; set; }
+    public DbSet<MentorRoundReview> MentorRoundReviews { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Notification> Notifications { get; set; }
     public DbSet<GroupRoundProgress> GroupRoundProgresses { get; set; }
@@ -40,6 +41,28 @@ public class GpmsDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GpmsDbContext).Assembly);
+        modelBuilder.Entity<MentorRoundReview>(entity =>
+        {
+            entity.HasKey(m => new { m.ReviewRoundID, m.GroupID });
+
+            entity.Property(m => m.SupervisorID)
+                .HasMaxLength(20);
+
+            entity.HasOne(m => m.ReviewRound)
+                .WithMany(r => r.MentorRoundReviews)
+                .HasForeignKey(m => m.ReviewRoundID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Group)
+                .WithMany(g => g.MentorRoundReviews)
+                .HasForeignKey(m => m.GroupID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Supervisor)
+                .WithMany(u => u.MentorRoundReviews)
+                .HasForeignKey(m => m.SupervisorID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
         
         SeedData(modelBuilder);
     }

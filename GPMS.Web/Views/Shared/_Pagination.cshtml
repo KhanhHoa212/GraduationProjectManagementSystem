@@ -13,7 +13,7 @@
     int endRange = Math.Min(pageIndex * pageSize, totalItems);
     
     // Get current query strings to maintain filters
-    var queryData = Context.Request.Query.ToDictionary(x => x.Key, x => x.Value.ToString());
+    var queryData = Context.Request.Query.ToDictionary(x => x.Key, x => (string?)x.Value.ToString());
 }
 
 <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">

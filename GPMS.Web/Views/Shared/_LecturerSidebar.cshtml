@@ -1,0 +1,72 @@
+@{
+    var currentController = ViewContext.RouteData.Values["Controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString() ?? "";
+
+    bool IsActive(string controller, string action) {
+        return controller.Equals(currentController, StringComparison.OrdinalIgnoreCase) && 
+               action.Equals(currentAction, StringComparison.OrdinalIgnoreCase);
+    }
+}
+
+<aside class="portal-sidebar">
+    <div class="sidebar-header">
+        <div class="d-flex align-items-center justify-content-center bg-orange-50 rounded" style="width:32px; height:32px; background:var(--fpt-orange)">
+            <span class="material-symbols-outlined text-white" style="font-size: 20px;">school</span>
+        </div>
+        <div>
+            <h5 class="mb-0 text-white fw-bold" style="font-size: 15px; letter-spacing: -0.2px;">GPMS Portal</h5>
+            <div style="font-size: 11px; color: #9CA3AF;">Lecturer Panel</div>
+        </div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-group-title">Mentor</div>
+        <a href="@Url.Action("Dashboard", "Lecturer")" class="nav-item @(IsActive("Lecturer", "Dashboard") || IsActive("Teacher", "Index") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">dashboard</span>
+            Dashboard
+        </a>
+        <a href="@Url.Action("Projects", "Lecturer")" class="nav-item @(IsActive("Lecturer", "Projects") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">folder_open</span>
+            My Projects
+        </a>
+        <a href="@Url.Action("FeedbackApprovals", "Lecturer")" class="nav-item @(IsActive("Lecturer", "FeedbackApprovals") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">fact_check</span>
+            Feedback Approvals
+        </a>
+        <a href="@Url.Action("Schedule", "Lecturer")" class="nav-item @(IsActive("Lecturer", "Schedule") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">calendar_month</span>
+            Schedule
+        </a>
+
+        <div class="nav-group-title mt-3">Reviewer</div>
+        <a href="@Url.Action("ReviewAssignments", "Lecturer")" class="nav-item @(IsActive("Lecturer", "ReviewAssignments") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">assignment</span>
+            Review Assignments
+        </a>
+        <a href="@Url.Action("History", "Lecturer")" class="nav-item @(IsActive("Lecturer", "History") ? "active" : "")">
+            <span class="material-symbols-outlined" style="font-size: 20px;">history</span>
+            History
+        </a>
+
+        <div class="nav-group-title mt-3">System</div>
+        <a href="#" class="nav-item">
+            <span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+            Settings
+        </a>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="d-flex align-items-center gap-2">
+            <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(User.Identity?.Name ?? "Lecturer")&background=374151&color=fff" alt="Avatar" class="rounded-circle" width="32" height="32" />
+            <div style="min-width: 0;">
+                <div class="text-white fw-semibold text-truncate" style="font-size: 13px;">@User.Identity?.Name</div>
+                <div class="text-truncate" style="font-size: 11px; color: #9CA3AF;">Senior Lecturer</div>
+            </div>
+        </div>
+        <form asp-controller="Auth" asp-action="Logout" method="post" class="m-0 p-0">
+            <button type="submit" class="btn p-1 text-muted hover-white bg-transparent border-0" title="Logout">
+                <span class="material-symbols-outlined" style="font-size: 20px;">logout</span>
+            </button>
+        </form>
+    </div>
+</aside>

@@ -1,6 +1,5 @@
 @using GPMS.Application.DTOs
 @using GPMS.Domain.Enums
-@model IEnumerable<ChecklistDto>
 @{
     ViewData["Title"] = "Cấu hình Checklist";
     Layout = "_HODLayout";
@@ -10,7 +9,38 @@
     var semesters = ViewBag.Semesters as IEnumerable<SemesterDto> ?? new List<SemesterDto>();
 }
 
+@* ===== TOAST CONTAINER ===== *@
+<div id="toastContainer" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
+@* ===== CONFIRM DIALOG ===== *@
+<div id="confirmDialog" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[999] backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 mx-4 animate-scaleIn">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="w-12 h-12 rounded-full bg-green-50 flex items-center justify-center flex-shrink-0">
+                <i class="ri-save-3-line text-2xl text-green-600"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-800 text-lg">Xác nhận lưu checklist</h3>
+                <p class="text-sm text-gray-500" id="confirmDialogDesc">Bạn có chắc muốn lưu các thay đổi này không?</p>
+            </div>
+        </div>
+        <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-6 flex items-start gap-2">
+            <i class="ri-error-warning-line text-amber-500 mt-0.5 flex-shrink-0"></i>
+            <p class="text-xs text-amber-700">Thao tác này sẽ ghi đè toàn bộ cấu hình checklist hiện tại của vòng review này.</p>
+        </div>
+        <div class="flex gap-3 justify-end">
+            <button onclick="closeConfirmDialog()" class="px-5 py-2 text-gray-600 hover:bg-gray-100 rounded-xl font-medium transition-colors">
+                Hủy bỏ
+            </button>
+            <button id="confirmSaveBtn" onclick="executeSave()" class="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 font-bold transition-colors flex items-center gap-2">
+                <i class="ri-save-line"></i> Lưu thay đổi
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="p-6">
+    @* Header *@
     <div class="flex justify-between items-start mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Cấu hình Checklist</h1>
@@ -18,12 +48,10 @@
         </div>
         <div class="flex gap-3">
             <button onclick="openCopyModal()" class="px-4 py-2 border border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition-colors flex items-center gap-2">
-                <i class="ri-file-copy-line"></i>
-                Copy từ kỳ trước
+                <i class="ri-file-copy-line"></i> Copy từ kỳ trước
             </button>
             <a href="/HOD/ReviewRounds" class="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors flex items-center gap-2">
-                <i class="ri-add-line"></i>
-                Quản lý Vòng Review
+                <i class="ri-add-line"></i> Quản lý Vòng Review
             </a>
         </div>
     </div>
@@ -34,14 +62,17 @@
             @foreach (var round in rounds.OrderBy(r => r.RoundNumber))
             {
                 var isRubric = round.RoundNumber == 3;
-                <button onclick="switchTab(@round.RoundNumber)" 
+                var tabActiveClass = round.RoundNumber == 1 ? "text-indigo-600 border-b-2 border-indigo-600" : "text-gray-500 hover:text-gray-700";
+                <button onclick="switchTab(@round.RoundNumber)"
                         id="tab-btn-@round.RoundNumber"
-                        class="tab-btn pb-4 px-2 text-sm font-medium transition-all relative @(round.RoundNumber == 1 ? "text-indigo-600 border-b-2 border-indigo-600" : "text-gray-500 hover:text-gray-700")">
+                        class="tab-btn pb-4 px-2 text-sm font-medium transition-all relative @tabActiveClass">
                     <span class="flex items-center gap-2">
                         Review @round.RoundNumber
-                        <span class="px-2 py-0.5 rounded-full text-[10px] @(isRubric ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600")">
-                            @(isRubric ? "⭐ Rubric" : "Yes/No")
-                        </span>
+                        @{
+                            var badgeClass = isRubric ? "bg-purple-100 text-purple-600" : "bg-blue-100 text-blue-600";
+                            var badgeText = isRubric ? "⭐ Rubric" : "Yes/No";
+                        }
+                        <span class="px-2 py-0.5 rounded-full text-[10px] @badgeClass">@badgeText</span>
                     </span>
                 </button>
             }
@@ -54,76 +85,167 @@
         {
             var checklist = checklists.FirstOrDefault(c => c.ReviewRoundID == round.ReviewRoundID);
             var isRubric = round.RoundNumber == 3;
+            var checklistJson = System.Text.Json.JsonSerializer.Serialize(
+                checklist ?? new ChecklistDto { ReviewRoundID = round.ReviewRoundID, Items = new List<ChecklistItemDto>() },
+                new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase }
+            );
+            var tabHiddenClass = round.RoundNumber != 1 ? "hidden" : "";
 
-            <div id="content-@round.RoundNumber" class="tab-content @(round.RoundNumber != 1 ? "hidden" : "") animate-fadeIn">
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 flex justify-between items-start hover:shadow-md transition-shadow">
-                    <div class="flex-grow">
-                        <div class="flex items-center gap-3 mb-3">
-                            <span class="px-2 py-1 rounded bg-blue-50 text-blue-600 font-bold text-[10px] uppercase tracking-wider">
-                                Round @round.RoundNumber
-                            </span>
-                            <h2 class="text-xl font-bold text-gray-800">@(checklist?.Title ?? $"Review {round.RoundNumber} Checklist")</h2>
+            <div id="content-@round.RoundNumber"
+                 class="tab-content @tabHiddenClass animate-fadeIn"
+                 data-round-id="@round.ReviewRoundID"
+                 data-is-rubric="@isRubric.ToString().ToLower()">
+
+                @* ===== HEADER CARD ===== *@
+                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 mb-6 flex justify-between items-center">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                            <i class="ri-folder-info-line text-2xl"></i>
                         </div>
-                        
-                        <p class="text-gray-500 text-sm leading-relaxed mb-4 max-w-2xl">
-                            @(checklist?.Description ?? (isRubric ? "Đánh giá tiêu chí định tính và bảng mô tả Rubric cho từng mức độ. Hình thức: Excellent / Good / Acceptable / Fail." : "Đánh giá các hạng mục công việc định kỳ. Hình thức chấm điểm: Yes / No / N.A."))
-                        </p>
-
-                        <div class="flex items-center gap-6 text-xs text-gray-400">
-                            <span class="flex items-center gap-1.5">
-                                <i class="ri-calendar-line text-indigo-400"></i>
-                                @round.StartDate.ToString("dd/MM/yyyy") – @round.EndDate.ToString("dd/MM/yyyy")
-                            </span>
-                            @if (checklist != null)
-                            {
-                                <span class="flex items-center gap-1.5">
-                                    <i class="ri-list-check text-green-400"></i>
-                                    @checklist.Items.Count tiêu chí
-                                </span>
-                                <span class="flex items-center gap-1.5">
-                                    <i class="ri-node-tree text-orange-400"></i>
-                                    @checklist.Items.Select(i => i.Section).Distinct().Count() nhóm (sections)
-                                </span>
-                            }
-                            else
-                            {
-                                <span class="flex items-center gap-1.5 text-orange-400 font-medium">
-                                    <i class="ri-error-warning-line"></i>
-                                    Chưa được cấu hình nội dung
-                                </span>
-                            }
+                        <div>
+                            <h2 class="text-lg font-bold text-gray-800">@(checklist?.Title ?? $"Review {round.RoundNumber} Checklist")</h2>
+                            <p class="text-sm text-gray-500">@round.StartDate.ToString("dd/MM/yyyy") – @round.EndDate.ToString("dd/MM/yyyy")</p>
                         </div>
                     </div>
 
-                    <div class="relative dropdown-container">
-                        <button onclick="toggleDropdown(@round.RoundNumber)" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-50 text-gray-400 transition-colors">
-                            <i class="ri-more-2-line text-xl"></i>
+                    @* VIEW MODE BUTTONS *@
+                    <div class="view-actions flex gap-2">
+                        <button onclick="enterEditMode(this)"
+                                data-round-id="@round.ReviewRoundID"
+                                data-is-rubric="@isRubric.ToString().ToLower()"
+                                data-checklist="@Html.Raw(checklistJson.Replace("\"", "&quot;"))"
+                                class="px-4 py-2 border border-indigo-500 text-indigo-600 rounded-xl font-medium text-sm hover:bg-indigo-50 transition-colors flex items-center gap-2">
+                            <i class="ri-edit-2-line"></i> Chỉnh sửa
                         </button>
-                        
-                        <!-- Dropdown Menu -->
-                        <div id="dropdown-@round.RoundNumber" class="dropdown-menu absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 hidden z-10 animate-scaleIn">
-                            @if (checklist != null)
+                    </div>
+
+                    @* EDIT MODE BUTTONS *@
+                    <div class="edit-actions hidden flex gap-2">
+                        <button onclick="cancelEditMode(this)"
+                                class="px-4 py-2 border border-gray-300 text-gray-600 rounded-xl font-medium text-sm hover:bg-gray-50 transition-colors flex items-center gap-2">
+                            <i class="ri-close-line"></i> Hủy
+                        </button>
+                        <button onclick="openConfirmDialog(this)"
+                                data-round-id="@round.ReviewRoundID"
+                                class="px-5 py-2 bg-green-600 text-white rounded-xl font-bold text-sm hover:bg-green-700 transition-colors flex items-center gap-2 shadow-md">
+                            <i class="ri-save-3-line"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </div>
+
+                @* ===== VIEW PANEL ===== *@
+                <div class="view-panel">
+                    @if (checklist == null || !checklist.Items.Any())
+                    {
+                        <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 flex flex-col items-center text-center">
+                            <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 mb-4">
+                                <i class="ri-error-warning-line text-3xl"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Chưa có nội dung cho vòng review này</h3>
+                            <p class="text-gray-500 max-w-sm mb-6">Vui lòng cấu hình bộ tiêu chí đánh giá để Reviewer có thể bắt đầu chấm bài.</p>
+                            <button onclick="enterEditModeByRoundId(@round.ReviewRoundID)"
+                                    class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-all">
+                                + Thiết lập ngay
+                            </button>
+                        </div>
+                    }
+                    else if (isRubric)
+                    {
+                        @* Rubric Scale Info *@
+                        <div class="bg-indigo-900 text-white rounded-xl p-5 mb-6 shadow-sm">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-xs font-bold">Excellent: 8-10</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold">Good: 6-8</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-yellow-400"></span><span class="text-xs font-bold">Acceptable: 4-6</span></div>
+                                <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-xs font-bold">Fail: 0-4</span></div>
+                            </div>
+                        </div>
+                        @foreach (var group in checklist.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key))
+                        {
+                            <div class="mb-6">
+                                <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                                    <i class="ri-bookmark-3-line"></i> @group.Key
+                                    <span class="h-px bg-indigo-100 flex-grow"></span>
+                                </h3>
+                                <div class="grid gap-4">
+                                    @foreach (var item in group.OrderBy(i => i.OrderIndex))
+                                    {
+                                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                                            <div class="p-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] font-bold text-gray-400">@item.ItemCode</span>
+                                                    <h4 class="font-bold text-gray-700">@item.ItemName</h4>
+                                                </div>
+                                                <button onclick="toggleRubric('@item.ItemID')" class="text-xs text-indigo-600 font-bold hover:underline">Chi tiết Rubric</button>
+                                            </div>
+                                            <div class="p-4">
+                                                <p class="text-sm text-gray-600 leading-relaxed mb-3">@item.ItemContent</p>
+                                                <div id="rubric-@item.ItemID" class="hidden grid grid-cols-1 md:grid-cols-4 gap-2 animate-fadeIn">
+                                                    @foreach (var level in new[] { "Excellent", "Good", "Acceptable", "Fail" })
+                                                    {
+                                                        var rb = item.Rubrics.FirstOrDefault(r => r.GradeLevel == level);
+                                                        <div class="p-2 rounded bg-gray-50 border border-gray-100 italic text-[10px] text-gray-500">
+                                                            <div class="font-bold uppercase text-gray-400 mb-1">@level</div>
+                                                            @rb?.Description
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Yes/No Items by Section -->
+                        <div class="space-y-4">
+                            @foreach (var group in checklist.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key))
                             {
-                                <a href="/HOD/ChecklistDetails/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                                    <i class="ri-eye-line text-indigo-500"></i>
-                                    Xem chi tiết
-                                </a>
-                                <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                                    <i class="ri-edit-line text-blue-500"></i>
-                                    Chỉnh sửa nội dung
-                                </a>
+                                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div class="p-4 bg-gray-50/50 flex justify-between items-center">
+                                        <h3 class="font-bold text-gray-700">@group.Key</h3>
+                                        <span class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold">@group.Count() TIÊU CHÍ</span>
+                                    </div>
+                                    <div class="divide-y border-t border-gray-50">
+                                        @foreach (var item in group.OrderBy(i => i.OrderIndex))
+                                        {
+                                            <div class="p-4 flex gap-4 items-start">
+                                                <div class="text-[10px] font-mono font-bold text-gray-300 pt-1">@item.ItemCode</div>
+                                                <p class="text-sm text-gray-600 flex-grow leading-relaxed">@item.ItemContent</p>
+                                                <div class="flex gap-1 pt-1 opacity-40">
+                                                    <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">Y</span>
+                                                    <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">N</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
                             }
-                            else
-                            {
-                                <a href="/HOD/EditChecklist/@round.ReviewRoundID" class="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors font-medium">
-                                    <i class="ri-add-line"></i>
-                                    Tạo mới Checklist
-                                </a>
-                            }
-                            <div class="border-t border-gray-50 my-1"></div>
-                            <button onclick="openCopyModal()" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50 transition-colors text-left">
-                                <i class="ri-file-copy-line"></i>
-                                Copy từ kỳ học khác
+                        </div>
+                    }
+                </div>
+
+                @* ===== EDIT PANEL (hidden by default) ===== *@
+                <div class="edit-panel hidden">
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-4 mb-6 flex items-center gap-3 animate-fadeIn">
+                        <i class="ri-edit-2-line text-indigo-500 text-xl"></i>
+                        <div>
+                            <p class="text-sm font-bold text-indigo-700">Đang ở chế độ chỉnh sửa</p>
+                            <p class="text-xs text-indigo-500">Thêm, sửa hoặc xóa tiêu chí. Nhấn <strong>Lưu thay đổi</strong> để áp dụng.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-8 editor-items-container"></div>
+                    <div class="mt-8 border-2 border-dashed border-indigo-200 rounded-xl p-6 bg-indigo-50/50 flex flex-col items-center hover:border-indigo-400 transition-colors">
+                        <h4 class="font-bold text-indigo-400 mb-4 flex items-center gap-2">
+                            <i class="ri-add-circle-line"></i> Thêm Section mới
+                        </h4>
+                        <div class="flex gap-3 w-full max-w-lg">
+                            <input type="text" class="new-section-code w-24 border-gray-300 rounded-lg text-sm" placeholder="Mã (vd: P1)">
+                            <input type="text" class="new-section-name flex-grow border-gray-300 rounded-lg text-sm" placeholder="Tên Section (vd: Tài liệu)">
+                            <button onclick="addSection(this)" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 flex items-center gap-1 text-sm font-medium">
+                                <i class="ri-add-line"></i> Thêm
                             </button>
                         </div>
                     </div>
@@ -138,8 +260,7 @@
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
         <div class="p-4 border-b flex justify-between items-center bg-gray-50">
             <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                <i class="ri-file-copy-line text-orange-500"></i>
-                Copy Checklist từ kỳ học khác
+                <i class="ri-file-copy-line text-orange-500"></i> Copy Checklist từ kỳ học khác
             </h3>
             <button onclick="closeCopyModal()" class="text-gray-400 hover:text-gray-600"><i class="ri-close-line text-xl"></i></button>
         </div>
@@ -153,32 +274,24 @@
                     }
                 </select>
             </div>
-            
             <div class="mb-6">
                 <label class="block text-sm font-medium text-gray-700 mb-2">Chọn vòng review để copy:</label>
                 <div class="space-y-2">
                     <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <input type="checkbox" name="roundNum" value="1" checked class="rounded text-orange-500 focus:ring-orange-500">
-                        <span class="text-sm text-gray-700">Review 1 Checklist</span>
+                        <input type="checkbox" name="roundNum" value="1" checked class="rounded text-orange-500"> <span class="text-sm text-gray-700">Review 1</span>
                     </label>
                     <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <input type="checkbox" name="roundNum" value="2" checked class="rounded text-orange-500 focus:ring-orange-500">
-                        <span class="text-sm text-gray-700">Review 2 Checklist</span>
+                        <input type="checkbox" name="roundNum" value="2" checked class="rounded text-orange-500"> <span class="text-sm text-gray-700">Review 2</span>
                     </label>
                     <label class="flex items-center gap-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                        <input type="checkbox" name="roundNum" value="3" checked class="rounded text-orange-500 focus:ring-orange-500">
-                        <span class="text-sm text-gray-700">Review 3 Final Checklist</span>
+                        <input type="checkbox" name="roundNum" value="3" checked class="rounded text-orange-500"> <span class="text-sm text-gray-700">Review 3 Final</span>
                     </label>
                 </div>
             </div>
-
             <div class="bg-orange-50 p-3 rounded-lg flex items-start gap-2 mb-6">
                 <i class="ri-error-warning-line text-orange-500 mt-0.5"></i>
-                <p class="text-xs text-orange-700">
-                    Lưu ý: Thao tác này sẽ ghi đè checklist hiện tại của kỳ học @activeSemester?.SemesterCode nếu đã tồn tại.
-                </p>
+                <p class="text-xs text-orange-700">Lưu ý: Thao tác này sẽ ghi đè checklist hiện tại của kỳ @activeSemester?.SemesterCode nếu đã tồn tại.</p>
             </div>
-
             <div class="flex justify-end gap-3">
                 <button onclick="closeCopyModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Hủy</button>
                 <button onclick="executeCopy()" class="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 font-medium">📋 Copy và áp dụng</button>
@@ -187,9 +300,113 @@
     </div>
 </div>
 
+@* ===== ITEM TEMPLATES ===== *@
+<template id="yesNoItemTemplate">
+    <div class="item-row py-3 border-b flex gap-3 items-center animate-fadeIn">
+        <input type="text" class="item-code w-20 border-gray-200 rounded bg-gray-50 text-xs font-mono" placeholder="Code">
+        <textarea class="item-content flex-grow border-gray-300 rounded-lg text-sm resize-none overflow-hidden" 
+                  rows="1" oninput="autoResize(this)" placeholder="Nội dung câu hỏi..."></textarea>
+        <button onclick="removeItem(this)"
+                class="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-200"
+                title="Xóa tiêu chí">
+            <i class="ri-delete-bin-line"></i> Xóa
+        </button>
+    </div>
+</template>
+
+<template id="rubricItemTemplate">
+    <div class="item-card bg-white rounded-xl shadow-sm border border-gray-100 p-5 mb-4 animate-fadeIn">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div class="md:col-span-1">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mã tiêu chí</label>
+                    <input type="text" class="item-code w-full border-gray-300 rounded-lg text-sm" placeholder="Mã (vd: P1)">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tên tiêu chí</label>
+                    <input type="text" class="item-name w-full border-gray-300 rounded-lg text-sm font-bold" placeholder="Tên tiêu chí">
+                </div>
+                <div class="md:col-span-4">
+                    <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nội dung chi tiết</label>
+                    <textarea class="item-content w-full border-gray-300 rounded-lg text-sm resize-none overflow-hidden" 
+                              rows="1" oninput="autoResize(this)" placeholder="Các tiêu chí con..."></textarea>
+                </div>
+            </div>
+            <button onclick="removeItem(this)"
+                    class="flex-shrink-0 flex items-center gap-1 text-xs font-medium text-gray-400 hover:text-red-500 hover:bg-red-50 px-2 py-1.5 rounded-lg transition-colors border border-transparent hover:border-red-200 ml-2"
+                    title="Xóa tiêu chí">
+                <i class="ri-delete-bin-line"></i> Xóa
+            </button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 border-t pt-4">
+            <div class="space-y-2">
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0"></span>
+                    <textarea class="rubric-excellent w-full border-gray-200 rounded-lg text-xs resize-none overflow-hidden" 
+                              rows="1" oninput="autoResize(this)" placeholder="🟢 EXCELLENT (8-10)..."></textarea>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></span>
+                    <textarea class="rubric-good w-full border-gray-200 rounded-lg text-xs resize-none overflow-hidden" 
+                              rows="1" oninput="autoResize(this)" placeholder="🔵 GOOD (6-8)..."></textarea>
+                </div>
+            </div>
+            <div class="space-y-2">
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 mt-2 flex-shrink-0"></span>
+                    <textarea class="rubric-acceptable w-full border-gray-200 rounded-lg text-xs resize-none overflow-hidden" 
+                              rows="1" oninput="autoResize(this)" placeholder="🟡 ACCEPTABLE (4-6)..."></textarea>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0"></span>
+                    <textarea class="rubric-fail w-full border-gray-200 rounded-lg text-xs resize-none overflow-hidden" 
+                              rows="1" oninput="autoResize(this)" placeholder="🔴 FAIL (0-4)..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<!-- ===== FLOATING SAVE BAR (hiện khi đang edit mode) ===== -->
+<div id="floatingActionBar"
+     class="fixed bottom-0 left-0 right-0 hidden z-50 transition-all duration-300 translate-y-full">
+    <!-- Blur backdrop -->
+    <div class="bg-white/80 backdrop-blur-md border-t border-gray-200 shadow-[0_-8px_30px_rgba(0,0,0,0.08)]">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
+                <p class="text-sm font-medium text-gray-600">
+                    Đang chỉnh sửa — <span id="floatingItemCount" class="font-bold text-indigo-600">0 tiêu chí</span>
+                </p>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="floatingCancelBtn"
+                        onclick="cancelEditModeFromBar()"
+                        class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors flex items-center gap-2">
+                    <i class="ri-close-line"></i> Hủy
+                </button>
+                <button id="floatingSaveBtn"
+                        onclick="openConfirmDialogFromBar()"
+                        class="px-6 py-2 text-sm font-bold bg-green-600 text-white rounded-xl hover:bg-green-700 shadow-md transition-colors flex items-center gap-2">
+                    <i class="ri-save-3-line"></i> Lưu thay đổi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
+    // ========================
+    // STATE
+    // ========================
+    let currentEditRoundId = null;
+    let currentTabContent = null;
+
+    // ========================
+    // TAB SWITCHING
+    // ========================
     function switchTab(roundNum) {
-        // Toggle Buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('text-indigo-600', 'border-b-2', 'border-indigo-600');
             btn.classList.add('text-gray-500');
@@ -198,35 +415,454 @@
         activeBtn.classList.remove('text-gray-500');
         activeBtn.classList.add('text-indigo-600', 'border-b-2', 'border-indigo-600');
 
-        // Toggle Contents
         document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
         document.getElementById('content-' + roundNum).classList.remove('hidden');
     }
 
-    function toggleDropdown(roundNum) {
-        const dropdown = document.getElementById('dropdown-' + roundNum);
-        const allDropdowns = document.querySelectorAll('.dropdown-menu');
-        
-        // Close others
-        allDropdowns.forEach(d => {
-            if (d.id !== 'dropdown-' + roundNum) d.classList.add('hidden');
+    // ========================
+    // ENTER EDIT MODE
+    // ========================
+    function enterEditMode(btn) {
+        const tabContent = btn.closest('.tab-content');
+        _activateEditMode(tabContent);
+    }
+
+    function enterEditModeByRoundId(roundId) {
+        const tabContent = document.querySelector(`.tab-content[data-round-id="${roundId}"]`);
+        if (tabContent) _activateEditMode(tabContent);
+    }
+
+    function _activateEditMode(tabContent) {
+        const isRubric = tabContent.dataset.isRubric === 'true';
+
+        // Parse serialized checklist data
+        const editBtn = tabContent.querySelector('[data-checklist]');
+        let checklistData = null;
+        if (editBtn) {
+            try {
+                const raw = editBtn.getAttribute('data-checklist');
+                checklistData = JSON.parse(raw);
+            } catch (e) { console.warn('Parse error', e); }
+        }
+
+        // Toggle UI
+        tabContent.querySelector('.view-panel').classList.add('hidden');
+        tabContent.querySelector('.edit-panel').classList.remove('hidden');
+        tabContent.querySelector('.view-actions').classList.add('hidden');
+        tabContent.querySelector('.edit-actions').classList.remove('hidden');
+
+        currentEditRoundId = parseInt(tabContent.dataset.roundId);
+        currentTabContent = tabContent;
+
+        renderEditor(tabContent, checklistData, isRubric);
+        showFloatingBar(tabContent);
+    }
+
+    function cancelEditMode(btn) {
+        const tabContent = btn.closest('.tab-content');
+        tabContent.querySelector('.view-panel').classList.remove('hidden');
+        tabContent.querySelector('.edit-panel').classList.add('hidden');
+        tabContent.querySelector('.view-actions').classList.remove('hidden');
+        tabContent.querySelector('.edit-actions').classList.add('hidden');
+        currentEditRoundId = null;
+        currentTabContent = null;
+        hideFloatingBar();
+    }
+
+    // ========================
+    // EDITOR RENDER
+    // ========================
+    function renderEditor(tabContent, checklistData, isRubric) {
+        const container = tabContent.querySelector('.editor-items-container');
+        container.innerHTML = '';
+
+        const items = checklistData?.items || [];
+        const sections = groupBy(items, i => i.section || 'General');
+
+        Object.keys(sections).sort().forEach(secName => {
+            const sectionEl = createSectionElement(secName, isRubric);
+            container.appendChild(sectionEl);
+            const listContainer = sectionEl.querySelector('.items-list');
+            sections[secName].sort((a, b) => a.orderIndex - b.orderIndex).forEach(item => {
+                listContainer.appendChild(createItemElement(item, isRubric));
+            });
         });
 
-        dropdown.classList.toggle('hidden');
+        // Trigger auto-resize for all initially rendered textareas
+        setTimeout(() => {
+            container.querySelectorAll('textarea').forEach(autoResize);
+        }, 50);
     }
 
-    // Close dropdowns on outside click
-    window.addEventListener('click', function(e) {
-        if (!e.target.closest('.dropdown-container')) {
-            document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.add('hidden'));
+    function renderViewMode(tabContent, checklistData, isRubric) {
+        const container = tabContent.querySelector('.view-panel');
+        const items = checklistData?.items || [];
+
+        if (items.length === 0) {
+            container.innerHTML = `
+                <div class="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-12 flex flex-col items-center text-center">
+                    <div class="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center text-orange-500 mb-4">
+                        <i class="ri-error-warning-line text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-800 mb-2">Chưa có nội dung cho vòng review này</h3>
+                    <p class="text-gray-500 max-w-sm mb-6">Vui lòng cấu hình bộ tiêu chí đánh giá để Reviewer có thể bắt đầu chấm bài.</p>
+                    <button onclick="enterEditModeByRoundId(${checklistData.reviewRoundID})"
+                            class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-bold transition-all">
+                        + Thiết lập ngay
+                    </button>
+                </div>`;
+            return;
         }
-    });
 
-    function openCopyModal() {
-        document.getElementById('copyModal').classList.remove('hidden');
-        document.getElementById('copyModal').classList.add('flex');
+        let html = '';
+        if (isRubric) {
+            html += `
+                <div class="bg-indigo-900 text-white rounded-xl p-5 mb-6 shadow-sm">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-xs font-bold">Excellent: 8-10</span></div>
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-500"></span><span class="text-xs font-bold">Good: 6-8</span></div>
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-yellow-400"></span><span class="text-xs font-bold">Acceptable: 4-6</span></div>
+                        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-xs font-bold">Fail: 0-4</span></div>
+                    </div>
+                </div>`;
+
+            const sections = groupBy(items, i => i.section || 'General');
+            Object.keys(sections).sort().forEach(secName => {
+                html += `
+                    <div class="mb-6">
+                        <h3 class="text-xs font-black text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
+                            <i class="ri-bookmark-3-line"></i> ${escapeHtml(secName)}
+                            <span class="h-px bg-indigo-100 flex-grow"></span>
+                        </h3>
+                        <div class="grid gap-4">`;
+                sections[secName].sort((a, b) => a.orderIndex - b.orderIndex).forEach(item => {
+                    html += `
+                        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                            <div class="p-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[10px] font-bold text-gray-400">${escapeHtml(item.itemCode || '')}</span>
+                                    <h4 class="font-bold text-gray-700">${escapeHtml(item.itemName || '')}</h4>
+                                </div>
+                                <button onclick="toggleRubric('${item.itemID}')" class="text-xs text-indigo-600 font-bold hover:underline">Chi tiết Rubric</button>
+                            </div>
+                            <div class="p-4">
+                                <p class="text-sm text-gray-600 leading-relaxed mb-3">${escapeHtml(item.itemContent || '')}</p>
+                                <div id="rubric-${item.itemID}" class="hidden grid grid-cols-1 md:grid-cols-4 gap-2 animate-fadeIn">`;
+                    ["Excellent", "Good", "Acceptable", "Fail"].forEach(level => {
+                        const rb = item.rubrics?.find(r => r.gradeLevel === level);
+                        html += `
+                            <div class="p-2 rounded bg-gray-50 border border-gray-100 italic text-[10px] text-gray-500">
+                                <div class="font-bold uppercase text-gray-400 mb-1">${level}</div>
+                                ${escapeHtml(rb?.description || '')}
+                            </div>`;
+                    });
+                    html += `</div></div></div>`;
+                });
+                html += `</div></div>`;
+            });
+        } else {
+            html += `<div class="space-y-4">`;
+            const sections = groupBy(items, i => i.section || 'General');
+            Object.keys(sections).sort().forEach(secName => {
+                html += `
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <div class="p-4 bg-gray-50/50 flex justify-between items-center">
+                            <h3 class="font-bold text-gray-700">${escapeHtml(secName)}</h3>
+                            <span class="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold">${sections[secName].length} TIÊU CHÍ</span>
+                        </div>
+                        <div class="divide-y border-t border-gray-50">`;
+                sections[secName].sort((a, b) => a.orderIndex - b.orderIndex).forEach(item => {
+                    html += `
+                        <div class="p-4 flex gap-4 items-start">
+                            <div class="text-[10px] font-mono font-bold text-gray-300 pt-1">${escapeHtml(item.itemCode || '')}</div>
+                            <p class="text-sm text-gray-600 flex-grow leading-relaxed">${escapeHtml(item.itemContent || '')}</p>
+                            <div class="flex gap-1 pt-1 opacity-40">
+                                <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">Y</span>
+                                <span class="w-5 h-5 rounded border bg-gray-50 flex items-center justify-center text-[9px] font-bold text-gray-400">N</span>
+                            </div>
+                        </div>`;
+                });
+                html += `</div></div>`;
+            });
+            html += `</div>`;
+        }
+        container.innerHTML = html;
     }
 
+    const groupBy = (array, keyFn) => array.reduce((acc, item) => {
+        const key = keyFn(item);
+        (acc[key] = acc[key] || []).push(item);
+        return acc;
+    }, {});
+
+    const escapeHtml = (str) => {
+        if (!str) return '';
+        return str.replace(/[&<>"']/g, m => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+    };
+
+    function autoResize(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        el.style.height = (el.scrollHeight) + 'px';
+    }
+
+    function createSectionElement(secName, isRubric) {
+        const div = document.createElement('div');
+        div.className = 'section-group bg-white rounded-2xl p-5 border border-gray-100 shadow-sm';
+        const listClass = isRubric ? 'space-y-2' : 'border rounded-xl overflow-hidden divide-y divide-gray-50';
+        const safeSecName = secName.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        div.innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-base font-black text-gray-700 flex items-center gap-2">
+                    <span class="px-2 py-0.5 bg-indigo-100 rounded text-xs font-bold text-indigo-500">#</span>
+                    ${secName}
+                </h3>
+                <div class="flex gap-2">
+                    <button data-sec="${safeSecName}" data-rubric="${isRubric}" onclick="addItemToSection(this)"
+                            class="text-sm font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                        <i class="ri-add-line"></i> Thêm item
+                    </button>
+                    <button onclick="removeSection(this)" class="text-red-400 hover:text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium border border-transparent hover:border-red-200" title="Xóa section này">
+                        <i class="ri-delete-bin-line"></i> Xóa Section
+                    </button>
+                </div>
+            </div>
+            <div class="items-list ${listClass}" data-section="${secName}"></div>
+        `;
+        return div;
+    }
+
+    function createItemElement(item, isRubric) {
+        const templateId = isRubric ? 'rubricItemTemplate' : 'yesNoItemTemplate';
+        const template = document.getElementById(templateId);
+        const clone = template.content.cloneNode(true);
+        const root = clone.querySelector('div');
+
+        root.dataset.itemId = item.itemId ?? item.itemID ?? 0;
+        root.querySelector('.item-code').value = item.itemCode || '';
+        root.querySelector('.item-content').value = item.itemContent || '';
+
+        if (isRubric) {
+            root.querySelector('.item-name').value = item.itemName || '';
+            const rubrics = item.rubrics || [];
+            root.querySelector('.rubric-excellent').value = rubrics.find(r => r.gradeLevel === 'Excellent')?.description || '';
+            root.querySelector('.rubric-good').value       = rubrics.find(r => r.gradeLevel === 'Good')?.description || '';
+            root.querySelector('.rubric-acceptable').value = rubrics.find(r => r.gradeLevel === 'Acceptable')?.description || '';
+            root.querySelector('.rubric-fail').value       = rubrics.find(r => r.gradeLevel === 'Fail')?.description || '';
+        }
+
+        // Auto-resize textareas after content is set
+        setTimeout(() => {
+            root.querySelectorAll('textarea').forEach(autoResize);
+        }, 0);
+
+        return root;
+    }
+
+    function addItemToSection(btn) {
+        const secName = btn.dataset.sec;
+        const isRubric = btn.dataset.rubric === 'true';
+        const tabContent = btn.closest('.tab-content');
+        const listContainer = tabContent.querySelector(`.items-list[data-section="${secName}"]`);
+        const el = createItemElement({ itemId: 0, itemCode: '', itemContent: '', itemName: '', section: secName, orderIndex: 999, rubrics: [] }, isRubric);
+        listContainer.appendChild(el);
+        el.querySelector('.item-code').focus();
+        updateFloatingCount(tabContent);
+    }
+
+    function addSection(btn) {
+        const editPanel = btn.closest('.edit-panel');
+        const tabContent = btn.closest('.tab-content');
+        const isRubric = tabContent.dataset.isRubric === 'true';
+        const code = editPanel.querySelector('.new-section-code').value.trim();
+        const name = editPanel.querySelector('.new-section-name').value.trim();
+        if (!name) { showToast('Vui lòng nhập tên Section.', 'warning'); return; }
+
+        const secName = code ? `${code} - ${name}` : name;
+        const container = editPanel.querySelector('.editor-items-container');
+        const sectionEl = createSectionElement(secName, isRubric);
+        container.appendChild(sectionEl);
+
+        // Auto-add one empty item
+        const listContainer = sectionEl.querySelector('.items-list');
+        listContainer.appendChild(createItemElement({ itemId: 0, itemCode: '', itemContent: '', itemName: '', section: secName, orderIndex: 1, rubrics: [] }, isRubric));
+
+        editPanel.querySelector('.new-section-code').value = '';
+        editPanel.querySelector('.new-section-name').value = '';
+        updateFloatingCount(tabContent);
+        sectionEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function removeSection(btn) { 
+        if (!confirm('Bạn có chắc muốn xóa toàn bộ SECTION này cùng tất cả các tiêu chí bên trong không?')) return;
+        const tabContent = btn.closest('.tab-content');
+        btn.closest('.section-group').remove(); 
+        updateFloatingCount(tabContent);
+    }
+    function removeItem(btn) { 
+        const tabContent = btn.closest('.tab-content');
+        btn.closest('.item-row, .item-card').remove(); 
+        updateFloatingCount(tabContent);
+    }
+    function toggleRubric(itemId) { document.getElementById('rubric-' + itemId)?.classList.toggle('hidden'); }
+
+    // ========================
+    // CONFIRM DIALOG
+    // ========================
+    function openConfirmDialog(btn) {
+        const tabContent = btn.closest('.tab-content');
+        currentEditRoundId = parseInt(btn.dataset.roundId);
+        currentTabContent = tabContent;
+
+        const itemCount = tabContent.querySelectorAll('.item-row, .item-card').length;
+        document.getElementById('confirmDialogDesc').textContent =
+            `Bạn có chắc muốn lưu ${itemCount} tiêu chí cho checklist này không?`;
+
+        const dialog = document.getElementById('confirmDialog');
+        dialog.classList.remove('hidden');
+        dialog.classList.add('flex');
+    }
+
+    function closeConfirmDialog() {
+        const dialog = document.getElementById('confirmDialog');
+        dialog.classList.add('hidden');
+        dialog.classList.remove('flex');
+    }
+
+    // ========================
+    // SAVE
+    // ========================
+    async function executeSave() {
+        closeConfirmDialog();
+
+        const saveBtn = document.getElementById('confirmSaveBtn');
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = '<i class="ri-loader-4-line animate-spin"></i> Đang lưu...';
+
+        const tabContent = currentTabContent;
+        const isRubric = tabContent.dataset.isRubric === 'true';
+        const data = { reviewRoundID: currentEditRoundId, title: 'Review Checklist', description: null, items: [] };
+
+        let order = 1;
+        tabContent.querySelectorAll('.section-group').forEach(group => {
+            const secName = group.querySelector('.items-list')?.dataset.section || '';
+            group.querySelectorAll('.item-row, .item-card').forEach(el => {
+                const item = {
+                    itemID: parseInt(el.dataset.itemId) || 0,
+                    itemCode: el.querySelector('.item-code').value.trim(),
+                    itemContent: el.querySelector('.item-content').value.trim(),
+                    itemType: isRubric ? 'Rubric' : 'YesNo',
+                    section: secName,
+                    orderIndex: order++,
+                    rubrics: []
+                };
+                if (isRubric) {
+                    item.itemName = el.querySelector('.item-name')?.value.trim() || '';
+                    item.rubrics = [
+                        { gradeLevel: 'Excellent',  description: el.querySelector('.rubric-excellent')?.value.trim() || '' },
+                        { gradeLevel: 'Good',       description: el.querySelector('.rubric-good')?.value.trim() || ''       },
+                        { gradeLevel: 'Acceptable', description: el.querySelector('.rubric-acceptable')?.value.trim() || '' },
+                        { gradeLevel: 'Fail',       description: el.querySelector('.rubric-fail')?.value.trim() || ''       }
+                    ];
+                }
+                data.items.push(item);
+            });
+        });
+
+        if (data.items.length === 0) {
+            showToast('Vui lòng thêm ít nhất một tiêu chí trước khi lưu.', 'warning');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="ri-save-3-line"></i> Lưu thay đổi';
+            return;
+        }
+
+        try {
+            const res = await fetch('/HOD/SaveChecklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            if (result.success) {
+                showToast('Checklist đã được lưu thành công! 🎉', 'success');
+                
+                // Fetch fresh data from server (to get new IDs)
+                try {
+                    const freshRes = await fetch(`/HOD/GetChecklistJson/${currentEditRoundId}`);
+                    const freshData = await freshRes.json();
+                    
+                    // Update data-checklist attribute for future edits
+                    const editBtn = tabContent.querySelector('.view-actions [data-checklist]');
+                    if (editBtn) {
+                        editBtn.setAttribute('data-checklist', JSON.stringify(freshData));
+                    }
+                    
+                    // Update header title if it exists
+                    const titleEl = tabContent.querySelector('.bg-white h2');
+                    if (titleEl) titleEl.textContent = freshData.title || `Review ${freshData.reviewRoundID} Checklist`;
+
+                    // Render View mode with new data
+                    renderViewMode(tabContent, freshData, isRubric);
+                    
+                    // Exit edit mode (hides editor & floating bar)
+                    cancelEditMode(tabContent.querySelector('.edit-actions button'));
+                } catch (err) {
+                    console.error('Error refreshing data:', err);
+                    location.reload(); // Fallback to reload if refresh fails
+                }
+            } else {
+                showToast(result.message || 'Đã có lỗi xảy ra khi lưu.', 'error');
+            }
+        } catch (err) {
+            showToast('Lỗi kết nối. Vui lòng thử lại.', 'error');
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="ri-save-3-line"></i> Lưu thay đổi';
+        }
+    }
+
+    // ========================
+    // TOAST
+    // ========================
+    function showToast(message, type = 'info', duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const styles = {
+            success: { bg: 'bg-green-600 border-green-700', icon: 'ri-checkbox-circle-fill' },
+            error:   { bg: 'bg-red-600 border-red-700',     icon: 'ri-close-circle-fill'    },
+            warning: { bg: 'bg-amber-500 border-amber-600',  icon: 'ri-error-warning-fill'   },
+            info:    { bg: 'bg-indigo-600 border-indigo-700',icon: 'ri-information-fill'      }
+        };
+        const s = styles[type] || styles.info;
+
+        const toast = document.createElement('div');
+        toast.className = `pointer-events-auto flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-2xl border ${s.bg} text-white min-w-[280px] max-w-sm toast-enter`;
+        toast.innerHTML = `
+            <i class="${s.icon} text-xl flex-shrink-0"></i>
+            <p class="text-sm font-medium flex-grow">${message}</p>
+            <button onclick="this.closest('div').remove()" class="text-white/70 hover:text-white ml-2 flex-shrink-0">
+                <i class="ri-close-line"></i>
+            </button>
+        `;
+        container.appendChild(toast);
+        requestAnimationFrame(() => { requestAnimationFrame(() => toast.classList.add('toast-show')); });
+        setTimeout(() => {
+            toast.classList.remove('toast-show');
+            toast.classList.add('toast-leave');
+            setTimeout(() => toast.remove(), 400);
+        }, duration);
+    }
+
+    // ========================
+    // COPY MODAL
+    // ========================
+    function openCopyModal() {
+        document.getElementById('copyModal').classList.replace('hidden', 'flex') ||
+        document.getElementById('copyModal').classList.add('flex');
+        document.getElementById('copyModal').classList.remove('hidden');
+    }
     function closeCopyModal() {
         document.getElementById('copyModal').classList.add('hidden');
         document.getElementById('copyModal').classList.remove('flex');
@@ -235,50 +871,70 @@
     async function executeCopy() {
         const fromSemesterId = parseInt(document.getElementById('sourceSemester').value);
         const roundNums = Array.from(document.querySelectorAll('input[name="roundNum"]:checked')).map(cb => parseInt(cb.value));
-        
-        if (roundNums.length === 0) {
-            alert('Vui lòng chọn ít nhất một vòng review.');
-            return;
-        }
+        if (roundNums.length === 0) { showToast('Vui lòng chọn ít nhất một vòng review.', 'warning'); return; }
 
-        const data = {
-            fromSemesterId: fromSemesterId,
-            toSemesterId: @(activeSemester?.SemesterID ?? 0),
-            roundNumbers: roundNums
-        };
-
+        const data = { fromSemesterId, toSemesterId: @(activeSemester?.SemesterID ?? 0), roundNumbers: roundNums };
         try {
-            const response = await fetch('/HOD/CopyChecklists', {
+            const res = await fetch('/HOD/CopyChecklists', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
-            const result = await response.json();
+            const result = await res.json();
             if (result.success) {
-                location.reload();
+                closeCopyModal();
+                showToast('Copy checklist thành công!', 'success');
+                setTimeout(() => location.reload(), 1600);
             } else {
-                alert(result.message);
+                showToast(result.message, 'error');
             }
         } catch (err) {
-            alert('Đã có lỗi xảy ra.');
+            showToast('Đã có lỗi xảy ra.', 'error');
         }
     }
+    // ========================
+    // FLOATING ACTION BAR
+    // ========================
+    function showFloatingBar(tabContent) {
+        const bar = document.getElementById('floatingActionBar');
+        bar.classList.remove('hidden');
+        requestAnimationFrame(() => bar.classList.remove('translate-y-full'));
+        updateFloatingCount(tabContent);
+    }
+
+    function hideFloatingBar() {
+        const bar = document.getElementById('floatingActionBar');
+        bar.classList.add('translate-y-full');
+        setTimeout(() => bar.classList.add('hidden'), 300);
+    }
+
+    function updateFloatingCount(tabContent) {
+        const count = (tabContent || currentTabContent)?.querySelectorAll('.item-row, .item-card').length || 0;
+        document.getElementById('floatingItemCount').textContent = count + ' tiêu chí';
+    }
+
+    function cancelEditModeFromBar() {
+        const cancelBtn = currentTabContent?.querySelector('.edit-actions button:first-child');
+        if (cancelBtn) cancelBtn.click();
+    }
+
+    function openConfirmDialogFromBar() {
+        const saveBtn = currentTabContent?.querySelector('.edit-actions button:last-child');
+        if (saveBtn) saveBtn.click();
+    }
+
 </script>
 
 <style>
-    .animate-fadeIn {
-        animation: fadeIn 0.4s ease-out;
-    }
-    .animate-scaleIn {
-        animation: scaleIn 0.2s ease-out;
-        transform-origin: top right;
-    }
-    @@keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    @@keyframes scaleIn {
-        from { opacity: 0; transform: scale(0.95); }
-        to { opacity: 1; transform: scale(1); }
-    }
+    .animate-fadeIn  { animation: fadeIn 0.35s ease-out; }
+    .animate-scaleIn { animation: scaleIn 0.2s ease-out; }
+    @@keyframes fadeIn  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @@keyframes scaleIn { from { opacity: 0; transform: scale(0.93);      } to { opacity: 1; transform: scale(1);      } }
+
+    .toast-enter { opacity: 0; transform: translateX(60px); transition: opacity 0.3s ease, transform 0.3s ease; }
+    .toast-show  { opacity: 1; transform: translateX(0); }
+    .toast-leave { opacity: 0; transform: translateX(60px); transition: opacity 0.35s ease, transform 0.35s ease; }
+
+    .cursor-move { cursor: grab; }
+    .cursor-move:active { cursor: grabbing; }
 </style>

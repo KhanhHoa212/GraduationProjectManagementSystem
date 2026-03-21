@@ -1,0 +1,100 @@
+@using GPMS.Web.ViewModels.Lecturer
+@model LecturerScheduleViewModel
+@{
+    ViewData["Title"] = "Schedule";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Detailed Schedule</h1>
+        <p class="page-subtitle text-muted mb-0">Review sessions, mentoring meetings, online Meet links, and offline room information.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-3"><div class="card-panel text-center"><div class="fw-bold fs-3">@Model.TodaySessionsCount</div><div class="text-muted" style="font-size:12px;">TODAY</div></div></div>
+    <div class="col-md-3"><div class="card-panel text-center"><div class="fw-bold fs-3">@Model.OnlineSessionsCount</div><div class="text-muted" style="font-size:12px;">ONLINE</div></div></div>
+    <div class="col-md-3"><div class="card-panel text-center"><div class="fw-bold fs-3">@Model.OfflineSessionsCount</div><div class="text-muted" style="font-size:12px;">OFFLINE</div></div></div>
+    <div class="col-md-3"><div class="card-panel text-center"><div class="fw-bold fs-3">@Model.UpcomingDeadlinesCount</div><div class="text-muted" style="font-size:12px;">DEADLINES</div></div></div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card-panel">
+            <h2 class="section-title mb-4">Sessions</h2>
+            @if (!Model.Entries.Any())
+            {
+                <p class="text-muted mb-0">No schedule entries available.</p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var entry in Model.Entries)
+                    {
+                        <div class="border rounded p-4">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 mb-3">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <span class="badge bg-light text-body border">@entry.RoleLabel</span>
+                                        <span class="badge @(entry.IsOnline ? "bg-info-subtle text-info" : "bg-secondary-subtle text-secondary")">@(entry.IsOnline ? "Online" : "Offline")</span>
+                                    </div>
+                                    <h3 class="mb-1" style="font-size:16px;">@entry.GroupName - @entry.ProjectName</h3>
+                                    <div class="text-muted" style="font-size:12px;">Round @entry.RoundNumber (@entry.RoundType)</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-semibold">@entry.ScheduledAt.ToString("MMM dd, yyyy")</div>
+                                    <div class="text-muted" style="font-size:12px;">@entry.ScheduledAt.ToString("HH:mm")</div>
+                                </div>
+                            </div>
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-7">
+                                    <div class="text-muted mb-1" style="font-size:11px; text-transform:uppercase;">Location / Link</div>
+                                    <div class="fw-medium">@entry.Location</div>
+                                    @if (!string.IsNullOrWhiteSpace(entry.Guidance))
+                                    {
+                                        <div class="text-muted mt-2" style="font-size:12px;">@entry.Guidance</div>
+                                    }
+                                </div>
+                                <div class="col-md-5 d-flex justify-content-md-end gap-2 flex-wrap">
+                                    @if (!string.IsNullOrWhiteSpace(entry.MeetLink))
+                                    {
+                                        <a href="@entry.MeetLink" target="_blank" class="btn btn-primary btn-sm">Open Meet</a>
+                                    }
+                                    <a href="@entry.ActionUrl" class="btn btn-outline-secondary btn-sm">Open related page</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-panel">
+            <h2 class="section-title mb-4">Upcoming Deadlines</h2>
+            @if (!Model.Deadlines.Any())
+            {
+                <p class="text-muted mb-0">No upcoming deadlines.</p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var deadline in Model.Deadlines)
+                    {
+                        var badgeClass = deadline.Severity == "danger" ? "bg-danger-subtle text-danger" : deadline.Severity == "warning" ? "bg-warning-subtle text-warning" : "bg-light text-body border";
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div class="fw-semibold">@deadline.Title</div>
+                                <span class="badge @badgeClass">@deadline.DueAt.ToString("MMM dd")</span>
+                            </div>
+                            <div class="text-muted mb-3" style="font-size:12px;">@deadline.Description</div>
+                            <a href="@deadline.ActionUrl" class="btn btn-sm btn-outline-secondary">@deadline.ActionText</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

@@ -403,18 +403,20 @@ public class HODController : Controller
         return View(checklist);
     }
 
-    public async Task<IActionResult> EditChecklist(int id)
+    // Redirect legacy EditChecklist route → Checklists (inline edit now)
+    public IActionResult EditChecklist(int id) => RedirectToAction(nameof(Checklists));
+
+    [HttpGet]
+    public async Task<IActionResult> GetChecklistJson(int id)
     {
         var checklist = await _checklistService.GetByRoundIdAsync(id);
         if (checklist == null)
         {
-            // Create a shell if it doesn't exist
             var round = await _reviewRoundService.GetReviewRoundByIdAsync(id);
             if (round == null) return NotFound();
-            checklist = new ChecklistDto { ReviewRoundID = id, ReviewRoundTitle = $"Round {round.RoundNumber}" };
+            checklist = new ChecklistDto { ReviewRoundID = id, ReviewRoundTitle = $"Round {round.RoundNumber}", Items = new List<ChecklistItemDto>() };
         }
-
-        return View(checklist);
+        return Json(checklist);
     }
 
     [HttpPost]

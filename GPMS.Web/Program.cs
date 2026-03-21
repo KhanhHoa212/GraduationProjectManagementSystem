@@ -32,6 +32,7 @@ builder.Services.AddScoped<IReviewerAssignmentRepository, ReviewerAssignmentRepo
 builder.Services.AddScoped<ISubmissionRepository, SubmissionRepository>();
 builder.Services.AddScoped<IEvaluationRepository, EvaluationRepository>();
 builder.Services.AddScoped<IFeedbackRepository, FeedbackRepository>();
+builder.Services.AddScoped<IMentorRoundReviewRepository, MentorRoundReviewRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
 builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
@@ -41,8 +42,10 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
+builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
+builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
 
@@ -83,6 +86,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddScoped<IFileService, CloudinaryService>();
+
+// Register Background Services
+builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
 
 var app = builder.Build();
 

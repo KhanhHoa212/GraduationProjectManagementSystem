@@ -28,8 +28,8 @@ public class EvaluationSeeder : IDataSeeder
         var assignments = await _context.ReviewerAssignments
             .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == semesterId)
             .Include(ra => ra.ReviewRound)
-            .ThenInclude(rr => rr.ReviewChecklist)
-            .ThenInclude(rc => rc.ChecklistItems)
+            .ThenInclude(rr => rr!.ReviewChecklist)
+            .ThenInclude(rc => rc!.ChecklistItems)
             .ToListAsync();
 
         var random = new Random();

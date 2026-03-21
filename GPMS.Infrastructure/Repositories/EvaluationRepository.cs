@@ -14,10 +14,24 @@ public class EvaluationRepository : IEvaluationRepository
     public EvaluationRepository(GpmsDbContext context) => _context = context;
 
     public async Task<Evaluation?> GetByIdAsync(int evaluationId) => await _context.Evaluations.FindAsync(evaluationId);
-    public async Task<Evaluation?> GetByReviewerAndGroupAsync(int roundId, string reviewerId, int groupId) => 
-        await _context.Evaluations.FirstOrDefaultAsync(e => e.ReviewRoundID == roundId && e.ReviewerID == reviewerId && e.GroupID == groupId);
-    
-    public async Task<IEnumerable<Evaluation>> GetByGroupWithDetailsAsync(int groupId) => 
+    public async Task<Evaluation?> GetByReviewerAndGroupAsync(int roundId, string reviewerId, int groupId) =>
+        await _context.Evaluations
+            .Include(e => e.EvaluationDetails)
+                .ThenInclude(d => d.Item)
+            .Include(e => e.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+                        .ThenInclude(ps => ps.Lecturer)
+            .Include(e => e.Group)
+                .ThenInclude(g => g.GroupMembers)
+                    .ThenInclude(m => m.User)
+            .Include(e => e.ReviewRound)
+                .ThenInclude(rr => rr.ReviewChecklist)
+                    .ThenInclude(rc => rc!.ChecklistItems)
+            .Include(e => e.Feedback)
+                .ThenInclude(f => f!.FeedbackApproval)
+            .FirstOrDefaultAsync(e => e.ReviewRoundID == roundId && e.ReviewerID == reviewerId && e.GroupID == groupId);
+    public async Task<IEnumerable<Evaluation>> GetByGroupWithDetailsAsync(int groupId) =>
         await _context.Evaluations
             .Include(e => e.ReviewRound)
             .Include(e => e.Reviewer)
@@ -27,6 +41,17 @@ public class EvaluationRepository : IEvaluationRepository
             .Where(e => e.GroupID == groupId)
             .ToListAsync();
 
+    public async Task<IEnumerable<Evaluation>> GetSubmittedByReviewerAsync(string reviewerId) =>
+        await _context.Evaluations
+            .Include(e => e.Group)
+                .ThenInclude(g => g.Project)
+            .Include(e => e.ReviewRound)
+            .Include(e => e.Feedback)
+                .ThenInclude(f => f!.FeedbackApproval)
+            .Where(e => e.ReviewerID == reviewerId && e.SubmittedAt != null)
+            .OrderByDescending(e => e.SubmittedAt)
+            .ToListAsync();
     public async Task AddAsync(Evaluation evaluation) => await _context.Evaluations.AddAsync(evaluation);
+    public void Update(Evaluation evaluation) => _context.Evaluations.Update(evaluation);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }
