@@ -8,6 +8,7 @@ public class ProjectDto
     public int ProjectID { get; set; }
     public string ProjectCode { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public string? MajorName { get; set; }
     public int SemesterID { get; set; }
     public string? SemesterCode { get; set; }
@@ -17,7 +18,6 @@ public class ProjectDto
     // Supervisor info (main supervisor only)
     public string? SupervisorID { get; set; }
     public string? SupervisorName { get; set; }
-
     // Group count
     public int GroupCount { get; set; }
 

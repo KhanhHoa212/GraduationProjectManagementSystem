@@ -1,15 +1,79 @@
 @model GPMS.Web.ViewModels.StudentDashboardViewModel
 
 @{
-    ViewData["Title"] = "Student Dashboard";
+    ViewData["Title"] = "My Project";
     Layout = "_StudentLayout";
 }
 
 <div class="max-w-6xl mx-auto space-y-6">
     <!-- Header Section -->
     <div>
-        <h1 class="text-[28px] font-bold text-[#0f172a] tracking-tight">Student Dashboard</h1>
-        <p class="text-[#64748b] text-[15px] mt-1">Welcome back to your project workspace. Here is what's happening today.</p>
+        <h1 class="text-[28px] font-bold text-[#0f172a] tracking-tight">My Project</h1>
+        <p class="text-[#64748b] text-[15px] mt-1">Manage your graduation project, track progress, and collaborate with your team.</p>
+    </div>
+
+    <!-- Review Progress Section -->
+    <div class="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden mb-8">
+        <div class="flex justify-between items-center p-5 border-b border-[#e2e8f0]">
+            <h2 class="text-[16px] font-bold text-[#0f172a]">Review Progress</h2>
+            
+            @{
+                var ongoingRound = Model.ReviewRounds?.OrderBy(r => r.RoundNumber).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                var currentPhaseText = ongoingRound != null ? $"Round {ongoingRound.RoundNumber}" : 
+                                      (Model.ReviewRounds != null && Model.ReviewRounds.All(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed) && Model.ReviewRounds.Any() ? "Completed All Rounds" : "Not Started");
+            }
+            <span class="text-[13px] font-medium text-[#64748b]">Current Phase: @currentPhaseText</span>
+        </div>
+        
+        <div class="p-8">
+            <div class="flex items-center justify-between max-w-4xl mx-auto relative">
+                
+                @if (Model.ReviewRounds == null || !Model.ReviewRounds.Any())
+                {
+                    <div class="w-full text-center py-4">
+                        <p class="text-slate-500 font-medium">Progress timeline will be available once review rounds are scheduled.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Connector Line Background -->
+                    <div class="absolute top-6 left-[10%] right-[10%] h-[2px] bg-slate-100 -z-10"></div>
+
+                    foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                    {
+                        var isCompleted = round.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                        var isOngoing = round.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                        
+                        <div class="flex flex-col items-center flex-1 z-10">
+                            @if (isCompleted)
+                            {
+                                <div class="size-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm mb-3">
+                                    <span class="material-symbols-outlined text-[20px] font-bold">check</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-[#0f172a]">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-emerald-600 font-medium">Completed</p>
+                            }
+                            else if (isOngoing)
+                            {
+                                <div class="size-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md ring-4 ring-blue-50 mb-3">
+                                    <span class="material-symbols-outlined text-[20px]">assignment</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-blue-600">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-blue-600 font-medium">In Progress</p>
+                            }
+                            else
+                            {
+                                <div class="size-12 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center mb-3">
+                                    <span class="material-symbols-outlined text-[20px]">lock</span>
+                                </div>
+                                <p class="text-[14px] font-bold text-slate-500">Round @round.RoundNumber</p>
+                                <p class="text-[13px] text-slate-400 font-medium">Upcoming</p>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        </div>
     </div>
 
     <!-- Project Header & Team Section -->
@@ -56,6 +120,14 @@
                         }
                     </div>
                 </div>
+
+                @if (!string.IsNullOrEmpty(Model.Project.Description))
+                {
+                    <div class="mt-6 pt-6 border-t border-[#f1f5f9]">
+                        <h3 class="text-[13px] font-bold text-[#94a3b8] uppercase tracking-[0.1em] mb-3">Project Description</h3>
+                        <p class="text-[#475569] text-[15px] leading-relaxed">@Model.Project.Description</p>
+                    </div>
+                }
             </div>
 
             <!-- Team Members Grid -->
@@ -160,10 +232,19 @@
                                         }
                                     </td>
                                     <td class="py-4 px-5 text-right">
-                                        <a asp-action="Submissions" asp-controller="Student" asp-route-round="@item.RoundNumber"
-                                           class="inline-flex items-center px-4 py-2 text-[#475569] hover:text-[#2563eb] text-[13px] font-semibold transition-colors">
-                                            View
-                                        </a>
+                                        <div class="flex items-center justify-end gap-2">
+                                            @if (item.IsSubmitted)
+                                            {
+                                                <a href="@(item.FileUrl?.Replace("/upload/", "/upload/fl_attachment/"))" target="_blank"
+                                                   class="p-2 text-[#64748b] hover:text-[#2563eb] transition-colors" title="Download Submission">
+                                                    <span class="material-symbols-outlined text-[20px]">download</span>
+                                                </a>
+                                            }
+                                            <a asp-action="Submissions" asp-controller="Student" asp-route-round="@item.RoundNumber"
+                                               class="inline-flex items-center px-4 py-2 text-[#475569] hover:text-[#2563eb] text-[13px] font-semibold transition-colors">
+                                                View
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             }
@@ -210,66 +291,4 @@
         </div>
     </div>
     
-    <!-- Project Progress Section -->
-    <div class="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden mb-8">
-        <div class="flex justify-between items-center p-5 border-b border-[#e2e8f0]">
-            <h2 class="text-[16px] font-bold text-[#0f172a]">Project Progress</h2>
-            
-            @{
-                var ongoingRound = Model.ReviewRounds?.OrderBy(r => r.RoundNumber).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
-                var currentPhaseText = ongoingRound != null ? $"Round {ongoingRound.RoundNumber}" : 
-                                      (Model.ReviewRounds != null && Model.ReviewRounds.All(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed) && Model.ReviewRounds.Any() ? "Completed All Rounds" : "Not Started");
-            }
-            <span class="text-[13px] font-medium text-[#64748b]">Current Phase: @currentPhaseText</span>
-        </div>
-        
-        <div class="p-8">
-            <div class="flex items-center justify-between max-w-4xl mx-auto relative">
-                
-                @if (Model.ReviewRounds == null || !Model.ReviewRounds.Any())
-                {
-                    <div class="w-full text-center py-4">
-                        <p class="text-slate-500 font-medium">Progress timeline will be available once review rounds are scheduled.</p>
-                    </div>
-                }
-                else
-                {
-                    <!-- Connector Line Background -->
-                    <div class="absolute top-6 left-[10%] right-[10%] h-[2px] bg-slate-100 -z-10"></div>
-
-                    foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
-                    {
-                        var isCompleted = round.Status == GPMS.Domain.Enums.RoundStatus.Completed;
-                        var isOngoing = round.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
-                        
-                        <div class="flex flex-col items-center flex-1 z-10">
-                            @if (isCompleted)
-                            {
-                                <div class="size-12 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm mb-3">
-                                    <span class="material-symbols-outlined text-[20px] font-bold">check</span>
-                                </div>
-                                <p class="text-[14px] font-bold text-[#0f172a]">Round @round.RoundNumber</p>
-                                <p class="text-[13px] text-emerald-600 font-medium">Completed</p>
-                            }
-                            else if (isOngoing)
-                            {
-                                <div class="size-12 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md ring-4 ring-blue-50 mb-3">
-                                    <span class="material-symbols-outlined text-[20px]">assignment</span>
-                                </div>
-                                <p class="text-[14px] font-bold text-blue-600">Round @round.RoundNumber</p>
-                                <p class="text-[13px] text-blue-600 font-medium">In Progress</p>
-                            }
-                            else
-                            {
-                                <div class="size-12 rounded-full bg-white border-2 border-slate-200 text-slate-400 flex items-center justify-center mb-3">
-                                    <span class="material-symbols-outlined text-[20px]">lock</span>
-                                </div>
-                                <p class="text-[14px] font-bold text-slate-500">Round @round.RoundNumber</p>
-                                <p class="text-[13px] text-slate-400 font-medium">Upcoming</p>
-                            }
-                        </div>
-                    }
-                }
-            </div>
-        </div>
 </div>

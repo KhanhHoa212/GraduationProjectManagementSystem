@@ -1,0 +1,155 @@
+@model GPMS.Web.ViewModels.NotificationsViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    Layout = "_StudentLayout";
+}
+
+<div class="max-w-4xl mx-auto py-8 px-4">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-[#1e3a5f] dark:text-white tracking-tight">Notifications</h1>
+            <p class="text-sm text-dark-500 mt-1 font-medium">
+                @Model.AllNotifications.Count() notifications · <span class="text-orange-500 font-bold">@Model.UnreadCount unread</span>
+            </p>
+        </div>
+        <form asp-action="MarkAllAsRead" method="post">
+            <button type="submit" class="flex items-center gap-2 text-sm font-bold text-[#1e3a5f] hover:text-primary-600 transition-colors group">
+                <span class="material-symbols-outlined text-xl group-hover:scale-110 transition-transform">done_all</span>
+                Mark all as read
+            </button>
+        </form>
+    </div>
+
+    <!-- Tabs Filtering -->
+    <div class="flex items-center gap-6 border-b border-dark-100 dark:border-dark-700 mb-8 overflow-x-auto no-scrollbar pb-0.5">
+        <a asp-action="Notifications" asp-route-type="All" 
+           class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "All" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
+            All (@Model.AllNotifications.Count())
+        </a>
+        <a asp-action="Notifications" asp-route-type="Unread" 
+           class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "Unread" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
+            Unread (@Model.UnreadCount)
+        </a>
+        <a asp-action="Notifications" asp-route-type="Deadline" 
+           class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "Deadline" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
+            Deadline
+        </a>
+        <a asp-action="Notifications" asp-route-type="Feedback" 
+           class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "Feedback" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
+            Feedback
+        </a>
+    </div>
+
+    <!-- Notification List -->
+    <div class="space-y-10">
+        @foreach (var group in Model.GroupedNotifications)
+        {
+            <div class="notification-group">
+                <h3 class="text-[11px] font-black text-dark-400 uppercase tracking-[0.2em] mb-4">@group.Key</h3>
+                <div class="space-y-3">
+                    @foreach (var notification in group.Value)
+                    {
+                        <div class="group relative flex items-start gap-5 p-5 rounded-2xl transition-all duration-300 border @(notification.IsRead ? "bg-white border-dark-100 hover:border-dark-200" : "bg-orange-50/40 border-orange-100/50 hover:bg-orange-50/60 shadow-sm")">
+                            <!-- Icon -->
+                            <div class="shrink-0 w-12 h-12 rounded-full flex items-center justify-center @GetIconBg(notification.Type)">
+                                <span class="material-symbols-outlined @GetIconColor(notification.Type) text-2xl font-bold">
+                                    @GetIconName(notification.Type)
+                                </span>
+                            </div>
+
+                            <!-- Content -->
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start gap-4">
+                                    <h4 class="text-[15px] font-bold text-[#1e3a5f] dark:text-white leading-tight">@notification.Title</h4>
+                                    @if (!notification.IsRead)
+                                    {
+                                        <div class="w-2.5 h-2.5 bg-orange-500 rounded-full shrink-0 mt-1.5 shadow-[0_0_8px_rgba(249,115,22,0.4)]"></div>
+                                    }
+                                </div>
+                                <p class="text-[13.5px] text-dark-500 mt-1.5 leading-relaxed font-medium">@notification.Content</p>
+                                
+                                <div class="mt-3 flex items-center justify-between gap-4">
+                                    <div class="flex items-center gap-4">
+                                        <a href="@GetActionLink(notification)" class="text-[13px] font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1.5 transition-colors group/link">
+                                            @GetActionText(notification)
+                                            <span class="material-symbols-outlined text-[18px] group-hover/link:translate-x-1 transition-transform">arrow_right_alt</span>
+                                        </a>
+                                        <span class="text-[11px] text-dark-300 font-bold uppercase tracking-wider">@notification.CreatedAt.ToString("HH:mm")</span>
+                                    </div>
+
+                                    <!-- Individual Toggle Button -->
+                                    <form asp-action="ToggleReadStatus" method="post" class="opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <input type="hidden" name="id" value="@notification.NotificationID" />
+                                        <input type="hidden" name="type" value="@Model.ActiveTab" />
+                                        <button type="submit" class="flex items-center justify-center w-8 h-8 rounded-full border border-dark-100 hover:bg-dark-50 text-dark-400 hover:text-[#1e3a5f] transition-all tooltip" title="@(notification.IsRead ? "Mark as unread" : "Mark as read")">
+                                            <span class="material-symbols-outlined text-[18px]">
+                                                @(notification.IsRead ? "radio_button_unchecked" : "check_circle")
+                                            </span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (!Model.GroupedNotifications.Any())
+        {
+            <div class="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-dashed border-dark-200">
+                <div class="w-20 h-20 bg-dark-50 rounded-full flex items-center justify-center mb-4">
+                    <span class="material-symbols-outlined text-4xl text-dark-200">notifications_off</span>
+                </div>
+                <h3 class="text-lg font-bold text-[#1e3a5f]">No notifications yet</h3>
+                <p class="text-sm text-dark-400 mt-1">We'll notify you when there's something new.</p>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetIconName(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "alarm",
+        GPMS.Domain.Enums.NotificationType.Feedback => "notifications",
+        GPMS.Domain.Enums.NotificationType.Schedule => "calendar_month",
+        GPMS.Domain.Enums.NotificationType.Review => "rate_review",
+        _ => "info"
+    };
+
+    string GetIconBg(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "bg-red-50",
+        GPMS.Domain.Enums.NotificationType.Feedback => "bg-orange-50",
+        GPMS.Domain.Enums.NotificationType.Schedule => "bg-blue-50",
+        GPMS.Domain.Enums.NotificationType.Review => "bg-purple-50",
+        _ => "bg-gray-50"
+    };
+
+    string GetIconColor(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "text-red-500",
+        GPMS.Domain.Enums.NotificationType.Feedback => "text-orange-500",
+        GPMS.Domain.Enums.NotificationType.Schedule => "text-blue-500",
+        GPMS.Domain.Enums.NotificationType.Review => "text-purple-500",
+        _ => "text-gray-500"
+    };
+
+    string GetActionText(GPMS.Application.DTOs.NotificationDto n) => n.Type switch {
+        GPMS.Domain.Enums.NotificationType.Feedback => "View results",
+        GPMS.Domain.Enums.NotificationType.Deadline => "Submit now",
+        GPMS.Domain.Enums.NotificationType.Schedule => "View schedule",
+        _ => "Details"
+    };
+
+    string GetActionLink(GPMS.Application.DTOs.NotificationDto n) => n.Type switch {
+        GPMS.Domain.Enums.NotificationType.Feedback => Url.Action("Feedback", "Student", new { roundId = n.RelatedEntityID }) ?? "#",
+        GPMS.Domain.Enums.NotificationType.Deadline => Url.Action("Submissions", "Student") ?? "#",
+        GPMS.Domain.Enums.NotificationType.Schedule => Url.Action("Schedule", "Student") ?? "#",
+        _ => "#"
+    };
+}
+
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+</style>

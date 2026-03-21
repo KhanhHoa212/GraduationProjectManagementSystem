@@ -46,6 +46,8 @@ builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+
 
 // Register Infrastructure (including Seeders)
 builder.Services.AddInfrastructure(builder.Configuration);

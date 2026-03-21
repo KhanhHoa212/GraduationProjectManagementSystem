@@ -30,5 +30,29 @@ public class NotificationRepository : INotificationRepository
         var n = await _context.Notifications.FindAsync(notificationId);
         if (n != null) { n.IsRead = true; n.ReadAt = DateTime.UtcNow; }
     }
+
+    public async Task MarkAllAsReadAsync(string userId)
+    {
+        var notifications = await _context.Notifications
+            .Where(n => n.RecipientID == userId && !n.IsRead)
+            .ToListAsync();
+            
+        foreach (var n in notifications)
+        {
+            n.IsRead = true;
+            n.ReadAt = DateTime.UtcNow;
+        }
+    }
+    
+    public async Task ToggleReadStatusAsync(int notificationId)
+    {
+        var n = await _context.Notifications.FindAsync(notificationId);
+        if (n != null)
+        {
+            n.IsRead = !n.IsRead;
+            n.ReadAt = n.IsRead ? DateTime.UtcNow : null;
+        }
+    }
+
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }

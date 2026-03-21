@@ -11,7 +11,7 @@
             </div>
             <div class="flex flex-col">
                 <span class="font-black text-white text-lg tracking-wide leading-none">GPMS</span>
-                <span class="text-primary-300 text-[9px] uppercase tracking-[0.15em] font-bold mt-1 leading-none">STUDENT PORTAL</span>
+                <span class="text-primary-300 text-[9px] uppercase tracking-[0.15em] font-bold mt-1 leading-none">MY WORKSPACE</span>
             </div>
         </a>
     </div>
@@ -19,19 +19,11 @@
     <!-- Navigation Menu -->
     <nav class="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
         
-        <span class="px-3 text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2 block">Portal</span>
+        <span class="px-3 text-[10px] font-bold text-dark-400 uppercase tracking-widest mb-2 block">My Workspace</span>
 
         <a asp-controller="Student" asp-action="Index" 
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "Index" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
-            <span class="material-symbols-outlined @(currentAction == "Index" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">dashboard</span>
-            <span class="text-sm font-semibold tracking-wide">Dashboard</span>
-        </a>
-
-        <span class="px-3 text-[10px] font-bold text-dark-400 uppercase tracking-widest mt-6 mb-2 block">My Workspace</span>
-
-        <a href="#" 
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "MyProject" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
-            <span class="material-symbols-outlined @(currentAction == "MyProject" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">folder_open</span>
+            <span class="material-symbols-outlined @(currentAction == "Index" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">folder_open</span>
             <span class="text-sm font-semibold tracking-wide">My Project</span>
         </a>
 
@@ -47,23 +39,16 @@
             <span class="text-sm font-semibold tracking-wide">Feedback</span>
         </a>
 
-        <a href="#" 
+        <a asp-action="Schedule" asp-controller="Student" 
            class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "Schedule" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
             <span class="material-symbols-outlined @(currentAction == "Schedule" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">event</span>
-            <span class="text-sm font-semibold tracking-wide">Schedule</span>
+            <span class="text-sm font-semibold tracking-wide">Project Defense Schedule</span>
         </a>
 
-        <span class="px-3 text-[10px] font-bold text-dark-400 uppercase tracking-widest mt-6 mb-2 block">Support</span>
 
-        <a href="#" 
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "Resources" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
-            <span class="material-symbols-outlined @(currentAction == "Resources" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">menu_book</span>
-            <span class="text-sm font-semibold tracking-wide">Resources</span>
-        </a>
-
-        <a href="#" 
-           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "Notification" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
-            <span class="material-symbols-outlined @(currentAction == "Notification" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">notifications</span>
+        <a asp-action="Notifications" asp-controller="Student" 
+           class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group @(currentAction == "Notifications" ? "bg-[#F37021] text-white shadow-md" : "text-slate-300 hover:bg-dark-700/60 hover:text-white")">
+            <span class="material-symbols-outlined @(currentAction == "Notifications" ? "filled" : "") group-hover:scale-110 transition-transform duration-300">notifications</span>
             <span class="text-sm font-semibold tracking-wide">Notifications</span>
         </a>
     </nav>

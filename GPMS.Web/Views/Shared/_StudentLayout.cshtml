@@ -7,7 +7,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@(ViewData["Title"] ?? ViewBag.Title) - GPMS Student Portal</title>
+    <title>@(ViewData["Title"] ?? ViewBag.Title) - GPMS Student Workspace</title>
     
     <!-- Google Fonts - Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -146,15 +146,15 @@
         <!-- Main Content -->
         <div class="flex-1 flex flex-col overflow-hidden w-full relative">
             
-            <!-- Header -->
-            @await Html.PartialAsync("_StudentHeader")
+            @* <!-- Header -->
+            @await Html.PartialAsync("_StudentHeader") *@
             
             <!-- Page Content -->
             <main class="flex-1 overflow-auto bg-[#F5F7FA] dark:bg-dark-900 custom-main-scroll">
                 <div class="w-full min-h-full p-4 lg:p-6 pb-20 lg:pb-24 text-dark-900 dark:text-dark-100">
                     @RenderBody()
                 </div>
-            </main>            
+            </main>
             <div id="chatbot-container">
                 <iframe id="chatbot-iframe"
                         src="https://gpms-bot-supporter-fe.onrender.com/"
@@ -191,16 +191,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const sidebar = document.getElementById('main-sidebar');
-            const overlay = document.getElementById('sidebar-overlay');
-            const mobileBtn = document.getElementById('mobile-menu-btn');
-            const loadingOverlay = document.getElementById('loading-overlay');
-
-            if(mobileBtn) {
-                mobileBtn.addEventListener('click', () => {
-                    sidebar.classList.remove('-translate-x-full');
-                    overlay.classList.remove('hidden');
+        // Chatbot messaging
         window.addEventListener("message", function (event) {
             if (!event.data || typeof event.data !== "object") return;
             const iframe = document.getElementById("chatbot-iframe");
@@ -215,27 +206,29 @@
                 iframe.style.borderRadius = "50%";
             }
         }, false);
-        document.addEventListener('DOMContentLoaded', function () {
-            const overlay = document.getElementById('loading-overlay');
-            const sidebar = document.getElementById('student-sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('main-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const loadingOverlay = document.getElementById('loading-overlay');
 
             // Mobile sidebar toggle
-            if (sidebarToggle) {
-                sidebarToggle.addEventListener('click', function () {
-                    sidebar.classList.toggle('open');
-                    sidebarOverlay.classList.toggle('hidden');
+            if (mobileBtn) {
+                mobileBtn.addEventListener('click', () => {
+                    sidebar.classList.remove('-translate-x-full');
+                    overlay.classList.remove('hidden');
                 });
             }
 
-            if(overlay) {
+            if (overlay) {
                 overlay.addEventListener('click', () => {
                     sidebar.classList.add('-translate-x-full');
                     overlay.classList.add('hidden');
                 });
             }
 
+            // Form submission loading
             document.querySelectorAll('form').forEach(form => {
                 form.addEventListener('submit', function () {
                     if (this.checkValidity()) {
@@ -244,6 +237,7 @@
                 });
             });
 
+            // Link click loading
             document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not([data-no-load])').forEach(link => {
                 link.addEventListener('click', function (e) {
                     const href = this.getAttribute('href');

@@ -1,3 +1,4 @@
+using System;
 using AutoMapper;
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Repositories;
@@ -529,6 +530,65 @@ public class ProjectService : IProjectService
             result.OverallFeedback = selectedEval.OverallComment;
         }
 
+        return result;
+    }
+
+    public async Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId)
+    {
+        var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
+        if (project == null) return Enumerable.Empty<ProjectDefenseScheduleDto>();
+ 
+        var group = project.ProjectGroups.FirstOrDefault(g => g.GroupMembers.Any(m => m.UserID == studentId));
+        if (group == null) return Enumerable.Empty<ProjectDefenseScheduleDto>();
+ 
+        var sessions = await _groupRepository.GetGroupSchedulesAsync(group.GroupID);
+        var result = new List<ProjectDefenseScheduleDto>();
+ 
+        foreach (var session in sessions)
+        {
+            var dto = new ProjectDefenseScheduleDto
+            {
+                RoundNumber = session.ReviewRound.RoundNumber,
+                RoundName = session.ReviewRound.RoundNumber == 0 ? "Final Defense" : $"Round {session.ReviewRound.RoundNumber}",
+                ScheduledAt = session.ScheduledAt,
+                RoomName = session.Room?.RoomCode,
+                Building = session.Room?.Building,
+                Notes = session.Notes,
+                MeetLink = session.MeetLink,
+                LocationDetails = !string.IsNullOrEmpty(session.MeetLink) ? "Online" : "Campus Room"
+            };
+ 
+            // Get committee members
+            var reviewers = session.Group.ReviewerAssignments
+                .Where(ra => ra.ReviewRoundID == session.ReviewRoundID)
+                .Select(ra => new CommitteeMemberDto
+                {
+                    FullName = ra.Reviewer.FullName,
+                    UserID = ra.Reviewer.UserID,
+                    Role = "Reviewer",
+                    AvatarUrl = ra.Reviewer.AvatarUrl
+                }).ToList();
+ 
+            if (reviewers.Any()) reviewers[0].Role = "Chairperson";
+            dto.CommitteeMembers.AddRange(reviewers);
+ 
+            var supervisor = session.Group.Project.ProjectSupervisors
+                .FirstOrDefault(ps => ps.Role == ProjectRole.Main);
+            
+            if (supervisor != null)
+            {
+                dto.CommitteeMembers.Add(new CommitteeMemberDto
+                {
+                    FullName = supervisor.Lecturer.FullName,
+                    UserID = supervisor.Lecturer.UserID,
+                    Role = "Supervisor",
+                    AvatarUrl = supervisor.Lecturer.AvatarUrl
+                });
+            }
+ 
+            result.Add(dto);
+        }
+ 
         return result;
     }
 
