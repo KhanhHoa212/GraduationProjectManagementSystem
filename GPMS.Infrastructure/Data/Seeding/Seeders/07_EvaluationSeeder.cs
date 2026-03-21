@@ -54,7 +54,6 @@ public class EvaluationSeeder : IDataSeeder
             await _context.SaveChangesAsync();
 
             foreach (var item in checklist.ChecklistItems)
-
             {
                 string assessment = "Yes"; // Default for YesNo
                 if (item.ItemType == "Rubric")

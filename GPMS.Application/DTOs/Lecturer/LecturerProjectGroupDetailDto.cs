@@ -51,7 +51,6 @@ public class MilestoneDetailDto
     public string? SubmittedByName { get; set; }
     public string? ReviewerName { get; set; }
     public string? FeedbackStatus { get; set; }
-
     public DateTime? ScheduledAt { get; set; }
     public string? Location { get; set; }
     public string? MeetLink { get; set; }
