@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<comments xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><authors><author/></authors><commentList><comment ref="C8" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0w
+    (2025-05-29 11:45:33)
+Reviewer dựa vào danh sách các tiêu chí để thực hiện việc đánh giá các khía cạnh của đồ án tốt nghiệp. Sau đó cho ý kiến tổng quát về đề tài</t></r></text></comment><comment ref="D8" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlSjA
+    (2025-02-10 03:19:30)
+khác với 2 lần review trước, lần review này, mentor và reviewer đánh giá theo 4 cấp 
+FAIL
+ACCEPTABLE 
+GOOD 
+EXCELLENT
+khi chọn mỗi mức, cột grade sẽ load ra đánh giá tương ứng từ rubric, Mentor/RV có thể cân nhắc rubric này để đưa ra đánh giá đối với nhóm sinh viên</t></r></text></comment><comment ref="G8" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABTGlMZG8
+Admin    (2024-08-08 02:13:44)
+Give your comments if any
+------
+ID#AAABkcGjH1k
+Nguyen Xuan Long (FE FPTU DN)    (2025-05-29 11:46:12)
+_Được đánh dấu là đã được giải quyết_
+------
+ID#AAABkcGjH1o
+Nguyen Xuan Long (FE FPTU DN)    (2025-05-29 11:46:15)
+_Được mở lại_</t></r></text></comment><comment ref="C9" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH00
+    (2025-05-29 11:45:33)
+check xem sản phẩm phần mềm đã “cover” hết kế hoạch đặt ra trong capstone project register chưa? nếu cover đúng thì không có gì để thảo luận thêm, nhưng nếu khác biệt thì xem thử các nội dung cam kết ở title đề tài có được đảm bảo không (về công nghệ và tính năng then chốt)</t></r></text></comment><comment ref="E9" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABdnQlSi8
+Long Nguyen Xuan    (2025-02-10 03:19:30)
+khi mentor/review chọn Grade Level thì cột Grade này sẽ tự link theo</t></r></text></comment><comment ref="C10" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1g
+    (2025-05-29 11:45:33)
+yếu tố “deploy in production” cần được quan tâm, 
+sản phẩm phần mềm cần được "deploy" thực sự, web thì phải lên server, ra internet, app thì tối thiểu phải lên môi trường beta như deploy gate, hoặc tốt hơn hết có thể public được lên Google Play, Apple Store, không chỉ là code và chạy bằng cách nhấn F5 trên laptop sinh viên. 
+
+còn real user / real stakeholder thì thực sự rất khó, nếu sinh viên làm được thì là điểm cọng lớn</t></r></text></comment><comment ref="C11" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1Q
+    (2025-05-29 11:45:33)
+check xem sản phẩm có áp dụng các công nghệ mới lạ như mô tả không ?</t></r></text></comment><comment ref="C12" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH04
+    (2025-05-29 11:45:33)
+kiểm tra xem UI của dự án có được chăm chút không? hay nó bừa bãi, sơ sài?</t></r></text></comment><comment ref="C13" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0c
+    (2025-05-29 11:45:33)
+đa phần các dự án mới thì đều áp dụng các công nghệ này cả, nhưng chú ý check thử team có sử dụng công nghệ cũ lạc hậu như java 6, .net 4.6,  không?</t></r></text></comment><comment ref="C14" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0k
+    (2025-05-29 11:45:33)
+check xem team có tổ chức source code chuyên nghiệp và “sạch đẹp”, các design pattern phù hợp, tuân thủ các tiêu chuẩn như SOLID không. 
+check xem team có sử dụng config file để tập trung các ENV VAR không? hay hard code?</t></r></text></comment><comment ref="C15" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1A
+    (2025-05-29 11:45:33)
+check sản phẩm của nhóm có sử dụng các thuật toán phù hợp ko, có implement những thuật toán kém như O(n^2) không? 
+có xây dựng thuật toán gì mới không</t></r></text></comment><comment ref="C16" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1c
+    (2025-05-29 11:45:33)
+check sinh viên có dùng git để quản lý và cộng tác trong quá trình coding không? 
+sinh viên có áp dụng được CICD vào dự án không?</t></r></text></comment><comment ref="C17" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0g
+    (2025-05-29 11:45:33)
+check trong report 3 xem các hạng mục có được mô tả rõ ràng đầy đủ không?</t></r></text></comment><comment ref="C18" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1I
+    (2025-05-29 11:45:33)
+check trong report 4, các hạng mục được yêu cầu có được mô tả rõ ràng đầy đủ hay không?</t></r></text></comment><comment ref="C19" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH1U
+chú ý check 2 tài liệu    (2025-05-29 11:45:33)
+phần ERD &amp; Screen Design: ở report 3. 
+phần class design, db: ở report 4</t></r></text></comment><comment ref="C20" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0s
+    (2025-05-29 11:45:33)
+check 3 file tài liệu report 5, chú ý nội dung, tránh tình huống nhóm chép test case bừa về mà quên sửa lại</t></r></text></comment><comment ref="C21" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0o
+    (2025-05-29 11:45:33)
+check trong report 6 xem thử sinh viên viết hướng dẫn có phù hợp chưa, chú ý có 2 phần, 
+hướng dẫn technical guy cài đặt 
+hướng dẫn end user sử dụng hệ thống</t></r></text></comment><comment ref="C22" authorId="0" shapeId="0"><text><r><rPr><sz val="10"/><color rgb="FF000000"/><rFont val="Arial"/><scheme val="minor"/></rPr><t>======
+ID#AAABkcGjH0Y
+longnx    (2025-05-29 11:45:33)
+các hạng mục liên quan tới AI, sẽ define sau</t></r></text></comment></commentList><extLst><ext uri="GoogleSheetsCustomDataVersion2" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><go:sheetsCustomData r:id="rId1" roundtripDataSignature="AMtx7mj+zDE6JQDGhVJamH4G/4PgadCwVQ==" xmlns:go="http://customooxmlschemas.google.com/"/></ext></extLst></comments>

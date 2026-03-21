@@ -22,7 +22,7 @@ public class SemesterRepository : ISemesterRepository
         await _context.Semesters.Include(s => s.Projects).ToListAsync();
 
     public async Task AddAsync(Semester semester) => await _context.Semesters.AddAsync(semester);
-    public async Task UpdateAsync(Semester semester) => _context.Semesters.Update(semester);
+    public Task UpdateAsync(Semester semester) { _context.Semesters.Update(semester); return Task.CompletedTask; }
     
     public async Task DeleteAsync(int semesterId)
     {

@@ -1,21 +1,29 @@
+using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
 using GPMS.Web.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 
 namespace GPMS.Web.Controllers;
 
 [Authorize(Roles = "Student")]
 public class StudentController : Controller
 {
+    private readonly IFeedbackRepository _feedbackRepo;
     private readonly IProjectService _projectService;
     private readonly IReviewRoundService _reviewRoundService;
 
-    public StudentController(IProjectService projectService, IReviewRoundService reviewRoundService)
+    public StudentController(
+        IFeedbackRepository feedbackRepo,
+        IProjectService projectService,
+        IReviewRoundService reviewRoundService)
     {
+        _feedbackRepo = feedbackRepo;
         _projectService = projectService;
         _reviewRoundService = reviewRoundService;
     }
@@ -47,6 +55,39 @@ public class StudentController : Controller
         return View(viewModel);
     }
 
+    public async Task<IActionResult> FeedbackHistory()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+            return RedirectToAction("Login", "Auth");
+
+        var feedbacks = await _feedbackRepo.GetVisibleFeedbacksForStudentAsync(userId);
+
+        var vm = new StudentFeedbackHistoryViewModel
+        {
+            Feedbacks = feedbacks.Select(f => new StudentFeedbackDetailsViewModel
+            {
+                FeedbackID = f.FeedbackID,
+                ProjectName = f.Evaluation.Group.Project?.ProjectName ?? "N/A",
+                RoundName = $"Round {f.Evaluation.ReviewRound.RoundNumber}",
+                Content = f.Content,
+                SubmittedAt = f.Evaluation.SubmittedAt ?? f.CreatedAt,
+                ReviewerName = "Hidden Reviewer",
+                Items = f.Evaluation.EvaluationDetails.Select(d => new EvaluationItemViewModel
+                {
+                    ItemID = d.ItemID,
+                    ItemCode = d.Item.ItemCode,
+                    ItemContent = d.Item.ItemContent,
+                    Assessment = d.Assessment,
+                    Comment = d.Comment
+                }).ToList()
+
+            }).ToList()
+        };
+
+        return View(vm);
+    }
+
     public async Task<IActionResult> Submissions(int? round = null)
     {
         var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -63,7 +104,7 @@ public class StudentController : Controller
         {
             var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(project.SemesterID);
             reviewRounds = rounds;
-            
+
             if (round.HasValue && rounds.Any(r => r.RoundNumber == round.Value))
             {
                 activeRound = round.Value;
@@ -73,7 +114,7 @@ public class StudentController : Controller
                 var current = rounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
                            ?? rounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Planned)
                            ?? rounds.LastOrDefault();
-                
+
                 activeRound = current?.RoundNumber ?? 0;
             }
         }
@@ -119,7 +160,8 @@ public class StudentController : Controller
     public async Task<IActionResult> Feedback(int? roundId)
     {
         var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Auth");
+        if (string.IsNullOrEmpty(studentId))
+            return RedirectToAction("Login", "Auth");
 
         var feedbackData = await _projectService.GetStudentFeedbackAsync(studentId, roundId);
         var viewModel = new StudentFeedbackViewModel { Feedback = feedbackData };

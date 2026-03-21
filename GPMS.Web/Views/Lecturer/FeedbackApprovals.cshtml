@@ -1,0 +1,89 @@
+@using GPMS.Web.ViewModels.Lecturer
+@using GPMS.Domain.Enums
+@model FeedbackApprovalsViewModel
+@{
+    ViewData["Title"] = "Feedback Approvals";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Feedback Approvals</h1>
+        <p class="page-subtitle text-muted mb-0">Review reviewer feedback, see when it will auto-release, and open the detailed approval screen.</p>
+    </div>
+</div>
+
+<div class="card-panel border p-0 overflow-hidden shadow-sm">
+    <div class="p-4 border-bottom">
+        <h2 class="section-title mb-0">Pending Approvals</h2>
+    </div>
+
+    @if (!Model.Approvals.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <span class="material-symbols-outlined fs-1 d-block mb-2">inbox</span>
+            <p>No pending feedback approvals. All caught up!</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle">
+                <thead>
+                    <tr class="bg-light">
+                        <th class="px-4">GROUP</th>
+                        <th>REVIEWER</th>
+                        <th>ROUND</th>
+                        <th>SUBMITTED</th>
+                        <th>AUTO-RELEASE</th>
+                        <th>STATUS</th>
+                        <th class="text-end pe-4">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Approvals)
+                    {
+                        <tr>
+                            <td class="px-4">
+                                <div class="fw-bold text-body" style="font-size:13px;">@item.GroupName</div>
+                                <div class="text-muted" style="font-size:11px;">@item.ProjectName</div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(item.ReviewerName)&background=E5E7EB&color=374151"
+                                         class="rounded-circle" width="28" height="28" />
+                                    <span style="font-size:13px;">@item.ReviewerName</span>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-light text-body border fw-medium">Round @item.RoundNumber</span></td>
+                            <td><span class="text-body" style="font-size:13px;">@item.SubmittedAt.ToString("MMM dd, HH:mm")</span></td>
+                            <td>
+                                @if (item.AutoReleaseAt.HasValue)
+                                {
+                                    <span class="text-body" style="font-size:13px;">@item.AutoReleaseAt.Value.ToString("MMM dd, HH:mm")</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size:13px;">After approval</span>
+                                }
+                            </td>
+                            <td>
+                                @{
+                                    var badgeClass = item.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning"
+                                        : item.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success"
+                                        : "bg-danger-subtle text-danger";
+                                }
+                                <span class="badge @badgeClass">@item.ApprovalStatusLabel</span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-primary">
+                                    Review
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

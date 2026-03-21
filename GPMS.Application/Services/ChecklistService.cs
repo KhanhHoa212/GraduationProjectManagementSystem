@@ -211,7 +211,17 @@ public class ChecklistService : IChecklistService
             ReviewRoundTitle = $"Round {c.ReviewRound?.RoundNumber}",
             Title = c.Title,
             Description = c.Description,
-            Items = c.ChecklistItems.Select(i => new ChecklistItemDto { ItemID = i.ItemID }).ToList()
+            Items = c.ChecklistItems.Select(i => new ChecklistItemDto 
+            { 
+                ItemID = i.ItemID,
+                ItemCode = i.ItemCode,
+                ItemContent = i.ItemContent,
+                ItemName = i.ItemName,
+                ItemType = i.ItemType,
+                Section = i.Section,
+                OrderIndex = i.OrderIndex
+            }).ToList()
+
         });
     }
 }

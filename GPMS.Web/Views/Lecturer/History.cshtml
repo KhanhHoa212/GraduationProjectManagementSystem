@@ -1,0 +1,81 @@
+@using GPMS.Web.ViewModels.Lecturer
+@model LecturerHistoryViewModel
+@{
+    ViewData["Title"] = "History";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header mb-4">
+    <h1 class="page-title">Feedback and Review History</h1>
+    <p class="page-subtitle text-muted mb-0">Track reviews you submitted as a reviewer and feedback decisions you made as a mentor.</p>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card-panel h-100">
+            <h2 class="section-title mb-4">Review History</h2>
+            @if (!Model.ReviewHistory.Any())
+            {
+                <p class="text-muted mb-0">No submitted reviews yet.</p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var item in Model.ReviewHistory)
+                    {
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <div class="fw-semibold">@item.GroupName - @item.ProjectName</div>
+                                    <div class="text-muted" style="font-size:12px;">Round @item.RoundNumber (@item.RoundType)</div>
+                                </div>
+                                <span class="badge bg-light text-body border">@item.ApprovalStatus</span>
+                            </div>
+                            <div class="text-muted mb-2" style="font-size:12px;">Submitted: @item.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</div>
+
+                            <div class="text-muted" style="font-size:12px;">@item.FeedbackPreview</div>
+                            <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = item.GroupID })" class="btn btn-sm btn-outline-secondary mt-2">Open group</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card-panel h-100">
+            <h2 class="section-title mb-4">Feedback Decision History</h2>
+            @if (!Model.FeedbackHistory.Any())
+            {
+                <p class="text-muted mb-0">No feedback decisions yet.</p>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-3">
+                    @foreach (var item in Model.FeedbackHistory)
+                    {
+                        var badgeClass = item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Approved ? "bg-success-subtle text-success"
+                            : item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Rejected ? "bg-danger-subtle text-danger"
+                            : "bg-warning-subtle text-warning";
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                                <div>
+                                    <div class="fw-semibold">@item.GroupName - @item.ProjectName</div>
+                                    <div class="text-muted" style="font-size:12px;">Reviewer: @item.ReviewerName - Round @item.RoundNumber</div>
+                                </div>
+                                <span class="badge @badgeClass">@item.ApprovalStatus</span>
+                            </div>
+                            <div class="text-muted mb-2" style="font-size:12px;">Updated: @item.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            <div class="text-muted mb-2" style="font-size:12px;">Visible to students: @(item.IsVisibleToStudent ? "Yes" : "Waiting auto release")</div>
+                            @if (!string.IsNullOrWhiteSpace(item.SupervisorComment))
+                            {
+                                <div class="text-muted" style="font-size:12px;">Supervisor note: @item.SupervisorComment</div>
+                            }
+                            <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-outline-secondary mt-2">Open feedback</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>

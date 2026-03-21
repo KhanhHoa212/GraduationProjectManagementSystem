@@ -10,6 +10,7 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         // Data Seeders
+        services.AddScoped<IDataSeeder, SchemaPatchSeeder>();
         services.AddScoped<IDataSeeder, UserSeeder>();
         services.AddScoped<IDataSeeder, ProjectSeeder>();
         services.AddScoped<IDataSeeder, GroupSeeder>();
@@ -18,6 +19,7 @@ public static class DependencyInjection
         services.AddScoped<IDataSeeder, SubmissionSeeder>();
         services.AddScoped<IDataSeeder, EvaluationSeeder>();
         services.AddScoped<IDataSeeder, NotificationSeeder>();
+        services.AddScoped<IDataSeeder, LecturerWorkflowTestSeeder>();
         services.AddScoped<DataSeederRunner>();
 
         return services;
