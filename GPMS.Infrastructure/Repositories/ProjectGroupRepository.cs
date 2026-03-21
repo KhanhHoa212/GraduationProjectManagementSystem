@@ -14,10 +14,72 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public ProjectGroupRepository(GpmsDbContext context) => _context = context;
 
     public async Task<ProjectGroup?> GetByIdAsync(int groupId) =>
-        await _context.ProjectGroups.FindAsync(groupId);
+        await _context.ProjectGroups
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.Semester)
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(pg => pg.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(pg => pg.MentorRoundReviews)
+                .ThenInclude(mr => mr.ReviewRound)
+            .Include(pg => pg.MentorRoundReviews)
+                .ThenInclude(mr => mr.Supervisor)
+            .Include(pg => pg.ReviewerAssignments)
+                .ThenInclude(ra => ra.ReviewRound)
+            .Include(pg => pg.ReviewerAssignments)
+                .ThenInclude(ra => ra.Reviewer)
+            .Include(pg => pg.ReviewSessions)
+                .ThenInclude(rs => rs.ReviewRound)
+            .Include(pg => pg.ReviewSessions)
+                .ThenInclude(rs => rs.Room)
+            .Include(pg => pg.Submissions)
+                .ThenInclude(s => s.Requirement)
+            .Include(pg => pg.Submissions)
+                .ThenInclude(s => s.Submitter)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.ReviewRound)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Reviewer)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.EvaluationDetails)
+                    .ThenInclude(ed => ed.Item)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Feedback)
+                    .ThenInclude(f => f!.FeedbackApproval)
+            .FirstOrDefaultAsync(pg => pg.GroupID == groupId);
 
     public async Task<IEnumerable<ProjectGroup>> GetByProjectIdAsync(int projectId) =>
         await _context.ProjectGroups.Where(pg => pg.ProjectID == projectId).ToListAsync();
+
+    public async Task<IEnumerable<ProjectGroup>> GetBySupervisorAsync(string supervisorId) =>
+        await _context.ProjectGroups
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.Semester)
+            .Include(pg => pg.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(pg => pg.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(pg => pg.ReviewSessions)
+                .ThenInclude(rs => rs.ReviewRound)
+            .Include(pg => pg.ReviewSessions)
+                .ThenInclude(rs => rs.Room)
+            .Include(pg => pg.Submissions)
+                .ThenInclude(s => s.Requirement)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.ReviewRound)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Reviewer)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.EvaluationDetails)
+                    .ThenInclude(ed => ed.Item)
+            .Include(pg => pg.Evaluations)
+                .ThenInclude(e => e.Feedback)
+                    .ThenInclude(f => f!.FeedbackApproval)
+            .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .ToListAsync();
 
     public async Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId) =>
         await _context.ProjectGroups

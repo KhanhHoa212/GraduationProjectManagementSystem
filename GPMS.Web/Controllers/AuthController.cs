@@ -25,7 +25,7 @@ public class AuthController : Controller
         if (user.Roles.Contains("Admin") || user.Roles.Contains("HeadOfDept"))
             return RedirectToAction("Index", "Admin");
         if (user.Roles.Contains("Lecturer"))
-            return RedirectToAction("Index", "Teacher");
+            return RedirectToAction("Dashboard", "Lecturer");
         if (user.Roles.Contains("Student"))
             return RedirectToAction("Index", "Student");
         

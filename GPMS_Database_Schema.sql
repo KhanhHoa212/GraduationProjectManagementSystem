@@ -544,13 +544,20 @@ GO
 COMMIT;
 GO
 
--- add hashed password "123456"
+-- add hashed password "123456" for all accounts (bcrypt hash)
 TRUNCATE TABLE UserCredentials;
 INSERT INTO UserCredentials (UserID, AuthProvider, PasswordHash) VALUES 
 ('ADMIN001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'), 
-('GV001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
-('HOD001', 'Internal','$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
-('SE180001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
+('GV001',    'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('GV002',    'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('GV003',    'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('HOD001',   'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180001', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180002', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180003', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180004', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW'),
+('SE180005', 'Internal', '$2a$12$5rpNYY6iiwYuRGsm83m06.T77MdMmrgHgMHHZHmH9xE8sr5aGtNuW');
+
 GO
 
 

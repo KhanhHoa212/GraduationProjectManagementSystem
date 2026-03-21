@@ -1,0 +1,120 @@
+@using GPMS.Web.ViewModels.Lecturer
+@model MentoredProjectsViewModel
+@{
+    ViewData["Title"] = "My Projects";
+    Layout = "_LecturerLayout";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">My Projects</h1>
+        <p class="page-subtitle text-muted mb-0">All groups you are supervising, their next meeting, and current feedback state.</p>
+    </div>
+</div>
+
+<div class="card-panel border p-0 overflow-hidden shadow-sm">
+    <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h2 class="section-title mb-0">Mentored Groups</h2>
+        <div class="input-group" style="max-width: 280px;">
+            <span class="input-group-text bg-white border-end-0">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted)">search</span>
+            </span>
+            <input type="text" class="form-control border-start-0" id="groupSearch" placeholder="Search group or project...">
+        </div>
+    </div>
+
+    @if (!Model.Groups.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <span class="material-symbols-outlined fs-1 d-block mb-2">folder_off</span>
+            <p>No groups assigned to you this semester.</p>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table mb-0 align-middle" id="projectsTable">
+                <thead>
+                    <tr class="bg-light">
+                        <th class="px-4">GROUP</th>
+                        <th>PROJECT</th>
+                        <th>MEMBERS</th>
+                        <th>NEXT SESSION</th>
+                        <th>ROUND</th>
+                        <th>STATUS</th>
+                        <th class="text-end pe-4">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var g in Model.Groups)
+                    {
+                        <tr>
+                            <td class="px-4">
+                                <div class="fw-bold text-body" style="font-size:13px;">@g.GroupName</div>
+                            </td>
+                            <td>
+                                <div class="fw-medium" style="font-size:13px;">@g.ProjectName</div>
+                                <div class="text-muted" style="font-size:11px;">@g.ProjectCode - @g.Semester</div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+                                    @foreach (var name in g.MemberNames.Take(3))
+                                    {
+                                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(name)&background=E5E7EB&color=374151"
+                                             title="@name" width="24" height="24" class="rounded-circle border border-white" style="margin-left:-6px;" />
+                                    }
+                                    @if (g.MemberNames.Count > 3)
+                                    {
+                                        <span class="badge bg-light text-muted border ms-1">+@(g.MemberNames.Count - 3)</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                @if (g.NextSessionAt.HasValue)
+                                {
+                                    <div class="fw-medium" style="font-size:13px;">@g.NextSessionAt.Value.ToString("MMM dd, HH:mm")</div>
+                                    <div class="text-muted" style="font-size:11px;">@g.NextSessionLocation</div>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size:12px;">No meeting scheduled</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-body border fw-medium">@g.RoundType</span>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = g.Status.Contains("Awaiting") ? "bg-warning-subtle text-warning"
+                                        : g.Status.Contains("revision") ? "bg-danger-subtle text-danger"
+                                        : "bg-success-subtle text-success";
+                                }
+                                <span class="badge @statusClass">@g.Status</span>
+                                @if (g.PendingFeedbackCount > 0)
+                                {
+                                    <div class="text-muted mt-1" style="font-size:11px;">@g.PendingFeedbackCount pending approval</div>
+                                }
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = g.GroupID })" class="btn btn-sm btn-outline-secondary">
+                                    View Details
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.getElementById('groupSearch')?.addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#projectsTable tbody tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+    </script>
+}
