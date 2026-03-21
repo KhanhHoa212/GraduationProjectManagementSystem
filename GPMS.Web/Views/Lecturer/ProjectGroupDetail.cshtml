@@ -1,11 +1,11 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @using GPMS.Web.ViewModels.Lecturer
 @model ProjectGroupDetailViewModel
 @{
     ViewData["Title"] = Model.GroupName;
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
 
     var milestones = Model.Milestones.OrderBy(m => m.RoundNumber).ToList();
     var leader = Model.Members.FirstOrDefault(m => string.Equals(m.Role, "Leader", StringComparison.OrdinalIgnoreCase));

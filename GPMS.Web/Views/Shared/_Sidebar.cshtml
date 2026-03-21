@@ -1,0 +1,246 @@
+@{
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+    
+    // Helper function for active state
+    bool IsActive(string controller, string action) {
+        if (!currentController.Equals(controller, StringComparison.OrdinalIgnoreCase)) return false;
+        
+        // Special handling for HOD Projects
+        if (controller.Equals("HOD", StringComparison.OrdinalIgnoreCase) && action.Equals("Projects", StringComparison.OrdinalIgnoreCase)) {
+            return currentAction.Equals("Projects", StringComparison.OrdinalIgnoreCase) || 
+                   currentAction.Equals("CreateProject", StringComparison.OrdinalIgnoreCase) || 
+                   currentAction.Equals("ProjectDetails", StringComparison.OrdinalIgnoreCase);
+        }
+
+        // Special handling for HOD Review Rounds
+        if (controller.Equals("HOD", StringComparison.OrdinalIgnoreCase) && action.Equals("ReviewRounds", StringComparison.OrdinalIgnoreCase)) {
+            return currentAction.Equals("ReviewRounds", StringComparison.OrdinalIgnoreCase) || 
+                   currentAction.Equals("CreateReviewRound", StringComparison.OrdinalIgnoreCase) || 
+                   currentAction.Equals("EditReviewRound", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return currentAction.Equals(action, StringComparison.OrdinalIgnoreCase);
+    }
+
+    string GetActiveClasses(string controller, string action) {
+        return IsActive(controller, action) 
+            ? "border-[#f4741c] bg-[#f4741c]/10 text-[#f4741c] font-semibold" 
+            : "border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5";
+    }
+
+    string GetIconClasses(string controller, string action) {
+        return IsActive(controller, action) ? "filled" : "";
+    }
+}
+<!-- Sidebar Navigation -->
+<div class="flex flex-col h-full bg-[#1a2236] border-r border-white/5 transition-all duration-300 shadow-2xl">
+    <!-- Logo Section -->
+    <div class="px-6 py-6 border-b border-white/5 shrink-0">
+        <a href="~/" class="flex items-center gap-4 w-full group">
+            <div class="w-11 h-11 bg-[#f4741c] rounded-xl shadow-[0_0_20px_rgba(244,116,28,0.3)] flex items-center justify-center text-white group-hover:scale-105 transition-transform duration-300">
+                <span class="material-symbols-outlined text-[24px] font-bold">school</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="font-black text-white text-xl tracking-tight leading-none">GPMS</span>
+                <span class="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-bold mt-2 leading-none">
+                    @if (User.IsInRole("Admin")) { <text>ADMIN PORTAL</text> }
+                    else if (User.IsInRole("HeadOfDept")) { <text>HOD PORTAL</text> }
+                    else if (User.IsInRole("Lecturer")) { <text>LECTURER PANEL</text> }
+
+                    else { <text>MY WORKSPACE</text> }
+                </span>
+            </div>
+        </a>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="flex-1 px-0 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+        
+        @if (User.IsInRole("Admin")) {
+            <div class="px-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Overview</span>
+            </div>
+            <a asp-controller="Admin" asp-action="Dashboard" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Admin", "Dashboard")">
+                <span class="material-symbols-outlined @GetIconClasses("Admin", "Dashboard") group-hover:scale-110 transition-transform duration-300">dashboard</span>
+                <span class="text-[14px]">Dashboard</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Management</span>
+            </div>
+            <a asp-controller="Admin" asp-action="Index" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Admin", "Index")">
+                <span class="material-symbols-outlined @GetIconClasses("Admin", "Index") group-hover:scale-110 transition-transform duration-300">manage_accounts</span>
+                <span class="text-[14px]">User Management</span>
+            </a>
+            <a asp-controller="Admin" asp-action="SemesterIndex" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Admin", "SemesterIndex")">
+                <span class="material-symbols-outlined @GetIconClasses("Admin", "SemesterIndex") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
+                <span class="text-[14px]">Semester Settings</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform duration-300">account_tree</span>
+                <span class="text-[14px]">Projects</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform duration-300">domain</span>
+                <span class="text-[14px]">Faculty &amp; Majors</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">System</span>
+            </div>
+            <a asp-controller="Admin" asp-action="SystemLogs" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Admin", "SystemLogs")">
+                <span class="material-symbols-outlined @GetIconClasses("Admin", "SystemLogs") group-hover:scale-110 transition-transform duration-300">history</span>
+                <span class="text-[14px]">System Logs</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform duration-300">security</span>
+                <span class="text-[14px]">Backup &amp; Security</span>
+            </a>
+            <a href="#" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform duration-300">settings</span>
+                <span class="text-[14px]">Settings</span>
+            </a>
+        }
+        else if (User.IsInRole("HeadOfDept")) {
+            <div class="px-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Dashboard</span>
+            </div>
+            <a asp-controller="HOD" asp-action="Index" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Index")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "Index") group-hover:scale-110 transition-transform duration-300">dashboard</span>
+                <span class="text-[14px]">Dashboard</span>
+            </a>
+            <a asp-controller="HOD" asp-action="Projects" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Projects")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "Projects") group-hover:scale-110 transition-transform duration-300">folder</span>
+                <span class="text-[14px]">Projects</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Management</span>
+            </div>
+            <a asp-controller="HOD" asp-action="AssignSupervisor" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "AssignSupervisor")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "AssignSupervisor") group-hover:scale-110 transition-transform duration-300">person_search</span>
+                <span class="text-[14px]">Supervisor Assign</span>
+            </a>
+            <a asp-controller="HOD" asp-action="ReviewRounds" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "ReviewRounds")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "ReviewRounds") group-hover:scale-110 transition-transform duration-300">event_repeat</span>
+                <span class="text-[14px]">Review Rounds</span>
+            </a>
+            <a asp-controller="HOD" asp-action="Checklists" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Checklists")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "Checklists") group-hover:scale-110 transition-transform duration-300">task_alt</span>
+                <span class="text-[14px]">Checklists</span>
+            </a>
+            <a asp-controller="HOD" asp-action="AssignReviewer" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "AssignReviewer")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "AssignReviewer") group-hover:scale-110 transition-transform duration-300">assignment_ind</span>
+                <span class="text-[14px]">Reviewer Assign</span>
+            </a>
+            <a asp-controller="HOD" asp-action="DefenseSchedule" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "DefenseSchedule")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "DefenseSchedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
+                <span class="text-[14px]">Defense Schedule</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Monitoring</span>
+            </div>
+            <a asp-controller="HOD" asp-action="Progress" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Progress")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "Progress") group-hover:scale-110 transition-transform duration-300">trending_up</span>
+                <span class="text-[14px]">Progress</span>
+            </a>
+            <a asp-controller="HOD" asp-action="Reports" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Reports")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "Reports") group-hover:scale-110 transition-transform duration-300">analytics</span>
+                <span class="text-[14px]">Reports</span>
+            </a>
+        }
+        else if (User.IsInRole("Lecturer")) {
+            <div class="px-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mentor</span>
+            </div>
+            <a asp-controller="Lecturer" asp-action="Dashboard" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Dashboard")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Dashboard") group-hover:scale-110 transition-transform duration-300">dashboard</span>
+                <span class="text-[14px]">Dashboard</span>
+            </a>
+            <a asp-controller="Lecturer" asp-action="Projects" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Projects")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Projects") group-hover:scale-110 transition-transform duration-300">folder_open</span>
+                <span class="text-[14px]">My Projects</span>
+            </a>
+            <a asp-controller="Lecturer" asp-action="FeedbackApprovals" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "FeedbackApprovals")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "FeedbackApprovals") group-hover:scale-110 transition-transform duration-300">fact_check</span>
+                <span class="text-[14px]">Feedback Approvals</span>
+            </a>
+            <a asp-controller="Lecturer" asp-action="Schedule" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Schedule")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Schedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
+                <span class="text-[14px]">Schedule</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Reviewer</span>
+            </div>
+            <a asp-controller="Lecturer" asp-action="ReviewAssignments" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "ReviewAssignments")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "ReviewAssignments") group-hover:scale-110 transition-transform duration-300">assignment</span>
+                <span class="text-[14px]">Review Assignments</span>
+            </a>
+            <a asp-controller="Lecturer" asp-action="History" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "History")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "History") group-hover:scale-110 transition-transform duration-300">history</span>
+                <span class="text-[14px]">History</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">System</span>
+            </div>
+            <a href="#" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 border-transparent text-slate-400 font-medium hover:text-white hover:bg-white/5">
+                <span class="material-symbols-outlined group-hover:scale-110 transition-transform duration-300">settings</span>
+                <span class="text-[14px]">Settings</span>
+            </a>
+        }
+
+        else {
+            <div class="px-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">My Workspace</span>
+            </div>
+            <a asp-controller="Student" asp-action="Index" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Student", "Index")">
+                <span class="material-symbols-outlined @GetIconClasses("Student", "Index") group-hover:scale-110 transition-transform duration-300">folder_open</span>
+                <span class="text-[14px]">My Project</span>
+            </a>
+            <a asp-controller="Student" asp-action="Submissions" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Student", "Submissions")">
+                <span class="material-symbols-outlined @GetIconClasses("Student", "Submissions") group-hover:scale-110 transition-transform duration-300">description</span>
+                <span class="text-[14px]">Submissions</span>
+            </a>
+            <a asp-controller="Student" asp-action="Feedback" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Student", "Feedback")">
+                <span class="material-symbols-outlined @GetIconClasses("Student", "Feedback") group-hover:scale-110 transition-transform duration-300">rate_review</span>
+                <span class="text-[14px]">Feedback</span>
+            </a>
+            <a asp-controller="Student" asp-action="Schedule" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Student", "Schedule")">
+                <span class="material-symbols-outlined @GetIconClasses("Student", "Schedule") group-hover:scale-110 transition-transform duration-300">event</span>
+                <span class="text-[14px]">Project Defense Schedule</span>
+            </a>
+            <a asp-controller="Student" asp-action="Notifications" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Student", "Notifications")">
+                <span class="material-symbols-outlined @GetIconClasses("Student", "Notifications") group-hover:scale-110 transition-transform duration-300">notifications</span>
+                <span class="text-[14px]">Notifications</span>
+            </a>
+        }
+    </nav>
+</div>
+
+<style>
+/* Custom Scrollbar for sidebar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 20px;
+}
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(255,255,255,0.2);
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+.material-symbols-outlined.filled {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+</style>

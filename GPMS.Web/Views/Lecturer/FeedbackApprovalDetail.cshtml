@@ -1,10 +1,10 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @model GPMS.Web.ViewModels.Lecturer.FeedbackApprovalDetailViewModel
 @{
     ViewData["Title"] = "Feedback Approval Detail";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
     var isGradeRound = Model.Scores.Any(s => s.ItemType == "Grade");
     var groupedScores = Model.Scores
         .Select((score, index) => new { score, index })

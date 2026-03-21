@@ -1,10 +1,10 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @model GPMS.Web.ViewModels.Lecturer.EvaluationFormViewModel
 @{
     ViewData["Title"] = "Evaluation Form";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
     var isReadOnly = Model.ExistingEvaluationID.HasValue && !Model.CanEdit;
     var isGradeRound = Model.ChecklistItems.Any(i => i.ItemType == "Grade");
     var sectionGroups = Model.ChecklistItems

@@ -1,8 +1,8 @@
-@model GPMS.Application.DTOs.ProjectDetailDto
+﻿@model GPMS.Application.DTOs.ProjectDetailDto
 @using GPMS.Domain.Enums
 @{
     ViewData["Title"] = "Project Details";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
     var semesterList = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? Enumerable.Empty<GPMS.Application.DTOs.SemesterDto>();
     bool isNew = Model == null || Model.ProjectID == 0;
 

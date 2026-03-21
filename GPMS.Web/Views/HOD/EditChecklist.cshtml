@@ -1,8 +1,8 @@
-@using GPMS.Application.DTOs
+﻿@using GPMS.Application.DTOs
 @model ChecklistDto
 @{
     ViewData["Title"] = "Chỉnh sửa Checklist";
-    Layout = "_HODLayout";
+    Layout = "_Layout";
     var isRubric = Model.ReviewRoundTitle.Contains("3") || Model.Items.Any(i => i.ItemType == "Rubric");
     var defaultType = isRubric ? "Rubric" : "YesNo";
 }

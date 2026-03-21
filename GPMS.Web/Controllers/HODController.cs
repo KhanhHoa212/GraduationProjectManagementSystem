@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace GPMS.Web.Controllers;
 
-[Authorize(Roles = "HeadOfDept,Admin")]
+[Authorize(Roles = "HeadOfDept")]
 public class HODController : Controller
 {
     private readonly IProjectService _projectService;

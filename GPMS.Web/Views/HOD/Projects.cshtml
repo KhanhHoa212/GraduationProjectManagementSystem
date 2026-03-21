@@ -1,10 +1,10 @@
-@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+﻿@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
 @using GPMS.Domain.Enums
 @{
     ViewBag.Title = "Projects";
     ViewBag.CurrentPage = "Projects";
     ViewBag.BreadcrumbSection = "Project";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
 
     var semesters = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? new List<GPMS.Application.DTOs.SemesterDto>();
     var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
