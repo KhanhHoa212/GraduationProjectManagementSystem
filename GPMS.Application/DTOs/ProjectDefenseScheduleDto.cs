@@ -5,6 +5,8 @@ namespace GPMS.Application.DTOs;
 
 public class ProjectDefenseScheduleDto
 {
+    public int RoundNumber { get; set; }
+    public string RoundName { get; set; } = string.Empty;
     public DateTime ScheduledAt { get; set; }
     public string? RoomName { get; set; }
     public string? Building { get; set; }

@@ -33,5 +33,5 @@ public interface IProjectService
     Task<(bool success, string message)> AssignSupervisorAsync(int projectId, string lecturerId, string? assignedBy);
     
     // Schedule
-    Task<ProjectDefenseScheduleDto?> GetProjectDefenseScheduleAsync(string studentId);
+    Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId);
 }

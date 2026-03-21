@@ -74,6 +74,21 @@ public class ProjectGroupRepository : IProjectGroupRepository
             .OrderByDescending(s => s.ReviewRound.RoundNumber)
             .FirstOrDefaultAsync(s => s.GroupID == groupId);
 
+    public async Task<IEnumerable<ReviewSessionInfo>> GetGroupSchedulesAsync(int groupId) =>
+        await _context.ReviewSessions
+            .Include(s => s.Room)
+            .Include(s => s.ReviewRound)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.ReviewerAssignments)
+                    .ThenInclude(ra => ra.Reviewer)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+                        .ThenInclude(ps => ps.Lecturer)
+            .Where(s => s.GroupID == groupId)
+            .OrderBy(s => s.ReviewRound.RoundNumber)
+            .ToListAsync();
+
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
 }

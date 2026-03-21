@@ -8,6 +8,7 @@ public class ProjectDto
     public int ProjectID { get; set; }
     public string ProjectCode { get; set; } = string.Empty;
     public string ProjectName { get; set; } = string.Empty;
+    public string? Description { get; set; }
     public string? MajorName { get; set; }
     public int SemesterID { get; set; }
     public string? SemesterCode { get; set; }

@@ -37,6 +37,18 @@ public class StudentController : Controller
         if (project != null)
         {
             reviewRounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(project.SemesterID);
+            
+            // Filter submissions to ongoing round only
+            var ongoingRound = reviewRounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+
+            if (ongoingRound != null)
+            {
+                submissions = submissions.Where(s => s.RoundNumber == ongoingRound.RoundNumber).ToList();
+            }
+            else
+            {
+                submissions = new List<GPMS.Application.DTOs.SubmissionItemDto>();
+            }
         }
 
         var viewModel = new StudentDashboardViewModel
@@ -65,17 +77,19 @@ public class StudentController : Controller
         if (project != null)
         {
             var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(project.SemesterID);
-            reviewRounds = rounds;
             
-            if (round.HasValue && rounds.Any(r => r.RoundNumber == round.Value))
+            // Filter out upcoming (planned) rounds as per user request
+            var visibleRounds = rounds.Where(r => r.Status != GPMS.Domain.Enums.RoundStatus.Planned).ToList();
+            reviewRounds = visibleRounds;
+            
+            if (round.HasValue && visibleRounds.Any(r => r.RoundNumber == round.Value))
             {
                 activeRound = round.Value;
             }
             else
             {
-                var current = rounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
-                           ?? rounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Planned)
-                           ?? rounds.LastOrDefault();
+                var current = visibleRounds.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
+                           ?? visibleRounds.LastOrDefault();
                 
                 activeRound = current?.RoundNumber ?? 0;
             }
@@ -134,9 +148,9 @@ public class StudentController : Controller
     {
         var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(studentId)) return RedirectToAction("Login", "Auth");
-
-        var schedule = await _projectService.GetProjectDefenseScheduleAsync(studentId);
-        return View(schedule);
+ 
+        var schedules = await _projectService.GetProjectDefenseScheduleAsync(studentId);
+        return View(schedules);
     }
 
     public async Task<IActionResult> Notifications(string type = "All")
