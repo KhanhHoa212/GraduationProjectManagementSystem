@@ -34,4 +34,7 @@ public interface IProjectService
     
     // Schedule
     Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId);
+    // Bulk Import
+    Task<(int successCount, string message)> BulkImportProjectsAsync(IEnumerable<ProjectImportRowDto> projects, int semesterId, string? requestedBy);
 }
+

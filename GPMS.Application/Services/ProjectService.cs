@@ -22,6 +22,7 @@ public class ProjectService : IProjectService
     private readonly ISemesterRepository _semesterRepository;
     private readonly IFileService _fileService;
     private readonly IReviewRoundService _reviewRoundService;
+    private readonly IMajorRepository _majorRepository;
     private readonly IMapper _mapper;
 
     public ProjectService(
@@ -34,6 +35,7 @@ public class ProjectService : IProjectService
         ISemesterRepository semesterRepository,
         IFileService fileService,
         IReviewRoundService reviewRoundService,
+        IMajorRepository majorRepository,
         IMapper mapper)
     {
         _projectRepository = projectRepository;
@@ -45,6 +47,7 @@ public class ProjectService : IProjectService
         _semesterRepository = semesterRepository;
         _fileService = fileService;
         _reviewRoundService = reviewRoundService;
+        _majorRepository = majorRepository;
         _mapper = mapper;
     }
 
@@ -592,5 +595,82 @@ public class ProjectService : IProjectService
         return result;
     }
 
-    // ============================================================
+    public async Task<(int successCount, string message)> BulkImportProjectsAsync(IEnumerable<ProjectImportRowDto> projects, int semesterId, string? requestedBy)
+    {
+        int count = 0;
+        var majors = await _majorRepository.GetAllAsync();
+        var lecturers = await _userRepository.GetByRoleAsync(RoleName.Lecturer);
+        var students = await _userRepository.GetByRoleAsync(RoleName.Student);
+        
+        foreach (var row in projects)
+        {
+            try
+            {
+                var major = majors.FirstOrDefault(m => m.MajorName.Equals(row.MajorName, StringComparison.OrdinalIgnoreCase));
+                var lecturer = lecturers.FirstOrDefault(l => l.Email?.Equals(row.SupervisorEmail, StringComparison.OrdinalIgnoreCase) == true);
+                
+                if (major == null || lecturer == null) continue;
+
+                // 1. Create Project
+                var project = new Project
+                {
+                    ProjectCode = row.ProjectCode,
+                    ProjectName = row.ProjectName,
+                    Description = row.Description,
+                    SemesterID = semesterId,
+                    MajorID = major.MajorID,
+                    Status = ProjectStatus.Active,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _projectRepository.AddAsync(project);
+                await _projectRepository.SaveChangesAsync();
+
+                // 2. Assign Supervisor (using internal entities for speed in loop)
+                project.ProjectSupervisors.Add(new ProjectSupervisor
+                {
+                    ProjectID = project.ProjectID,
+                    LecturerID = lecturer.UserID,
+                    Role = ProjectRole.Main,
+                    AssignedAt = DateTime.UtcNow,
+                    AssignedBy = requestedBy
+                });
+
+                // 3. Create Default Group
+                var group = new ProjectGroup
+                {
+                    ProjectID = project.ProjectID,
+                    GroupName = "Group 1",
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _groupRepository.AddAsync(group);
+                await _groupRepository.SaveChangesAsync();
+
+                // 4. Add Members
+                for (int i = 0; i < row.StudentEmails.Count; i++)
+                {
+                    var mssv = row.StudentEmails[i];
+                    var student = students.FirstOrDefault(s => s.UserID == mssv);
+                    if (student != null)
+                    {
+                        await _groupRepository.AddMemberAsync(new GroupMember
+                        {
+                            GroupID = group.GroupID,
+                            UserID = student.UserID,
+                            RoleInGroup = i == 0 ? GroupRole.Leader : GroupRole.Member,
+                            JoinedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+
+                await _groupRepository.SaveChangesAsync();
+                count++;
+            }
+            catch (Exception)
+            {
+                // Silently skip if error occurs for one row
+            }
+        }
+
+        return (count, $"Đã nhập thành công {count} dự án.");
+    }
 }
