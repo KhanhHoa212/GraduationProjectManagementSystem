@@ -3,95 +3,97 @@
 @{
     ViewData["Title"] = "Review Assignments";
     Layout = "_Layout";
+
+    string GetTailwindBadge(string label) {
+        if(string.IsNullOrEmpty(label)) return "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
+        if(label.Contains("Pending") || label.Contains("Waiting")) return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+        if(label.Contains("Complete") || label.Contains("Approve")) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+        return "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
+    }
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
     <div>
-        <h1 class="page-title">My Review Assignments</h1>
-        <p class="page-subtitle text-muted mb-0">Groups you have been assigned to evaluate, including Meet links or offline room details.</p>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">My Review Assignments</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Groups you have been assigned to evaluate, including Meet links or offline room details.</p>
     </div>
 </div>
 
 <!-- Stats Bar -->
-<div class="row g-4 mb-4">
-    <div class="col-md-4">
-        <div class="card-panel text-center py-3">
-            <div class="fw-bold" style="font-size:28px;">@Model.PendingEvaluationsCount</div>
-            <div class="text-muted" style="font-size:12px;">PENDING</div>
-        </div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
+        <div class="text-4xl font-black text-dark-900 dark:text-white mb-1">@Model.PendingEvaluationsCount</div>
+        <div class="text-[11px] font-bold text-amber-500 uppercase tracking-widest">PENDING</div>
     </div>
-    <div class="col-md-4">
-        <div class="card-panel text-center py-3">
-            <div class="fw-bold" style="font-size:28px;">@Model.ScheduledTodayCount</div>
-            <div class="text-muted" style="font-size:12px;">SCHEDULED TODAY</div>
-        </div>
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
+        <div class="text-4xl font-black text-dark-900 dark:text-white mb-1">@Model.ScheduledTodayCount</div>
+        <div class="text-[11px] font-bold text-primary-500 uppercase tracking-widest">SCHEDULED TODAY</div>
     </div>
-    <div class="col-md-4">
-        <div class="card-panel text-center py-3">
-            <div class="fw-bold" style="font-size:28px;">@Model.CompletedReviewsCount</div>
-            <div class="text-muted" style="font-size:12px;">COMPLETED</div>
-        </div>
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
+        <div class="text-4xl font-black text-dark-900 dark:text-white mb-1">@Model.CompletedReviewsCount</div>
+        <div class="text-[11px] font-bold text-emerald-500 uppercase tracking-widest">COMPLETED</div>
     </div>
 </div>
 
-<div class="card-panel border p-0 overflow-hidden shadow-sm">
-    <div class="p-4 border-bottom">
-        <h2 class="section-title mb-0">Assignments</h2>
+<div class="bg-white dark:bg-dark-800 rounded-3xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+    <div class="p-6 border-b border-slate-100 dark:border-dark-700">
+        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Assignments</h2>
     </div>
 
     @if (!Model.Assignments.Any())
     {
-        <div class="text-center py-5 text-muted">
-            <span class="material-symbols-outlined fs-1 d-block mb-2">assignment</span>
-            <p>No review assignments at this time.</p>
+        <div class="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500">
+            <span class="material-symbols-outlined text-5xl mb-4 opacity-50">assignment</span>
+            <p class="text-sm font-medium">No review assignments at this time.</p>
         </div>
     }
     else
     {
-        <div class="d-flex flex-column gap-0">
+        <div class="flex flex-col divide-y divide-slate-100 dark:divide-dark-700">
             @foreach (var a in Model.Assignments)
             {
                 var isCompleted = a.HasEvaluation;
-                var borderColor = isCompleted ? "#22C55E" : "var(--fpt-orange)";
-                <div class="p-4 border-bottom d-flex align-items-center gap-4" style="border-left: 4px solid @borderColor;">
-                    <div class="flex-grow-1">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <h6 class="mb-0 fw-bold" style="font-size:15px;">@a.GroupName</h6>
-                            <span class="text-muted">·</span>
-                            <span class="text-muted" style="font-size:13px;">@a.ProjectName</span>
+                var borderColor = isCompleted ? "#22C55E" : "var(--primary-color, #F97316)"; // default to orange if var fails
+                <div class="p-6 flex flex-col lg:flex-row items-start lg:items-center gap-6 border-l-4 transition-colors hover:bg-slate-50/50 dark:hover:bg-dark-700/30" style="border-left-color: @borderColor;">
+                    <div class="flex-grow min-w-0">
+                        <div class="flex items-center gap-3 mb-2 flex-wrap">
+                            <h6 class="text-lg font-bold text-dark-900 dark:text-white m-0">@a.GroupName</h6>
+                            <span class="text-slate-300 dark:text-dark-600">•</span>
+                            <span class="text-slate-600 dark:text-slate-400 font-medium">@a.ProjectName</span>
                         </div>
-                        <div class="d-flex gap-3 text-muted" style="font-size:12px;">
-                            <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">layers</span> Round @a.RoundNumber (@a.RoundType)</span>
+                        <div class="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
+                            <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">layers</span> Round @a.RoundNumber (@a.RoundType)</span>
                             @if (a.ScheduledAt.HasValue)
                             {
-                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
+                                <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
                             }
                             @if (!string.IsNullOrEmpty(a.Location))
                             {
-                                <span><span class="material-symbols-outlined align-middle" style="font-size:14px;">location_on</span> @a.Location</span>
+                                <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">location_on</span> @a.Location</span>
                             }
                             @if (a.MeetLink != null)
                             {
-                                <a href="@a.MeetLink" target="_blank" class="text-decoration-none" style="color:var(--fpt-orange);">
-                                    <span class="material-symbols-outlined align-middle" style="font-size:14px;">videocam</span> Join Meeting
+                                <a href="@a.MeetLink" target="_blank" class="inline-flex items-center gap-1.5 font-semibold text-primary-500 hover:text-primary-600 transition-colors">
+                                    <span class="material-symbols-outlined text-[16px]">videocam</span> Join Meeting
                                 </a>
                             }
                         </div>
                     </div>
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="badge @a.StatusBadgeClass">@a.StatusLabel</span>
+                    <div class="flex items-center gap-4 shrink-0">
+                        <span class="px-3 py-1.5 text-xs font-semibold rounded-lg @GetTailwindBadge(a.StatusLabel)">@a.StatusLabel</span>
+                        
                         @if (!isCompleted)
                         {
                             <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
-                               class="btn btn-primary btn-sm d-flex align-items-center gap-1">
-                                <span class="material-symbols-outlined" style="font-size:16px;">edit</span>
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-colors text-sm">
+                                <span class="material-symbols-outlined text-[18px]">edit</span>
                                 @a.PrimaryActionLabel
                             </a>
                         }
                         else if (a.EvaluationID.HasValue)
                         {
                             <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
-                               class="btn btn-outline-secondary btn-sm">
+                               class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-dark-800 hover:bg-slate-50 dark:hover:bg-dark-700 font-bold rounded-xl shadow-sm transition-colors text-sm">
                                 View
                             </a>
                         }
