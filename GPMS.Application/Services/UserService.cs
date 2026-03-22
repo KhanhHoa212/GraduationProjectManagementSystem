@@ -170,6 +170,33 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
     }
 
+    public async Task UpdateProfileAsync(UpdateProfileDto dto)
+    {
+        var user = await _userRepository.GetByIdAsync(dto.UserID);
+        if (user == null) return;
+
+        // Check if Email already exists for another user
+        if (!string.IsNullOrEmpty(dto.Email))
+        {
+            var userByEmail = await _userRepository.GetByEmailAsync(dto.Email);
+            if (userByEmail != null && userByEmail.UserID != dto.UserID)
+            {
+                throw new InvalidOperationException("Email address already exists.");
+            }
+        }
+
+        user.Email = dto.Email;
+        user.FullName = dto.FullName;
+        user.Phone = dto.Phone;
+        if (!string.IsNullOrEmpty(dto.AvatarUrl))
+        {
+            user.AvatarUrl = dto.AvatarUrl;
+        }
+
+        await _userRepository.UpdateAsync(user);
+        await _userRepository.SaveChangesAsync();
+    }
+
     public async Task ToggleUserStatusAsync(string id)
     {
         var user = await _userRepository.GetByIdAsync(id);
