@@ -36,6 +36,7 @@ builder.Services.AddScoped<IMentorRoundReviewRepository, MentorRoundReviewReposi
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
 builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
+builder.Services.AddScoped<IMajorRepository, MajorRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -47,6 +48,8 @@ builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IExcelService, ExcelService>();
+
 
 
 // Register Infrastructure (including Seeders)
