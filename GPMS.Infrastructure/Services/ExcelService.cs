@@ -267,7 +267,18 @@ public class ExcelService : IExcelService
             .Select(gm => gm.UserID)
             .ToListAsync();
 
+        var existingProjectCodes = await _context.Projects
+            .Select(p => p.ProjectCode)
+            .ToListAsync();
+        
+        var existingProjectNamesInSemester = await _context.Projects
+            .Where(p => p.SemesterID == activeSemester.SemesterID)
+            .Select(p => p.ProjectName)
+            .ToListAsync();
+
         var studentsInThisFile = new HashSet<string>();
+        var projectCodesInThisFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var projectNamesInThisFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         for (int row = 5; row <= rowCount; row++)
         {
@@ -298,6 +309,39 @@ public class ExcelService : IExcelService
             
             if (string.IsNullOrEmpty(majorName) || !majors.Any(m => m.MajorName.Equals(majorName, StringComparison.OrdinalIgnoreCase)))
                 dto.Errors.Add($"Chuyên ngành '{majorName}' không hợp lệ hoặc không tồn tại");
+
+            // Project Uniqueness Validation
+            if (!string.IsNullOrEmpty(projectCode))
+            {
+                if (existingProjectCodes.Any(c => c.Equals(projectCode, StringComparison.OrdinalIgnoreCase)))
+                {
+                    dto.Errors.Add($"Mã đề tài '{projectCode}' đã tồn tại trong hệ thống");
+                }
+                else if (projectCodesInThisFile.Contains(projectCode))
+                {
+                    dto.Errors.Add($"Mã đề tài '{projectCode}' bị trùng lặp trong file này");
+                }
+                else
+                {
+                    projectCodesInThisFile.Add(projectCode);
+                }
+            }
+
+            if (!string.IsNullOrEmpty(projectName))
+            {
+                if (existingProjectNamesInSemester.Any(n => n.Equals(projectName, StringComparison.OrdinalIgnoreCase)))
+                {
+                    dto.Errors.Add($"Tên đề tài '{projectName}' đã tồn tại trong học kỳ này");
+                }
+                else if (projectNamesInThisFile.Contains(projectName))
+                {
+                    dto.Errors.Add($"Tên đề tài '{projectName}' bị trùng lặp trong file này");
+                }
+                else
+                {
+                    projectNamesInThisFile.Add(projectName);
+                }
+            }
                 
             if (string.IsNullOrEmpty(mentorEmail) || !lecturers.Any(l => l.Email?.Equals(mentorEmail, StringComparison.OrdinalIgnoreCase) == true))
                 dto.Errors.Add($"Mentor '{mentorEmail}' không tồn tại trong hệ thống");

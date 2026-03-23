@@ -200,6 +200,21 @@ public class ProjectService : IProjectService
         await _projectRepository.SaveChangesAsync();
     }
 
+    public async Task<bool> DeleteProjectAsync(int projectId)
+    {
+        var project = await _projectRepository.GetDetailAsync(projectId);
+        if (project == null) return false;
+
+        // Note: ProjectGroups, ProjectSupervisors should be deleted either by cascade or explicitly
+        // If cascade is not set, we might need to remove them here.
+        // Assuming _projectRepository.DeleteAsync handles it or it's cascade.
+        // Based on GetDetailAsync, we have the details.
+
+        await _projectRepository.DeleteAsync(project);
+        await _projectRepository.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId)
     {
         var allProjects = semesterId.HasValue

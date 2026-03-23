@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
+using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace GPMS.Web.Controllers;
 
@@ -226,6 +229,13 @@ public class HODController : Controller
         await _projectService.UpdateProjectAsync(dto);
         TempData["SuccessMessage"] = "Project updated successfully.";
         return RedirectToAction(nameof(ProjectDetails), new { id = dto.ProjectID });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteProject(int id)
+    {
+        var success = await _projectService.DeleteProjectAsync(id);
+        return Json(new { success, message = success ? "Xóa đề tài thành công." : "Không thể xóa đề tài này." });
     }
 
     // ============================================================
