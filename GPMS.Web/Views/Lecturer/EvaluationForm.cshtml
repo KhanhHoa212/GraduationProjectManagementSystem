@@ -126,7 +126,7 @@
                                             <input type="hidden" name="CriteriaScores.Index" value="@i" />
                                             <input type="hidden" asp-for="CriteriaScores[i].CriteriaId" value="@item.ItemID" />
                                             <select asp-for="CriteriaScores[i].Assessment"
-                                                    class="form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
+                                                    class="grade-level-select form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
                                                     data-target="grade-desc-@i"
                                                     data-summary="grade-summary"
                                                     disabled="@isReadOnly"

@@ -105,7 +105,20 @@ public class LecturerController : Controller
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        LecturerProjectGroupDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var memberEmails = dto.Members
             .Select(m => m.Email)
             .Where(email => !string.IsNullOrWhiteSpace(email))
@@ -218,7 +231,24 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> FeedbackApprovalDetail(int id = 1)
     {
-        var dto = await _lecturerService.GetFeedbackApprovalDetailAsync(id);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        LecturerFeedbackApprovalDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var vm = new FeedbackApprovalDetailViewModel
         {
             FeedbackID = dto.FeedbackId,
@@ -521,7 +551,22 @@ public class LecturerController : Controller
             return RedirectToAction(nameof(FeedbackApprovals));
         }
 
-        TempData["ErrorMessage"] = "An error occurred while processing the feedback approval.";
+        try
+        {
+            var currentFeedback = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, model.FeedbackID);
+            TempData["ErrorMessage"] = currentFeedback.ApprovalStatus == ApprovalStatus.Pending
+                ? "An error occurred while processing the feedback approval."
+                : $"This feedback was already {currentFeedback.ApprovalStatus.ToString().ToLowerInvariant()} and is now read-only.";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = model.FeedbackID });
     }
 }

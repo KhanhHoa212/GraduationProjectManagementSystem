@@ -119,8 +119,16 @@ public class LecturerService : ILecturerService
         var groups = (await _groupRepo.GetBySupervisorAsync(lecturerId)).ToList();
         var dto = new LecturerProjectsDto();
 
+        var processedGroupIds = new HashSet<int>();
+
         foreach (var group in groups)
         {
+            if (processedGroupIds.Contains(group.GroupID))
+            {
+                continue;
+            }
+            processedGroupIds.Add(group.GroupID);
+
             var project = group.Project;
             if (project == null)
             {
@@ -176,6 +184,11 @@ public class LecturerService : ILecturerService
         }
 
         var project = group.Project;
+        var isAuthorizedSupervisor = project.ProjectSupervisors.Any(ps => ps.LecturerID == lecturerId);
+        if (!isAuthorizedSupervisor)
+        {
+            throw new UnauthorizedAccessException("You are not authorized to view this group.");
+        }
 
         var rounds = (await _roundRepo.GetBySemesterAsync(project.SemesterID))
             .OrderBy(r => r.RoundNumber)
@@ -297,7 +310,7 @@ public class LecturerService : ILecturerService
         return dto;
     }
 
-    public async Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(int feedbackId)
+    public async Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(string lecturerId, int feedbackId)
     {
         var feedback = await _feedbackRepo.GetByIdWithDetailsAsync(feedbackId);
         if (feedback == null)
@@ -305,8 +318,17 @@ public class LecturerService : ILecturerService
             throw new InvalidOperationException("Feedback not found.");
         }
 
+        var isAuthorizedSupervisor =
+            string.Equals(feedback.FeedbackApproval?.SupervisorID, lecturerId, StringComparison.OrdinalIgnoreCase) ||
+            feedback.Evaluation.Group.Project?.ProjectSupervisors.Any(ps => ps.LecturerID == lecturerId) == true;
+        if (!isAuthorizedSupervisor)
+        {
+            throw new UnauthorizedAccessException("You are not authorized to view this feedback.");
+        }
+
         var evaluation = feedback.Evaluation;
         var group = evaluation.Group;
+        var project = group.Project ?? throw new InvalidOperationException("Project not found.");
         var mentorGate = group.MentorRoundReviews?.FirstOrDefault(m => m.ReviewRoundID == evaluation.ReviewRoundID)
             ?? await _mentorRoundReviewRepo.GetAsync(evaluation.ReviewRoundID, group.GroupID);
 
@@ -318,7 +340,7 @@ public class LecturerService : ILecturerService
             GroupId = group.GroupID,
             ReviewRoundName = evaluation.ReviewRound.RoundNumber.ToString(),
             CurrentRoundIndex = evaluation.ReviewRound.RoundNumber,
-            TotalRounds = Math.Max(1, (await _roundRepo.GetBySemesterAsync(group.Project.SemesterID)).Count()),
+            TotalRounds = Math.Max(1, (await _roundRepo.GetBySemesterAsync(project.SemesterID)).Count()),
             SubmittedAt = evaluation.SubmittedAt ?? feedback.CreatedAt,
             ApprovalStatus = feedback.FeedbackApproval?.ApprovalStatus ?? ApprovalStatus.Pending,
             SupervisorComment = feedback.FeedbackApproval?.SupervisorComment,
@@ -591,7 +613,7 @@ public class LecturerService : ILecturerService
             normalizedScores.Add(new ScoreInputDto
             {
                 CriteriaId = item.ItemID,
-                Assessment = input.Assessment,
+                Assessment = normalizedAssessmentValue,
                 Comment = input.Comment?.Trim()
             });
         }
@@ -754,15 +776,16 @@ public class LecturerService : ILecturerService
             await _mentorRoundReviewRepo.AddAsync(gate);
         }
 
-        gate.SupervisorID = supervisorId;
-        gate.DecisionStatus = decision;
-        gate.ProgressComment = progressComment?.Trim();
-        gate.ReviewedAt = DateTime.UtcNow;
-        gate.ReviewerNotifiedAt = decision == MentorGateStatus.Approved ? DateTime.UtcNow : null;
+        var gateRecord = gate ?? throw new InvalidOperationException("Unable to create mentor gate.");
+        gateRecord.SupervisorID = supervisorId;
+        gateRecord.DecisionStatus = decision;
+        gateRecord.ProgressComment = progressComment?.Trim();
+        gateRecord.ReviewedAt = DateTime.UtcNow;
+        gateRecord.ReviewerNotifiedAt = decision == MentorGateStatus.Approved ? DateTime.UtcNow : null;
 
         if (!isNewGate)
         {
-            _mentorRoundReviewRepo.Update(gate);
+            _mentorRoundReviewRepo.Update(gateRecord);
         }
         await _mentorRoundReviewRepo.SaveChangesAsync();
         return true;
@@ -778,31 +801,26 @@ public class LecturerService : ILecturerService
 
         var isAuthorizedSupervisor =
             string.Equals(feedback.FeedbackApproval.SupervisorID, supervisorId, StringComparison.OrdinalIgnoreCase) ||
-            feedback.Evaluation.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId);
+            feedback.Evaluation.Group.Project?.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId) == true;
         if (!isAuthorizedSupervisor)
         {
             return false;
         }
 
         var approval = feedback.FeedbackApproval;
+        if (approval.ApprovalStatus != ApprovalStatus.Pending)
+        {
+            return false;
+        }
+
         var evaluation = feedback.Evaluation;
         var now = DateTime.UtcNow;
-
-        foreach (var itemComment in model.ItemComments)
-        {
-            var detail = evaluation.EvaluationDetails.FirstOrDefault(d => d.ItemID == itemComment.ItemId);
-            if (detail != null)
-            {
-                detail.MentorComment = itemComment.MentorComment?.Trim();
-            }
-        }
 
         switch (model.Decision)
         {
             case "Approve":
                 approval.ApprovalStatus = ApprovalStatus.Approved;
                 approval.SupervisorComment = model.SupervisorComment?.Trim();
-                feedback.Content = model.OverallFeedbackContent.Trim();
                 approval.ApprovedAt = now;
                 approval.AutoReleasedAt = now.AddDays(7);
                 approval.IsVisibleToStudent = false;
@@ -815,6 +833,7 @@ public class LecturerService : ILecturerService
                     return false;
                 }
 
+                ApplyMentorChecklistComments(evaluation, model.ItemComments);
                 feedback.Content = model.OverallFeedbackContent.Trim();
                 approval.ApprovalStatus = ApprovalStatus.Approved;
                 approval.SupervisorComment = model.SupervisorComment?.Trim();
@@ -830,6 +849,7 @@ public class LecturerService : ILecturerService
                     return false;
                 }
 
+                ApplyMentorChecklistComments(evaluation, model.ItemComments);
                 approval.ApprovalStatus = ApprovalStatus.Rejected;
                 approval.SupervisorComment = model.SupervisorComment.Trim();
                 approval.ApprovedAt = null;
@@ -1044,6 +1064,18 @@ public class LecturerService : ILecturerService
         }
     }
 
+    private static void ApplyMentorChecklistComments(Evaluation evaluation, IEnumerable<MentorChecklistCommentDto> itemComments)
+    {
+        foreach (var itemComment in itemComments)
+        {
+            var detail = evaluation.EvaluationDetails.FirstOrDefault(d => d.ItemID == itemComment.ItemId);
+            if (detail != null)
+            {
+                detail.MentorComment = itemComment.MentorComment?.Trim();
+            }
+        }
+    }
+
 
 
     private static string? NormalizeAssessmentValue(ChecklistItem item, string? rawValue)
@@ -1053,12 +1085,30 @@ public class LecturerService : ILecturerService
             return string.Empty;
         }
 
-        return rawValue.Trim();
+        var normalized = rawValue.Trim();
+
+        if (string.Equals(item.ItemType, "NumericScore", StringComparison.OrdinalIgnoreCase))
+        {
+            return normalized;
+        }
+
+        var allowedValues = IsGradeChecklistItem(item)
+            ? new[] { "Excellent", "Good", "Acceptable", "Fail", "NA" }
+            : new[] { "Y", "N", "NA" };
+
+        return allowedValues.FirstOrDefault(value => value.Equals(normalized, StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
     }
 
     private static string? ResolveGradeDescription(ChecklistItem item, string? assessmentValue)
     {
         return item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == assessmentValue)?.Description;
+    }
+
+    private static bool IsGradeChecklistItem(ChecklistItem item)
+    {
+        return string.Equals(item.ItemType, "Grade", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(item.ItemType, "GradeLevel", StringComparison.OrdinalIgnoreCase) ||
+               item.RubricDescriptions.Any();
     }
 
     private static string ResolveMilestoneStatus(ReviewRound round, Submission? submission, Evaluation? evaluation, MentorRoundReview? mentorGate)

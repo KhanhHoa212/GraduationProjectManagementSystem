@@ -10,7 +10,7 @@ public interface ILecturerService
     Task<LecturerProjectsDto> GetMentoredProjectsAsync(string lecturerId);
     Task<LecturerProjectGroupDetailDto> GetProjectGroupDetailAsync(string lecturerId, int groupId);
     Task<LecturerFeedbackApprovalsDto> GetPendingApprovalsAsync(string lecturerId);
-    Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(int feedbackId);
+    Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(string lecturerId, int feedbackId);
     Task<LecturerReviewAssignmentsDto> GetReviewAssignmentsAsync(string reviewerId);
     Task<LecturerScheduleDto> GetScheduleAsync(string lecturerId);
     Task<LecturerHistoryDto> GetHistoryAsync(string lecturerId);

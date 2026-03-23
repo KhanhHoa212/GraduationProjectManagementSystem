@@ -44,6 +44,7 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
             .Include(ra => ra.ReviewRound)
             .Include(ra => ra.Group)
                 .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
             .Include(ra => ra.Group)
                 .ThenInclude(g => g.MentorRoundReviews)
             .Include(ra => ra.Group)
@@ -52,7 +53,7 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
             .Include(ra => ra.Group)
                 .ThenInclude(g => g.Evaluations)
                     .ThenInclude(e => e.Feedback)
-            .Where(ra => ra.ReviewerID == reviewerId)
+            .Where(ra => ra.ReviewerID == reviewerId && !ra.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == reviewerId))
             .OrderByDescending(ra => ra.ReviewRound.StartDate)
             .ToListAsync();
 
