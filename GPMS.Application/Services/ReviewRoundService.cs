@@ -28,8 +28,8 @@ public class ReviewRoundService : IReviewRoundService
         bool anyChanged = false;
         foreach (var r in rounds)
         {
-            var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                                 r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+            var expectedStatus = r.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                                 r.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                                  GPMS.Domain.Enums.RoundStatus.Ongoing;
             if (r.Status != expectedStatus)
             {
@@ -50,8 +50,8 @@ public class ReviewRoundService : IReviewRoundService
         if (r == null) return null;
 
         var now = System.DateTime.Now;
-        var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                             r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        var expectedStatus = r.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                             r.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                              GPMS.Domain.Enums.RoundStatus.Ongoing;
         if (r.Status != expectedStatus)
         {
@@ -68,8 +68,8 @@ public class ReviewRoundService : IReviewRoundService
         var entity = _mapper.Map<ReviewRound>(dto);
         
         var now = System.DateTime.Now;
-        entity.Status = entity.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                        entity.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        entity.Status = entity.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                        entity.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                         GPMS.Domain.Enums.RoundStatus.Ongoing;
 
         if (dto.SubmissionRequirements != null && dto.SubmissionRequirements.Any())
@@ -99,8 +99,8 @@ public class ReviewRoundService : IReviewRoundService
         _mapper.Map(dto, existing);
 
         var now = System.DateTime.Now;
-        existing.Status = existing.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                          existing.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        existing.Status = existing.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                          existing.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                           GPMS.Domain.Enums.RoundStatus.Ongoing;
 
         // Sync requirements explicitly

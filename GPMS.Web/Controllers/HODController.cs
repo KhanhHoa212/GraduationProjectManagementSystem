@@ -56,6 +56,12 @@ public class HODController : Controller
         ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
         ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
 
+        // Fetch review rounds for the timeline
+        if (activeSemester != null)
+        {
+            ViewBag.ReviewRounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
+
         return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
 
@@ -314,7 +320,7 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Only for NEW rounds)
         if (dto.EndDate <= DateTime.Now)
         {
             ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
@@ -396,12 +402,12 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Loosened for editing existing rounds)
         var now = DateTime.Now;
-        if (dto.EndDate <= now)
-        {
-            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
-        }
+        // Only block if EndDate was formerly in the future and is now being moved to the past
+        // Actually, just allow it for Edit.
+        // if (dto.EndDate <= now) { ... }
+        
 
         // 3. Sequential Validation
         var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID))
