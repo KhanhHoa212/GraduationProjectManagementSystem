@@ -402,6 +402,8 @@ public class LecturerController : Controller
             RoundNumber = dto.RoundNumber,
             RoundType = dto.ReviewRoundName,
             ScheduledAt = dto.ScheduledAt,
+            SubmissionFileName = dto.SubmissionFileName,
+            SubmissionUrl = dto.SubmissionUrl,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
@@ -440,6 +442,7 @@ public class LecturerController : Controller
             ItemID = c.ItemId,
             ItemCode = c.ItemCode,
             ItemName = c.ItemName,
+            ItemContent = c.ItemContent,
             ItemType = c.ItemType,
             Section = c.Section,
             RubricDescriptions = c.RubricDescriptions.Select(r => new RubricDescriptionViewModel
@@ -469,7 +472,7 @@ public class LecturerController : Controller
         {
             AssignmentId = model.AssignmentID,
             OverallFeedback = model.ExistingFeedbackContent ?? string.Empty,
-            CriteriaScores = model.CriteriaScores.Select(s => new ScoreInputDto
+            CriteriaScores = model.CriteriaScores.Where(s => s != null).Select(s => new ScoreInputDto
             {
                 CriteriaId = s.CriteriaId,
                 Assessment = s.Assessment,
@@ -477,14 +480,16 @@ public class LecturerController : Controller
             }).ToList()
         };
 
-        var success = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
-        if (success)
+        var result = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
+        if (result.Success)
         {
             TempData["SuccessMessage"] = "Evaluation submitted successfully.";
             return RedirectToAction(nameof(ReviewAssignments));
         }
 
-        TempData["ErrorMessage"] = "Unable to submit evaluation. Please check the assignment and score inputs.";
+        TempData["ErrorMessage"] = string.IsNullOrWhiteSpace(result.ErrorMessage)
+            ? "Unable to submit evaluation. Please check the assignment and score inputs."
+            : result.ErrorMessage;
         return RedirectToAction(nameof(EvaluationForm), new { id = model.AssignmentID });
     }
 

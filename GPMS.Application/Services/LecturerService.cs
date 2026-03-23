@@ -489,6 +489,11 @@ public class LecturerService : ILecturerService
                       approvalStatus == ApprovalStatus.Rejected;
         var canProceed = mentorGate?.DecisionStatus == MentorGateStatus.Approved;
 
+        var submission = assignment.Group?.Submissions
+            .Where(s => s.Requirement?.ReviewRoundID == assignment.ReviewRoundID)
+            .OrderByDescending(s => s.Version)
+            .FirstOrDefault();
+
         return new LecturerEvaluationFormDto
         {
             AssignmentId = assignment.AssignmentID,
@@ -499,6 +504,8 @@ public class LecturerService : ILecturerService
             ReviewRoundName = assignment.ReviewRound?.RoundType.ToString() ?? "N/A",
             RoundNumber = assignment.ReviewRound?.RoundNumber ?? 0,
             ScheduledAt = session?.ScheduledAt,
+            SubmissionFileName = submission?.FileName,
+            SubmissionUrl = submission?.FileUrl,
             Members = assignment.Group?.GroupMembers.Select(m => new StudentMemberDto
             {
                 UserId = m.UserID,
@@ -543,19 +550,19 @@ public class LecturerService : ILecturerService
         };
     }
 
-    public async Task<bool> SubmitEvaluationAsync(string reviewerId, EvaluationSubmitDto model)
+    public async Task<(bool Success, string ErrorMessage)> SubmitEvaluationAsync(string reviewerId, EvaluationSubmitDto model)
     {
         var assignment = await _assignmentRepo.GetByIdAsync(model.AssignmentId);
         if (assignment == null || assignment.ReviewerID != reviewerId)
         {
-            return false;
+            return (false, "Assignment not found or unauthorized.");
         }
 
         var mentorGate = assignment.Group?.MentorRoundReviews?.FirstOrDefault(m => m.ReviewRoundID == assignment.ReviewRoundID)
             ?? await _mentorRoundReviewRepo.GetAsync(assignment.ReviewRoundID, assignment.GroupID);
         if (mentorGate?.DecisionStatus != MentorGateStatus.Approved)
         {
-            return false;
+            return (false, "Mentor has not approved this round.");
         }
 
         var checklistItems = assignment.ReviewRound?.ReviewChecklist?.ChecklistItems
@@ -563,7 +570,7 @@ public class LecturerService : ILecturerService
             .ToList();
         if (checklistItems == null || checklistItems.Count == 0)
         {
-            return false;
+            return (false, "No checklist items found for this round.");
         }
 
         var normalizedScores = new List<ScoreInputDto>();
@@ -572,13 +579,13 @@ public class LecturerService : ILecturerService
             var input = model.CriteriaScores.FirstOrDefault(s => s.CriteriaId == item.ItemID);
             if (input == null)
             {
-                return false;
+                return (false, $"Missing score input for criteria ID {item.ItemID}. Total submitted scores count: {model.CriteriaScores.Count}.");
             }
 
             var normalizedAssessmentValue = NormalizeAssessmentValue(item, input.Assessment);
             if (item.ItemType != "NumericScore" && string.IsNullOrWhiteSpace(normalizedAssessmentValue))
             {
-                return false;
+                return (false, $"Assessment is required for {item.ItemName}.");
             }
 
             normalizedScores.Add(new ScoreInputDto
@@ -594,7 +601,7 @@ public class LecturerService : ILecturerService
             .FirstOrDefault();
         if (string.IsNullOrWhiteSpace(supervisor?.LecturerID))
         {
-            return false;
+            return (false, "Project supervisor not found.");
         }
 
         var existingEvaluation = await _evaluationRepo.GetByReviewerAndGroupAsync(
@@ -636,14 +643,16 @@ public class LecturerService : ILecturerService
             await _evaluationRepo.AddAsync(evaluation);
             await _evaluationRepo.SaveChangesAsync();
             await NotifySubmitAsync(supervisor, assignment, evaluation.Feedback?.FeedbackID);
-            return true;
+            return (true, string.Empty);
         }
 
         var approvalStatus = existingEvaluation.Feedback?.FeedbackApproval?.ApprovalStatus;
         var canResubmit = existingEvaluation.Status == EvaluationStatus.Draft || approvalStatus == ApprovalStatus.Rejected;
         if (!canResubmit)
         {
-            return false;
+            if (approvalStatus == ApprovalStatus.Pending) return (false, "Feedback is currently pending approval by supervisor.");
+            if (approvalStatus == ApprovalStatus.Approved) return (false, "Feedback is already approved and cannot be modified.");
+            return (false, "This evaluation cannot be modified in its current state.");
         }
 
         existingEvaluation.Status = EvaluationStatus.Submitted;
@@ -713,7 +722,7 @@ public class LecturerService : ILecturerService
         _evaluationRepo.Update(existingEvaluation);
         await _evaluationRepo.SaveChangesAsync();
         await NotifySubmitAsync(supervisor, assignment, existingEvaluation.Feedback?.FeedbackID);
-        return true;
+        return (true, string.Empty);
     }
 
     public async Task<bool> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment)
