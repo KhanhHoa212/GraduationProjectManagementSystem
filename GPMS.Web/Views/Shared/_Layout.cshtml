@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth light">
 <head>
     <meta charset="UTF-8" />
@@ -160,64 +160,6 @@
             <!-- Page Content Body -->
             <main class="flex-1 overflow-y-auto overflow-x-hidden custom-main-scroll bg-[#F5F7FA] dark:bg-dark-900">
                 <div class="w-full min-h-full p-4 lg:p-8 pb-24 text-dark-900 dark:text-dark-100 relative">
-                    
-                    @if (TempData["SuccessMessage"] != null)
-                    {
-                        <a class="text-sm font-medium transition-colors no-underline @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "text-primary font-bold" : "text-[#4c669a] dark:text-gray-400 hover:text-primary")" asp-controller="Admin" asp-action="Index">Users</a>
-                    }
-                    
-                    <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors no-underline" href="#">Projects</a>
-                    <a class="text-[#4c669a] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors no-underline" href="#">Reports</a>
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button class="flex items-center justify-center text-[#4c669a] dark:text-gray-400 hover:text-primary">
-                        <span class="material-symbols-outlined">notifications</span>
-                    </button>
-                    
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <div class="flex items-center gap-3 pl-4 border-l border-gray-200 dark:border-gray-700">
-                             <div class="flex flex-col items-end hidden sm:flex">
-                                <span class="text-xs font-bold text-[#0d121b] dark:text-white">@User.Identity.Name</span>
-                                <div class="flex items-center gap-2">
-                                    @if (!User.IsInRole("Admin"))
-                                    {
-                                        <a asp-controller="Profile" asp-action="Index" class="text-[10px] text-primary hover:underline font-bold uppercase tracking-wider no-underline">Profile</a>
-                                        <span class="text-[10px] text-slate-300">|</span>
-                                    }
-                                    <a asp-controller="Auth" asp-action="Logout" class="text-[10px] text-red-500 hover:underline font-bold uppercase tracking-wider no-underline">Logout</a>
-                                </div>
-                            </div>
-                            @if (!User.IsInRole("Admin"))
-                            {
-                                <a asp-controller="Profile" asp-action="Index" class="bg-primary/10 hover:bg-primary/20 transition-colors flex items-center justify-center rounded-full size-9 border-2 border-white dark:border-gray-700 shadow-sm text-primary no-underline">
-                                    <span class="material-symbols-outlined">person</span>
-                                </a>
-                            }
-                            else
-                            {
-                                <div class="bg-primary/10 flex items-center justify-center rounded-full size-9 border-2 border-white dark:border-gray-700 shadow-sm text-primary">
-                                    <span class="material-symbols-outlined">person</span>
-                                </div>
-                            }
-                        </div>
-                        @if (TempData["SuccessMessage"] != null)
-                        {
-                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
-                                <span class="material-symbols-outlined text-emerald-500">check_circle</span>
-                                <span class="font-medium text-sm">@TempData["SuccessMessage"]</span>
-                            </div>
-                        }
-                    }
-                    @if (TempData["ErrorMessage"] != null)
-                    {
-                        <div class="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 flex items-center gap-3 shadow-sm">
-                            <span class="material-symbols-outlined text-red-500">error</span>
-                            <span class="font-medium text-sm">@TempData["ErrorMessage"]</span>
-                        </div>
-                    }
-
                     @RenderBody()
                 </div>
             </main>
