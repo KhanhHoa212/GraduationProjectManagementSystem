@@ -11,6 +11,7 @@ public interface IUserService
     Task<UserDto?> GetUserByIdAsync(string id);
     Task CreateUserAsync(CreateUserDto dto);
     Task UpdateUserAsync(UpdateUserDto dto);
+    Task UpdateProfileAsync(UpdateProfileDto dto);
     Task ToggleUserStatusAsync(string id);
     Task<(int total, int students, int lecturers, int admins, int hods)> GetUserCountsAsync();
 }
