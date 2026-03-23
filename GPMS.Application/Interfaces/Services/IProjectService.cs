@@ -31,4 +31,10 @@ public interface IProjectService
     // Supervisor Assignment
     Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId);
     Task<(bool success, string message)> AssignSupervisorAsync(int projectId, string lecturerId, string? assignedBy);
+    
+    // Schedule
+    Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId);
+    // Bulk Import
+    Task<(int successCount, string message)> BulkImportProjectsAsync(IEnumerable<ProjectImportRowDto> projects, int semesterId, string? requestedBy);
 }
+

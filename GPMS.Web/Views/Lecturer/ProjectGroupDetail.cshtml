@@ -1,11 +1,11 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @using GPMS.Web.ViewModels.Lecturer
 @model ProjectGroupDetailViewModel
 @{
     ViewData["Title"] = Model.GroupName;
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
 
     var milestones = Model.Milestones.OrderBy(m => m.RoundNumber).ToList();
     var leader = Model.Members.FirstOrDefault(m => string.Equals(m.Role, "Leader", StringComparison.OrdinalIgnoreCase));
@@ -42,268 +42,90 @@
 
     string GetStatusBadgeClass(string status)
     {
-        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase))
-        {
-            return "bg-success-subtle text-success";
-        }
-
-        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase))
-        {
-            return "bg-danger-subtle text-danger";
-        }
-
+        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase)) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase)) return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
         if (status.Contains("Waiting", StringComparison.OrdinalIgnoreCase) ||
             status.Contains("progress", StringComparison.OrdinalIgnoreCase) ||
             status.Contains("Reviewed", StringComparison.OrdinalIgnoreCase) ||
-            status.Contains("Submission", StringComparison.OrdinalIgnoreCase))
-        {
-            return "bg-warning-subtle text-warning";
-        }
-
-        return "bg-secondary-subtle text-secondary";
+            status.Contains("Submission", StringComparison.OrdinalIgnoreCase)) return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+        
+        return "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
     }
 
     string GetStepTone(string status)
     {
-        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase))
-        {
-            return "#22C55E";
-        }
-
-        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase))
-        {
-            return "#DC2626";
-        }
-
+        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase)) return "bg-emerald-500 text-white border-emerald-500";
+        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase)) return "bg-red-500 text-white border-red-500";
         if (status.Contains("Waiting", StringComparison.OrdinalIgnoreCase) ||
             status.Contains("progress", StringComparison.OrdinalIgnoreCase) ||
             status.Contains("Reviewed", StringComparison.OrdinalIgnoreCase) ||
-            status.Contains("Submission", StringComparison.OrdinalIgnoreCase))
-        {
-            return "var(--fpt-orange)";
-        }
+            status.Contains("Submission", StringComparison.OrdinalIgnoreCase)) return "bg-primary-500 text-white border-primary-500";
+        
+        return "bg-slate-100 dark:bg-dark-700 text-slate-400 dark:text-slate-500 border-slate-200 dark:border-dark-600";
+    }
 
-        return "#D1D5DB";
+    string GetStepTextTone(string status)
+    {
+        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase)) return "text-emerald-600 dark:text-emerald-500";
+        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase)) return "text-red-600 dark:text-red-500";
+        if (status.Contains("Waiting", StringComparison.OrdinalIgnoreCase) ||
+            status.Contains("progress", StringComparison.OrdinalIgnoreCase) ||
+            status.Contains("Reviewed", StringComparison.OrdinalIgnoreCase) ||
+            status.Contains("Submission", StringComparison.OrdinalIgnoreCase)) return "text-primary-600 dark:text-primary-500";
+        
+        return "text-slate-500 dark:text-slate-400";
     }
 
     string GetStepIcon(string status)
     {
-        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase))
-        {
-            return "check";
-        }
-
-        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase))
-        {
-            return "warning";
-        }
-
-        if (status.Contains("Waiting", StringComparison.OrdinalIgnoreCase))
-        {
-            return "fact_check";
-        }
-
-        if (status.Contains("Submission", StringComparison.OrdinalIgnoreCase))
-        {
-            return "upload_file";
-        }
-
-        if (status.Contains("Reviewed", StringComparison.OrdinalIgnoreCase) || status.Contains("progress", StringComparison.OrdinalIgnoreCase))
-        {
-            return "rate_review";
-        }
-
+        if (status.Contains("Approved", StringComparison.OrdinalIgnoreCase)) return "check";
+        if (status.Contains("Need", StringComparison.OrdinalIgnoreCase) || status.Contains("revision", StringComparison.OrdinalIgnoreCase)) return "warning";
+        if (status.Contains("Waiting", StringComparison.OrdinalIgnoreCase)) return "fact_check";
+        if (status.Contains("Submission", StringComparison.OrdinalIgnoreCase)) return "upload_file";
+        if (status.Contains("Reviewed", StringComparison.OrdinalIgnoreCase) || status.Contains("progress", StringComparison.OrdinalIgnoreCase)) return "rate_review";
         return "schedule";
     }
 }
 
-<style>
-    .group-hero-card,
-    .progress-card,
-    .detail-card,
-    .calendar-card,
-    .quick-action-card {
-        border-radius: 22px;
-        border: 1px solid #DCE4EE;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-    }
-
-    .group-hero-card {
-        background: linear-gradient(180deg, #FFFFFF 0%, #FFFDFC 100%);
-        padding: 2rem 2.25rem;
-    }
-
-    .group-identity-tile {
-        width: 122px;
-        min-width: 122px;
-        height: 122px;
-        border-radius: 24px;
-        background: #FFF7F2;
-        color: var(--fpt-orange);
-    }
-
-    .member-pill {
-        display: inline-flex;
-        align-items: center;
-        gap: .65rem;
-        border: 1px solid #D9E1EA;
-        border-radius: 999px;
-        padding: .55rem .9rem;
-        background: #F9FBFD;
-        color: #0F172A;
-        font-weight: 500;
-        font-size: .95rem;
-    }
-
-    .member-pill-badge {
-        width: 28px;
-        height: 28px;
-        border-radius: 50%;
-        background: #FFE7D6;
-        color: var(--fpt-orange);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .75rem;
-        font-weight: 700;
-    }
-
-    .progress-track {
-        position: absolute;
-        left: 5%;
-        right: 5%;
-        top: 26px;
-        height: 4px;
-        background: #E5E7EB;
-        z-index: 0;
-    }
-
-    .progress-line {
-        position: absolute;
-        left: 5%;
-        top: 26px;
-        height: 4px;
-        background: var(--fpt-orange);
-        z-index: 0;
-    }
-
-    .progress-step {
-        position: relative;
-        z-index: 1;
-        text-align: center;
-        flex: 1;
-    }
-
-    .progress-icon {
-        width: 52px;
-        height: 52px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        box-shadow: 0 0 0 6px rgba(255, 255, 255, .92);
-    }
-
-    .active-round-shell {
-        border-radius: 22px;
-        overflow: hidden;
-        border: 1px solid #DCE4EE;
-        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-        background: #FFFFFF;
-    }
-
-    .active-round-header {
-        padding: 1.35rem 1.75rem;
-        border-bottom: 1px solid #E7EDF4;
-    }
-
-    .active-round-body {
-        padding: 1.75rem;
-        background: linear-gradient(180deg, #FFFFFF 0%, #FBFDFF 100%);
-    }
-
-    .submission-card,
-    .review-mini-card {
-        border: 1px solid #E2E8F0;
-        border-radius: 18px;
-        background: #F8FAFD;
-    }
-
-    .submission-card {
-        padding: 1.25rem;
-    }
-
-    .review-mini-card {
-        padding: 1.15rem 1.25rem;
-        height: 100%;
-    }
-
-    .calendar-item {
-        display: flex;
-        gap: 1rem;
-        padding: 1rem 0;
-        border-bottom: 1px solid #EDF2F7;
-    }
-
-    .calendar-item:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-    }
-
-    .calendar-date-box {
-        width: 58px;
-        min-width: 58px;
-        border-radius: 14px;
-        background: #F3F6FA;
-        text-align: center;
-        padding: .55rem .25rem;
-    }
-
-    .quick-action-card {
-        background: linear-gradient(180deg, #FF7A1A 0%, #F76707 100%);
-        color: white;
-        padding: 1.75rem;
-    }
-</style>
-
-<div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-    <div>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-2" style="font-size:14px;">
-                <li class="breadcrumb-item"><a href="@Url.Action("Projects", "Lecturer")" class="text-decoration-none">Projects</a></li>
-                <li class="breadcrumb-item"><a href="@Url.Action("Projects", "Lecturer")" class="text-decoration-none">My Groups</a></li>
-                <li class="breadcrumb-item active" aria-current="page">@Model.GroupName</li>
-            </ol>
-        </nav>
-        <h1 class="page-title mb-0">Project Group Detail</h1>
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="flex text-sm text-slate-500 dark:text-slate-400 space-x-2 mb-2">
+            <li><a href="@Url.Action("Projects", "Lecturer")" class="hover:text-primary-500 transition-colors">Projects</a></li>
+            <li><span class="mx-1">/</span></li>
+            <li><a href="@Url.Action("Projects", "Lecturer")" class="hover:text-primary-500 transition-colors">My Groups</a></li>
+            <li><span class="mx-1">/</span></li>
+            <li class="font-bold text-dark-900 dark:text-white" aria-current="page">@Model.GroupName</li>
+        </ol>
+    </nav>
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-3 pb-4 border-b border-slate-200 dark:border-dark-700">
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight">Project Group Detail</h1>
     </div>
 </div>
 
-<div class="group-hero-card mb-4">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-4">
-        <div class="d-flex align-items-start gap-4 flex-grow-1">
-            <div class="group-identity-tile d-flex align-items-center justify-content-center">
-                <span class="material-symbols-outlined" style="font-size:56px;">smart_toy</span>
+<div class="bg-gradient-to-b from-white to-slate-50 dark:from-dark-800 dark:to-dark-900 border border-slate-200 dark:border-dark-700 shadow-sm rounded-3xl p-6 lg:p-8 mb-8">
+    <div class="flex flex-col xl:flex-row justify-between items-start gap-6">
+        <div class="flex flex-col sm:flex-row items-start gap-6 flex-grow">
+            <div class="w-[100px] sm:w-[122px] min-w-[100px] sm:min-w-[122px] h-[100px] sm:h-[122px] rounded-3xl bg-primary-50 dark:bg-primary-900/20 text-primary-500 flex items-center justify-center shrink-0">
+                <span class="material-symbols-outlined text-[48px] sm:text-[56px]">smart_toy</span>
             </div>
-            <div class="flex-grow-1">
-                <h2 class="mb-2" style="font-size:2.35rem; letter-spacing:-0.02em;">@Model.ProjectName</h2>
-                <div class="text-muted mb-3" style="font-size:1.1rem;">
-                    Group ID: <span style="color:var(--fpt-orange);" class="fw-semibold">@Model.GroupName</span>
-                    <span class="mx-2">•</span>
+            <div class="flex-grow">
+                <h2 class="text-2xl sm:text-3xl font-black text-dark-900 dark:text-white tracking-tight mb-2 leading-tight">@Model.ProjectName</h2>
+                <div class="text-slate-600 dark:text-slate-400 font-medium mb-4">
+                    Group ID: <span class="text-primary-500 font-bold">@Model.GroupName</span>
+                    <span class="mx-2 text-slate-300 dark:text-dark-600">•</span>
                     @Model.Semester
                 </div>
-                <div class="row g-4 pt-3 border-top">
-                    <div class="col-lg-3">
-                        <div class="text-muted fw-bold mb-2" style="font-size:12px; letter-spacing:1px;">MENTOR</div>
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="rounded-circle" style="width:28px; height:28px; background:#9CC3C5;"></span>
-                            <span class="fw-semibold" style="font-size:1.05rem;">@Model.SupervisorName</span>
+                <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 pt-4 border-t border-slate-100 dark:border-dark-700">
+                    <div class="shrink-0 lg:w-48">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">MENTOR</div>
+                        <div class="flex items-center gap-3">
+                            <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-dark-600 border-2 border-white dark:border-dark-800 shadow-sm shrink-0"></span>
+                            <span class="font-bold text-dark-900 dark:text-white">@Model.SupervisorName</span>
                         </div>
                     </div>
-                    <div class="col-lg-9">
-                        <div class="text-muted fw-bold mb-2" style="font-size:12px; letter-spacing:1px;">STUDENT MEMBERS</div>
-                        <div class="d-flex flex-wrap gap-2">
+                    <div class="flex-grow">
+                        <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">STUDENT MEMBERS</div>
+                        <div class="flex flex-wrap gap-3">
                             @foreach (var member in Model.Members)
                             {
                                 var initials = string.Concat(member.FullName
@@ -311,10 +133,10 @@
                                     .Take(2)
                                     .Select(part => char.ToUpperInvariant(part[0])));
                                 var isLeader = string.Equals(member.Role, "Leader", StringComparison.OrdinalIgnoreCase);
-                                <span class="member-pill">
-                                    <span class="member-pill-badge">@initials</span>
-                                    <span>@member.FullName@(isLeader ? " (Leader)" : string.Empty)</span>
-                                </span>
+                                <div class="inline-flex items-center gap-2.5 border border-slate-200 dark:border-dark-600 rounded-full py-1.5 pr-4 pl-1.5 bg-white dark:bg-dark-800 text-dark-900 dark:text-white shadow-sm">
+                                    <span class="w-7 h-7 rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 flex items-center justify-center text-xs font-bold shrink-0">@initials</span>
+                                    <span class="text-sm font-semibold">@member.FullName@(isLeader ? " (Leader)" : string.Empty)</span>
+                                </div>
                             }
                         </div>
                     </div>
@@ -322,17 +144,17 @@
             </div>
         </div>
 
-        <div class="d-flex gap-2 flex-wrap justify-content-end">
+        <div class="flex flex-row xl:flex-col gap-3 flex-wrap xl:shrink-0 w-full xl:w-auto">
             @if (!string.IsNullOrWhiteSpace(Model.MessageGroupUrl))
             {
-                <a href="@Model.MessageGroupUrl" class="btn btn-primary px-4 py-3">
-                    <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">mail</span>
+                <a href="@Model.MessageGroupUrl" target="_blank" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-all w-full md:w-auto xl:w-full">
+                    <span class="material-symbols-outlined text-[20px]">mail</span>
                     Message Group
                 </a>
             }
             @if (Model.PendingFeedbackId.HasValue)
             {
-                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = Model.PendingFeedbackId.Value })" class="btn btn-outline-secondary px-4 py-3">
+                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = Model.PendingFeedbackId.Value })" class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 font-bold rounded-xl shadow-sm transition-all w-full md:w-auto xl:w-full">
                     Review Feedback
                 </a>
             }
@@ -340,34 +162,39 @@
     </div>
 </div>
 
-<div class="mb-4">
-    <h2 class="section-title mb-3" style="font-size:2rem;">Assessment Progress</h2>
-    <div class="progress-card bg-white p-4">
+<div class="mb-8">
+    <h2 class="text-xl font-bold text-dark-900 dark:text-white mb-4">Assessment Progress</h2>
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 shadow-sm p-6 lg:p-8">
         @if (!milestones.Any())
         {
-            <p class="text-muted mb-0">No review rounds available for this group yet.</p>
+            <p class="text-slate-500 dark:text-slate-400 m-0">No review rounds available for this group yet.</p>
         }
         else
         {
             var completedCount = milestones.Count(m => m.Status.Contains("Approved", StringComparison.OrdinalIgnoreCase));
-            var progressWidth = milestones.Count == 1 ? 90 : completedCount >= milestones.Count ? 90 : (completedCount * 100.0 / (milestones.Count - 1)) * 0.9;
+            var totalCount = milestones.Count;
+            var progressWidth = totalCount <= 1 ? 90 : (completedCount * 100.0 / (totalCount - 1)) * 0.9;
+            if (completedCount >= totalCount) progressWidth = 90;
 
-            <div class="position-relative pt-2">
-                <div class="progress-track"></div>
-                <div class="progress-line" style="width:@($"{progressWidth:0.##}%");"></div>
+            <div class="relative pt-2 pb-2">
+                <!-- Track -->
+                <div class="absolute left-[5%] right-[5%] top-[25px] h-1.5 bg-slate-100 dark:bg-dark-700 rounded-full z-0"></div>
+                <!-- Line -->
+                <div class="absolute left-[5%] top-[25px] h-1.5 bg-primary-500 rounded-full z-0 transition-all duration-500" style="width:@($"{progressWidth:0.##}%");"></div>
 
-                <div class="d-flex align-items-start justify-content-between gap-3">
+                <div class="flex justify-between relative z-10">
                     @foreach (var milestone in milestones)
                     {
-                        var tone = GetStepTone(milestone.Status);
+                        var toneClass = GetStepTone(milestone.Status);
+                        var textToneClass = GetStepTextTone(milestone.Status);
                         var icon = GetStepIcon(milestone.Status);
-                        <div class="progress-step">
-                            <div class="progress-icon mx-auto mb-3" style="background:@tone;">
-                                <span class="material-symbols-outlined">@icon</span>
+                        <div class="flex-1 text-center">
+                            <div class="w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center ring-4 ring-white dark:ring-dark-800 shadow-sm border @toneClass transition-colors">
+                                <span class="material-symbols-outlined text-[20px] @(toneClass.Contains("bg-slate") ? "" : "text-white")">@icon</span>
                             </div>
-                            <div class="fw-bold" style="font-size:1.15rem;">Round @milestone.RoundNumber</div>
-                            <div class="small text-muted">@milestone.RoundType</div>
-                            <div class="small mt-1" style="color:@tone; font-weight:600;">@milestone.Status</div>
+                            <div class="font-bold text-dark-900 dark:text-white mb-0.5">Round @milestone.RoundNumber</div>
+                            <div class="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold mb-1">@milestone.RoundType</div>
+                            <div class="text-[11px] font-bold @textToneClass">@milestone.Status</div>
                         </div>
                     }
                 </div>
@@ -376,46 +203,46 @@
     </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-xl-8">
-        <div class="active-round-shell">
-            <div class="active-round-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
+<div class="flex flex-col xl:flex-row gap-6">
+    <div class="w-full xl:w-2/3">
+        <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 shadow-sm overflow-hidden mb-6">
+            <div class="p-6 border-b border-slate-100 dark:border-dark-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 @if (activeMilestone == null)
                 {
-                    <div>
-                        <h2 class="section-title mb-0">Current Round</h2>
-                    </div>
+                    <h2 class="text-xl font-bold text-dark-900 dark:text-white">Current Round</h2>
                 }
                 else
                 {
-                    <div class="d-flex align-items-center gap-3">
-                        <span class="material-symbols-outlined" style="font-size:32px; color:var(--fpt-orange);">assignment_add</span>
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                        <div class="w-12 h-12 rounded-xl bg-primary-50 dark:bg-primary-900/20 text-primary-500 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[24px]">assignment_add</span>
+                        </div>
                         <div>
-                            <h2 class="section-title mb-0">Active Round: Round @activeMilestone.RoundNumber - @activeMilestone.RoundType</h2>
-                            <div class="text-muted mt-1" style="font-size:13px;">Window: @activeMilestone.StartDate.ToString("MMM dd, yyyy") - @activeMilestone.EndDate.ToString("MMM dd, yyyy")</div>
+                            <h2 class="text-lg font-bold text-dark-900 dark:text-white mb-0.5">Active Round: Round @activeMilestone.RoundNumber - @activeMilestone.RoundType</h2>
+                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Window: @activeMilestone.StartDate.ToString("MMM dd, yyyy") - @activeMilestone.EndDate.ToString("MMM dd, yyyy")</div>
                         </div>
                     </div>
-                    <span class="badge @GetStatusBadgeClass(activeMilestone.Status)" style="font-size:12px;">@activeMilestone.Status</span>
+                    <span class="px-3 py-1.5 rounded-lg text-xs font-semibold @GetStatusBadgeClass(activeMilestone.Status)">@activeMilestone.Status</span>
                 }
             </div>
 
-            <div class="active-round-body">
+            <div class="p-6 lg:p-8 bg-gradient-to-b from-white to-slate-50/50 dark:from-dark-800 dark:to-dark-900/30">
                 @if (activeMilestone == null)
                 {
-                    <p class="text-muted mb-0">No milestone details available yet.</p>
+                    <p class="text-slate-500 dark:text-slate-400">No milestone details available yet.</p>
                 }
                 else
                 {
-                    <div class="submission-card mb-4">
-                        <div class="d-flex align-items-start gap-3 flex-wrap">
-                            <div class="rounded-4 d-flex align-items-center justify-content-center" style="width:56px; height:56px; background:#FFE3DB; color:#EF4444;">
-                                <span class="material-symbols-outlined" style="font-size:32px;">description</span>
+                    <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 rounded-2xl p-5 shadow-sm mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 flex items-center justify-center shrink-0">
+                                <span class="material-symbols-outlined text-[24px]">description</span>
                             </div>
-                            <div class="flex-grow-1">
+                            <div class="flex-grow min-w-0">
                                 @if (activeMilestone.HasSubmission)
                                 {
-                                    <div class="fw-bold mb-1" style="font-size:1.45rem;">@activeMilestone.SubmissionFileName</div>
-                                    <div class="text-muted mb-3" style="font-size:15px;">
+                                    <div class="font-bold text-dark-900 dark:text-white text-lg mb-1 truncate">@activeMilestone.SubmissionFileName</div>
+                                    <div class="text-sm text-slate-500 dark:text-slate-400 mb-3 truncate">
                                         Submitted by @(activeMilestone.SubmittedByName ?? "Group member")
                                         on @activeMilestone.SubmittedAt?.ToString("MMM dd, yyyy")
                                         @if (activeMilestone.SubmissionSizeMb.HasValue)
@@ -423,15 +250,15 @@
                                             <span> • @activeMilestone.SubmissionSizeMb.Value.ToString("0.#") MB</span>
                                         }
                                     </div>
-                                    <div class="d-flex gap-3 flex-wrap">
+                                    <div class="flex flex-wrap gap-3">
                                         @if (!string.IsNullOrWhiteSpace(activeMilestone.SubmissionUrl))
                                         {
-                                            <a href="@activeMilestone.SubmissionUrl" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--fpt-orange);">
-                                                <span class="material-symbols-outlined align-middle" style="font-size:18px;">download</span>
+                                            <a href="@activeMilestone.SubmissionUrl" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary-500 hover:text-primary-600 transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">download</span>
                                                 Download
                                             </a>
-                                            <a href="@activeMilestone.SubmissionUrl" target="_blank" class="text-decoration-none fw-semibold" style="color:var(--fpt-orange);">
-                                                <span class="material-symbols-outlined align-middle" style="font-size:18px;">visibility</span>
+                                            <a href="@activeMilestone.SubmissionUrl" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary-500 hover:text-primary-600 transition-colors">
+                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
                                                 Preview
                                             </a>
                                         }
@@ -439,142 +266,110 @@
                                 }
                                 else
                                 {
-                                    <div class="fw-bold mb-1" style="font-size:1.2rem;">No submission uploaded yet</div>
-                                    <div class="text-muted">The group has not uploaded a submission file for this round.</div>
+                                    <div class="font-bold text-dark-900 dark:text-white text-base mb-1">No submission uploaded yet</div>
+                                    <div class="text-sm text-slate-500 dark:text-slate-400">The group has not uploaded a submission file for this round.</div>
                                 }
                             </div>
                         </div>
                     </div>
 
-                    <div class="text-muted fw-bold mb-3" style="font-size:12px; letter-spacing:1px;">REVIEW DETAILS</div>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="review-mini-card">
-                                <div class="text-muted mb-2" style="font-size:14px;">Assigned Reviewer</div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="rounded-circle" style="width:26px; height:26px; background:#3F5E74;"></span>
-                                    <span class="fw-semibold fs-5">@(activeMilestone.ReviewerName ?? "Waiting for assignment")</span>
-                                </div>
+                    <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">REVIEW DETAILS</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                        <div class="bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 rounded-2xl p-5">
+                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Assigned Reviewer</div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-7 h-7 rounded-full bg-slate-300 dark:bg-dark-600 shadow-inner"></span>
+                                <span class="font-bold text-dark-900 dark:text-white text-lg">@(activeMilestone.ReviewerName ?? "Waiting for assignment")</span>
                             </div>
                         </div>
-                        <div class="col-md-6">
-                            <div class="review-mini-card">
-                                <div class="text-muted mb-2" style="font-size:14px;">Feedback Status</div>
-                                <div class="fw-semibold fs-5" style="color:var(--fpt-orange);">
-                                    @if (!string.IsNullOrWhiteSpace(activeMilestone.FeedbackStatus))
-                                    {
-                                        @activeMilestone.FeedbackStatus
-                                    }
-                                    else
-                                    {
-                                        @activeMilestone.Status
-                                    }
-                                </div>
-
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="review-mini-card">
-                                <div class="text-muted mb-2" style="font-size:14px;">Round Deadline</div>
-                                <div class="fw-semibold fs-5">@activeMilestone.Deadline.ToString("MMM dd, yyyy")</div>
-                                <div class="text-muted mt-2">Submission and review activity should be completed before this date.</div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="review-mini-card">
-                                <div class="text-muted mb-2" style="font-size:14px;">Meeting Logistics</div>
-                                @if (activeMilestone.ScheduledAt.HasValue)
+                        <div class="bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 rounded-2xl p-5">
+                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Feedback Status</div>
+                            <div class="font-bold text-primary-500 text-lg">
+                                @if (!string.IsNullOrWhiteSpace(activeMilestone.FeedbackStatus))
                                 {
-                                    <div class="fw-semibold fs-5">@activeMilestone.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
-                                    <div class="text-muted mt-2">@activeMilestone.Location</div>
-                                    @if (!string.IsNullOrWhiteSpace(activeMilestone.MeetLink))
-                                    {
-                                        <a href="@activeMilestone.MeetLink" target="_blank" class="btn btn-sm btn-outline-primary mt-3">Open Meet</a>
-                                    }
+                                    @activeMilestone.FeedbackStatus
                                 }
                                 else
                                 {
-                                    <div class="text-muted">Meeting information has not been scheduled for this round yet.</div>
+                                    @activeMilestone.Status
                                 }
                             </div>
                         </div>
+                        <div class="bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 rounded-2xl p-5">
+                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Round Deadline</div>
+                            <div class="font-bold text-dark-900 dark:text-white text-lg mb-1">@activeMilestone.Deadline.ToString("MMM dd, yyyy")</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Activity should be completed before this date.</div>
+                        </div>
+                        <div class="bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 rounded-2xl p-5">
+                            <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Meeting Logistics</div>
+                            @if (activeMilestone.ScheduledAt.HasValue)
+                            {
+                                <div class="font-bold text-dark-900 dark:text-white text-lg mb-1">@activeMilestone.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
+                                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-3">@activeMilestone.Location</div>
+                                @if (!string.IsNullOrWhiteSpace(activeMilestone.MeetLink))
+                                {
+                                    <a href="@activeMilestone.MeetLink" target="_blank" class="inline-flex items-center justify-center px-4 py-2 border border-primary-200 dark:border-primary-900/30 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 bg-white dark:bg-dark-800 rounded-xl text-xs font-bold transition-colors">Open Meet</a>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-sm text-slate-500 dark:text-slate-400">Meeting information has not been scheduled.</div>
+                            }
+                        </div>
                     </div>
 
-                    <div class="mt-4">
-                        <div class="text-muted fw-bold mb-3" style="font-size:12px; letter-spacing:1px;">MENTOR GATE BEFORE REVIEWER EVALUATION</div>
-                        <div class="submission-card">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                                <div>
-                                    <div class="fw-semibold" style="font-size:1.1rem;">Current Gate Status</div>
-                                    <div class="text-muted small">Mentor decides whether the group can proceed to reviewer evaluation for this round.</div>
-                                </div>
-                                <span class="badge @(activeMilestone.MentorGateStatus == MentorGateStatus.Approved ? "bg-success-subtle text-success" : activeMilestone.MentorGateStatus == MentorGateStatus.Rejected ? "bg-danger-subtle text-danger" : "bg-secondary-subtle text-secondary")">
-                                    @activeMilestone.MentorGateStatus
-                                </span>
+                    <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4">MENTOR GATE BEFORE REVIEWER EVALUATION</div>
+                    <div class="bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 rounded-2xl p-5 shadow-sm">
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
+                            <div>
+                                <div class="font-bold text-dark-900 dark:text-white text-lg">Current Gate Status</div>
+                                <div class="text-sm text-slate-500 dark:text-slate-400">Decide if the group can proceed to reviewer evaluation.</div>
                             </div>
-
-                            <form asp-action="ReviewRoundGate" asp-controller="Lecturer" method="post" class="row g-3">
-                                @Html.AntiForgeryToken()
-                                <input type="hidden" name="groupId" value="@Model.GroupID" />
-                                <input type="hidden" name="roundId" value="@activeMilestone.RoundId" />
-                                <div class="col-md-4">
-                                    <label class="form-label fw-semibold">Decision</label>
-                                    <select name="decision" class="form-select">
-                                        @if (activeMilestone.MentorGateStatus == MentorGateStatus.Pending)
-                                        {
-                                            <option value="@MentorGateStatus.Pending" selected>Pending</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@MentorGateStatus.Pending">Pending</option>
-                                        }
-                                        @if (activeMilestone.MentorGateStatus == MentorGateStatus.Approved)
-                                        {
-                                            <option value="@MentorGateStatus.Approved" selected>Approve for Reviewer</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@MentorGateStatus.Approved">Approve for Reviewer</option>
-                                        }
-                                        @if (activeMilestone.MentorGateStatus == MentorGateStatus.Rejected)
-                                        {
-                                            <option value="@MentorGateStatus.Rejected" selected>Reject / Block</option>
-                                        }
-                                        else
-                                        {
-                                            <option value="@MentorGateStatus.Rejected">Reject / Block</option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="col-md-8">
-                                    <label class="form-label fw-semibold">Mentor Progress Comment</label>
-                                    <textarea name="progressComment" class="form-control" rows="3" placeholder="Describe current progress and your decision for this round.">@activeMilestone.MentorGateComment</textarea>
-                                </div>
-                                <div class="col-12">
-                                    <button type="submit" class="btn btn-outline-primary">Save Mentor Gate</button>
-                                </div>
-                            </form>
+                            <span class="px-3 py-1.5 rounded-lg text-sm font-semibold @(activeMilestone.MentorGateStatus == MentorGateStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : activeMilestone.MentorGateStatus == MentorGateStatus.Rejected ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300")">
+                                @activeMilestone.MentorGateStatus
+                            </span>
                         </div>
+
+                        <form asp-action="ReviewRoundGate" asp-controller="Lecturer" method="post" class="flex flex-col lg:flex-row gap-5">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="groupId" value="@Model.GroupID" />
+                            <input type="hidden" name="roundId" value="@activeMilestone.RoundId" />
+                            <div class="lg:w-1/3">
+                                <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Decision</label>
+                                <select name="decision" class="block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors text-dark-900 dark:text-white">
+                                    <option value="@MentorGateStatus.Pending" selected="@(activeMilestone.MentorGateStatus == MentorGateStatus.Pending)">Pending</option>
+                                    <option value="@MentorGateStatus.Approved" selected="@(activeMilestone.MentorGateStatus == MentorGateStatus.Approved)">Approve for Reviewer</option>
+                                    <option value="@MentorGateStatus.Rejected" selected="@(activeMilestone.MentorGateStatus == MentorGateStatus.Rejected)">Reject / Block</option>
+                                </select>
+                            </div>
+                            <div class="flex-grow">
+                                <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Mentor Progress Comment</label>
+                                <textarea name="progressComment" class="block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors text-dark-900 dark:text-white resize-none" rows="3" placeholder="Describe current progress and your decision for this round.">@activeMilestone.MentorGateComment</textarea>
+                                <div class="mt-4 flex justify-end">
+                                    <button type="submit" class="inline-flex items-center justify-center px-5 py-2.5 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 rounded-xl text-sm font-bold shadow-sm transition-all">Save Mentor Gate</button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 }
             </div>
 
-            <div class="px-4 pb-4">
+            <div class="px-6 py-5 bg-slate-50 dark:bg-dark-900/50 border-t border-slate-100 dark:border-dark-700">
                 @if (Model.PendingFeedbackId.HasValue)
                 {
-                    <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = Model.PendingFeedbackId.Value })" class="btn btn-primary px-4 py-3">
+                    <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = Model.PendingFeedbackId.Value })" class="inline-flex justify-center items-center px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-all cursor-pointer">
                         View Feedback to Approve
                     </a>
                 }
                 else if (!string.IsNullOrWhiteSpace(activeMilestone?.MeetLink))
                 {
-                    <a href="@activeMilestone!.MeetLink" target="_blank" class="btn btn-primary px-4 py-3">
+                    <a href="@activeMilestone!.MeetLink" target="_blank" class="inline-flex justify-center items-center px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-all cursor-pointer">
                         Join Current Round Meeting
                     </a>
                 }
                 else
                 {
-                    <a href="@Url.Action("Schedule", "Lecturer")" class="btn btn-primary px-4 py-3">
+                    <a href="@Url.Action("Schedule", "Lecturer")" class="inline-flex justify-center items-center px-5 py-2.5 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-all cursor-pointer">
                         View Full Schedule
                     </a>
                 }
@@ -582,56 +377,58 @@
         </div>
     </div>
 
-    <div class="col-xl-4 d-flex flex-column gap-4">
-        <div class="calendar-card bg-white p-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h2 class="section-title mb-0">Milestone Calendar</h2>
-                <a href="@Url.Action("Schedule", "Lecturer")" class="text-decoration-none" style="color:var(--fpt-orange); font-size:13px;">View Full Schedule</a>
+    <div class="w-full xl:w-1/3 flex flex-col gap-6">
+        <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 shadow-sm p-6 lg:p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-dark-900 dark:text-white">Milestone Calendar</h2>
+                <a href="@Url.Action("Schedule", "Lecturer")" class="text-sm font-bold text-primary-500 hover:text-primary-600 transition-colors">View All</a>
             </div>
 
             @if (!milestones.Any())
             {
-                <p class="text-muted mb-0">Milestone dates will appear here once review rounds are configured.</p>
+                <p class="text-slate-500 dark:text-slate-400">Milestone dates will appear here once configured.</p>
             }
             else
             {
-                @foreach (var milestone in milestones.OrderBy(m => m.Deadline))
-                {
-                    <div class="calendar-item">
-                        <div class="calendar-date-box">
-                            <div class="text-uppercase text-muted fw-bold" style="font-size:11px;">@milestone.Deadline.ToString("MMM")</div>
-                            <div class="fw-bold" style="font-size:1.85rem; color:var(--fpt-orange); line-height:1;">@milestone.Deadline.ToString("dd")</div>
+                <div class="space-y-4">
+                    @foreach (var milestone in milestones.OrderBy(m => m.Deadline))
+                    {
+                        <div class="flex gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-dark-900/50 border border-slate-100 dark:border-dark-700 items-center">
+                            <div class="w-16 h-16 min-w-[64px] rounded-xl bg-white dark:bg-dark-800 shadow-sm border border-slate-100 dark:border-dark-600 flex flex-col items-center justify-center shrink-0">
+                                <div class="text-[10px] uppercase text-slate-500 dark:text-slate-400 font-bold tracking-widest mb-0.5">@milestone.Deadline.ToString("MMM")</div>
+                                <div class="text-2xl font-black text-primary-500 leading-none">@milestone.Deadline.ToString("dd")</div>
+                            </div>
+                            <div class="flex-grow min-w-0">
+                                <div class="font-bold text-dark-900 dark:text-white text-lg mb-1 truncate">Round @milestone.RoundNumber Deadline</div>
+                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 truncate">@milestone.RoundType &middot; @milestone.Status</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="fw-bold" style="font-size:1.2rem;">Round @milestone.RoundNumber Deadline</div>
-                            <div class="text-muted">@milestone.RoundType • @milestone.Status</div>
-                        </div>
-                    </div>
-                }
+                    }
+                </div>
             }
         </div>
 
-        <div class="quick-action-card">
-            <div class="fw-bold mb-2" style="font-size:2rem; line-height:1.1;">Mentor Quick Action</div>
-            <div class="mb-4" style="font-size:1.02rem; opacity:.95;">
+        <div class="bg-gradient-to-br from-primary-500 to-primary-600 rounded-3xl p-6 lg:p-8 text-white shadow-md sticky top-24">
+            <h3 class="text-2xl font-black mb-3">Mentor Quick Action</h3>
+            <p class="text-primary-100 font-medium mb-6 text-sm leading-relaxed">
                 @quickActionDescription
                 @if (leader != null)
                 {
-                    <span> Group leader: @leader.FullName.</span>
+                    <span class="block mt-1">Group leader: @leader.FullName.</span>
                 }
-            </div>
+            </p>
 
             @if (!string.IsNullOrWhiteSpace(quickActionLink))
             {
                 if (openQuickActionInNewTab)
                 {
-                    <a href="@quickActionLink" target="_blank" class="btn btn-light w-100 fw-semibold py-3" style="color:var(--fpt-orange);">
+                    <a href="@quickActionLink" target="_blank" class="block w-full text-center py-3.5 bg-white text-primary-600 hover:bg-slate-50 font-bold rounded-xl shadow-sm transition-colors">
                         @quickActionLabel
                     </a>
                 }
                 else
                 {
-                    <a href="@quickActionLink" class="btn btn-light w-100 fw-semibold py-3" style="color:var(--fpt-orange);">
+                    <a href="@quickActionLink" class="block w-full text-center py-3.5 bg-white text-primary-600 hover:bg-slate-50 font-bold rounded-xl shadow-sm transition-colors">
                         @quickActionLabel
                     </a>
                 }

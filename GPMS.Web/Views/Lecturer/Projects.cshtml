@@ -1,102 +1,103 @@
-@using GPMS.Web.ViewModels.Lecturer
+﻿@using GPMS.Web.ViewModels.Lecturer
 @model MentoredProjectsViewModel
 @{
     ViewData["Title"] = "My Projects";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
     <div>
-        <h1 class="page-title">My Projects</h1>
-        <p class="page-subtitle text-muted mb-0">All groups you are supervising, their next meeting, and current feedback state.</p>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">My Projects</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">All groups you are supervising, their next meeting, and current feedback state.</p>
     </div>
 </div>
 
-<div class="card-panel border p-0 overflow-hidden shadow-sm">
-    <div class="p-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <h2 class="section-title mb-0">Mentored Groups</h2>
-        <div class="input-group" style="max-width: 280px;">
-            <span class="input-group-text bg-white border-end-0">
-                <span class="material-symbols-outlined" style="font-size: 18px; color: var(--text-muted)">search</span>
+<div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+    <div class="p-5 border-b border-slate-100 dark:border-dark-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Mentored Groups</h2>
+        <div class="relative w-full md:w-72">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <span class="material-symbols-outlined text-slate-400 text-lg">search</span>
             </span>
-            <input type="text" class="form-control border-start-0" id="groupSearch" placeholder="Search group or project...">
+            <input type="text" id="groupSearch" class="block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 pl-10 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors text-dark-900 dark:text-white placeholder-slate-400" placeholder="Search group or project...">
         </div>
     </div>
 
     @if (!Model.Groups.Any())
     {
-        <div class="text-center py-5 text-muted">
-            <span class="material-symbols-outlined fs-1 d-block mb-2">folder_off</span>
-            <p>No groups assigned to you this semester.</p>
+        <div class="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500">
+            <span class="material-symbols-outlined text-5xl mb-4 opacity-50">folder_off</span>
+            <p class="text-sm font-medium">No groups assigned to you this semester.</p>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table mb-0 align-middle" id="projectsTable">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm whitespace-nowrap md:whitespace-normal" id="projectsTable">
                 <thead>
-                    <tr class="bg-light">
-                        <th class="px-4">GROUP</th>
-                        <th>PROJECT</th>
-                        <th>MEMBERS</th>
-                        <th>NEXT SESSION</th>
-                        <th>ROUND</th>
-                        <th>STATUS</th>
-                        <th class="text-end pe-4">ACTIONS</th>
+                    <tr class="bg-slate-50 dark:bg-dark-700 border-b border-slate-200 dark:border-dark-600">
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">GROUP</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">PROJECT</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">MEMBERS</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">NEXT SESSION</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">ROUND</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">STATUS</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400 text-right">ACTIONS</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                     @foreach (var g in Model.Groups)
                     {
-                        <tr>
-                            <td class="px-4">
-                                <div class="fw-bold text-body" style="font-size:13px;">@g.GroupName</div>
+                        var statusClass = g.Status.Contains("Awaiting") ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                            : g.Status.Contains("revision") ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
+
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-middle">
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-dark-900 dark:text-white">@g.GroupName</div>
                             </td>
-                            <td>
-                                <div class="fw-medium" style="font-size:13px;">@g.ProjectName</div>
-                                <div class="text-muted" style="font-size:11px;">@g.ProjectCode - @g.Semester</div>
+                            <td class="px-5 py-4">
+                                <div class="font-medium text-dark-900 dark:text-white mb-0.5 truncate max-w-[200px]">@g.ProjectName</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400">@g.ProjectCode &middot; @g.Semester</div>
                             </td>
-                            <td>
-                                <div class="d-flex flex-wrap gap-1">
+                            <td class="px-5 py-4">
+                                <div class="flex items-center -space-x-2">
                                     @foreach (var name in g.MemberNames.Take(3))
                                     {
                                         <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(name)&background=E5E7EB&color=374151"
-                                             title="@name" width="24" height="24" class="rounded-circle border border-white" style="margin-left:-6px;" />
+                                             title="@name" class="w-7 h-7 rounded-full border-2 border-white dark:border-dark-800 shadow-sm" alt="@name" />
                                     }
                                     @if (g.MemberNames.Count > 3)
                                     {
-                                        <span class="badge bg-light text-muted border ms-1">+@(g.MemberNames.Count - 3)</span>
+                                        <span class="w-7 h-7 rounded-full border-2 border-white dark:border-dark-800 bg-slate-100 dark:bg-dark-600 text-slate-600 dark:text-slate-300 flex items-center justify-center text-[10px] font-bold shadow-sm z-10">
+                                            +@(g.MemberNames.Count - 3)
+                                        </span>
                                     }
                                 </div>
                             </td>
-                            <td>
+                            <td class="px-5 py-4">
                                 @if (g.NextSessionAt.HasValue)
                                 {
-                                    <div class="fw-medium" style="font-size:13px;">@g.NextSessionAt.Value.ToString("MMM dd, HH:mm")</div>
-                                    <div class="text-muted" style="font-size:11px;">@g.NextSessionLocation</div>
+                                    <div class="font-medium text-dark-900 dark:text-white mb-0.5 text-sm">@g.NextSessionAt.Value.ToString("MMM dd, HH:mm")</div>
+                                    <div class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[150px]">@g.NextSessionLocation</div>
                                 }
                                 else
                                 {
-                                    <span class="text-muted" style="font-size:12px;">No meeting scheduled</span>
+                                    <span class="text-xs text-slate-400 dark:text-slate-500">No meeting scheduled</span>
                                 }
                             </td>
-                            <td>
-                                <span class="badge bg-light text-body border fw-medium">@g.RoundType</span>
+                            <td class="px-5 py-4">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-300">@g.RoundType</span>
                             </td>
-                            <td>
-                                @{
-                                    var statusClass = g.Status.Contains("Awaiting") ? "bg-warning-subtle text-warning"
-                                        : g.Status.Contains("revision") ? "bg-danger-subtle text-danger"
-                                        : "bg-success-subtle text-success";
-                                }
-                                <span class="badge @statusClass">@g.Status</span>
+                            <td class="px-5 py-4">
+                                <span class="px-3 py-1.5 text-xs font-semibold rounded-lg @statusClass inline-block">@g.Status</span>
                                 @if (g.PendingFeedbackCount > 0)
                                 {
-                                    <div class="text-muted mt-1" style="font-size:11px;">@g.PendingFeedbackCount pending approval</div>
+                                    <div class="text-xs text-amber-600 dark:text-amber-400 font-medium mt-2">@g.PendingFeedbackCount pending approval</div>
                                 }
                             </td>
-                            <td class="text-end pe-4">
-                                <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = g.GroupID })" class="btn btn-sm btn-outline-secondary">
+                            <td class="px-5 py-4 text-right">
+                                <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = g.GroupID })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-dark-800 hover:bg-slate-50 dark:hover:bg-dark-700 rounded-xl text-sm font-semibold transition-colors shadow-sm">
                                     View Details
                                 </a>
                             </td>

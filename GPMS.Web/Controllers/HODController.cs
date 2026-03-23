@@ -3,28 +3,32 @@ using GPMS.Application.Interfaces.Services;
 using GPMS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 
 namespace GPMS.Web.Controllers;
 
-[Authorize(Roles = "HeadOfDept,Admin")]
+[Authorize(Roles = "HeadOfDept")]
 public class HODController : Controller
 {
     private readonly IProjectService _projectService;
     private readonly ISemesterService _semesterService;
     private readonly IReviewRoundService _reviewRoundService;
     private readonly IChecklistService _checklistService;
+    private readonly IExcelService _excelService;
 
     public HODController(
         IProjectService projectService, 
         ISemesterService semesterService, 
         IReviewRoundService reviewRoundService,
-        IChecklistService checklistService)
+        IChecklistService checklistService,
+        IExcelService excelService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
         _checklistService = checklistService;
+        _excelService = excelService;
     }
 
 
@@ -51,6 +55,12 @@ public class HODController : Controller
         ViewBag.ActiveCount = projects.Count(p => p.Status == ProjectStatus.Active);
         ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
         ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
+
+        // Fetch review rounds for the timeline
+        if (activeSemester != null)
+        {
+            ViewBag.ReviewRounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
 
         return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
@@ -101,6 +111,74 @@ public class HODController : Controller
         ViewBag.CurrentMajor = majorName;
 
         return View(projects.ToList());
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> DownloadProjectTemplate()
+    {
+        var fileBytes = await _excelService.GenerateProjectImportTemplateAsync();
+        if (fileBytes == null || fileBytes.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Không thể tạo file mẫu. Vui lòng kiểm tra học kỳ hiện tại.";
+            return RedirectToAction(nameof(Projects));
+        }
+        
+        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "GPMS_Project_Import_Template.xlsx");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> PreviewProjectImport(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            TempData["ErrorMessage"] = "Vui lòng chọn file Excel.";
+            return RedirectToAction(nameof(Projects));
+        }
+
+        var results = await _excelService.PreviewProjectImportAsync(file);
+        return View(results);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ConfirmProjectImport(string importDataJson)
+    {
+        if (string.IsNullOrEmpty(importDataJson))
+        {
+            TempData["ErrorMessage"] = "Không có dữ liệu để import.";
+            return RedirectToAction(nameof(Projects));
+        }
+
+        try
+        {
+            var projects = System.Text.Json.JsonSerializer.Deserialize<List<ProjectImportRowDto>>(importDataJson);
+            if (projects == null || !projects.Any())
+            {
+                TempData["ErrorMessage"] = "Dữ liệu không hợp lệ hoặc rỗng.";
+                return RedirectToAction(nameof(Projects));
+            }
+
+            var activeSemester = await _semesterService.GetCurrentSemesterAsync();
+            if (activeSemester == null)
+            {
+                TempData["ErrorMessage"] = "Không tìm thấy học kỳ hoạt động (Semester Status = Active).";
+                return RedirectToAction(nameof(Projects));
+            }
+
+            var requestedBy = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var (successCount, message) = await _projectService.BulkImportProjectsAsync(projects, activeSemester.SemesterID, requestedBy);
+
+            if (successCount > 0)
+                TempData["SuccessMessage"] = message;
+            else
+                TempData["ErrorMessage"] = "Không có dự án nào được nhập thành công. Vui lòng kiểm tra lại dữ liệu.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Có lỗi xảy ra trong quá trình xử lý: " + ex.Message;
+        }
+
+        return RedirectToAction(nameof(Projects));
     }
 
     // GET: /HOD/ProjectDetails/{id}
@@ -242,7 +320,7 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Only for NEW rounds)
         if (dto.EndDate <= DateTime.Now)
         {
             ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
@@ -324,12 +402,12 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Loosened for editing existing rounds)
         var now = DateTime.Now;
-        if (dto.EndDate <= now)
-        {
-            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
-        }
+        // Only block if EndDate was formerly in the future and is now being moved to the past
+        // Actually, just allow it for Edit.
+        // if (dto.EndDate <= now) { ... }
+        
 
         // 3. Sequential Validation
         var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID))

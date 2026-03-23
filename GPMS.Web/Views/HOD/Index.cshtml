@@ -3,7 +3,7 @@
     ViewBag.Title = "Dashboard";
     ViewBag.CurrentPage = "Dashboard";
     ViewBag.BreadcrumbSection = "Dashboard";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
 
     int totalProjects = ViewBag.TotalProjects ?? 0;
     int missingSup = ViewBag.MissingSupervisor ?? 0;
@@ -77,18 +77,25 @@
 
         <!-- Card 2: Current Review Round -->
         <div class="saas-card flex flex-col justify-between">
+            @{
+                var ongoingRound = (ViewBag.ReviewRounds as IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>)?.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                var nextRound = ongoingRound == null ? (ViewBag.ReviewRounds as IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>)?.OrderBy(r => r.StartDate).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Planned) : null;
+                var phaseName = ongoingRound != null ? $"Vòng {ongoingRound.RoundNumber}" : (nextRound != null ? $"Sắp tới: R{nextRound.RoundNumber}" : "N/A");
+                var phaseStatus = ongoingRound != null ? "Đang diễn ra" : (nextRound != null ? "Sắp bắt đầu" : "Không có");
+                var pulseClass = ongoingRound != null ? "animate-pulse" : "";
+            }
             <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Current Phase</span>
+                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Giai đoạn hiện tại</span>
                 <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                     <span class="material-symbols-outlined text-[20px]">update</span>
                 </div>
             </div>
             <div>
-                <div class="saas-stat-number text-emerald-600">Round 1</div>
+                <div class="saas-stat-number text-emerald-600">@phaseName</div>
                 <div class="flex items-center gap-1.5 mt-2">
                     <span class="flex items-center text-emerald-700 font-medium text-xs">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                        Ongoing Phase
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 @pulseClass"></span>
+                        @phaseStatus
                     </span>
                 </div>
             </div>
@@ -196,43 +203,58 @@
             <div class="flex-1 px-2 pt-4">
                 <!-- Horizontal Stepper -->
                 <div class="relative flex justify-between w-full max-w-2xl mx-auto mb-16">
-                    <!-- Connecting line -->
-                    <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 rounded-full z-0"></div>
-                    <!-- Filled line -->
-                    <div class="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded-full z-0" style="width: 25%;"></div>
+                    @{
+                        var rounds = (ViewBag.ReviewRounds as IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>)?.OrderBy(r => r.RoundNumber).ToList();
+                        if (rounds != null && rounds.Any())
+                        {
+                            int totalSegments = rounds.Count > 1 ? rounds.Count - 1 : 1;
+                            int completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
+                            int ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                            int lastActiveIndex = ongoingIndex != -1 ? ongoingIndex : (completedCount > 0 ? completedCount - 1 : -1);
+                            double progressPercentage = 0;
+                            if (lastActiveIndex != -1)
+                            {
+                                progressPercentage = (lastActiveIndex * 100.0 / totalSegments);
+                            }
+                            progressPercentage = Math.Min(100, Math.Max(0, progressPercentage));
 
-                    <!-- Step 1 (Ongoing) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center shadow-md">
-                            <span class="material-symbols-outlined text-white text-[20px] font-bold">check</span>
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-bold saas-text-heading text-sm">Round 1</div>
-                            <div class="text-[10px] uppercase font-bold text-blue-600 tracking-wider mt-1">Ongoing</div>
-                        </div>
-                    </div>
+                            <!-- Connecting line -->
+                            <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 rounded-full z-0"></div>
+                            <!-- Filled line -->
+                            <div class="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded-full z-0" style="width: @(progressPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture))%;"></div>
 
-                    <!-- Step 2 (Planned) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-slate-400 font-bold">
-                            2
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-semibold saas-text-neutral text-sm">Round 2</div>
-                            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Planned</div>
-                        </div>
-                    </div>
-
-                    <!-- Step 3 (Defense) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-slate-400 font-bold">
-                            3
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-semibold saas-text-neutral text-sm">Defense</div>
-                            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Planned</div>
-                        </div>
-                    </div>
+                            for (int i = 0; i < rounds.Count; i++)
+                            {
+                                var r = rounds[i];
+                                var isCompleted = r.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                                var isOngoing = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                                var stepBg = isCompleted || isOngoing ? "bg-blue-600 border-4 border-white shadow-md" : "bg-white border-2 border-slate-300 text-slate-400";
+                                var stepIcon = isCompleted ? "check" : (i + 1).ToString();
+                                var statusLabel = isCompleted ? "Đã hoàn thành" : (isOngoing ? "Đang diễn ra" : "Sắp tới");
+                                var statusColor = isOngoing ? "text-blue-600" : (isCompleted ? "text-emerald-600" : "text-slate-400");
+                                
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-full @stepBg flex items-center justify-center font-bold">
+                                        @if (isCompleted) {
+                                            <span class="material-symbols-outlined text-white text-[20px] font-bold">check</span>
+                                        } else if (isOngoing) {
+                                            <span class="text-white">@(i + 1)</span>
+                                        } else {
+                                            <span>@(i + 1)</span>
+                                        }
+                                    </div>
+                                    <div class="absolute top-14 text-center w-32">
+                                        <div class="font-bold saas-text-heading text-sm">Round @r.RoundNumber</div>
+                                        <div class="text-[10px] uppercase font-bold @statusColor tracking-wider mt-1">@statusLabel</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="w-full text-center text-slate-400 py-4">Chưa có vòng review nào</div>
+                        }
+                    }
                 </div>
             </div>
 

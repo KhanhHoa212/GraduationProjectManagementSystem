@@ -1,81 +1,103 @@
-@using GPMS.Web.ViewModels.Lecturer
+﻿@using GPMS.Web.ViewModels.Lecturer
 @model LecturerHistoryViewModel
 @{
     ViewData["Title"] = "History";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
 }
 
-<div class="page-header mb-4">
-    <h1 class="page-title">Feedback and Review History</h1>
-    <p class="page-subtitle text-muted mb-0">Track reviews you submitted as a reviewer and feedback decisions you made as a mentor.</p>
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
+    <div>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">Feedback and Review History</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Track reviews you submitted as a reviewer and feedback decisions you made as a mentor.</p>
+    </div>
 </div>
 
-<div class="row g-4">
-    <div class="col-lg-6">
-        <div class="card-panel h-100">
-            <h2 class="section-title mb-4">Review History</h2>
-            @if (!Model.ReviewHistory.Any())
-            {
-                <p class="text-muted mb-0">No submitted reviews yet.</p>
-            }
-            else
-            {
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var item in Model.ReviewHistory)
-                    {
-                        <div class="border rounded p-3">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                <div>
-                                    <div class="fw-semibold">@item.GroupName - @item.ProjectName</div>
-                                    <div class="text-muted" style="font-size:12px;">Round @item.RoundNumber (@item.RoundType)</div>
-                                </div>
-                                <span class="badge bg-light text-body border">@item.ApprovalStatus</span>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 lg:p-8 shadow-sm flex flex-col">
+        <h2 class="text-xl font-bold text-dark-900 dark:text-white mb-6">Review History</h2>
+        
+        @if (!Model.ReviewHistory.Any())
+        {
+            <div class="flex-grow flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-dark-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-dark-600">
+                <span class="material-symbols-outlined text-4xl mb-3 opacity-50">history</span>
+                <p class="text-sm font-medium">No submitted reviews yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col gap-4">
+                @foreach (var item in Model.ReviewHistory)
+                {
+                    <div class="border border-slate-200 dark:border-dark-600 rounded-2xl p-5 bg-white dark:bg-dark-800 hover:border-primary-200 dark:hover:border-primary-900/50 transition-colors shadow-sm relative overflow-hidden group">
+                        <!-- Accent Line -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 dark:bg-dark-600 group-hover:bg-primary-400 transition-colors"></div>
+                        
+                        <div class="flex justify-between items-start gap-4 mb-3 pl-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-1">@item.GroupName - @item.ProjectName</h3>
+                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Round @item.RoundNumber (@item.RoundType)</div>
                             </div>
-                            <div class="text-muted mb-2" style="font-size:12px;">Submitted: @item.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</div>
-
-                            <div class="text-muted" style="font-size:12px;">@item.FeedbackPreview</div>
-                            <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = item.GroupID })" class="btn btn-sm btn-outline-secondary mt-2">Open group</a>
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-300 shrink-0">@item.ApprovalStatus</span>
                         </div>
-                    }
-                </div>
-            }
-        </div>
+                        <div class="pl-2">
+                            <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">Submitted: @item.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                            <div class="text-sm text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-dark-900/50 p-3 rounded-xl border border-slate-100 dark:border-dark-700">@item.FeedbackPreview</div>
+                            <a href="@Url.Action("ProjectGroupDetail", "Lecturer", new { id = item.GroupID })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 bg-white dark:bg-dark-800 text-sm font-bold rounded-xl shadow-sm transition-colors">Open group</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 
-    <div class="col-lg-6">
-        <div class="card-panel h-100">
-            <h2 class="section-title mb-4">Feedback Decision History</h2>
-            @if (!Model.FeedbackHistory.Any())
-            {
-                <p class="text-muted mb-0">No feedback decisions yet.</p>
-            }
-            else
-            {
-                <div class="d-flex flex-column gap-3">
-                    @foreach (var item in Model.FeedbackHistory)
-                    {
-                        var badgeClass = item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Approved ? "bg-success-subtle text-success"
-                            : item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Rejected ? "bg-danger-subtle text-danger"
-                            : "bg-warning-subtle text-warning";
-                        <div class="border rounded p-3">
-                            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
-                                <div>
-                                    <div class="fw-semibold">@item.GroupName - @item.ProjectName</div>
-                                    <div class="text-muted" style="font-size:12px;">Reviewer: @item.ReviewerName - Round @item.RoundNumber</div>
-                                </div>
-                                <span class="badge @badgeClass">@item.ApprovalStatus</span>
+    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 lg:p-8 shadow-sm flex flex-col">
+        <h2 class="text-xl font-bold text-dark-900 dark:text-white mb-6">Feedback Decision History</h2>
+        
+        @if (!Model.FeedbackHistory.Any())
+        {
+            <div class="flex-grow flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-dark-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-dark-600">
+                <span class="material-symbols-outlined text-4xl mb-3 opacity-50">fact_check</span>
+                <p class="text-sm font-medium">No feedback decisions yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col gap-4">
+                @foreach (var item in Model.FeedbackHistory)
+                {
+                    var badgeClass = item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                        : item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Rejected ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                        : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
+                    
+                    <div class="border border-slate-200 dark:border-dark-600 rounded-2xl p-5 bg-white dark:bg-dark-800 hover:border-primary-200 dark:hover:border-primary-900/50 transition-colors shadow-sm relative overflow-hidden group">
+                        <!-- Accent Line -->
+                        <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 dark:bg-dark-600 group-hover:bg-primary-400 transition-colors"></div>
+                        
+                        <div class="flex justify-between items-start gap-4 mb-3 pl-2">
+                            <div>
+                                <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-1">@item.GroupName - @item.ProjectName</h3>
+                                <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Reviewer: @item.ReviewerName &middot; Round @item.RoundNumber</div>
                             </div>
-                            <div class="text-muted mb-2" style="font-size:12px;">Updated: @item.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</div>
-                            <div class="text-muted mb-2" style="font-size:12px;">Visible to students: @(item.IsVisibleToStudent ? "Yes" : "Waiting auto release")</div>
+                            <span class="px-2.5 py-1 text-xs font-bold rounded-lg shrink-0 @badgeClass">@item.ApprovalStatus</span>
+                        </div>
+                        <div class="pl-2">
+                            <div class="flex flex-wrap gap-4 mb-3">
+                                <div class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Updated: @item.UpdatedAt.ToString("MMM dd, yyyy HH:mm")</div>
+                                <div class="text-xs font-bold @(item.IsVisibleToStudent ? "text-primary-500" : "text-slate-400 dark:text-slate-500") uppercase tracking-widest">
+                                    Visible: @(item.IsVisibleToStudent ? "Yes" : "Waiting auto release")
+                                </div>
+                            </div>
                             @if (!string.IsNullOrWhiteSpace(item.SupervisorComment))
                             {
-                                <div class="text-muted" style="font-size:12px;">Supervisor note: @item.SupervisorComment</div>
+                                <div class="text-sm text-slate-600 dark:text-slate-400 mb-4 bg-slate-50 dark:bg-dark-900/50 p-3 rounded-xl border border-slate-100 dark:border-dark-700 italic">
+                                    <span class="font-bold not-italic">Supervisor note:</span> @item.SupervisorComment
+                                </div>
                             }
-                            <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-outline-secondary mt-2">Open feedback</a>
+                            <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 bg-white dark:bg-dark-800 text-sm font-bold rounded-xl shadow-sm transition-colors mt-1">Open feedback</a>
                         </div>
-                    }
-                </div>
-            }
-        </div>
+                    </div>
+                }
+            </div>
+        }
     </div>
 </div>

@@ -1,10 +1,10 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @model GPMS.Web.ViewModels.Lecturer.EvaluationFormViewModel
 @{
     ViewData["Title"] = "Evaluation Form";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
     var isReadOnly = Model.ExistingEvaluationID.HasValue && !Model.CanEdit;
     var isGradeRound = Model.ChecklistItems.Any(i => i.ItemType == "Grade");
     var sectionGroups = Model.ChecklistItems
@@ -12,16 +12,16 @@
         .GroupBy(x => x.item.Section ?? "Checklist");
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
     <div>
-        <h1 class="page-title">Evaluation Form</h1>
-        <p class="page-subtitle text-muted mb-0">@Model.GroupName - Round @Model.RoundNumber (@Model.RoundType)</p>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">Evaluation Form</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">@Model.GroupName - Round @Model.RoundNumber (@Model.RoundType)</p>
     </div>
-    <div class="d-flex gap-2 align-items-center">
-        <span class="badge @(isReadOnly ? "bg-success-subtle text-success" : "bg-warning-subtle text-warning") px-3 py-2">
+    <div class="flex items-center gap-3">
+        <span class="px-3 py-1.5 rounded-lg text-sm font-semibold @(isReadOnly ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400")">
             @(isReadOnly ? "Read Only" : "Editable")
         </span>
-        <span class="badge @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-success-subtle text-success" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-danger-subtle text-danger" : "bg-secondary-subtle text-secondary") px-3 py-2">
+        <span class="px-3 py-1.5 rounded-lg text-sm font-semibold @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300")">
             Mentor Gate: @Model.MentorGateStatus
         </span>
     </div>
@@ -29,27 +29,40 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.MentorGateComment))
 {
-    <div class="alert @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "alert-danger" : "alert-info") border-0 mb-4">
-        <div class="fw-semibold mb-1">Mentor Progress Comment</div>
-        <div style="font-size:13px;">@Model.MentorGateComment</div>
+    <div class="mb-6 p-4 rounded-xl border flex gap-4 @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-red-50 border-red-200 dark:bg-red-900/10 dark:border-red-800" : "bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800")">
+        <div class="shrink-0 pt-0.5">
+            <span class="material-symbols-outlined @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "text-red-500" : "text-blue-500")">info</span>
+        </div>
+        <div>
+            <h4 class="text-sm font-bold @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "text-red-800 dark:text-red-400" : "text-blue-800 dark:text-blue-400") mb-1">Mentor Progress Comment</h4>
+            <p class="text-sm @(Model.MentorGateStatus == MentorGateStatus.Rejected ? "text-red-700 dark:text-red-300" : "text-blue-700 dark:text-blue-300")">@Model.MentorGateComment</p>
+        </div>
     </div>
 }
 
 @if (Model.MentorGateStatus != MentorGateStatus.Approved)
 {
-    <div class="alert alert-warning border-0 mb-4">
-        <div class="fw-semibold mb-1">Reviewer access is not open yet</div>
-        <div style="font-size:13px;">
-            The mentor must approve this group for the round before the reviewer can submit evaluation.
+    <div class="mb-6 p-4 rounded-xl border bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800 flex gap-4">
+        <div class="shrink-0 pt-0.5">
+            <span class="material-symbols-outlined text-amber-500">warning</span>
+        </div>
+        <div>
+            <h4 class="text-sm font-bold text-amber-800 dark:text-amber-400 mb-1">Reviewer access is not open yet</h4>
+            <p class="text-sm text-amber-700 dark:text-amber-300">The mentor must approve this group for the round before the reviewer can submit evaluation.</p>
         </div>
     </div>
 }
 
 @if (!string.IsNullOrWhiteSpace(Model.SupervisorComment))
 {
-    <div class="alert alert-warning border-0 mb-4">
-        <div class="fw-semibold mb-1">Latest supervisor note</div>
-        <div style="font-size:13px;">@Model.SupervisorComment</div>
+    <div class="mb-6 p-4 rounded-xl border bg-amber-50 border-amber-200 dark:bg-amber-900/10 dark:border-amber-800 flex gap-4">
+        <div class="shrink-0 pt-0.5">
+            <span class="material-symbols-outlined text-amber-500">note_alt</span>
+        </div>
+        <div>
+            <h4 class="text-sm font-bold text-amber-800 dark:text-amber-400 mb-1">Latest supervisor note</h4>
+            <p class="text-sm text-amber-700 dark:text-amber-300">@Model.SupervisorComment</p>
+        </div>
     </div>
 }
 
@@ -58,57 +71,61 @@
     <input type="hidden" asp-for="AssignmentID" />
     <input type="hidden" asp-for="GroupID" />
 
-    <div class="row g-4">
-        <div class="col-xl-9 d-flex flex-column gap-section">
+    <div class="flex flex-col xl:flex-row gap-6">
+        <!-- Main Form Area -->
+        <div class="w-full xl:w-3/4 flex flex-col gap-6">
             @if (isGradeRound)
             {
-                <div class="card-panel border p-0 overflow-hidden mb-0 shadow-sm">
-                    <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">grading</span>
-                        <h2 class="section-title mb-0">Round 3 Rubric Evaluation</h2>
+                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 dark:border-dark-700 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary-500">grading</span>
+                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Round 3 Rubric Evaluation</h2>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table mb-0 align-middle">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-light">
-                                    <th class="px-3" style="min-width:80px;">Code</th>
-                                    <th style="min-width:180px;">Name</th>
-                                    <th style="min-width:280px;">Evaluation Criteria</th>
-                                    <th style="min-width:150px;">Grade Level</th>
-                                    <th style="min-width:260px;">Grade</th>
-                                    <th style="min-width:220px;">Reviewer Comment</th>
+                                <tr class="bg-slate-50 dark:bg-dark-700 border-b border-slate-200 dark:border-dark-600">
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[80px]">Code</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[180px]">Name</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[280px]">Evaluation Criteria</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[150px]">Grade Level</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[260px]">Grade</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Reviewer Comment</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                                 @for (var i = 0; i < Model.ChecklistItems.Count; i++)
                                 {
                                     var item = Model.ChecklistItems[i];
                                     var existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID);
-                                    <tr>
-                                        <td class="px-3 fw-semibold">@item.ItemCode</td>
-                                        <td>
-                                            <div class="fw-semibold">@item.ItemName</div>
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
+                                        <td class="px-4 py-4 font-bold text-dark-900 dark:text-white">@item.ItemCode</td>
+                                        <td class="px-4 py-4">
+                                            <div class="font-bold text-dark-900 dark:text-white mb-1">@item.ItemName</div>
                                             @if (!string.IsNullOrWhiteSpace(item.Section))
                                             {
-                                                <div class="text-muted" style="font-size:12px;">@item.Section</div>
+                                                <div class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-dark-600 inline-block px-2 py-1 rounded">@item.Section</div>
                                             }
                                         </td>
-                                        <td>
-                                            <div style="white-space:pre-line; font-size:13px;">@item.ItemContent</div>
-                                            <details class="mt-2">
-                                                <summary class="text-primary" style="cursor:pointer; font-size:12px;">View rubric reference</summary>
-                                                <div class="mt-2 small text-muted">
-                                                    <div><strong>Excellent:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
-                                                    <div class="mt-1"><strong>Good:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
-                                                    <div class="mt-1"><strong>Acceptable:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
-                                                    <div class="mt-1"><strong>Fail:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
+                                        <td class="px-4 py-4">
+                                            <div class="text-slate-700 dark:text-slate-300 mb-3 whitespace-pre-line leading-relaxed">@item.ItemContent</div>
+                                            <details class="group/details">
+                                                <summary class="text-xs font-bold text-primary-500 hover:text-primary-600 cursor-pointer list-none flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[16px] transition-transform group-open/details:rotate-90">chevron_right</span>
+                                                    View rubric reference
+                                                </summary>
+                                                <div class="mt-3 p-3 bg-slate-50 dark:bg-dark-700 rounded-xl space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                                    <div><strong class="text-dark-900 dark:text-white">Excellent:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Good:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Acceptable:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Fail:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
                                                 </div>
                                             </details>
                                         </td>
-                                        <td>
+                                        <td class="px-4 py-4">
                                             <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
                                             <select asp-for="CriteriaScores[@i].Assessment"
-                                                    class="form-select grade-level-select"
+                                                    class="form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
                                                     data-target="grade-desc-@i"
                                                     data-summary="grade-summary"
                                                     disabled="@isReadOnly"
@@ -121,17 +138,18 @@
                                                 <option value="NA">N/A</option>
                                             </select>
                                         </td>
-                                        <td>
-                                            <div id="grade-desc-@i" class="small text-muted">@((existing?.GradeDescription) ?? "Rubric text will appear here based on selected grade level.")</div>
+                                        <td class="px-4 py-4">
+                                            <div id="grade-desc-@i" class="text-xs text-slate-600 dark:text-slate-400 italic">@((existing?.GradeDescription) ?? "Rubric text will appear here based on selected grade level.")</div>
                                             @if (!string.IsNullOrWhiteSpace(existing?.MentorComment))
                                             {
-                                                <div class="mt-2 p-2 rounded bg-light small">
-                                                    <strong>Mentor Comment:</strong> @existing.MentorComment
+                                                <div class="mt-3 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 text-xs">
+                                                    <strong class="text-blue-800 dark:text-blue-400 mb-1 block">Mentor Comment:</strong> 
+                                                    <span class="text-blue-700 dark:text-blue-300">@existing.MentorComment</span>
                                                 </div>
                                             }
                                         </td>
-                                        <td>
-                                            <textarea asp-for="CriteriaScores[@i].Comment" class="form-control" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                        <td class="px-4 py-4">
+                                            <textarea asp-for="CriteriaScores[@i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
                                         </td>
                                     </tr>
                                 }
@@ -140,68 +158,86 @@
                     </div>
                 </div>
 
-                <div class="card-panel border mb-0 shadow-sm">
-                    <h2 class="section-title mb-3">Summary</h2>
-                    <div class="row g-3 mb-3" id="grade-summary">
-                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Excellent">0</div><div class="small text-muted">Excellent</div></div></div>
-                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Good">0</div><div class="small text-muted">Good</div></div></div>
-                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Acceptable">0</div><div class="small text-muted">Acceptable</div></div></div>
-                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="Fail">0</div><div class="small text-muted">Fail</div></div></div>
-                        <div class="col-md-2"><div class="border rounded p-3 text-center"><div class="fw-bold fs-5" data-grade-count="NA">0</div><div class="small text-muted">N/A</div></div></div>
+                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6">
+                    <h2 class="text-lg font-bold text-dark-900 dark:text-white mb-5">Summary</h2>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="grade-summary">
+                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
+                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Excellent">0</div>
+                            <div class="text-[11px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Excellent</div>
+                        </div>
+                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
+                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Good">0</div>
+                            <div class="text-[11px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest">Good</div>
+                        </div>
+                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
+                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Acceptable">0</div>
+                            <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest">Acceptable</div>
+                        </div>
+                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
+                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Fail">0</div>
+                            <div class="text-[11px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest">Fail</div>
+                        </div>
+                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
+                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="NA">0</div>
+                            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">N/A</div>
+                        </div>
                     </div>
-                    <label class="form-label fw-semibold">Overall Reviewer Comment / Suggestion for Project Supervisor</label>
-                    <textarea asp-for="ExistingFeedbackContent" class="form-control" rows="6" readonly="@isReadOnly" placeholder="Enter your overall comment and suggestion for the mentor."></textarea>
+                    
+                    <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Overall Reviewer Comment / Suggestion for Project Supervisor</label>
+                    <textarea asp-for="ExistingFeedbackContent" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="6" readonly="@isReadOnly" placeholder="Enter your overall comment and suggestion for the mentor."></textarea>
                 </div>
             }
             else
             {
-                <div class="card-panel border mb-0 shadow-sm">
-                    <div class="d-flex align-items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">rule_settings</span>
-                        <h2 class="section-title mb-0">Round @Model.RoundNumber Checklist</h2>
+                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6 overflow-hidden">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-dark-700">
+                        <span class="material-symbols-outlined text-primary-500">rule_settings</span>
+                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Round @Model.RoundNumber Checklist</h2>
                     </div>
 
                     @foreach (var sectionGroup in sectionGroups)
                     {
-                        <div class="mb-4">
-                            <div class="fw-bold mb-3" style="font-size:15px;">@sectionGroup.Key</div>
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
+                        <div class="mb-8 last:mb-0">
+                            <h3 class="text-base font-bold text-dark-900 dark:text-white mb-4 pl-2 border-l-4 border-primary-500">@sectionGroup.Key</h3>
+                            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-dark-600">
+                                <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
                                     <thead>
-                                        <tr class="bg-light">
-                                            <th style="min-width:320px;">Question</th>
-                                            <th style="min-width:120px;">Priority</th>
-                                            <th style="min-width:210px;">Assessment</th>
-                                            <th style="min-width:220px;">Mentor Comment</th>
-                                            <th style="min-width:220px;">Reviewer Comment</th>
+                                        <tr class="bg-slate-50 dark:bg-dark-900 border-b border-slate-200 dark:border-dark-600">
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[320px]">Question</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[120px]">Priority</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[210px]">Assessment</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Mentor Comment</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Reviewer Comment</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                                         @foreach (var row in sectionGroup)
                                         {
                                             var i = row.index;
                                             var item = row.item;
                                             var existing = row.existing;
                                             var currentValue = Model.CriteriaScores.ElementAtOrDefault(i)?.Assessment ?? existing?.Assessment ?? string.Empty;
-                                            <tr>
-                                                <td>
+                                            <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
+                                                <td class="px-4 py-4">
                                                     <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
-                                                    <div class="fw-medium">@item.ItemContent</div>
+                                                    <div class="font-medium text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">@item.ItemContent</div>
                                                 </td>
-                                                <td></td>
-                                                <td>
+                                                <td class="px-4 py-4">
+                                                    <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-slate-100 text-slate-600 dark:bg-dark-600 dark:text-slate-300">Default</span>
+                                                </td>
+                                                <td class="px-4 py-4">
                                                     <input type="hidden" asp-for="CriteriaScores[@i].Assessment" class="assessment-value" />
-                                                    <div class="btn-group" role="group">
-                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "Y" ? "btn-primary" : "btn-outline-secondary")" data-value="Y" data-target-index="@i" disabled="@isReadOnly">Y</button>
-                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "N" ? "btn-primary" : "btn-outline-secondary")" data-value="N" data-target-index="@i" disabled="@isReadOnly">N</button>
-                                                        <button type="button" class="btn btn-sm assessment-toggle @(currentValue == "NA" ? "btn-primary" : "btn-outline-secondary")" data-value="NA" data-target-index="@i" disabled="@isReadOnly">NA</button>
+                                                    <div class="inline-flex rounded-lg shadow-sm border border-slate-200 dark:border-dark-600 overflow-hidden bg-white dark:bg-dark-800">
+                                                        <button type="button" class="assessment-toggle px-4 py-2 text-sm font-semibold transition-colors border-r border-slate-200 dark:border-dark-600 last:border-0 @(currentValue == "Y" ? "bg-primary-500 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700")" data-value="Y" data-target-index="@i" disabled="@isReadOnly">Y</button>
+                                                        <button type="button" class="assessment-toggle px-4 py-2 text-sm font-semibold transition-colors border-r border-slate-200 dark:border-dark-600 last:border-0 @(currentValue == "N" ? "bg-primary-500 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700")" data-value="N" data-target-index="@i" disabled="@isReadOnly">N</button>
+                                                        <button type="button" class="assessment-toggle px-4 py-2 text-sm font-semibold transition-colors @(currentValue == "NA" ? "bg-primary-500 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700")" data-value="NA" data-target-index="@i" disabled="@isReadOnly">NA</button>
                                                     </div>
                                                 </td>
-                                                <td>
-                                                    <textarea class="form-control" rows="3" readonly>@existing?.MentorComment</textarea>
+                                                <td class="px-4 py-4">
+                                                    <textarea class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-400 text-sm shadow-inner transition-colors resize-none" rows="3" readonly>@existing?.MentorComment</textarea>
                                                 </td>
-                                                <td>
-                                                    <textarea asp-for="CriteriaScores[@i].Comment" class="form-control" rows="3" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                                <td class="px-4 py-4">
+                                                    <textarea asp-for="CriteriaScores[@i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="3" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
                                                 </td>
                                             </tr>
                                         }
@@ -211,40 +247,65 @@
                         </div>
                     }
 
-                    <label class="form-label fw-semibold mt-3">Overall Reviewer Comment</label>
-                    <textarea asp-for="ExistingFeedbackContent" class="form-control" rows="6" readonly="@isReadOnly" placeholder="Write your overall reviewer comment."></textarea>
+                    <div class="mt-6 pt-6 border-t border-slate-100 dark:border-dark-700">
+                        <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Overall Reviewer Comment</label>
+                        <textarea asp-for="ExistingFeedbackContent" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="6" readonly="@isReadOnly" placeholder="Write your overall reviewer comment."></textarea>
+                    </div>
                 </div>
             }
 
             @if (!isReadOnly && Model.MentorGateStatus == MentorGateStatus.Approved)
             {
-                <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn btn-primary px-4 py-2">
-                        <span class="material-symbols-outlined align-middle me-1" style="font-size:18px;">send</span>
+                <div class="flex justify-end mt-4">
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-3 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5">
+                        <span class="material-symbols-outlined text-[20px]">send</span>
                         Submit Evaluation
                     </button>
                 </div>
             }
         </div>
 
-        <div class="col-xl-3 d-flex flex-column gap-section">
-            <div class="card-panel border shadow-sm mb-0">
-                <div class="text-muted fw-bold mb-3" style="font-size:11px; letter-spacing:1px;">GROUP INFO</div>
-                <div class="fw-bold mb-1">@Model.GroupName</div>
-                <div class="text-muted mb-3" style="font-size:13px;">@Model.ProjectName</div>
-                <div class="small text-muted mb-2">Supervisor: @Model.SupervisorName</div>
-                @if (Model.ScheduledAt.HasValue)
-                {
-                    <div class="small text-muted mb-2">Review Date: @Model.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
-                }
-                <hr />
-                <div class="text-muted fw-bold mb-2" style="font-size:11px; letter-spacing:1px;">MEMBERS</div>
-                <div class="d-flex flex-column gap-2">
+        <!-- Sidebar Info Column -->
+        <div class="w-full xl:w-1/4">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6 sticky top-24">
+                <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-4">Group Info</div>
+                <div class="text-lg font-black text-dark-900 dark:text-white mb-1">@Model.GroupName</div>
+                <div class="text-sm text-primary-500 font-semibold mb-4 leading-snug">@Model.ProjectName</div>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="flex items-start gap-3">
+                        <span class="material-symbols-outlined text-slate-400 text-[18px]">person</span>
+                        <div>
+                            <div class="text-[11px] text-slate-500 uppercase tracking-wide font-semibold">Supervisor</div>
+                            <div class="text-sm font-medium text-dark-900 dark:text-white">@Model.SupervisorName</div>
+                        </div>
+                    </div>
+                    @if (Model.ScheduledAt.HasValue)
+                    {
+                        <div class="flex items-start gap-3">
+                            <span class="material-symbols-outlined text-slate-400 text-[18px]">event</span>
+                            <div>
+                                <div class="text-[11px] text-slate-500 uppercase tracking-wide font-semibold">Review Date</div>
+                                <div class="text-sm font-medium text-dark-900 dark:text-white">@Model.ScheduledAt.Value.ToString("MMM dd, yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <hr class="border-slate-100 dark:border-dark-700 mb-6" />
+                
+                <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-4">Members</div>
+                <div class="space-y-4">
                     @foreach (var member in Model.Members)
                     {
-                        <div class="small">
-                            <div class="fw-semibold">@member.FullName</div>
-                            <div class="text-muted">@member.Role</div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-slate-500 dark:text-slate-400 font-bold shrink-0">
+                                @(string.IsNullOrEmpty(member.FullName) ? "?" : member.FullName.Substring(0,1).ToUpper())
+                            </div>
+                            <div class="min-w-0">
+                                <div class="text-sm font-bold text-dark-900 dark:text-white truncate">@member.FullName</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">@member.Role</div>
+                            </div>
                         </div>
                     }
                 </div>
@@ -264,11 +325,11 @@
                 hidden.value = button.dataset.value;
                 const group = button.parentElement.querySelectorAll('.assessment-toggle');
                 group.forEach(btn => {
-                    btn.classList.remove('btn-primary');
-                    btn.classList.add('btn-outline-secondary');
+                    btn.classList.remove('bg-primary-500', 'text-white');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-50', 'dark:hover:bg-dark-700');
                 });
-                button.classList.remove('btn-outline-secondary');
-                button.classList.add('btn-primary');
+                button.classList.remove('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-50', 'dark:hover:bg-dark-700');
+                button.classList.add('bg-primary-500', 'text-white');
             });
         });
 

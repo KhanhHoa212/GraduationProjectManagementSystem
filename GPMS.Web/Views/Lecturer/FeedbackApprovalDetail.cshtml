@@ -1,26 +1,26 @@
-@using System
+﻿@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @model GPMS.Web.ViewModels.Lecturer.FeedbackApprovalDetailViewModel
 @{
     ViewData["Title"] = "Feedback Approval Detail";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
     var isGradeRound = Model.Scores.Any(s => s.ItemType == "Grade");
     var groupedScores = Model.Scores
         .Select((score, index) => new { score, index })
         .GroupBy(x => x.score.Section ?? "Checklist");
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4 pb-3">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
     <div>
-        <h1 class="page-title">Mentor Review Approval</h1>
-        <p class="page-subtitle text-muted mb-0">@Model.GroupName - Round @Model.CurrentRoundIndex (@Model.ReviewRoundName)</p>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">Mentor Review Approval</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">@Model.GroupName - Round @Model.CurrentRoundIndex (@Model.ReviewRoundName)</p>
     </div>
-    <div class="d-flex gap-2">
-        <span class="badge @(Model.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning" : Model.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger") px-3 py-2">
+    <div class="flex items-center gap-3">
+        <span class="px-3 py-1.5 rounded-lg text-sm font-semibold @(Model.ApprovalStatus == ApprovalStatus.Pending ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : Model.ApprovalStatus == ApprovalStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400")">
             @Model.ApprovalStatus
         </span>
-        <span class="badge @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-success-subtle text-success" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-danger-subtle text-danger" : "bg-secondary-subtle text-secondary") px-3 py-2">
+        <span class="px-3 py-1.5 rounded-lg text-sm font-semibold @(Model.MentorGateStatus == MentorGateStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : Model.MentorGateStatus == MentorGateStatus.Rejected ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300")">
             Gate: @Model.MentorGateStatus
         </span>
     </div>
@@ -28,9 +28,14 @@
 
 @if (!string.IsNullOrWhiteSpace(Model.MentorGateComment))
 {
-    <div class="alert alert-info border-0 mb-4">
-        <div class="fw-semibold mb-1">Pre-review mentor comment</div>
-        <div style="font-size:13px;">@Model.MentorGateComment</div>
+    <div class="mb-6 p-4 rounded-xl border bg-blue-50 border-blue-200 dark:bg-blue-900/10 dark:border-blue-800 flex gap-4">
+        <div class="shrink-0 pt-0.5">
+            <span class="material-symbols-outlined text-blue-500">info</span>
+        </div>
+        <div>
+            <h4 class="text-sm font-bold text-blue-800 dark:text-blue-400 mb-1">Pre-review mentor comment</h4>
+            <p class="text-sm text-blue-700 dark:text-blue-300">@Model.MentorGateComment</p>
+        </div>
     </div>
 }
 
@@ -40,56 +45,63 @@
     <input type="hidden" name="decision" id="decisionInput" value="" />
     <input type="hidden" name="comments" id="commentsInput" value="" />
 
-    <div class="row g-4">
-        <div class="col-xl-8 d-flex flex-column gap-section">
+    <div class="flex flex-col xl:flex-row gap-6">
+        <!-- Main Form Area -->
+        <div class="w-full xl:w-2/3 flex flex-col gap-6">
             @if (isGradeRound)
             {
-                <div class="card-panel border p-0 overflow-hidden shadow-sm mb-0">
-                    <div class="p-3 border-bottom d-flex align-items-center gap-2">
-                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">grading</span>
-                        <h2 class="section-title mb-0">Round 3 Review Table</h2>
+                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 dark:border-dark-700 flex items-center gap-3">
+                        <span class="material-symbols-outlined text-primary-500">grading</span>
+                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Round 3 Review Table</h2>
                     </div>
-                    <div class="table-responsive">
-                        <table class="table mb-0 align-middle">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-sm">
                             <thead>
-                                <tr class="bg-light">
-                                    <th style="min-width:80px;">Code</th>
-                                    <th style="min-width:180px;">Name</th>
-                                    <th style="min-width:240px;">Criteria</th>
-                                    <th style="min-width:150px;">Grade Level</th>
-                                    <th style="min-width:220px;">Grade</th>
-                                    <th style="min-width:220px;">Mentor Comment</th>
-                                    <th style="min-width:220px;">Reviewer Comment</th>
+                                <tr class="bg-slate-50 dark:bg-dark-700 border-b border-slate-200 dark:border-dark-600">
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[80px]">Code</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[150px]">Name</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[240px]">Criteria</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[120px]">Grade Level</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[200px]">Mentor Comment</th>
+                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[200px]">Reviewer Comment</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                                 @for (var i = 0; i < Model.Scores.Count; i++)
                                 {
                                     var score = Model.Scores[i];
-                                    <tr>
-                                        <td>
+                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
+                                        <td class="px-4 py-4 font-bold text-dark-900 dark:text-white">
                                             <input type="hidden" asp-for="Scores[@i].ItemID" value="@score.ItemID" />
                                             @score.ItemCode
                                         </td>
-                                        <td>@score.ItemName</td>
-                                        <td>
-                                            <div style="white-space:pre-line; font-size:13px;">@score.ItemContent</div>
-                                        </td>
-                                        <td><span class="badge bg-light text-body border">@score.Assessment</span></td>
-                                        <td>
-                                            <div class="small text-muted">@score.GradeDescription</div>
-                                            <details class="mt-2">
-                                                <summary class="text-primary" style="cursor:pointer; font-size:12px;">Rubric reference</summary>
-                                                <div class="small text-muted mt-2">
-                                                    <div><strong>Excellent:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
-                                                    <div class="mt-1"><strong>Good:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
-                                                    <div class="mt-1"><strong>Acceptable:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
-                                                    <div class="mt-1"><strong>Fail:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
+                                        <td class="px-4 py-4 font-bold text-dark-900 dark:text-white">@score.ItemName</td>
+                                        <td class="px-4 py-4">
+                                            <div class="text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed mb-3">@score.ItemContent</div>
+                                            <div class="mt-2 text-xs text-slate-500 dark:text-slate-400 italic">@score.GradeDescription</div>
+                                            <details class="group/details mt-3">
+                                                <summary class="text-xs font-bold text-primary-500 hover:text-primary-600 cursor-pointer list-none flex items-center gap-1">
+                                                    <span class="material-symbols-outlined text-[16px] transition-transform group-open/details:rotate-90">chevron_right</span>
+                                                    Rubric reference
+                                                </summary>
+                                                <div class="mt-3 p-3 bg-slate-50 dark:bg-dark-700 rounded-xl space-y-2 text-xs text-slate-600 dark:text-slate-400">
+                                                    <div><strong class="text-dark-900 dark:text-white">Excellent:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Good:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Acceptable:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
+                                                    <div><strong class="text-dark-900 dark:text-white">Fail:</strong> @score.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
                                                 </div>
                                             </details>
                                         </td>
-                                        <td><textarea asp-for="Scores[@i].MentorComment" class="form-control" rows="4" placeholder="Mentor comment"></textarea></td>
-                                        <td><textarea class="form-control" rows="4" readonly>@score.ReviewerComment</textarea></td>
+                                        <td class="px-4 py-4">
+                                            <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-700 dark:text-slate-300">@score.Assessment</span>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <textarea asp-for="Scores[@i].MentorComment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="4" placeholder="Mentor comment"></textarea>
+                                        </td>
+                                        <td class="px-4 py-4">
+                                            <textarea class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-400 text-sm shadow-inner transition-colors resize-none" rows="4" readonly>@score.ReviewerComment</textarea>
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -99,41 +111,45 @@
             }
             else
             {
-                <div class="card-panel border shadow-sm mb-0">
-                    <div class="d-flex align-items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined" style="color:var(--fpt-orange)">rule_settings</span>
-                        <h2 class="section-title mb-0">Reviewer Checklist Submission</h2>
+                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6 overflow-hidden">
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100 dark:border-dark-700">
+                        <span class="material-symbols-outlined text-primary-500">rule_settings</span>
+                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Reviewer Checklist Submission</h2>
                     </div>
 
                     @foreach (var sectionGroup in groupedScores)
                     {
-                        <div class="mb-4">
-                            <div class="fw-bold mb-3" style="font-size:15px;">@sectionGroup.Key</div>
-                            <div class="table-responsive">
-                                <table class="table align-middle mb-0">
+                        <div class="mb-8 last:mb-0">
+                            <h3 class="text-base font-bold text-dark-900 dark:text-white mb-4 pl-2 border-l-4 border-primary-500">@sectionGroup.Key</h3>
+                            <div class="overflow-x-auto rounded-xl border border-slate-200 dark:border-dark-600">
+                                <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
                                     <thead>
-                                        <tr class="bg-light">
-                                            <th style="min-width:320px;">Question</th>
-                                            <th style="min-width:110px;">Priority</th>
-                                            <th style="min-width:130px;">Assessment</th>
-                                            <th style="min-width:220px;">Mentor Comment</th>
-                                            <th style="min-width:220px;">Reviewer Comment</th>
+                                        <tr class="bg-slate-50 dark:bg-dark-900 border-b border-slate-200 dark:border-dark-600">
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[320px]">Question</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[110px]">Assessment</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Mentor Comment</th>
+                                            <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Reviewer Comment</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                                         @foreach (var row in sectionGroup)
                                         {
                                             var score = row.score;
                                             var i = row.index;
-                                            <tr>
-                                                <td>
+                                            <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
+                                                <td class="px-4 py-4">
                                                     <input type="hidden" asp-for="Scores[@i].ItemID" value="@score.ItemID" />
-                                                    <div class="fw-medium">@score.ItemContent</div>
+                                                    <div class="font-medium text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">@score.ItemContent</div>
                                                 </td>
-
-                                                <td><span class="badge bg-light text-body border">@score.Assessment</span></td>
-                                                <td><textarea asp-for="Scores[@i].MentorComment" class="form-control" rows="3" placeholder="Mentor comment"></textarea></td>
-                                                <td><textarea class="form-control" rows="3" readonly>@score.ReviewerComment</textarea></td>
+                                                <td class="px-4 py-4">
+                                                    <span class="inline-block px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-700 dark:text-slate-300">@score.Assessment</span>
+                                                </td>
+                                                <td class="px-4 py-4">
+                                                    <textarea asp-for="Scores[@i].MentorComment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="3" placeholder="Mentor comment"></textarea>
+                                                </td>
+                                                <td class="px-4 py-4">
+                                                    <textarea class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-400 text-sm shadow-inner transition-colors resize-none" rows="3" readonly>@score.ReviewerComment</textarea>
+                                                </td>
                                             </tr>
                                         }
                                     </tbody>
@@ -144,89 +160,154 @@
                 </div>
             }
 
-            <div class="card-panel border shadow-sm mb-0">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="section-title mb-0">Overall Feedback to Student Group</h2>
-                    <span class="small text-muted">Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</span>
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-dark-900 dark:text-white">Overall Feedback to Student Group</h2>
+                    <span class="px-3 py-1 bg-slate-100 dark:bg-dark-700 text-slate-500 dark:text-slate-400 rounded-lg text-xs font-bold">
+                        Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")
+                    </span>
                 </div>
-                <textarea asp-for="FeedbackContent" class="form-control" rows="8" id="editedFeedbackInput"></textarea>
+                <textarea asp-for="FeedbackContent" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="8" id="editedFeedbackInput"></textarea>
             </div>
         </div>
 
-        <div class="col-xl-4 d-flex flex-column gap-section">
-            <div class="card-panel border shadow-sm mb-0">
-                <div class="fw-semibold mb-2">Review Meta</div>
-                <div class="small text-muted mb-1">Reviewer: @Model.ReviewerName</div>
-                <div class="small text-muted mb-1">Round: @Model.CurrentRoundIndex / @Model.TotalRounds</div>
+        <!-- Sidebar Info Column -->
+        <div class="w-full xl:w-1/3">
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6 mb-6">
+                <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-4">Review Meta</div>
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(Model.ReviewerName)&background=E5E7EB&color=374151" class="w-10 h-10 rounded-full shadow-sm" />
+                        <div>
+                            <div class="text-[11px] text-slate-500 uppercase tracking-wide font-semibold">Reviewer</div>
+                            <div class="text-sm font-bold text-dark-900 dark:text-white">@Model.ReviewerName</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-dark-700 flex items-center justify-center text-primary-500">
+                            <span class="material-symbols-outlined text-[20px]">sync</span>
+                        </div>
+                        <div>
+                            <div class="text-[11px] text-slate-500 uppercase tracking-wide font-semibold">Round</div>
+                            <div class="text-sm font-bold text-dark-900 dark:text-white">@Model.CurrentRoundIndex / @Model.TotalRounds</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr class="border-slate-100 dark:border-dark-700 my-5" />
 
-                <div class="small text-muted">Latest supervisor note: @(string.IsNullOrWhiteSpace(Model.SupervisorComment) ? "None" : Model.SupervisorComment)</div>
+                <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-2">Latest Supervisor Note</div>
+                <div class="text-sm text-slate-600 dark:text-slate-300 p-3 bg-slate-50 dark:bg-dark-900/50 rounded-xl border border-slate-100 dark:border-dark-600 italic">
+                    @(string.IsNullOrWhiteSpace(Model.SupervisorComment) ? "None." : Model.SupervisorComment)
+                </div>
             </div>
 
-            <div class="card-panel border shadow-sm mb-0">
-                <h2 class="section-title mb-3">Decision Panel</h2>
-                <button type="button" class="btn btn-primary w-100 mb-3" onclick="prepareDecision('Approve')" data-bs-toggle="modal" data-bs-target="#confirmApproveModal">Approve</button>
-                <button type="button" class="btn btn-secondary w-100 mb-3" onclick="prepareDecision('ApproveWithEdits')" data-bs-toggle="modal" data-bs-target="#confirmApproveEditsModal">Approve with Edits</button>
-                <button type="button" class="btn btn-danger w-100" onclick="prepareDecision('Reject')" data-bs-toggle="modal" data-bs-target="#confirmRejectModal">Reject</button>
+            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6 sticky top-24">
+                <h2 class="text-lg font-bold text-dark-900 dark:text-white mb-4">Decision Panel</h2>
+                <div class="space-y-3">
+                    <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-sm transition-colors" onclick="openModal('confirmApproveModal', 'Approve')">
+                        <span class="material-symbols-outlined text-[18px]">check_circle</span> Approve
+                    </button>
+                    <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 hover:bg-slate-50 dark:hover:bg-dark-700 text-dark-900 dark:text-white font-bold rounded-xl shadow-sm transition-colors" onclick="openModal('confirmApproveEditsModal', 'ApproveWithEdits')">
+                        <span class="material-symbols-outlined text-[18px]">edit_note</span> Approve with Edits
+                    </button>
+                    <button type="button" class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 font-bold rounded-xl shadow-sm transition-colors" onclick="openModal('confirmRejectModal', 'Reject')">
+                        <span class="material-symbols-outlined text-[18px]">cancel</span> Reject
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 </form>
 
-<div class="modal fade" id="confirmApproveModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Approve Feedback</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">This will approve the review and make it available for student release according to the auto-release rule.</div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitApproval()">Confirm</button>
-            </div>
+<!-- Modal Overlay Backdrop -->
+<div id="modalBackdrop" class="fixed inset-0 bg-dark-900/50 backdrop-blur-sm z-40 hidden transition-opacity opacity-0"></div>
+
+<!-- Approve Modal -->
+<div id="confirmApproveModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-0 transition-opacity opacity-0 transform scale-95 duration-200">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-slate-100 dark:border-dark-700 w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center">
+            <h5 class="text-lg font-bold text-dark-900 dark:text-white">Approve Feedback</h5>
+            <button type="button" class="text-slate-400 hover:text-dark-900 dark:hover:text-white transition-colors" onclick="closeModal('confirmApproveModal')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-sm text-slate-600 dark:text-slate-300">This will approve the review and make it available for student release according to the auto-release rule.</p>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 dark:bg-dark-900/50 flex justify-end gap-3 border-t border-slate-100 dark:border-dark-700">
+            <button type="button" class="px-4 py-2 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-dark-700 transition-colors" onclick="closeModal('confirmApproveModal')">Cancel</button>
+            <button type="button" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors" onclick="submitApproval()">Confirm</button>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="confirmApproveEditsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold">Approve With Edits</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">Your edited overall feedback and mentor comments will be saved before approval.</div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" onclick="submitApproval()">Confirm</button>
-            </div>
+<!-- Approve Edits Modal -->
+<div id="confirmApproveEditsModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-0 transition-opacity opacity-0 transform scale-95 duration-200">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-slate-100 dark:border-dark-700 w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center">
+            <h5 class="text-lg font-bold text-dark-900 dark:text-white">Approve With Edits</h5>
+            <button type="button" class="text-slate-400 hover:text-dark-900 dark:hover:text-white transition-colors" onclick="closeModal('confirmApproveEditsModal')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6">
+            <p class="text-sm text-slate-600 dark:text-slate-300">Your edited overall feedback and mentor comments will be saved before approval.</p>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 dark:bg-dark-900/50 flex justify-end gap-3 border-t border-slate-100 dark:border-dark-700">
+            <button type="button" class="px-4 py-2 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-dark-700 transition-colors" onclick="closeModal('confirmApproveEditsModal')">Cancel</button>
+            <button type="button" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-semibold rounded-xl transition-colors" onclick="submitApproval()">Confirm</button>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="confirmRejectModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold text-danger">Reject Feedback</h5>
-                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <label class="form-label">Rejection Reason</label>
-                <textarea class="form-control" rows="4" id="rejectReasonInput" placeholder="Explain what the reviewer needs to revise."></textarea>
-            </div>
-            <div class="modal-footer border-0">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" onclick="submitApproval()">Reject</button>
-            </div>
+<!-- Reject Modal -->
+<div id="confirmRejectModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-0 transition-opacity opacity-0 transform scale-95 duration-200">
+    <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-xl border border-red-100 dark:border-red-900/30 w-full max-w-md overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center">
+            <h5 class="text-lg font-bold text-red-600 dark:text-red-500">Reject Feedback</h5>
+            <button type="button" class="text-slate-400 hover:text-dark-900 dark:hover:text-white transition-colors" onclick="closeModal('confirmRejectModal')">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-6">
+            <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Rejection Reason</label>
+            <textarea class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-red-500 focus:ring-red-500 shadow-sm transition-colors resize-none" rows="4" id="rejectReasonInput" placeholder="Explain what the reviewer needs to revise."></textarea>
+        </div>
+        <div class="px-6 py-4 bg-slate-50 dark:bg-dark-900/50 flex justify-end gap-3 border-t border-slate-100 dark:border-dark-700">
+            <button type="button" class="px-4 py-2 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-dark-700 transition-colors" onclick="closeModal('confirmRejectModal')">Cancel</button>
+            <button type="button" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors" onclick="submitApproval()">Reject</button>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        function prepareDecision(decision) {
+        const backdrop = document.getElementById('modalBackdrop');
+
+        function openModal(modalId, decision) {
             document.getElementById('decisionInput').value = decision;
+            const modal = document.getElementById(modalId);
+            backdrop.classList.remove('hidden');
+            modal.classList.remove('hidden');
+            // Allow display:block to apply before animating opacity
+            setTimeout(() => {
+                backdrop.classList.remove('opacity-0');
+                modal.classList.remove('opacity-0', 'scale-95');
+                modal.classList.add('opacity-100', 'scale-100');
+            }, 10);
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            backdrop.classList.add('opacity-0');
+            modal.classList.remove('opacity-100', 'scale-100');
+            modal.classList.add('opacity-0', 'scale-95');
+            // Wait for transition before hiding
+            setTimeout(() => {
+                backdrop.classList.add('hidden');
+                modal.classList.add('hidden');
+            }, 200);
         }
 
         function submitApproval() {
@@ -237,5 +318,11 @@
                 : '';
             document.getElementById('feedbackActionForm').submit();
         }
+
+        // Close on backdrop click
+        backdrop.addEventListener('click', () => {
+            const openModals = document.querySelectorAll('[id^=confirm]:not(.hidden)');
+            openModals.forEach(m => closeModal(m.id));
+        });
     </script>
 }

@@ -1,7 +1,7 @@
-@model GPMS.Web.ViewModels.DashboardViewModel
+﻿@model GPMS.Web.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Admin Dashboard";
-    Layout = "_AdminLayout";
+    Layout = "_Layout";
 
     // Percentages for role bar
     double studPct  = Model.TotalUsers > 0 ? (double)Model.TotalStudents  / Model.TotalUsers * 100 : 0;

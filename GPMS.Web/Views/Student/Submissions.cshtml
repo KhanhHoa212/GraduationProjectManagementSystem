@@ -1,7 +1,7 @@
 @model GPMS.Web.ViewModels.SubmissionsViewModel
 @{
     ViewData["Title"] = "Documentation Submission";
-    Layout = "_StudentLayout";
+    Layout = "_Layout";
 }
 
 <div class="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -141,9 +141,20 @@
                                                     </div>
                                                 </div>
                                                 <div class="flex items-center gap-2">
-                                                    <a href="@sub.FileUrl" target="_blank" class="px-4 py-2 text-[13px] font-semibold text-[#475569] hover:bg-[#f8fafc] rounded-lg transition-colors flex items-center gap-2">
-                                                        View file
-                                                        <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                                                    @{
+                                                        var extension = System.IO.Path.GetExtension(sub.FileName)?.ToLower();
+                                                        var canView = extension != ".zip" && extension != ".rar" && extension != ".7z";
+                                                    }
+                                                    @if (canView)
+                                                    {
+                                                        <a href="@sub.FileUrl" target="_blank" class="px-4 py-2 text-[13px] font-semibold text-[#475569] hover:bg-[#f8fafc] rounded-lg transition-colors flex items-center gap-2">
+                                                            View
+                                                            <span class="material-symbols-outlined text-[16px]">open_in_new</span>
+                                                        </a>
+                                                    }
+                                                    <a href="@(sub.FileUrl?.Replace("/upload/", "/upload/fl_attachment/"))" target="_blank" class="px-4 py-2 text-[13px] font-semibold text-[#2563eb] hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2">
+                                                        Download
+                                                        <span class="material-symbols-outlined text-[16px]">download</span>
                                                     </a>
                                                     <button onclick="toggleResubmit(@sub.RequirementID)" class="px-4 py-2 text-[13px] font-semibold bg-[#1e293b] text-white hover:bg-[#0f172a] rounded-lg transition-colors shadow-sm">Re-submit</button>
                                                 </div>
@@ -154,18 +165,19 @@
                                                 <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="space-y-4">
                                                     <input type="hidden" name="requirementId" value="@sub.RequirementID" />
                                                     <div class="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 bg-white/5 flex flex-col items-center justify-center gap-4 hover:border-[#2563eb] hover:bg-blue-50/10 transition-all cursor-pointer relative">
-                                                        <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID)" accept="@sub.AllowedFormats" />
+                                                        <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" accept="@sub.AllowedFormats" />
                                                         <div class="size-12 rounded-full bg-white flex items-center justify-center text-[#94a3b8] shadow-sm">
                                                             <span class="material-symbols-outlined text-[32px]">upload_file</span>
                                                         </div>
                                                         <div class="text-center">
                                                             <p class="text-[14px] font-bold text-[#0f172a]" id="fileName-@sub.RequirementID">Click to select new file</p>
-                                                            <p class="text-[12px] text-[#94a3b8]">This will update your submission to Version @((sub.Version ?? 0) + 1)</p>
+                                                            <p class="text-[12px] text-[#94a3b8]" id="formatInfo-@sub.RequirementID">This will update your submission to Version @((sub.Version ?? 0) + 1)</p>
+                                                            <p class="hidden text-[12px] font-bold text-red-500 mt-1" id="error-@sub.RequirementID"></p>
                                                         </div>
                                                     </div>
                                                     <div class="flex justify-end gap-3">
                                                         <button type="button" onclick="toggleResubmit(@sub.RequirementID)" class="px-6 py-2 text-[14px] font-semibold text-[#64748b] hover:bg-[#f8fafc] rounded-xl transition-all">Cancel</button>
-                                                        <button type="submit" class="px-8 py-2 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Confirm Re-submit</button>
+                                                        <button type="submit" id="resubmitBtn-@sub.RequirementID" class="hidden px-8 py-2 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Confirm Re-submit</button>
                                                     </div>
                                                 </form>
                                             </div>
@@ -175,17 +187,18 @@
                                             <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="mt-4">
                                                 <input type="hidden" name="requirementId" value="@sub.RequirementID" />
                                                 <div class="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 bg-white/50 flex flex-col items-center justify-center gap-4 group/dropzone hover:border-[#2563eb] hover:bg-blue-50/30 transition-all cursor-pointer relative">
-                                                    <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID)" required accept="@sub.AllowedFormats" />
+                                                    <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" required accept="@sub.AllowedFormats" />
                                                     <div class="size-12 rounded-full bg-white flex items-center justify-center text-[#94a3b8] group-hover/dropzone:scale-110 group-hover/dropzone:text-[#2563eb] transition-all shadow-sm">
                                                         <span class="material-symbols-outlined text-[32px]">upload_file</span>
                                                     </div>
                                                     <div class="text-center">
                                                         <p class="text-[14px] font-bold text-[#0f172a]" id="fileName-@sub.RequirementID">Drag and drop file or click to select</p>
-                                                        <p class="text-[12px] text-[#94a3b8]">Supports @(string.IsNullOrEmpty(sub.AllowedFormats) ? "all file types" : sub.AllowedFormats.Replace(".", "").Replace(",", ", ").ToUpper() + " files")</p>
+                                                        <p class="text-[12px] text-[#94a3b8]" id="formatInfo-@sub.RequirementID">Supports @(string.IsNullOrEmpty(sub.AllowedFormats) ? "all file types" : sub.AllowedFormats.Replace(".", "").Replace(",", ", ").ToUpper() + " files")</p>
+                                                        <p class="hidden text-[12px] font-bold text-red-500 mt-1" id="error-@sub.RequirementID"></p>
                                                     </div>
                                                 </div>
                                                 <div class="mt-4 flex justify-end">
-                                                    <button type="submit" id="submitBtn-@sub.RequirementID" class="px-8 py-2.5 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Upload & Submit</button>
+                                                    <button type="submit" id="submitBtn-@sub.RequirementID" class="hidden px-8 py-2.5 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Upload & Submit</button>
                                                 </div>
                                             </form>
                                         }
@@ -230,11 +243,50 @@
         activeTab.appendChild(underline);
     }
 
-    function updateFileName(input, requirementId) {
+    function updateFileName(input, requirementId, allowedFormats) {
         const fileNameDisplay = document.getElementById('fileName-' + requirementId);
+        const formatInfo = document.getElementById('formatInfo-' + requirementId);
+        const errorMessage = document.getElementById('error-' + requirementId);
+        const submitBtn = document.getElementById('submitBtn-' + requirementId);
+        const resubmitBtn = document.getElementById('resubmitBtn-' + requirementId);
+        
         if (input.files && input.files.length > 0) {
-            fileNameDisplay.innerText = "Selected: " + input.files[0].name;
-            fileNameDisplay.classList.add('text-[#2563eb]');
+            const fileName = input.files[0].name;
+            const extension = "." + fileName.split('.').pop().toLowerCase();
+            const allowedList = allowedFormats ? allowedFormats.toLowerCase().split(',').map(f => f.trim()) : [];
+            
+            const isValid = !allowedFormats || allowedList.includes(extension) || allowedList.length === 0;
+            
+            if (isValid) {
+                fileNameDisplay.innerText = "Selected: " + fileName;
+                fileNameDisplay.classList.remove('text-red-500');
+                fileNameDisplay.classList.add('text-[#2563eb]');
+                if (formatInfo) formatInfo.classList.remove('hidden');
+                if (errorMessage) errorMessage.classList.add('hidden');
+                if (submitBtn) submitBtn.classList.remove('hidden');
+                if (resubmitBtn) resubmitBtn.classList.remove('hidden');
+            } else {
+                fileNameDisplay.innerText = "Invalid Format";
+                fileNameDisplay.classList.remove('text-[#2563eb]');
+                fileNameDisplay.classList.add('text-red-500');
+                if (formatInfo) formatInfo.classList.add('hidden');
+                if (errorMessage) {
+                    errorMessage.innerText = "Please select a supported format: " + allowedFormats.toUpperCase();
+                    errorMessage.classList.remove('hidden');
+                }
+                if (submitBtn) submitBtn.classList.add('hidden');
+                if (resubmitBtn) resubmitBtn.classList.add('hidden');
+                
+                // Clear input
+                input.value = "";
+            }
+        } else {
+            fileNameDisplay.innerText = "Drag and drop file or click to select";
+            fileNameDisplay.classList.remove('text-[#2563eb]', 'text-red-500');
+            if (formatInfo) formatInfo.classList.remove('hidden');
+            if (errorMessage) errorMessage.classList.add('hidden');
+            if (submitBtn) submitBtn.classList.add('hidden');
+            if (resubmitBtn) resubmitBtn.classList.add('hidden');
         }
     }
 

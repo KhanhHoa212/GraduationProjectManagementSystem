@@ -1,10 +1,10 @@
-@using GPMS.Application.DTOs
+﻿@using GPMS.Application.DTOs
 @model SupervisorAssignmentDto
 @{
     ViewBag.Title = "Supervisor Assignment";
     ViewBag.CurrentPage = "AssignSupervisor";
     ViewBag.BreadcrumbSection = "Phân công Giảng viên";
-    Layout = "~/Views/Shared/_HODLayout.cshtml";
+    Layout = "_Layout";
     var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
 }
 

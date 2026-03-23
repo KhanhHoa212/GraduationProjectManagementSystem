@@ -1,82 +1,85 @@
-@using GPMS.Web.ViewModels.Lecturer
+﻿@using GPMS.Web.ViewModels.Lecturer
 @using GPMS.Domain.Enums
 @model FeedbackApprovalsViewModel
 @{
     ViewData["Title"] = "Feedback Approvals";
-    Layout = "_LecturerLayout";
+    Layout = "_Layout";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
     <div>
-        <h1 class="page-title">Feedback Approvals</h1>
-        <p class="page-subtitle text-muted mb-0">Review reviewer feedback, see when it will auto-release, and open the detailed approval screen.</p>
+        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">Feedback Approvals</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Review reviewer feedback, see when it will auto-release, and open the detailed approval screen.</p>
     </div>
 </div>
 
-<div class="card-panel border p-0 overflow-hidden shadow-sm">
-    <div class="p-4 border-bottom">
-        <h2 class="section-title mb-0">Pending Approvals</h2>
+<div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+    <div class="p-5 border-b border-slate-100 dark:border-dark-700">
+        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Pending Approvals</h2>
     </div>
 
     @if (!Model.Approvals.Any())
     {
-        <div class="text-center py-5 text-muted">
-            <span class="material-symbols-outlined fs-1 d-block mb-2">inbox</span>
-            <p>No pending feedback approvals. All caught up!</p>
+        <div class="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500">
+            <span class="material-symbols-outlined text-5xl mb-4 opacity-50">inbox</span>
+            <p class="text-sm font-medium">No pending feedback approvals. All caught up!</p>
         </div>
     }
     else
     {
-        <div class="table-responsive">
-            <table class="table mb-0 align-middle">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-sm whitespace-nowrap md:whitespace-normal">
                 <thead>
-                    <tr class="bg-light">
-                        <th class="px-4">GROUP</th>
-                        <th>REVIEWER</th>
-                        <th>ROUND</th>
-                        <th>SUBMITTED</th>
-                        <th>AUTO-RELEASE</th>
-                        <th>STATUS</th>
-                        <th class="text-end pe-4">ACTIONS</th>
+                    <tr class="bg-slate-50 dark:bg-dark-700 border-b border-slate-200 dark:border-dark-600">
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">GROUP</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">REVIEWER</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">ROUND</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">SUBMITTED</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">AUTO-RELEASE</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400">STATUS</th>
+                        <th class="px-5 py-3 font-bold text-slate-500 dark:text-slate-400 text-right">ACTIONS</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                     @foreach (var item in Model.Approvals)
                     {
-                        <tr>
-                            <td class="px-4">
-                                <div class="fw-bold text-body" style="font-size:13px;">@item.GroupName</div>
-                                <div class="text-muted" style="font-size:11px;">@item.ProjectName</div>
+                        var badgeClass = item.ApprovalStatus == ApprovalStatus.Pending ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                            : item.ApprovalStatus == ApprovalStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400";
+
+                        <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-middle">
+                            <td class="px-5 py-4">
+                                <div class="font-bold text-dark-900 dark:text-white mb-0.5">@item.GroupName</div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-xs">@item.ProjectName</div>
                             </td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
+                            <td class="px-5 py-4">
+                                <div class="flex items-center gap-3">
                                     <img src="https://ui-avatars.com/api/?name=@Uri.EscapeDataString(item.ReviewerName)&background=E5E7EB&color=374151"
-                                         class="rounded-circle" width="28" height="28" />
-                                    <span style="font-size:13px;">@item.ReviewerName</span>
+                                         class="w-8 h-8 rounded-full shadow-sm" alt="@item.ReviewerName" />
+                                    <span class="font-medium text-dark-900 dark:text-white">@item.ReviewerName</span>
                                 </div>
                             </td>
-                            <td><span class="badge bg-light text-body border fw-medium">Round @item.RoundNumber</span></td>
-                            <td><span class="text-body" style="font-size:13px;">@item.SubmittedAt.ToString("MMM dd, HH:mm")</span></td>
-                            <td>
+                            <td class="px-5 py-4">
+                                <span class="px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-300">Round @item.RoundNumber</span>
+                            </td>
+                            <td class="px-5 py-4">
+                                <span class="text-dark-900 dark:text-slate-300 font-medium text-sm">@item.SubmittedAt.ToString("MMM dd, HH:mm")</span>
+                            </td>
+                            <td class="px-5 py-4">
                                 @if (item.AutoReleaseAt.HasValue)
                                 {
-                                    <span class="text-body" style="font-size:13px;">@item.AutoReleaseAt.Value.ToString("MMM dd, HH:mm")</span>
+                                    <span class="text-dark-900 dark:text-slate-300 font-medium text-sm">@item.AutoReleaseAt.Value.ToString("MMM dd, HH:mm")</span>
                                 }
                                 else
                                 {
-                                    <span class="text-muted" style="font-size:13px;">After approval</span>
+                                    <span class="text-slate-400 dark:text-slate-500 text-sm">After approval</span>
                                 }
                             </td>
-                            <td>
-                                @{
-                                    var badgeClass = item.ApprovalStatus == ApprovalStatus.Pending ? "bg-warning-subtle text-warning"
-                                        : item.ApprovalStatus == ApprovalStatus.Approved ? "bg-success-subtle text-success"
-                                        : "bg-danger-subtle text-danger";
-                                }
-                                <span class="badge @badgeClass">@item.ApprovalStatusLabel</span>
+                            <td class="px-5 py-4">
+                                <span class="px-3 py-1.5 text-xs font-semibold rounded-lg @badgeClass">@item.ApprovalStatusLabel</span>
                             </td>
-                            <td class="text-end pe-4">
-                                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="btn btn-sm btn-primary">
+                            <td class="px-5 py-4 text-right">
+                                <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="inline-flex items-center justify-center px-4 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 dark:bg-primary-900/20 dark:hover:bg-primary-900/40 dark:text-primary-400 border border-primary-100 dark:border-primary-900/30 rounded-xl text-sm font-semibold transition-colors">
                                     Review
                                 </a>
                             </td>

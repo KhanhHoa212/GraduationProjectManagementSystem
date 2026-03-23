@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GPMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialQualitativeStructure : Migration
+    public partial class Student : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -396,8 +396,8 @@ namespace GPMS.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     ChecklistID = table.Column<int>(type: "int", nullable: false),
                     ItemCode = table.Column<string>(type: "varchar(20)", unicode: false, maxLength: 20, nullable: false),
-                    ItemContent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     ItemName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    ItemContent = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     ItemType = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false, defaultValue: "YesNo"),
                     Section = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     OrderIndex = table.Column<int>(type: "int", nullable: false, defaultValue: 1)
@@ -500,6 +500,41 @@ namespace GPMS.Infrastructure.Migrations
                         principalTable: "ReviewRounds",
                         principalColumn: "ReviewRoundID",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MentorRoundReviews",
+                columns: table => new
+                {
+                    ReviewRoundID = table.Column<int>(type: "int", nullable: false),
+                    GroupID = table.Column<int>(type: "int", nullable: false),
+                    SupervisorID = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    DecisionStatus = table.Column<int>(type: "int", nullable: false),
+                    ProgressComment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReviewerNotifiedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MentorRoundReviews", x => new { x.ReviewRoundID, x.GroupID });
+                    table.ForeignKey(
+                        name: "FK_MentorRoundReviews_ProjectGroups_GroupID",
+                        column: x => x.GroupID,
+                        principalTable: "ProjectGroups",
+                        principalColumn: "GroupID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MentorRoundReviews_ReviewRounds_ReviewRoundID",
+                        column: x => x.ReviewRoundID,
+                        principalTable: "ReviewRounds",
+                        principalColumn: "ReviewRoundID",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_MentorRoundReviews_Users_SupervisorID",
+                        column: x => x.SupervisorID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -647,7 +682,9 @@ namespace GPMS.Infrastructure.Migrations
                     EvaluationID = table.Column<int>(type: "int", nullable: false),
                     ItemID = table.Column<int>(type: "int", nullable: false),
                     Assessment = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MentorComment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    GradeDescription = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -738,23 +775,41 @@ namespace GPMS.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Semesters",
                 columns: new[] { "SemesterID", "AcademicYear", "EndDate", "SemesterCode", "StartDate", "Status" },
-                values: new object[] { 1, "2024-2025", new DateTime(2025, 4, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "SP25", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Active" });
+                values: new object[,]
+                {
+                    { 1, "2023-2024", new DateTime(2024, 4, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "SP24", new DateTime(2024, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 2, "2023-2024", new DateTime(2024, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "SU24", new DateTime(2024, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 3, "2024-2025", new DateTime(2024, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "FALL24", new DateTime(2024, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 4, "2024-2025", new DateTime(2025, 4, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "SP25", new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 5, "2024-2025", new DateTime(2025, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "SU25", new DateTime(2025, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 6, "2025-2026", new DateTime(2025, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "FALL25", new DateTime(2025, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Closed" },
+                    { 7, "2025-2026", new DateTime(2026, 4, 30, 0, 0, 0, 0, DateTimeKind.Unspecified), "SP26", new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Active" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Semesters",
+                columns: new[] { "SemesterID", "AcademicYear", "EndDate", "SemesterCode", "StartDate" },
+                values: new object[,]
+                {
+                    { 8, "2025-2026", new DateTime(2026, 8, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "SU26", new DateTime(2026, 5, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) },
+                    { 9, "2026-2027", new DateTime(2026, 12, 31, 0, 0, 0, 0, DateTimeKind.Unspecified), "FALL26", new DateTime(2026, 9, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) }
+                });
 
             migrationBuilder.InsertData(
                 table: "Users",
                 columns: new[] { "UserID", "AvatarUrl", "CreatedAt", "Email", "FullName", "Phone", "Username" },
                 values: new object[,]
                 {
-                    { "ADMIN001", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4881), "admin@fpt.edu.vn", "System Admin", null, "admin" },
-                    { "GV001", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4893), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
-                    { "GV002", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4896), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
-                    { "GV003", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4898), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
-                    { "HOD001", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4929), "hod@fpt.edu.vn", "Head of Department", null, null },
-                    { "SE180001", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4931), "student1@fpt.edu.vn", "Student One", null, null },
-                    { "SE180002", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4932), "student2@fpt.edu.vn", "Student Two", null, null },
-                    { "SE180003", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4935), "student3@fpt.edu.vn", "Student Three", null, null },
-                    { "SE180004", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4937), "student4@fpt.edu.vn", "Student Four", null, null },
-                    { "SE180005", null, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4938), "student5@fpt.edu.vn", "Student Five", null, null }
+                    { "ADMIN001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(842), "admin@fpt.edu.vn", "System Admin", null, "admin" },
+                    { "GV001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(854), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
+                    { "GV002", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(860), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
+                    { "GV003", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(862), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
+                    { "HOD001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(864), "hod@fpt.edu.vn", "Head of Department", null, null },
+                    { "SE180001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(866), "student1@fpt.edu.vn", "Student One", null, null },
+                    { "SE180002", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(867), "student2@fpt.edu.vn", "Student Two", null, null },
+                    { "SE180003", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(869), "student3@fpt.edu.vn", "Student Three", null, null },
+                    { "SE180004", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(871), "student4@fpt.edu.vn", "Student Four", null, null },
+                    { "SE180005", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(872), "student5@fpt.edu.vn", "Student Five", null, null }
                 });
 
             migrationBuilder.InsertData(
@@ -771,16 +826,16 @@ namespace GPMS.Infrastructure.Migrations
                 columns: new[] { "UserRoleID", "AssignedAt", "RoleName", "UserID" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4964), "Admin", "ADMIN001" },
-                    { 2, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4967), "Lecturer", "GV001" },
-                    { 3, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4968), "Lecturer", "GV002" },
-                    { 4, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4969), "Lecturer", "GV003" },
-                    { 5, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4970), "Student", "SE180001" },
-                    { 6, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4971), "Student", "SE180002" },
-                    { 7, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4972), "Student", "SE180003" },
-                    { 8, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4973), "Student", "SE180004" },
-                    { 9, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4973), "Student", "SE180005" },
-                    { 10, new DateTime(2026, 3, 19, 17, 24, 11, 723, DateTimeKind.Utc).AddTicks(4970), "HeadOfDept", "HOD001" }
+                    { 1, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(898), "Admin", "ADMIN001" },
+                    { 2, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(899), "Lecturer", "GV001" },
+                    { 3, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(900), "Lecturer", "GV002" },
+                    { 4, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(901), "Lecturer", "GV003" },
+                    { 5, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(903), "Student", "SE180001" },
+                    { 6, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(903), "Student", "SE180002" },
+                    { 7, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(904), "Student", "SE180003" },
+                    { 8, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(905), "Student", "SE180004" },
+                    { 9, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(906), "Student", "SE180005" },
+                    { 10, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(902), "HeadOfDept", "HOD001" }
                 });
 
             migrationBuilder.InsertData(
@@ -866,6 +921,16 @@ namespace GPMS.Infrastructure.Migrations
                 table: "Majors",
                 column: "MajorCode",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MentorRoundReviews_GroupID",
+                table: "MentorRoundReviews",
+                column: "GroupID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MentorRoundReviews_SupervisorID",
+                table: "MentorRoundReviews",
+                column: "SupervisorID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_RecipientID",
@@ -1038,6 +1103,9 @@ namespace GPMS.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "LecturerExpertise");
+
+            migrationBuilder.DropTable(
+                name: "MentorRoundReviews");
 
             migrationBuilder.DropTable(
                 name: "Notifications");
