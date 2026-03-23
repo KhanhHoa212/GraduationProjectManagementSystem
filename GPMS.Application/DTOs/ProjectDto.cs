@@ -12,6 +12,7 @@ public class ProjectDto
     public string? MajorName { get; set; }
     public int SemesterID { get; set; }
     public string? SemesterCode { get; set; }
+    public string? AcademicYear { get; set; }
     public ProjectStatus Status { get; set; }
     public DateTime CreatedAt { get; set; }
 
@@ -35,6 +36,7 @@ public class ProjectDetailDto
     public string? Description { get; set; }
     public int SemesterID { get; set; }
     public string? SemesterCode { get; set; }
+    public string? AcademicYear { get; set; }
     public int MajorID { get; set; }
     public string? MajorName { get; set; }
     public ProjectStatus Status { get; set; }

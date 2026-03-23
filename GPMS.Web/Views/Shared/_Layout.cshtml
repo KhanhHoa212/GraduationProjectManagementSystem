@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="scroll-smooth light">
 <head>
     <meta charset="UTF-8" />
@@ -12,6 +12,9 @@
         
     <!-- Material Symbols Outlined -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
     
     <!-- Lecturer Specific CSS (Tailwind overrides if any) -->
     @if (User.IsInRole("Lecturer"))
@@ -93,6 +96,12 @@
             @@apply bg-dark-100 dark:bg-dark-700 hover:bg-dark-200 dark:hover:bg-dark-600 text-dark-900 dark:text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2;
         }
 
+        /* Toast Animations */
+        .toast-enter { opacity: 0; transform: translateX(80px); transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+        .toast-show  { opacity: 1; transform: translateX(0); }
+        .toast-leave { opacity: 0; transform: translateX(80px); transition: all 0.3s ease-in; }
+        .toast-progress-bar { transition: width 0.1s linear; }
+
         /* Loading overlay */
         #loading-overlay {
             position: fixed;
@@ -120,6 +129,9 @@
 </head>
 <body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden">
     
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+
     <!-- Loading Overlay -->
     <div id="loading-overlay">
         <div class="flex flex-col items-center gap-4 bg-white dark:bg-dark-800 p-6 rounded-2xl shadow-xl border border-dark-100 dark:border-dark-700">
@@ -287,6 +299,74 @@
                 loadingOverlay.classList.remove('active');
             });
         });
+
+        // Global Toast System
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const configs = {
+                success: { border: 'border-green-500', icon: 'ri-check-line', iconBg: 'bg-green-500', title: 'Thông báo!', barColor: 'bg-green-500' },
+                error:   { border: 'border-red-500',   icon: 'ri-close-line', iconBg: 'bg-red-500',   title: 'Lỗi!',       barColor: 'bg-red-500'   },
+                warning: { border: 'border-amber-500', icon: 'ri-error-warning-line', iconBg: 'bg-amber-500', title: 'Cảnh báo!', barColor: 'bg-amber-500' },
+                info:    { border: 'border-blue-500',  icon: 'ri-information-line',   iconBg: 'bg-blue-500',  title: 'Thông tin!', barColor: 'bg-blue-500' }
+            };
+            const c = configs[type] || configs.info;
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex flex-col bg-white rounded-lg shadow-xl border-l-4 ${c.border} min-w-[320px] max-w-sm overflow-hidden toast-enter`;
+            toast.innerHTML = `
+                <div class="flex items-start gap-3 p-4">
+                    <div class="flex-shrink-0">
+                        <div class="size-8 rounded-full ${c.iconBg} flex items-center justify-center text-white shadow-sm">
+                            <i class="${c.icon} text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <h4 class="text-sm font-bold text-gray-800">${c.title}</h4>
+                        <p class="text-xs text-gray-400 leading-snug mt-0.5">${message}</p>
+                    </div>
+                    <button onclick="this.closest('.pointer-events-auto').remove()" class="text-gray-300 hover:text-gray-500 transition-colors">
+                        <i class="ri-close-line text-lg"></i>
+                    </button>
+                </div>
+                <div class="h-1.5 w-full bg-gray-50 mt-auto">
+                    <div class="toast-progress-bar h-full ${c.barColor} opacity-60" style="width: 100%"></div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            requestAnimationFrame(() => { 
+                requestAnimationFrame(() => toast.classList.add('toast-show')); 
+            });
+
+            const progressBar = toast.querySelector('.toast-progress-bar');
+            const startTime = Date.now();
+
+            const timer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, 100 - (elapsed / duration * 100));
+                progressBar.style.width = remaining + '%';
+                
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    toast.classList.remove('toast-show');
+                    toast.classList.add('toast-leave');
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 10);
+
+            toast.querySelector('button').addEventListener('click', () => clearInterval(timer));
+        }
+
+        // Handle Server-side TempData
+        @if (TempData["SuccessMessage"] != null) {
+            <text>setTimeout(() => showToast('@Html.Raw(TempData["SuccessMessage"])', 'success', 5000), 300);</text>
+        }
+        @if (TempData["ErrorMessage"] != null) {
+            <text>setTimeout(() => showToast('@Html.Raw(TempData["ErrorMessage"])', 'error', 6000), 300);</text>
+        }
 
         // Chatbot communication
         window.addEventListener("message", function (event) {
