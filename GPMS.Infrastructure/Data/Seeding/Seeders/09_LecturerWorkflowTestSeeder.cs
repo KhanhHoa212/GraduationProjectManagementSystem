@@ -24,8 +24,13 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         await EnsureLecturerCredentialAsync("GV002", "gv002");
         await EnsureLecturerCredentialAsync("GV003", "gv003");
 
-        var groups = await _context.ProjectGroups.OrderBy(g => g.GroupID).ToListAsync();
+        var groups = await _context.ProjectGroups
+            .Include(g => g.Project)
+            .Where(g => g.Project.SemesterID == 5)
+            .OrderBy(g => g.GroupID)
+            .ToListAsync();
         if (groups.Count < 3) return;
+
 
         int gId0 = groups[0].GroupID;
         int gId1 = groups[1].GroupID;
@@ -136,18 +141,19 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         string description)
     {
         var round = await _context.ReviewRounds
-            .FirstOrDefaultAsync(r => r.SemesterID == 1 && r.RoundNumber == roundNumber);
+            .FirstOrDefaultAsync(r => r.SemesterID == 5 && r.RoundNumber == roundNumber);
 
         if (round == null)
         {
             round = new ReviewRound
             {
-                SemesterID = 1,
+                SemesterID = 5,
                 RoundNumber = roundNumber
             };
 
             _context.ReviewRounds.Add(round);
         }
+
 
         round.RoundType = roundType;
         round.StartDate = startDate;
