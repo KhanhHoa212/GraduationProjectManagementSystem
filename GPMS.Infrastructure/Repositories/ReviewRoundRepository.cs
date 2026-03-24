@@ -32,6 +32,20 @@ public class ReviewRoundRepository : IReviewRoundRepository
             .Include(r => r.SubmissionRequirements)
             .Where(r => r.SemesterID == semesterId)
             .ToListAsync();
+            
+    public async Task<IEnumerable<ReviewRound>> GetBySemesterWithRequirementsAsync(int semesterId) => 
+        await _context.ReviewRounds
+            .Include(r => r.SubmissionRequirements)
+            .Where(r => r.SemesterID == semesterId)
+            .OrderBy(r => r.RoundNumber)
+            .ToListAsync();
+
+    public async Task<IEnumerable<ReviewRound>> GetAllWithRequirementsAsync() => 
+        await _context.ReviewRounds
+            .Include(r => r.SubmissionRequirements)
+            .OrderBy(r => r.SemesterID)
+            .ThenBy(r => r.RoundNumber)
+            .ToListAsync();
         
     public async Task<IEnumerable<ReviewRound>> GetUpcomingRoundsAsync(int count = 5) =>
         await _context.ReviewRounds
