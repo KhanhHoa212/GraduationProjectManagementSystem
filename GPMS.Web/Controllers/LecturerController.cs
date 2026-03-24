@@ -105,7 +105,20 @@ public class LecturerController : Controller
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        LecturerProjectGroupDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var memberEmails = dto.Members
             .Select(m => m.Email)
             .Where(email => !string.IsNullOrWhiteSpace(email))
@@ -218,7 +231,24 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> FeedbackApprovalDetail(int id = 1)
     {
-        var dto = await _lecturerService.GetFeedbackApprovalDetailAsync(id);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        LecturerFeedbackApprovalDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var vm = new FeedbackApprovalDetailViewModel
         {
             FeedbackID = dto.FeedbackId,
@@ -402,6 +432,8 @@ public class LecturerController : Controller
             RoundNumber = dto.RoundNumber,
             RoundType = dto.ReviewRoundName,
             ScheduledAt = dto.ScheduledAt,
+            SubmissionFileName = dto.SubmissionFileName,
+            SubmissionUrl = dto.SubmissionUrl,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
@@ -440,6 +472,7 @@ public class LecturerController : Controller
             ItemID = c.ItemId,
             ItemCode = c.ItemCode,
             ItemName = c.ItemName,
+            ItemContent = c.ItemContent,
             ItemType = c.ItemType,
             Section = c.Section,
             RubricDescriptions = c.RubricDescriptions.Select(r => new RubricDescriptionViewModel
@@ -469,7 +502,7 @@ public class LecturerController : Controller
         {
             AssignmentId = model.AssignmentID,
             OverallFeedback = model.ExistingFeedbackContent ?? string.Empty,
-            CriteriaScores = model.CriteriaScores.Select(s => new ScoreInputDto
+            CriteriaScores = model.CriteriaScores.Where(s => s != null).Select(s => new ScoreInputDto
             {
                 CriteriaId = s.CriteriaId,
                 Assessment = s.Assessment,
@@ -477,14 +510,16 @@ public class LecturerController : Controller
             }).ToList()
         };
 
-        var success = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
-        if (success)
+        var result = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
+        if (result.Success)
         {
             TempData["SuccessMessage"] = "Evaluation submitted successfully.";
             return RedirectToAction(nameof(ReviewAssignments));
         }
 
-        TempData["ErrorMessage"] = "Unable to submit evaluation. Please check the assignment and score inputs.";
+        TempData["ErrorMessage"] = string.IsNullOrWhiteSpace(result.ErrorMessage)
+            ? "Unable to submit evaluation. Please check the assignment and score inputs."
+            : result.ErrorMessage;
         return RedirectToAction(nameof(EvaluationForm), new { id = model.AssignmentID });
     }
 
@@ -516,7 +551,22 @@ public class LecturerController : Controller
             return RedirectToAction(nameof(FeedbackApprovals));
         }
 
-        TempData["ErrorMessage"] = "An error occurred while processing the feedback approval.";
+        try
+        {
+            var currentFeedback = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, model.FeedbackID);
+            TempData["ErrorMessage"] = currentFeedback.ApprovalStatus == ApprovalStatus.Pending
+                ? "An error occurred while processing the feedback approval."
+                : $"This feedback was already {currentFeedback.ApprovalStatus.ToString().ToLowerInvariant()} and is now read-only.";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = model.FeedbackID });
     }
 }

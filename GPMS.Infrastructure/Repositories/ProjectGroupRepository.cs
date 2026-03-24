@@ -80,6 +80,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
                 .ThenInclude(e => e.Feedback)
                     .ThenInclude(f => f!.FeedbackApproval)
             .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .Distinct()
             .ToListAsync();
 
     public async Task<ProjectGroup?> GetByProjectIdWithMembersAsync(int projectId) =>
