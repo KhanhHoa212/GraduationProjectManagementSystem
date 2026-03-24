@@ -212,9 +212,11 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
             item.ItemType = seedItem.InputType.ToString();
             item.OrderIndex = seedItem.OrderIndex;
 
+            /*
             // Clear and re-add rubrics
             var existingRubrics = await _context.RubricDescriptions.Where(r => r.ItemID == item.ItemID).ToListAsync();
             _context.RubricDescriptions.RemoveRange(existingRubrics);
+            */
 
             if (!string.IsNullOrWhiteSpace(seedItem.ExcellentRubric))
                 _context.RubricDescriptions.Add(new RubricDescription { Item = item, GradeLevel = "Excellent", Description = seedItem.ExcellentRubric });

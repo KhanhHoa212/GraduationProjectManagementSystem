@@ -39,5 +39,9 @@ public interface IProjectService
     Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId);
     // Bulk Import
     Task<(int successCount, string message)> BulkImportProjectsAsync(IEnumerable<ProjectImportRowDto> projects, int semesterId, string? requestedBy);
+    
+    // Download Proxy
+    Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
+    Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
 }
 

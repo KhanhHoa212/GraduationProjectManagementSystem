@@ -18,4 +18,6 @@ public interface ILecturerService
     Task<(bool Success, string ErrorMessage)> SubmitEvaluationAsync(string reviewerId, EvaluationSubmitDto model);
     Task<bool> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment);
     Task<bool> ApproveFeedbackAsync(string supervisorId, FeedbackApprovalDecisionDto model);
+    Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
+    Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
 }

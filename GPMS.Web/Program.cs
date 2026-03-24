@@ -62,6 +62,7 @@ builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
 
 // Memory cache (for system logs + visit tracking)
 builder.Services.AddMemoryCache();
@@ -92,6 +93,7 @@ builder.Services.AddScoped<IFileService, CloudinaryService>();
 
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
+builder.Services.AddHostedService<GPMS.Web.Services.DeadlineReminderHostedService>();
 
 var app = builder.Build();
 
