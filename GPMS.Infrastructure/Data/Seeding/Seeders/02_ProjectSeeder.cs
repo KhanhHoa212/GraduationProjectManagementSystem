@@ -2,6 +2,11 @@ using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bogus;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace GPMS.Infrastructure.Data.Seeding.Seeders;
 
@@ -17,83 +22,85 @@ public class ProjectSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        if (await _context.Projects.CountAsync() > 20) return;
+
+        var faker = new Faker("vi");
         var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
-        if (activeSemester == null) return;
+        var semesters = await _context.Semesters.Where(s => s.SemesterID >= 5).ToListAsync(); 
+        
+        var lecturers = await _context.Users
+            .Where(u => u.UserID.StartsWith("GV"))
+            .Select(u => u.UserID)
+            .ToListAsync();
+            
+        if (!lecturers.Any()) return;
 
-        string semesterCode = activeSemester.SemesterCode;
-        if (await _context.Projects.AnyAsync(p => p.ProjectCode.StartsWith(semesterCode + "SE"))) return;
+        var projects = new List<Project>();
+        int projectCount = 0;
 
-        var projects = new List<Project>
+        foreach (var sem in semesters)
         {
-            new Project
+            int count = sem.SemesterID == activeSemester?.SemesterID ? 80 : 20;
+
+            for (int i = 0; i < count; i++)
             {
-                ProjectCode = $"{semesterCode}SE01",
-                ProjectName = "Hệ thống quản lý bán hàng đa kênh",
-                Description = "Phát triển hệ thống quản lý bán hàng tích hợp nhiều sàn TMĐT.",
-                SemesterID = activeSemester.SemesterID,
-                MajorID = 1,
-                Status = ProjectStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Project
-            {
-                ProjectCode = $"{semesterCode}SE02",
-                ProjectName = "Ứng dụng học tiếng Anh qua video",
-                Description = "App học tiếng Anh sử dụng trí tuệ nhân tạo để gợi ý nội dung.",
-                SemesterID = activeSemester.SemesterID,
-                MajorID = 1,
-                Status = ProjectStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Project
-            {
-                ProjectCode = $"{semesterCode}SE03",
-                ProjectName = "Platform quản lý sự kiện và đặt vé",
-                Description = "Nền tảng cho phép tổ chức và quản lý bán vé sự kiện trực tuyến.",
-                SemesterID = activeSemester.SemesterID,
-                MajorID = 1,
-                Status = ProjectStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Project
-            {
-                ProjectCode = $"{semesterCode}SE04",
-                ProjectName = "Hệ thống theo dõi sức khỏe thông minh",
-                Description = "IoT kết hợp Mobile App để theo dõi các chỉ số sức khỏe.",
-                SemesterID = activeSemester.SemesterID,
-                MajorID = 1,
-                Status = ProjectStatus.Active,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Project
-            {
-                ProjectCode = $"{semesterCode}SE05",
-                ProjectName = "Mạng xã hội cho cộng đồng lập trình viên",
-                Description = "Nơi chia sẻ kiến thức và kết nối các dev với nhau.",
-                SemesterID = activeSemester.SemesterID,
-                MajorID = 1,
-                Status = ProjectStatus.Active,
-                CreatedAt = DateTime.UtcNow
+                projectCount++;
+                var majorId = faker.PickRandom(1, 2); 
+                var majorStr = majorId == 1 ? "SE" : "SS";
+                
+                ProjectStatus status;
+                if (sem.Status == SemesterStatus.Closed) 
+                    status = faker.Random.Double() > 0.1 ? ProjectStatus.Completed : ProjectStatus.Cancelled;
+                else if (sem.Status == SemesterStatus.Active)
+                    status = faker.Random.Double() > 0.2 ? ProjectStatus.Active : ProjectStatus.Draft;
+                else
+                    status = ProjectStatus.Draft;
+
+                projects.Add(new Project
+                {
+                    ProjectCode = $"{sem.SemesterCode}{majorStr}_{projectCount:D3}",
+                    ProjectName = faker.Company.CatchPhrase() + " " + faker.Hacker.Noun(),
+                    Description = faker.Lorem.Paragraphs(2),
+                    SemesterID = sem.SemesterID,
+                    MajorID = majorId,
+                    Status = status,
+                    CreatedAt = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 60))
+                });
             }
-        };
-
-        _context.Projects.AddRange(projects);
-        await _context.SaveChangesAsync();
-
-        // Assign Supervisors (GV001–GV005)
-        var supervisors = new[] { "GV001", "GV002", "GV003", "GV004", "GV005" };
-        for (int i = 0; i < projects.Count; i++)
-        {
-            _context.ProjectSupervisors.Add(new ProjectSupervisor
-            {
-                ProjectID = projects[i].ProjectID,
-                LecturerID = supervisors[i % supervisors.Length],
-                Role = ProjectRole.Main,
-                AssignedAt = DateTime.UtcNow,
-                AssignedBy = "ADMIN001"
-            });
         }
 
+        await _context.Projects.AddRangeAsync(projects);
+        await _context.SaveChangesAsync();
+
+        var projectSupervisors = new List<ProjectSupervisor>();
+        foreach (var p in projects)
+        {
+            var pickedLecturers = faker.PickRandom(lecturers, faker.Random.Int(1, 2)).ToList();
+            
+            projectSupervisors.Add(new ProjectSupervisor
+            {
+                ProjectID = p.ProjectID,
+                LecturerID = pickedLecturers[0],
+                Role = ProjectRole.Main,
+                AssignedAt = p.CreatedAt,
+                AssignedBy = "ADMIN001"
+            });
+
+            if (pickedLecturers.Count > 1)
+            {
+                projectSupervisors.Add(new ProjectSupervisor
+                {
+                    ProjectID = p.ProjectID,
+                    LecturerID = pickedLecturers[1],
+                    Role = ProjectRole.Co,
+                    AssignedAt = p.CreatedAt,
+                    AssignedBy = "ADMIN001"
+                });
+            }
+        }
+
+        await _context.ProjectSupervisors.AddRangeAsync(projectSupervisors);
         await _context.SaveChangesAsync();
     }
 }
+

@@ -2,6 +2,11 @@ using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bogus;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace GPMS.Infrastructure.Data.Seeding.Seeders;
 
@@ -17,28 +22,34 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
-        if (activeSemester == null) return;
+        if (await _context.Evaluations.CountAsync() > 20) return;
 
-        int semesterId = activeSemester.SemesterID;
-
-        // Check for specific seeded evaluations
-        if (await _context.Evaluations.AnyAsync(e => e.ReviewRound.SemesterID == semesterId)) return;
+        var faker = new Faker("vi");
 
         var assignments = await _context.ReviewerAssignments
-            .Where(ra => ra.ReviewRound.RoundNumber == 1 && ra.ReviewRound.SemesterID == semesterId)
             .Include(ra => ra.ReviewRound)
-            .ThenInclude(rr => rr!.ReviewChecklist)
-            .ThenInclude(rc => rc!.ChecklistItems)
+                .ThenInclude(rr => rr!.ReviewChecklist)
+                    .ThenInclude(rc => rc!.ChecklistItems)
+            .Where(ra => ra.ReviewRound.Status == RoundStatus.Completed || ra.ReviewRound.Status == RoundStatus.Ongoing)
             .ToListAsync();
 
-        var random = new Random();
-        int count = 0;
+        if (!assignments.Any()) return;
 
+        var evaluations = new List<Evaluation>();
+        var details = new List<EvaluationDetail>();
+        var feedbacks = new List<Feedback>();
+        var approvals = new List<FeedbackApproval>();
+
+        var supervisors = await _context.ProjectSupervisors.ToListAsync();
+
+        int count = 0;
         foreach (var ra in assignments)
         {
             var checklist = ra.ReviewRound.ReviewChecklist;
             if (checklist == null) continue;
+            
+            // Randomly skipping some evaluations to mock incomplete data
+            if (ra.ReviewRound.Status == RoundStatus.Ongoing && faker.Random.Double() > 0.7) continue;
 
             var evaluation = new Evaluation
             {
@@ -46,69 +57,68 @@ public class EvaluationSeeder : IDataSeeder
                 GroupID = ra.GroupID,
                 ReviewerID = ra.ReviewerID,
                 Status = EvaluationStatus.Submitted,
-                SubmittedAt = DateTime.UtcNow.AddDays(-1),
-                OverallComment = "Nội dung bài làm đáp ứng yêu cầu của round này."
+                SubmittedAt = ra.AssignedAt.AddDays(faker.Random.Int(2, 7)),
+                OverallComment = faker.Lorem.Paragraphs(1)
             };
 
-            _context.Evaluations.Add(evaluation);
-            await _context.SaveChangesAsync();
+            // Needs to add to context to get ID if using Guid or Identity?
+            // Wait, EF Core assigns IDs on SaveChanges, but we can link by object ref
+            evaluations.Add(evaluation);
 
             foreach (var item in checklist.ChecklistItems)
             {
-                string assessment = "Yes"; // Default for YesNo
+                string assessment = "Yes"; 
                 if (item.ItemType == "Rubric")
                 {
-                    var grades = new[] { "Excellent", "Good", "Acceptable" };
-                    assessment = grades[random.Next(grades.Length)];
+                    var grades = new[] { "Excellent", "Good", "Acceptable", "Fail" };
+                    // Bias towards Acceptable/Good
+                    assessment = faker.PickRandom(new[] { "Excellent", "Good", "Good", "Acceptable", "Acceptable", "Acceptable", "Fail" });
                 }
                 else
                 {
                     var answers = new[] { "Yes", "Yes", "No", "N/A" };
-                    assessment = answers[random.Next(answers.Length)];
+                    assessment = faker.PickRandom(answers);
                 }
                 
-                _context.EvaluationDetails.Add(new EvaluationDetail
+                details.Add(new EvaluationDetail
                 {
-                    EvaluationID = evaluation.EvaluationID,
+                    Evaluation = evaluation,
                     ItemID = item.ItemID,
                     Assessment = assessment,
-                    Comment = $"Đánh giá cho tiêu chí: {item.ItemContent}"
+                    Comment = faker.Lorem.Sentence()
                 });
             }
 
-            // Feedback
             var feedback = new Feedback
             {
-                EvaluationID = evaluation.EvaluationID,
-                Content = $"Bài làm của nhóm khá tốt. Cần phát huy ở các round tiếp theo.",
-                CreatedAt = DateTime.UtcNow.AddHours(-12)
+                Evaluation = evaluation,
+                Content = faker.Lorem.Sentences(2),
+                CreatedAt = evaluation.SubmittedAt.Value.AddHours(faker.Random.Int(1, 24))
             };
-            _context.Feedbacks.Add(feedback);
-            await _context.SaveChangesAsync();
+            feedbacks.Add(feedback);
 
-            // Feedback Approval: 8 Approved, 2 Pending
-            if (count < 8)
+            var isApproved = count % 10 != 0; // 90% approved
+            if (isApproved)
             {
-                var supervisor = await _context.ProjectSupervisors
-                    .FirstOrDefaultAsync(ps => ps.Project.ProjectGroups.Any(pg => pg.GroupID == ra.GroupID) && ps.Role == ProjectRole.Main);
-
+                var supervisor = supervisors.FirstOrDefault(ps => ps.ProjectID == ra.Group?.ProjectID && ps.Role == ProjectRole.Main);
                 if (supervisor != null)
                 {
-                    _context.FeedbackApprovals.Add(new FeedbackApproval
+                    approvals.Add(new FeedbackApproval
                     {
-                        FeedbackID = feedback.FeedbackID,
+                        Feedback = feedback,
                         SupervisorID = supervisor.LecturerID,
                         ApprovalStatus = ApprovalStatus.Approved,
-                        ApprovedAt = DateTime.UtcNow.AddHours(-2),
-                        SupervisorComment = "Đồng ý với nhận xét của reviewer."
+                        ApprovedAt = feedback.CreatedAt.AddHours(faker.Random.Int(1, 24)),
+                        SupervisorComment = "Nhận xét chân thực."
                     });
                 }
             }
+
             else
             {
-                _context.FeedbackApprovals.Add(new FeedbackApproval
+                approvals.Add(new FeedbackApproval
                 {
-                    FeedbackID = feedback.FeedbackID,
+                    Feedback = feedback,
                     ApprovalStatus = ApprovalStatus.Pending
                 });
             }
@@ -116,6 +126,11 @@ public class EvaluationSeeder : IDataSeeder
             count++;
         }
 
+        await _context.Evaluations.AddRangeAsync(evaluations);
+        await _context.EvaluationDetails.AddRangeAsync(details);
+        await _context.Feedbacks.AddRangeAsync(feedbacks);
+        await _context.FeedbackApprovals.AddRangeAsync(approvals);
         await _context.SaveChangesAsync();
     }
 }
+
