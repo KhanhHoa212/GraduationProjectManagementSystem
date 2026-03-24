@@ -153,12 +153,24 @@
         }
         else if (User.IsInRole("Lecturer")) {
             <div class="px-6 mb-4">
-                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mentor</span>
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Overview</span>
             </div>
             <a asp-controller="Lecturer" asp-action="Dashboard" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Dashboard")">
                 <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Dashboard") group-hover:scale-110 transition-transform duration-300">dashboard</span>
                 <span class="text-[14px]">Dashboard</span>
             </a>
+            <a asp-controller="Lecturer" asp-action="Schedule" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Schedule")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Schedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
+                <span class="text-[14px]">Schedule</span>
+            </a>
+            <a asp-controller="Lecturer" asp-action="History" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "History")">
+                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "History") group-hover:scale-110 transition-transform duration-300">history</span>
+                <span class="text-[14px]">History</span>
+            </a>
+
+            <div class="px-6 mt-6 mb-4">
+                <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Mentor</span>
+            </div>
             <a asp-controller="Lecturer" asp-action="Projects" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Projects")">
                 <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Projects") group-hover:scale-110 transition-transform duration-300">folder_open</span>
                 <span class="text-[14px]">My Projects</span>
@@ -167,10 +179,6 @@
                 <span class="material-symbols-outlined @GetIconClasses("Lecturer", "FeedbackApprovals") group-hover:scale-110 transition-transform duration-300">fact_check</span>
                 <span class="text-[14px]">Feedback Approvals</span>
             </a>
-            <a asp-controller="Lecturer" asp-action="Schedule" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "Schedule")">
-                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "Schedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
-                <span class="text-[14px]">Schedule</span>
-            </a>
 
             <div class="px-6 mt-6 mb-4">
                 <span class="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Reviewer</span>
@@ -178,10 +186,6 @@
             <a asp-controller="Lecturer" asp-action="ReviewAssignments" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "ReviewAssignments")">
                 <span class="material-symbols-outlined @GetIconClasses("Lecturer", "ReviewAssignments") group-hover:scale-110 transition-transform duration-300">assignment</span>
                 <span class="text-[14px]">Review Assignments</span>
-            </a>
-            <a asp-controller="Lecturer" asp-action="History" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("Lecturer", "History")">
-                <span class="material-symbols-outlined @GetIconClasses("Lecturer", "History") group-hover:scale-110 transition-transform duration-300">history</span>
-                <span class="text-[14px]">History</span>
             </a>
 
             <div class="px-6 mt-6 mb-4">

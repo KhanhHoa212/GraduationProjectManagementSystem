@@ -245,6 +245,8 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int RoundNumber { get; set; }
         public string RoundType { get; set; } = string.Empty;
         public DateTime? ScheduledAt { get; set; }
+        public string? SubmissionFileName { get; set; }
+        public string? SubmissionUrl { get; set; }
         public List<GroupMemberItem> Members { get; set; } = new();
         public List<ChecklistItemRow> ChecklistItems { get; set; } = new();
         public int? ExistingEvaluationID { get; set; }

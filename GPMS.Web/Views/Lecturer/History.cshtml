@@ -65,6 +65,7 @@
             <div class="flex flex-col gap-4">
                 @foreach (var item in Model.FeedbackHistory)
                 {
+                    var actionLabel = item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Pending ? "Review feedback" : "View feedback";
                     var badgeClass = item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Approved ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
                         : item.ApprovalStatus == GPMS.Domain.Enums.ApprovalStatus.Rejected ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
                         : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400";
@@ -93,7 +94,7 @@
                                     <span class="font-bold not-italic">Supervisor note:</span> @item.SupervisorComment
                                 </div>
                             }
-                            <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 bg-white dark:bg-dark-800 text-sm font-bold rounded-xl shadow-sm transition-colors mt-1">Open feedback</a>
+                            <a href="@Url.Action("FeedbackApprovalDetail", "Lecturer", new { id = item.FeedbackID })" class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 bg-white dark:bg-dark-800 text-sm font-bold rounded-xl shadow-sm transition-colors mt-1">@actionLabel</a>
                         </div>
                     </div>
                 }

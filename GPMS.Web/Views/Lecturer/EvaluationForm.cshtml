@@ -123,9 +123,10 @@
                                             </details>
                                         </td>
                                         <td class="px-4 py-4">
-                                            <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
-                                            <select asp-for="CriteriaScores[@i].Assessment"
-                                                    class="form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
+                                            <input type="hidden" name="CriteriaScores.Index" value="@i" />
+                                            <input type="hidden" asp-for="CriteriaScores[i].CriteriaId" value="@item.ItemID" />
+                                            <select asp-for="CriteriaScores[i].Assessment"
+                                                    class="grade-level-select form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
                                                     data-target="grade-desc-@i"
                                                     data-summary="grade-summary"
                                                     disabled="@isReadOnly"
@@ -149,7 +150,7 @@
                                             }
                                         </td>
                                         <td class="px-4 py-4">
-                                            <textarea asp-for="CriteriaScores[@i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                            <textarea asp-for="CriteriaScores[i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
                                         </td>
                                     </tr>
                                 }
@@ -219,14 +220,15 @@
                                             var currentValue = Model.CriteriaScores.ElementAtOrDefault(i)?.Assessment ?? existing?.Assessment ?? string.Empty;
                                             <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
                                                 <td class="px-4 py-4">
-                                                    <input type="hidden" asp-for="CriteriaScores[@i].CriteriaId" value="@item.ItemID" />
+                                                    <input type="hidden" name="CriteriaScores.Index" value="@i" />
+                                                    <input type="hidden" asp-for="CriteriaScores[i].CriteriaId" value="@item.ItemID" />
                                                     <div class="font-medium text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">@item.ItemContent</div>
                                                 </td>
                                                 <td class="px-4 py-4">
                                                     <span class="inline-block px-2 py-1 text-xs font-semibold rounded bg-slate-100 text-slate-600 dark:bg-dark-600 dark:text-slate-300">Default</span>
                                                 </td>
                                                 <td class="px-4 py-4">
-                                                    <input type="hidden" asp-for="CriteriaScores[@i].Assessment" class="assessment-value" />
+                                                    <input type="hidden" asp-for="CriteriaScores[i].Assessment" class="assessment-value" />
                                                     <div class="inline-flex rounded-lg shadow-sm border border-slate-200 dark:border-dark-600 overflow-hidden bg-white dark:bg-dark-800">
                                                         <button type="button" class="assessment-toggle px-4 py-2 text-sm font-semibold transition-colors border-r border-slate-200 dark:border-dark-600 last:border-0 @(currentValue == "Y" ? "bg-primary-500 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700")" data-value="Y" data-target-index="@i" disabled="@isReadOnly">Y</button>
                                                         <button type="button" class="assessment-toggle px-4 py-2 text-sm font-semibold transition-colors border-r border-slate-200 dark:border-dark-600 last:border-0 @(currentValue == "N" ? "bg-primary-500 text-white" : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700")" data-value="N" data-target-index="@i" disabled="@isReadOnly">N</button>
@@ -237,7 +239,7 @@
                                                     <textarea class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-400 text-sm shadow-inner transition-colors resize-none" rows="3" readonly>@existing?.MentorComment</textarea>
                                                 </td>
                                                 <td class="px-4 py-4">
-                                                    <textarea asp-for="CriteriaScores[@i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="3" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
+                                                    <textarea asp-for="CriteriaScores[i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="3" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
                                                 </td>
                                             </tr>
                                         }
@@ -292,6 +294,24 @@
                     }
                 </div>
 
+                @if (!string.IsNullOrWhiteSpace(Model.SubmissionUrl))
+                {
+                    <hr class="border-slate-100 dark:border-dark-700 mb-6" />
+                    <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-4">Round Document</div>
+                    <a href="@(Model.SubmissionUrl?.Replace("/upload/", "/upload/fl_attachment/"))" target="_blank" class="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-dark-600 hover:bg-slate-50 dark:hover:bg-dark-700 transition-colors group mb-6">
+                        <div class="w-10 h-10 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-500 flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[20px]">description</span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <div class="text-sm font-bold text-dark-900 dark:text-white truncate group-hover:text-primary-600 transition-colors">
+                                @(string.IsNullOrWhiteSpace(Model.SubmissionFileName) ? "View Document" : Model.SubmissionFileName)
+                            </div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Click to download</div>
+                        </div>
+                        <span class="material-symbols-outlined text-slate-400 group-hover:text-primary-500 transition-colors">download</span>
+                    </a>
+                }
+
                 <hr class="border-slate-100 dark:border-dark-700 mb-6" />
                 
                 <div class="text-[11px] font-bold text-slate-400 dark:text-slate-500 tracking-widest uppercase mb-4">Members</div>
@@ -317,19 +337,20 @@
 @section Scripts {
     <script>
         document.querySelectorAll('.assessment-toggle').forEach(button => {
-            button.addEventListener('click', () => {
-                const index = button.dataset.targetIndex;
-                const hidden = document.querySelector(`input[name="CriteriaScores[${index}].Assessment"]`);
+            button.addEventListener('click', function() {
+                if (this.disabled) return;
+                const td = this.closest('td');
+                const hidden = td.querySelector('.assessment-value');
                 if (!hidden) return;
 
-                hidden.value = button.dataset.value;
-                const group = button.parentElement.querySelectorAll('.assessment-toggle');
+                hidden.value = this.dataset.value;
+                const group = td.querySelectorAll('.assessment-toggle');
                 group.forEach(btn => {
                     btn.classList.remove('bg-primary-500', 'text-white');
                     btn.classList.add('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-50', 'dark:hover:bg-dark-700');
                 });
-                button.classList.remove('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-50', 'dark:hover:bg-dark-700');
-                button.classList.add('bg-primary-500', 'text-white');
+                this.classList.remove('text-slate-600', 'dark:text-slate-300', 'hover:bg-slate-50', 'dark:hover:bg-dark-700');
+                this.classList.add('bg-primary-500', 'text-white');
             });
         });
 
