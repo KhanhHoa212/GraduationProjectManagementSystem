@@ -2,6 +2,11 @@ using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bogus;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace GPMS.Infrastructure.Data.Seeding.Seeders;
 
@@ -17,69 +22,77 @@ public class ReviewerAssignmentSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
-        if (activeSemester == null) return;
+        if (await _context.ReviewerAssignments.CountAsync() > 20) return;
 
-        int semesterId = activeSemester.SemesterID;
+        var faker = new Faker("vi");
 
-        // Check if assignments exist for potential seeded rounds (Round 1 or 2)
-        if (await _context.ReviewerAssignments.AnyAsync(ra => ra.ReviewRound.SemesterID == semesterId)) return;
-
-        var groups = await _context.ProjectGroups.Where(g => g.GroupName.StartsWith("Team ")).ToListAsync();
+        var groups = await _context.ProjectGroups.Include(g => g.Project).ToListAsync();
         var rounds = await _context.ReviewRounds
-            .Where(r => r.SemesterID == semesterId && (r.Status == RoundStatus.Completed || r.Status == RoundStatus.Ongoing))
+            .Where(r => r.SemesterID >= 5)
             .ToListAsync();
-        var lecturers = await _context.UserRoles
-            .Where(r => r.RoleName == RoleName.Lecturer)
-            .Select(r => r.UserID)
+            
+        var lecturers = await _context.Users
+            .Where(u => u.UserID.StartsWith("GV"))
+            .Select(u => u.UserID)
             .ToListAsync();
 
         if (!groups.Any() || !rounds.Any() || !lecturers.Any()) return;
 
+        var assignments = new List<ReviewerAssignment>();
+        var progresses = new List<GroupRoundProgress>();
+
         foreach (var round in rounds)
         {
-            var reviewerIdx = 0;
-            foreach (var @group in groups)
+            // Chỉ assign cho các group thuộc cùng kỳ với round
+            var targetGroups = groups.Where(g => g.Project.SemesterID == round.SemesterID).ToList();
+
+            foreach (var group in targetGroups)
             {
-                // Get supervisor of this project to avoid assigning as reviewer
                 var supervisorId = await _context.ProjectSupervisors
-                    .Where(ps => ps.ProjectID == @group.ProjectID && ps.Role == ProjectRole.Main)
+                    .Where(ps => ps.ProjectID == group.ProjectID && ps.Role == ProjectRole.Main)
                     .Select(ps => ps.LecturerID)
                     .FirstOrDefaultAsync();
 
-                // Select a lecturer who is NOT the supervisor
-                string reviewerId;
-                int attempts = 0;
-                do
-                {
-                    reviewerId = lecturers[reviewerIdx % lecturers.Count];
-                    reviewerIdx++;
-                    attempts++;
-                } while (reviewerId == supervisorId && attempts < lecturers.Count);
+                var pool = lecturers.Where(l => l != supervisorId).ToList();
+                if (!pool.Any()) pool = lecturers; // Fallback
 
-                _context.ReviewerAssignments.Add(new ReviewerAssignment
-                {
-                    ReviewRoundID = round.ReviewRoundID,
-                    GroupID = @group.GroupID,
-                    ReviewerID = reviewerId,
-                    AssignedBy = "ADMIN001",
-                    AssignedAt = DateTime.UtcNow,
-                    IsRandom = true
-                });
+                // 2 reviewers per group
+                var pickedReviewers = faker.PickRandom(pool, 2).ToList();
 
-                // Add GroupRoundProgress (Mentor Decision)
-                // If round is already ongoing or completed, we assume it was "Accepted"
-                _context.GroupRoundProgresses.Add(new GroupRoundProgress
+                foreach (var revId in pickedReviewers)
                 {
-                    GroupID = @group.GroupID,
+                    assignments.Add(new ReviewerAssignment
+                    {
+                        ReviewRoundID = round.ReviewRoundID,
+                        GroupID = group.GroupID,
+                        ReviewerID = revId,
+                        AssignedBy = "ADMIN001",
+                        AssignedAt = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 20)),
+                        IsRandom = true
+                    });
+                }
+
+                // Random mentor decision
+                MentorDecision decision;
+                if (round.Status == RoundStatus.Planned)
+                    decision = MentorDecision.Pending;
+                else
+                    decision = faker.Random.Double() > 0.05 ? MentorDecision.Accepted : MentorDecision.Rejected;
+
+                progresses.Add(new GroupRoundProgress
+                {
+                    GroupID = group.GroupID,
                     ReviewRoundID = round.ReviewRoundID,
-                    MentorDecision = MentorDecision.Accepted,
-                    MentorComment = "Tiến độ ổn, đồng ý cho review.",
-                    UpdatedAt = DateTime.UtcNow
+                    MentorDecision = decision,
+                    MentorComment = decision == MentorDecision.Accepted ? "Nhóm làm tốt, cho bảo vệ." : "Tiến độ chậm, cần nỗ lực hơn.",
+                    UpdatedAt = DateTime.UtcNow.AddDays(-faker.Random.Int(1, 20))
                 });
             }
         }
 
+        await _context.ReviewerAssignments.AddRangeAsync(assignments);
+        await _context.GroupRoundProgresses.AddRangeAsync(progresses);
         await _context.SaveChangesAsync();
     }
 }
+
