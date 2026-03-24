@@ -7,8 +7,9 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Linq;
 using System.Collections.Generic;
-
+using GPMS.Web.ViewModels;
 namespace GPMS.Web.Controllers;
 
 [Authorize(Roles = "HeadOfDept")]
@@ -19,19 +20,22 @@ public class HODController : Controller
     private readonly IReviewRoundService _reviewRoundService;
     private readonly IChecklistService _checklistService;
     private readonly IExcelService _excelService;
+    private readonly IReportService _reportService;
 
     public HODController(
         IProjectService projectService, 
         ISemesterService semesterService, 
         IReviewRoundService reviewRoundService,
         IChecklistService checklistService,
-        IExcelService excelService)
+        IExcelService excelService,
+        IReportService reportService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
         _checklistService = checklistService;
         _excelService = excelService;
+        _reportService = reportService;
     }
 
 
@@ -528,7 +532,55 @@ public class HODController : Controller
     }
 
     public IActionResult AssignReviewer() => View();
-    public IActionResult Reports() => View();
+    public async Task<IActionResult> Reports(int? semesterId)
+    {
+        ViewData["Title"] = "Reports";
+        ViewData["BreadcrumbTitle"] = "Reports";
+
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        int? targetSemesterId;
+        if (semesterId == -1)
+        {
+            targetSemesterId = null; 
+        }
+        else if (semesterId == null)
+        {
+            targetSemesterId = activeSemester?.SemesterID;
+        }
+        else
+        {
+            targetSemesterId = semesterId;
+        }
+
+        ViewBag.Semesters = semesters;
+        ViewBag.SelectedSemesterId = semesterId == -1 ? -1 : targetSemesterId;
+
+        var dto = await _reportService.GetHODReportAsync(targetSemesterId);
+        
+        var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
+        
+        var vm = new HODReportViewModel
+        {
+            TotalProjects = dto.TotalProjects,
+            TotalGroups = dto.TotalGroups,
+            TotalStudents = dto.TotalStudents,
+            TotalSupervisors = dto.TotalSupervisors,
+            SemesterCode = targetSemObj?.SemesterCode ?? "Tất cả",
+            AcademicYear = targetSemObj?.AcademicYear ?? "N/A",
+            DraftProjects = dto.DraftProjects,
+            ActiveProjects = dto.ActiveProjects,
+            CompletedProjects = dto.CompletedProjects,
+            CancelledProjects = dto.CancelledProjects,
+            MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
+            RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
+            SupervisorWorkloads = dto.SupervisorWorkloads.Select(s => new SupervisorWorkloadItem { LecturerName = s.LecturerName, ProjectCount = s.ProjectCount, GroupCount = s.GroupCount, StudentCount = s.StudentCount }).ToList(),
+            RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
+        };
+
+        return View(vm);
+    }
     
     [HttpGet]
     public async Task<IActionResult> CreateProject()

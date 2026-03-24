@@ -18,6 +18,10 @@ public class SubmissionRepository : ISubmissionRepository
         await _context.SubmissionRequirements.Include(r => r.ReviewRound).FirstOrDefaultAsync(r => r.RequirementID == requirementId);
     public async Task<IEnumerable<Submission>> GetByGroupAndRequirementAsync(int groupId, int requirementId) => 
         await _context.Submissions.Where(s => s.GroupID == groupId && s.RequirementID == requirementId).ToListAsync();
+
+    public async Task<IEnumerable<Submission>> GetByGroupIdsAsync(IEnumerable<int> groupIds) =>
+        await _context.Submissions.Where(s => groupIds.Contains(s.GroupID)).ToListAsync();
+
     public async Task AddAsync(Submission submission) => await _context.Submissions.AddAsync(submission);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
