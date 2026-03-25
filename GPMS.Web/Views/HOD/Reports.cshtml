@@ -15,32 +15,80 @@
 @section Styles {
     <style>
         @@media print {
-            /* Ẩn sidebar, header của layout */
-            aside, header, nav, .print\:hidden { display: none !important; }
-            
-            /* Reset layout để full trang */
-            main.ml-64, main {
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 100% !important;
-                max-width: 100% !important;
+            /* Ẩn hoàn toàn các thành phần UI không liên quan */
+            aside, header, nav, .print\:hidden, #chatbot-container, #toastContainer, #sidebar-overlay { 
+                display: none !important; 
             }
-
-            /* Giữ nguyên màu sắc và dark mode styles khi in */
-            body {
+            
+            /* RESET LAYOUT SHELL: Đây là phần quan trọng nhất */
+            /* Phải ép tất cả các container bọc ngoài về overflow visible và height auto */
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
                 background: white !important;
                 color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
             }
 
+            /* Target các div layout trong _Layout.cshtml */
+            .flex.h-screen.overflow-hidden,
+            .flex-1.flex.flex-col.h-full.overflow-hidden,
+            main.flex-1.overflow-y-auto {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+                width: 100% !important;
+            }
+
+            main {
+                margin: 0 !important;
+                padding: 1cm !important; /* Lề trang in */
+            }
+
+            /* Reset container nội dung */
+            #reportContent, .space-y-8 {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
+
+            /* Giữ nguyên màu sắc khi in */
             * {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
-                page-break-inside: avoid;
             }
 
+            /* Tránh ngắt trang giữa chừng bên trong các card/bảng */
+            .bg-white, tr, .grid > div, .rounded-2xl {
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
+                float: none !important;
+            }
+
+            /* Gap giữa các section */
+            .space-y-8 > div {
+                margin-bottom: 3rem !important;
+                page-break-after: auto !important;
+            }
+
+            /* Fix table layout khi in */
+            table {
+                page-break-inside: auto;
+                width: 100% !important;
+            }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
+
             /* Giảm bớt shadow và format lại charts */
-            .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            .shadow-sm, .shadow-md, .shadow-lg { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+            }
         }
+
+
     </style>
 }
 
@@ -445,6 +493,12 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Pagination -->
+            <div class="print:hidden">
+                @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
+            </div>
+
         }
         else
         {
