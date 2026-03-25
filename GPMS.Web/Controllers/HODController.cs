@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
-using System.Linq;
 using System.Collections.Generic;
 using GPMS.Web.ViewModels;
 namespace GPMS.Web.Controllers;
@@ -309,6 +308,14 @@ public class HODController : Controller
             return View(new List<ReviewRoundDto>());
 
         var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        
+        // Auto-initialize 3 rounds if none exist
+        if (!rounds.Any())
+        {
+            await _reviewRoundService.InitializeDefaultRoundsAsync(activeSemester.SemesterID);
+            rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
+
         return View(rounds);
     }
 
@@ -459,8 +466,15 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteReviewRound(int id)
     {
-        await _reviewRoundService.DeleteReviewRoundAsync(id);
-        TempData["SuccessMessage"] = "Review round deleted successfully.";
+        try 
+        {
+            await _reviewRoundService.DeleteReviewRoundAsync(id);
+            TempData["SuccessMessage"] = "Review round deleted successfully.";
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
         return RedirectToAction(nameof(ReviewRounds));
     }
 
@@ -532,7 +546,8 @@ public class HODController : Controller
     }
 
     public IActionResult AssignReviewer() => View();
-    public async Task<IActionResult> Reports(int? semesterId)
+    [HttpGet("Reports")]
+    public async Task<IActionResult> Reports(int? semesterId, int page = 1)
     {
         ViewData["Title"] = "Reports";
         ViewData["BreadcrumbTitle"] = "Reports";
@@ -561,6 +576,15 @@ public class HODController : Controller
         
         var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
         
+        // Paginate workloads (pageSize = 10 to match _Pagination.cshtml)
+        var workloadItems = dto.SupervisorWorkloads.Select(s => new SupervisorWorkloadItem 
+        { 
+            LecturerName = s.LecturerName, 
+            ProjectCount = s.ProjectCount, 
+            GroupCount = s.GroupCount, 
+            StudentCount = s.StudentCount 
+        });
+
         var vm = new HODReportViewModel
         {
             TotalProjects = dto.TotalProjects,
@@ -575,12 +599,15 @@ public class HODController : Controller
             CancelledProjects = dto.CancelledProjects,
             MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
             RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
-            SupervisorWorkloads = dto.SupervisorWorkloads.Select(s => new SupervisorWorkloadItem { LecturerName = s.LecturerName, ProjectCount = s.ProjectCount, GroupCount = s.GroupCount, StudentCount = s.StudentCount }).ToList(),
+            SupervisorWorkloads = Models.PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
+            AllSupervisorWorkloads = workloadItems.ToList(),
             RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
         };
 
+
         return View(vm);
     }
+
     
     [HttpGet]
     public async Task<IActionResult> CreateProject()

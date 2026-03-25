@@ -54,7 +54,7 @@ public class SubmissionMapping : IEntityTypeConfiguration<Submission>
         builder.HasOne(s => s.Group)
             .WithMany(g => g.Submissions)
             .HasForeignKey(s => s.GroupID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(s => s.Submitter)
             .WithMany(u => u.Submissions)

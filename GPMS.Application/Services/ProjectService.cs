@@ -321,8 +321,20 @@ public class ProjectService : IProjectService
         if (student == null)
             return (false, "Student not found.");
 
-        if (await _groupRepository.IsUserInAnyGroupAsync(userId))
-            return (false, "Student is already assigned to a project group.");
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
+            return (false, "Project not found.");
+
+        // 1. Check if graduated (Passed in any project)
+        if (await _groupRepository.HasUserGraduatedAsync(userId))
+            return (false, "Sinh viên đã hoàn thành đồ án tốt nghiệp ở học kỳ trước.");
+
+        // 2. Check if already in a group for the SAME semester
+        var projectsInSemester = await _projectRepository.GetBySemesterWithDetailsAsync(project.SemesterID);
+        var isAlreadyInSemesterGroup = projectsInSemester.Any(p => p.ProjectGroups.Any(g => g.GroupMembers.Any(m => m.UserID == userId)));
+        
+        if (isAlreadyInSemesterGroup)
+            return (false, "Sinh viên đã được chỉ định vào một nhóm đồ án khác trong học kỳ này.");
 
         var group = await _groupRepository.GetByProjectIdWithMembersAsync(projectId);
         if (group == null)

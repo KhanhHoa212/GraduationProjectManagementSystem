@@ -25,7 +25,10 @@ public class HODReportViewModel
     public List<RoundSubmissionStat> RoundSubmissionStats { get; set; } = new();
 
     // --- Supervisor Workload ---
-    public List<SupervisorWorkloadItem> SupervisorWorkloads { get; set; } = new();
+    public Models.PaginatedList<SupervisorWorkloadItem> SupervisorWorkloads { get; set; } = null!;
+    public List<SupervisorWorkloadItem> AllSupervisorWorkloads { get; set; } = new();
+
+
 
     // --- Mentor Decision Stats per Round ---
     public List<RoundMentorDecisionStat> RoundMentorStats { get; set; } = new();

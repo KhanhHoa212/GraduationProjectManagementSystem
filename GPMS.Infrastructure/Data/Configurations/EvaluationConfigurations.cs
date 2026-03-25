@@ -82,7 +82,7 @@ public class EvaluationConfiguration : IEntityTypeConfiguration<Evaluation>
         builder.HasOne(e => e.Group)
             .WithMany(g => g.Evaluations)
             .HasForeignKey(e => e.GroupID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 

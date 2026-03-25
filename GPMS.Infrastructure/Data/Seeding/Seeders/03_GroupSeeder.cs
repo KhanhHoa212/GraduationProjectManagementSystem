@@ -31,17 +31,23 @@ public class GroupSeeder : IDataSeeder
             .OrderBy(u => u.UserID)
             .ToListAsync();
             
-        var projects = await _context.Projects.ToListAsync();
+        var projects = await _context.Projects
+            .Where(p => p.SemesterID >= 5) // Active/Upcoming semesters
+            .OrderBy(p => p.ProjectID)
+            .ToListAsync();
 
         if (!students.Any() || !projects.Any()) return;
+
+        // Shuffle projects to give random unique assignments
+        var projectQueue = new Queue<Project>(faker.Random.Shuffle(projects));
 
         var groupMembers = new List<GroupMember>();
         int studentIdx = 0;
         int groupCounter = 1;
 
-        while (studentIdx < students.Count)
+        while (studentIdx < students.Count && projectQueue.Any())
         {
-            var project = faker.PickRandom(projects);
+            var project = projectQueue.Dequeue();
             
             var group = new ProjectGroup
             {
@@ -70,6 +76,7 @@ public class GroupSeeder : IDataSeeder
             }
             groupCounter++;
         }
+
 
         await _context.GroupMembers.AddRangeAsync(groupMembers);
         await _context.SaveChangesAsync();
