@@ -329,21 +329,42 @@ public class LecturerController : Controller
         return View(vm);
     }
 
-    public async Task<IActionResult> Schedule()
+    public async Task<IActionResult> Schedule(string? role = null, string? range = null, int weekOffset = 0)
     {
         var userId = GetUserId();
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var dto = await _lecturerService.GetScheduleAsync(userId);
+        var dto = await _lecturerService.GetScheduleAsync(userId, role, range, weekOffset);
         var vm = new LecturerScheduleViewModel
         {
             TodaySessionsCount = dto.TodaySessionsCount,
             OnlineSessionsCount = dto.OnlineSessionsCount,
             OfflineSessionsCount = dto.OfflineSessionsCount,
             UpcomingDeadlinesCount = dto.UpcomingDeadlinesCount,
+            NeedsAttentionCount = dto.NeedsAttentionCount,
+            WeekSessionsCount = dto.WeekSessionsCount,
+            SelectedRole = dto.ActiveRoleFilter,
+            SelectedRange = dto.ActiveRangeFilter,
+            WeekOffset = dto.WeekOffset,
+            WeekLabel = dto.WeekLabel,
+            WeekStartDate = dto.WeekStartDate,
+            WeekEndDate = dto.WeekEndDate,
+            FocusCard = dto.FocusCard == null
+                ? null
+                : new ScheduleFocusViewModel
+                {
+                    Eyebrow = dto.FocusCard.Eyebrow,
+                    Title = dto.FocusCard.Title,
+                    Description = dto.FocusCard.Description,
+                    ActionText = dto.FocusCard.ActionText,
+                    ActionUrl = dto.FocusCard.ActionUrl,
+                    SecondaryActionText = dto.FocusCard.SecondaryActionText,
+                    SecondaryActionUrl = dto.FocusCard.SecondaryActionUrl
+                },
             Entries = dto.Entries.Select(e => new ScheduleEntryViewModel
             {
+                RoleKey = e.RoleKey,
                 RoleLabel = e.RoleLabel,
                 GroupID = e.GroupId,
                 GroupName = e.GroupName,
@@ -355,7 +376,80 @@ public class LecturerController : Controller
                 Location = e.Location,
                 MeetLink = e.MeetLink,
                 Guidance = e.Guidance,
-                ActionUrl = e.ActionUrl
+                StatusKey = e.StatusKey,
+                StatusLabel = e.StatusLabel,
+                StatusTone = e.StatusTone,
+                NeedsAttention = e.NeedsAttention,
+                IsToday = e.IsToday,
+                IsPast = e.IsPast,
+                TimeHint = e.TimeHint,
+                PrimaryActionText = e.PrimaryActionText,
+                PrimaryActionUrl = e.PrimaryActionUrl,
+                SecondaryActionText = e.SecondaryActionText,
+                SecondaryActionUrl = e.SecondaryActionUrl
+            }).ToList(),
+            DayGroups = dto.DayGroups.Select(g => new ScheduleDayGroupViewModel
+            {
+                Date = g.Date,
+                Label = g.Label,
+                Entries = g.Entries.Select(e => new ScheduleEntryViewModel
+                {
+                    RoleKey = e.RoleKey,
+                    RoleLabel = e.RoleLabel,
+                    GroupID = e.GroupId,
+                    GroupName = e.GroupName,
+                    ProjectName = e.ProjectName,
+                    RoundNumber = e.RoundNumber,
+                    RoundType = e.RoundType,
+                    ScheduledAt = e.ScheduledAt,
+                    IsOnline = e.IsOnline,
+                    Location = e.Location,
+                    MeetLink = e.MeetLink,
+                    Guidance = e.Guidance,
+                    StatusKey = e.StatusKey,
+                    StatusLabel = e.StatusLabel,
+                    StatusTone = e.StatusTone,
+                    NeedsAttention = e.NeedsAttention,
+                    IsToday = e.IsToday,
+                    IsPast = e.IsPast,
+                    TimeHint = e.TimeHint,
+                    PrimaryActionText = e.PrimaryActionText,
+                    PrimaryActionUrl = e.PrimaryActionUrl,
+                    SecondaryActionText = e.SecondaryActionText,
+                    SecondaryActionUrl = e.SecondaryActionUrl
+                }).ToList()
+            }).ToList(),
+            WeekDays = dto.WeekDays.Select(day => new ScheduleWeekDayViewModel
+            {
+                Date = day.Date,
+                DayLabel = day.DayLabel,
+                IsToday = day.IsToday,
+                Entries = day.Entries.Select(e => new ScheduleEntryViewModel
+                {
+                    RoleKey = e.RoleKey,
+                    RoleLabel = e.RoleLabel,
+                    GroupID = e.GroupId,
+                    GroupName = e.GroupName,
+                    ProjectName = e.ProjectName,
+                    RoundNumber = e.RoundNumber,
+                    RoundType = e.RoundType,
+                    ScheduledAt = e.ScheduledAt,
+                    IsOnline = e.IsOnline,
+                    Location = e.Location,
+                    MeetLink = e.MeetLink,
+                    Guidance = e.Guidance,
+                    StatusKey = e.StatusKey,
+                    StatusLabel = e.StatusLabel,
+                    StatusTone = e.StatusTone,
+                    NeedsAttention = e.NeedsAttention,
+                    IsToday = e.IsToday,
+                    IsPast = e.IsPast,
+                    TimeHint = e.TimeHint,
+                    PrimaryActionText = e.PrimaryActionText,
+                    PrimaryActionUrl = e.PrimaryActionUrl,
+                    SecondaryActionText = e.SecondaryActionText,
+                    SecondaryActionUrl = e.SecondaryActionUrl
+                }).ToList()
             }).ToList(),
             Deadlines = dto.Deadlines.Select(d => new DeadlineAlertViewModel
             {

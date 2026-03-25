@@ -1,85 +1,272 @@
-﻿@using GPMS.Web.ViewModels.Lecturer
+@using System
+@using System.Globalization
+@using System.Linq
+@using GPMS.Web.ViewModels.Lecturer
 @model LecturerScheduleViewModel
 @{
     ViewData["Title"] = "Schedule";
     Layout = "_Layout";
+
+    string Tone(string tone) => tone switch
+    {
+        "danger" => "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+        "warning" => "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+        "success" => "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+        _ => "bg-primary-100 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400"
+    };
+
+    string RoleTone(string roleKey) => roleKey == "reviewer"
+        ? "bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400"
+        : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
+
+    bool External(string? url) => !string.IsNullOrWhiteSpace(url) &&
+        (url.StartsWith("http", StringComparison.OrdinalIgnoreCase) || url.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase));
+
+    string PageUrl(string? role = null, string? range = null, int? weekOffset = null) =>
+        Url.Action("Schedule", "Lecturer", new
+        {
+            role = role ?? Model.SelectedRole,
+            range = range ?? Model.SelectedRange,
+            weekOffset = weekOffset ?? Model.WeekOffset
+        }) ?? "#";
+
+    string DayAnchor(DateTime date) => $"day-{date:yyyyMMdd}";
+
+    var roles = new[] { ("all", "All"), ("mentor", "Mentor"), ("reviewer", "Reviewer") };
+    var ranges = new[] { ("week", "This week"), ("today", "Today"), ("upcoming", "Upcoming"), ("past", "Past"), ("all", "All") };
+    var urgent = Model.Entries.Where(e => e.NeedsAttention).Take(3).ToList();
+    var headlineDate = Model.DayGroups.FirstOrDefault()?.Date ?? DateTime.Today;
+    var weekNo = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(headlineDate, CalendarWeekRule.FirstFourDayWeek, DayOfWeek.Monday);
+    var maxWeekCount = Math.Max(1, Model.WeekDays.Any() ? Model.WeekDays.Max(d => d.Entries.Count) : 1);
 }
 
-<div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
+@* --- Premium Header Section --- *@
+<div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 mb-8">
     <div>
-        <h1 class="text-2xl font-black text-dark-900 dark:text-white tracking-tight mb-1">Detailed Schedule</h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Review sessions, mentoring meetings, online Meet links, and offline room information.</p>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-50 dark:bg-primary-900/20 shadow-sm border border-primary-100 dark:border-primary-900/30 mb-3 animate-fade-in">
+            <span class="relative flex h-2 w-2">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
+            </span>
+            <span class="text-[10px] font-bold uppercase tracking-widest text-primary-600 dark:text-primary-400">Live Workspace</span>
+        </div>
+        <h1 class="text-3xl md:text-4xl font-black tracking-tight text-slate-900 dark:text-white mb-2">
+            @{
+                var hour = DateTime.Now.Hour;
+                string greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+            }
+            @greeting, <span class="text-primary-500">Lecturer!</span>
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 font-medium flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            Week @weekNo | @Model.WeekLabel
+        </p>
+    </div>
+    <div class="flex items-center gap-3">
+        <a href="@PageUrl(range: "today", weekOffset: 0)" class="group relative px-6 py-3 rounded-2xl bg-white dark:bg-dark-800 border-2 border-slate-100 dark:border-dark-700 text-slate-700 dark:text-slate-300 text-sm font-bold transition-all hover:border-primary-500 hover:text-primary-600 dark:hover:text-primary-400 shadow-sm overflow-hidden">
+            <span class="relative z-10 flex items-center gap-2">
+                <svg class="w-4 h-4 transition-transform group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Jump to Today
+            </span>
+        </a>
     </div>
 </div>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
-    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
-        <div class="text-3xl font-black text-dark-900 dark:text-white mb-1">@Model.TodaySessionsCount</div>
-        <div class="text-[11px] font-bold text-primary-500 uppercase tracking-widest">TODAY</div>
-    </div>
-    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
-        <div class="text-3xl font-black text-dark-900 dark:text-white mb-1">@Model.OnlineSessionsCount</div>
-        <div class="text-[11px] font-bold text-blue-500 uppercase tracking-widest">ONLINE</div>
-    </div>
-    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
-        <div class="text-3xl font-black text-dark-900 dark:text-white mb-1">@Model.OfflineSessionsCount</div>
-        <div class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">OFFLINE</div>
-    </div>
-    <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 p-6 text-center shadow-sm">
-        <div class="text-3xl font-black text-dark-900 dark:text-white mb-1">@Model.UpcomingDeadlinesCount</div>
-        <div class="text-[11px] font-bold text-red-500 uppercase tracking-widest">DEADLINES</div>
+@* --- Quick Insights Bar --- *@
+<div class="relative mb-8">
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        @{
+            var stats = new[] {
+                ("Today", Model.TodaySessionsCount.ToString(), "bg-primary-50 text-primary-600 border-primary-100 dark:bg-primary-900/10 dark:text-primary-400 dark:border-primary-900/20"),
+                ("Attention", Model.NeedsAttentionCount.ToString(), "bg-red-50 text-red-600 border-red-100 dark:bg-red-900/10 dark:text-red-400 dark:border-red-900/20"),
+                ("Total sessions", Model.WeekSessionsCount.ToString(), "bg-slate-50 text-slate-600 border-slate-100 dark:bg-dark-800 dark:text-slate-400 dark:border-dark-700"),
+                ("Online", Model.OnlineSessionsCount.ToString(), "bg-slate-50 text-slate-600 border-slate-100 dark:bg-dark-800 dark:text-slate-400 dark:border-dark-700"),
+                ("Deadlines", Model.UpcomingDeadlinesCount.ToString(), "bg-slate-50 text-slate-600 border-slate-100 dark:bg-dark-800 dark:text-slate-400 dark:border-dark-700")
+            };
+        }
+        @foreach (var stat in stats)
+        {
+            <div class="group relative bg-white dark:bg-dark-800 rounded-2xl border-2 @stat.Item3 p-4 transition-all hover:shadow-lg hover:-translate-y-0.5">
+                <div class="text-[10px] font-black uppercase tracking-widest opacity-80 mb-1">@stat.Item1</div>
+                <div class="text-2xl font-black">@stat.Item2</div>
+                <div class="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V5z" clip-rule="evenodd"/></svg>
+                </div>
+            </div>
+        }
     </div>
 </div>
 
-<div class="flex flex-col lg:flex-row gap-6">
-    <div class="w-full lg:w-2/3">
-        <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 shadow-sm p-6 lg:p-8">
-            <h2 class="text-xl font-bold text-dark-900 dark:text-white mb-6">Sessions</h2>
-            @if (!Model.Entries.Any())
+@* --- Search & Filters --- *@
+<div class="glass-container sticky top-20 z-30 bg-white/70 dark:bg-dark-900/70 backdrop-blur-md rounded-3xl border border-white/20 dark:border-dark-700/30 shadow-xl p-4 mb-8">
+    <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-lg group">
+            <span class="absolute inset-y-0 left-4 flex items-center text-slate-400 group-focus-within:text-primary-500 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </span>
+            <input id="schedule-search" type="text" placeholder="Search groups, tasks, or dates..."
+                   class="w-full pl-12 pr-4 py-3.5 rounded-2xl bg-slate-50 dark:bg-dark-800/50 border-2 border-transparent focus:border-primary-500/30 focus:bg-white dark:focus:bg-dark-800 transition-all outline-none text-sm font-medium dark:text-white" />
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="h-8 w-px bg-slate-200 dark:bg-dark-700 hidden xl:block"></div>
+            <div class="flex p-1 bg-slate-100 dark:bg-dark-800 rounded-xl">
+                @foreach (var role in roles)
+                {
+                    var active = Model.SelectedRole == role.Item1;
+                    <a href="@PageUrl(role: role.Item1)" class="px-4 py-2 rounded-lg text-xs font-bold transition-all @(active ? "bg-white dark:bg-dark-700 text-primary-600 shadow-sm" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200")">@role.Item2</a>
+                }
+            </div>
+            <div class="flex p-1 bg-slate-100 dark:bg-dark-800 rounded-xl">
+                @foreach (var range in ranges)
+                {
+                    var active = Model.SelectedRange == range.Item1;
+                    <a href="@PageUrl(range: range.Item1)" class="px-4 py-2 rounded-lg text-xs font-bold transition-all @(active ? "bg-dark-900 dark:bg-white text-white dark:text-dark-900 shadow-sm" : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200")">@range.Item2</a>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+    @* --- Main Content --- *@
+    <div class="xl:col-span-8 space-y-8">
+        
+        @* --- Focus Highlight Card --- *@
+        <div class="relative group rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary-500/10 animate-fade-in-up">
+            <div class="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-orange-400"></div>
+            <div class="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-3xl group-hover:bg-white/20 transition-all duration-700"></div>
+            
+            <div class="relative p-8 md:p-10 flex flex-col lg:flex-row items-center gap-8">
+                <div class="flex-1 text-center lg:text-left">
+                    @if (Model.FocusCard != null)
+                    {
+                        <div class="inline-flex px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] mb-6 shadow-inner">
+                            @Model.FocusCard.Eyebrow
+                        </div>
+                        <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-sm">@Model.FocusCard.Title</h2>
+                        <p class="text-white/80 text-lg font-medium leading-relaxed mb-8 max-w-xl">@Model.FocusCard.Description</p>
+                        <div class="flex flex-wrap justify-center lg:justify-start gap-4">
+                            <a href="@Model.FocusCard.ActionUrl" target="@(External(Model.FocusCard.ActionUrl) ? "_blank" : null)" class="px-8 py-4 rounded-2xl bg-white text-primary-600 text-sm font-black shadow-xl hover:scale-105 hover:bg-slate-50 transition-all active:scale-95">
+                                @Model.FocusCard.ActionText
+                            </a>
+                            @if (!string.IsNullOrWhiteSpace(Model.FocusCard.SecondaryActionUrl))
+                            {
+                                <a href="@Model.FocusCard.SecondaryActionUrl" target="@(External(Model.FocusCard.SecondaryActionUrl) ? "_blank" : null)" class="px-8 py-4 rounded-2xl bg-primary-700/20 backdrop-blur-md border border-white/30 text-white text-sm font-black hover:bg-primary-700/40 transition-all">
+                                    @Model.FocusCard.SecondaryActionText
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="inline-flex px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm border border-white/20 text-white text-[10px] font-black uppercase tracking-[0.2em] mb-6 shadow-inner">Quiet Day</div>
+                        <h2 class="text-4xl md:text-5xl font-black text-white tracking-tight mb-4 drop-shadow-sm">No Focus Tasks</h2>
+                        <p class="text-white/80 text-lg font-medium leading-relaxed max-w-xl">Enjoy your streamlined schedule. Check the timeline below for regular activities.</p>
+                    }
+                </div>
+                <div class="hidden lg:flex w-56 h-56 items-center justify-center rounded-[3rem] bg-white/10 backdrop-blur-xl border-2 border-white/20 rotate-3 group-hover:rotate-6 transition-transform duration-500 shadow-2xl">
+                    <svg class="w-24 h-24 text-white opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+            </div>
+        </div>
+
+        @* --- Daily Timeline --- *@
+        <div class="bg-white dark:bg-dark-800 rounded-[2.5rem] border-2 border-slate-100 dark:border-dark-700 shadow-sm p-8">
+            <div class="flex items-center justify-between mb-10">
+                <h2 class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-3">
+                    Daily Timeline
+                    <span class="text-xs font-bold text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-dark-900 px-2 py-1 rounded-lg">@Model.Entries.Count Items</span>
+                </h2>
+                <div class="flex gap-1">
+                    <div class="w-2 h-2 rounded-full bg-primary-400"></div>
+                    <div class="w-2 h-2 rounded-full bg-slate-200 dark:bg-dark-700"></div>
+                    <div class="w-2 h-2 rounded-full bg-slate-200 dark:bg-dark-700"></div>
+                </div>
+            </div>
+
+            @if (!Model.DayGroups.Any())
             {
-                <div class="bg-slate-50 dark:bg-dark-900/50 rounded-2xl border border-dashed border-slate-200 dark:border-dark-600 p-8 text-center text-slate-500 dark:text-slate-400">
-                    <p class="m-0 font-medium">No schedule entries available.</p>
+                <div class="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-dark-900/30 rounded-3xl border-2 border-dashed border-slate-200 dark:border-dark-700">
+                    <div class="w-16 h-16 bg-white dark:bg-dark-800 rounded-2xl flex items-center justify-center shadow-md mb-4">
+                        <svg class="w-8 h-8 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                    </div>
+                    <p class="text-slate-500 font-bold">Nothing matches your search</p>
+                    <p class="text-slate-400 text-xs mt-1">Try adjusting your filters or jumping to today.</p>
                 </div>
             }
             else
             {
-                <div class="flex flex-col gap-4">
-                    @foreach (var entry in Model.Entries)
+                <div class="relative space-y-12">
+                    @* Vertical Timeline Line *@
+                    <div class="absolute left-[2.25rem] top-4 bottom-4 w-1 bg-slate-100 dark:bg-dark-700 rounded-full hidden md:block"></div>
+
+                    @foreach (var dayGroup in Model.DayGroups)
                     {
-                        <div class="border border-slate-200 dark:border-dark-600 hover:border-primary-200 dark:hover:border-primary-900/50 rounded-2xl p-5 lg:p-6 bg-white dark:bg-dark-800 transition-colors shadow-sm relative overflow-hidden group">
-                            <!-- Left Accent line -->
-                            <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-200 dark:bg-dark-600 group-hover:bg-primary-400 transition-colors"></div>
-                            
-                            <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4 pl-2">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded border border-slate-200 dark:border-dark-600 bg-slate-50 dark:bg-dark-900 text-slate-600 dark:text-slate-300">@entry.RoleLabel</span>
-                                        <span class="px-2.5 py-1 text-[10px] uppercase font-bold tracking-wider rounded @(entry.IsOnline ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300")">@(entry.IsOnline ? "Online" : "Offline")</span>
-                                    </div>
-                                    <h3 class="text-lg font-bold text-dark-900 dark:text-white mb-1">@entry.GroupName - @entry.ProjectName</h3>
-                                    <div class="text-sm font-medium text-slate-500 dark:text-slate-400">Round @entry.RoundNumber (@entry.RoundType)</div>
+                        <div id="@DayAnchor(dayGroup.Date)" class="relative scroll-mt-48 group/day">
+                            <div class="flex items-center gap-4 mb-6 sticky top-48 z-10 bg-white/80 dark:bg-dark-800/80 backdrop-blur-sm -mx-2 px-2 py-1 rounded-xl">
+                                <div class="w-10 h-10 rounded-xl bg-primary-500 text-white flex flex-col items-center justify-center shadow-lg transform group-hover/day:scale-110 transition-transform">
+                                    <span class="text-[10px] font-black uppercase tracking-tighter leading-none">@dayGroup.Date.ToString("ddd")</span>
+                                    <span class="text-sm font-black leading-none">@dayGroup.Date.Day</span>
                                 </div>
-                                <div class="sm:text-right shrink-0">
-                                    <div class="text-lg font-bold text-dark-900 dark:text-white">@entry.ScheduledAt.ToString("MMM dd, yyyy")</div>
-                                    <div class="text-sm font-bold text-primary-500">@entry.ScheduledAt.ToString("HH:mm")</div>
+                                <div>
+                                    <h3 class="text-lg font-black text-slate-900 dark:text-white leading-none">@dayGroup.Label</h3>
+                                    <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">@dayGroup.Date.ToString("MMMM yyyy")</p>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end pl-2">
-                                <div class="md:col-span-7">
-                                    <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1.5">Location / Link</div>
-                                    <div class="font-medium text-dark-900 dark:text-white">@entry.Location</div>
-                                    @if (!string.IsNullOrWhiteSpace(entry.Guidance))
-                                    {
-                                        <div class="text-sm text-slate-600 dark:text-slate-400 mt-2 bg-slate-50 dark:bg-dark-900/50 p-2.5 rounded-xl border border-slate-100 dark:border-dark-700 italic">@entry.Guidance</div>
-                                    }
-                                </div>
-                                <div class="md:col-span-5 flex justify-start md:justify-end gap-3 flex-wrap">
-                                    @if (!string.IsNullOrWhiteSpace(entry.MeetLink))
-                                    {
-                                        <a href="@entry.MeetLink" target="_blank" class="inline-flex items-center justify-center px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">Open Meet</a>
-                                    }
-                                    <a href="@entry.ActionUrl" class="inline-flex items-center justify-center px-4 py-2 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 text-sm font-bold rounded-xl shadow-sm transition-colors">Open related page</a>
-                                </div>
+
+                            <div class="space-y-4 md:ml-12">
+                                @foreach (var entry in dayGroup.Entries)
+                                {
+                                    <div class="schedule-entry group relative p-5 bg-white dark:bg-dark-900/40 rounded-3xl border-2 border-slate-100 dark:border-dark-700/50 hover:border-primary-500/30 hover:shadow-xl transition-all duration-300"
+                                         data-search="@($"{entry.GroupName} {entry.ProjectName} {entry.RoleLabel} {entry.StatusLabel} {entry.Location} Round {entry.RoundNumber} {entry.RoundType}")">
+                                        
+                                        @* Timeline Connector Dot *@
+                                        <div class="absolute -left-[3.15rem] top-1/2 -translate-y-1/2 w-4 h-4 rounded-full border-4 border-white dark:border-dark-800 shadow-sm hidden md:flex items-center justify-center z-10 transition-colors @(entry.IsPast ? "bg-slate-300" : "bg-primary-500")">
+                                        </div>
+
+                                        <div class="flex flex-col lg:flex-row lg:items-center gap-6">
+                                            <div class="lg:w-24 shrink-0">
+                                                <div class="text-2xl font-black text-slate-900 dark:text-white leading-tight">@entry.ScheduledAt.ToString("HH:mm")</div>
+                                                <div class="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mt-0.5">@entry.TimeHint</div>
+                                            </div>
+
+                                            <div class="flex-1 min-w-0">
+                                                <div class="flex flex-wrap gap-2 mb-3">
+                                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest @RoleTone(entry.RoleKey)">
+                                                        <span class="w-1 h-1 rounded-full bg-current mr-1.5"></span>
+                                                        @entry.RoleLabel
+                                                    </span>
+                                                    <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest @Tone(entry.StatusTone)">@entry.StatusLabel</span>
+                                                    @if(entry.IsOnline) {
+                                                        <span class="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400">Online Event</span>
+                                                    }
+                                                </div>
+                                                <h4 class="text-xl font-bold text-slate-900 dark:text-white truncate mb-1">@entry.GroupName</h4>
+                                                <p class="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                                    <span class="truncate max-w-[200px]">@entry.ProjectName</span>
+                                                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                    <span>Round @entry.RoundNumber (@entry.RoundType)</span>
+                                                </p>
+                                                <div class="mt-3 flex items-center gap-2 text-xs font-bold text-slate-400">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                    @entry.Location
+                                                </div>
+                                            </div>
+
+                                            <div class="flex flex-row lg:flex-col gap-2 shrink-0">
+                                                <a href="@entry.PrimaryActionUrl" target="@(External(entry.PrimaryActionUrl) ? "_blank" : null)" class="px-5 py-3 rounded-2xl bg-primary-500 text-white text-xs font-bold shadow-lg shadow-primary-500/20 hover:bg-primary-600 hover:-translate-y-0.5 transition-all text-center min-w-[120px]">
+                                                    @entry.PrimaryActionText
+                                                </a>
+                                                @if (!string.IsNullOrWhiteSpace(entry.SecondaryActionUrl))
+                                                {
+                                                    <a href="@entry.SecondaryActionUrl" target="@(External(entry.SecondaryActionUrl) ? "_blank" : null)" class="px-5 py-3 rounded-2xl bg-slate-50 dark:bg-dark-800 border-2 border-slate-100 dark:border-dark-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-white transition-all text-center">
+                                                        @entry.SecondaryActionText
+                                                    </a>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
                             </div>
                         </div>
                     }
@@ -88,28 +275,100 @@
         </div>
     </div>
 
-    <div class="w-full lg:w-1/3">
-        <div class="bg-white dark:bg-dark-800 rounded-3xl border border-slate-200 dark:border-dark-700 shadow-sm p-6 lg:p-8 sticky top-24">
-            <h2 class="text-xl font-bold text-dark-900 dark:text-white mb-6">Upcoming Deadlines</h2>
+    @* --- Sidebar --- *@
+    <div class="xl:col-span-4 space-y-8">
+        
+        @* Priority Actions *@
+        <div class="bg-red-50 dark:bg-red-900/10 rounded-[2.5rem] border-2 border-red-100 dark:border-red-900/30 p-6 shadow-sm overflow-hidden relative">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-red-100/50 dark:bg-red-900/20 rounded-full blur-2xl"></div>
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-xl font-black text-red-700 dark:text-red-400 flex items-center gap-2">
+                    <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    Priority Actions
+                </h2>
+                <span class="px-2.5 py-1 rounded-lg bg-red-100 dark:bg-red-900/40 text-[10px] font-black text-red-700 dark:text-red-400">@urgent.Count ALERT(S)</span>
+            </div>
+            
+            @if (!urgent.Any())
+            {
+                <div class="text-sm font-medium text-red-600/60 dark:text-red-400/60">No high-priority tasks for now. Nice work!</div>
+            }
+            else
+            {
+                <div class="space-y-4">
+                    @foreach (var entry in urgent)
+                    {
+                        <div class="p-4 bg-white dark:bg-dark-900 rounded-2xl shadow-sm border border-red-100 dark:border-red-900/20">
+                            <h4 class="text-sm font-black text-slate-900 dark:text-white mb-1">@entry.GroupName</h4>
+                            <p class="text-xs font-medium text-slate-500 mb-3 truncate">@entry.Guidance</p>
+                            <a href="@entry.PrimaryActionUrl" class="inline-flex items-center text-xs font-black text-primary-600 dark:text-primary-400 hover:gap-1.5 transition-all">
+                                Action Required
+                                <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        @* Weekly Overview Chart *@
+        <div class="bg-white dark:bg-dark-800 rounded-[2.5rem] border-2 border-slate-100 dark:border-dark-700 p-8 shadow-sm">
+            <div class="flex items-center justify-between mb-8">
+                <h2 class="text-xl font-black text-slate-900 dark:text-white">Week View</h2>
+                <span class="text-[10px] font-black text-primary-500 uppercase tracking-widest">Efficiency</span>
+            </div>
+            <div class="space-y-4">
+                @foreach (var day in Model.WeekDays)
+                {
+                    var width = day.Entries.Count == 0 ? 0 : Math.Max(15, (int)Math.Round(day.Entries.Count * 100.0 / maxWeekCount));
+                    <a href="#@DayAnchor(day.Date)" class="grid grid-cols-[64px_1fr_32px] gap-4 items-center group/day-row">
+                        <div class="flex flex-col items-center justify-center p-2 rounded-xl transition-all @(day.IsToday ? "bg-primary-500 text-white shadow-lg shadow-primary-500/20 scale-105" : "bg-slate-50 dark:bg-dark-900 text-slate-400 group-hover/day-row:bg-slate-100 dark:group-hover/day-row:bg-dark-700")">
+                            <span class="text-[8px] font-black uppercase tracking-tighter">@day.Date.ToString("ddd")</span>
+                            <span class="text-sm font-black">@day.Date.Day</span>
+                        </div>
+                        <div class="h-4 bg-slate-50 dark:bg-dark-900 rounded-full overflow-hidden p-0.5">
+                            <div class="h-full rounded-full bg-primary-500 transform origin-left transition-transform duration-1000 group-hover/day-row:scale-x-105 @(day.Entries.Count == 0 ? "opacity-0" : "opacity-100")" style="width: @width%"></div>
+                        </div>
+                        <div class="text-xs font-black text-right @(day.Entries.Count > 0 ? "text-slate-900 dark:text-white" : "text-slate-300 dark:text-slate-600")">@day.Entries.Count</div>
+                    </a>
+                }
+            </div>
+        </div>
+
+        @* Deadlines Section *@
+        <div class="bg-slate-900 dark:bg-dark-950 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden group">
+            <div class="absolute top-0 right-0 p-8 opacity-10 transform scale-150 rotate-12 group-hover:scale-110 transition-transform duration-500">
+                <svg class="w-32 h-32" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path></svg>
+            </div>
+            
+            <div class="relative z-10 flex items-center justify-between mb-8">
+                <h2 class="text-xl font-black">Deadlines</h2>
+                <span class="px-2.5 py-1 rounded-lg bg-white/10 text-[10px] font-black">@Model.UpcomingDeadlinesCount TOTAL</span>
+            </div>
+
             @if (!Model.Deadlines.Any())
             {
-                <div class="bg-slate-50 dark:bg-dark-900/50 rounded-2xl p-6 text-center text-slate-500 dark:text-slate-400">
-                    <p class="m-0 text-sm font-medium">No upcoming deadlines.</p>
+                <div class="relative z-10 py-6 text-center">
+                    <p class="text-white/40 text-sm font-medium">No burning deadlines!</p>
                 </div>
             }
             else
             {
-                <div class="flex flex-col gap-4">
+                <div class="relative z-10 space-y-6">
                     @foreach (var deadline in Model.Deadlines)
                     {
-                        var badgeClass = deadline.Severity == "danger" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : deadline.Severity == "warning" ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
-                        <div class="border border-slate-100 dark:border-dark-700 bg-slate-50/50 dark:bg-dark-900/30 rounded-2xl p-5 shadow-sm">
-                            <div class="flex justify-between items-start gap-3 mb-2">
-                                <div class="font-bold text-dark-900 dark:text-white">@deadline.Title</div>
-                                <span class="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider rounded-lg shrink-0 @badgeClass">@deadline.DueAt.ToString("MMM dd")</span>
+                        <div class="schedule-entry pb-6 border-b border-white/10 last:border-0 last:pb-0"
+                             data-search="@($"{deadline.Title} {deadline.Description} {deadline.ActionText}")">
+                            <div class="flex items-start justify-between mb-2">
+                                <span class="text-[9px] font-black uppercase tracking-[0.2em] text-primary-400">@deadline.Title</span>
+                                <span class="text-[9px] font-black uppercase @(deadline.Severity == "danger" ? "text-red-400" : "text-white/40")">
+                                    @(deadline.Severity == "danger" ? "URGENT" : deadline.DueAt.ToString("MMM dd"))
+                                </span>
                             </div>
-                            <div class="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">@deadline.Description</div>
-                            <a href="@deadline.ActionUrl" class="inline-flex w-full items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-700 text-sm font-bold rounded-xl shadow-sm transition-colors">@deadline.ActionText</a>
+                            <h4 class="text-base font-black mb-4 leading-tight">@deadline.Description</h4>
+                            <a href="@deadline.ActionUrl" class="inline-flex px-5 py-2.5 rounded-xl bg-white/10 border border-white/20 text-xs font-black hover:bg-white hover:text-slate-900 transition-all">
+                                @deadline.ActionText
+                            </a>
                         </div>
                     }
                 </div>
@@ -117,3 +376,47 @@
         </div>
     </div>
 </div>
+
+
+<script>
+    (() => {
+        const input = document.getElementById('schedule-search');
+        if (!input) return;
+
+        const entries = Array.from(document.querySelectorAll('.schedule-entry'));
+        input.addEventListener('input', () => {
+            const term = input.value.trim().toLowerCase();
+            entries.forEach(entry => {
+                const text = (entry.getAttribute('data-search') || '').toLowerCase();
+                entry.style.display = !term || text.includes(term) ? '' : 'none';
+            });
+
+            // Hide day groups if they have no visible entries
+            document.querySelectorAll('[id^="day-"]').forEach(dayGroup => {
+                const visibleEntries = dayGroup.querySelectorAll('.schedule-entry:not([style*="display: none"])');
+                dayGroup.style.display = visibleEntries.length > 0 ? '' : 'none';
+            });
+        });
+    })();
+</script>
+
+<style>
+    .animate-fade-in { animation: fadeIn 0.5s ease-out; }
+    .animate-fade-in-up { animation: fadeInUp 0.7s ease-out; }
+    
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    @@keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .glass-container {
+        /* Fallback for non-supporting browsers */
+        background-color: rgba(255, 255, 255, 0.95);
+    }
+</style>
+

@@ -12,7 +12,7 @@ public interface ILecturerService
     Task<LecturerFeedbackApprovalsDto> GetPendingApprovalsAsync(string lecturerId);
     Task<LecturerFeedbackApprovalDetailDto> GetFeedbackApprovalDetailAsync(string lecturerId, int feedbackId);
     Task<LecturerReviewAssignmentsDto> GetReviewAssignmentsAsync(string reviewerId);
-    Task<LecturerScheduleDto> GetScheduleAsync(string lecturerId);
+    Task<LecturerScheduleDto> GetScheduleAsync(string lecturerId, string? roleFilter = null, string? rangeFilter = null, int weekOffset = 0);
     Task<LecturerHistoryDto> GetHistoryAsync(string lecturerId);
     Task<LecturerEvaluationFormDto?> GetEvaluationFormAsync(string reviewerId, int assignmentId);
     Task<(bool Success, string ErrorMessage)> SubmitEvaluationAsync(string reviewerId, EvaluationSubmitDto model);
