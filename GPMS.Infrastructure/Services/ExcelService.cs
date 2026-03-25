@@ -48,9 +48,16 @@ public class ExcelService : IExcelService
             .Select(gm => gm.UserID)
             .ToListAsync();
             
+        var graduatedStudents = await _context.GroupMembers
+            .Where(gm => gm.Status == GraduationStatus.Passed)
+            .Select(gm => gm.UserID)
+            .ToListAsync();
+            
         var eligibleStudents = await _context.Users
             .Include(u => u.UserRoles)
-            .Where(u => u.UserRoles.Any(ur => ur.RoleName == RoleName.Student) && !studentsInGroups.Contains(u.UserID))
+            .Where(u => u.UserRoles.Any(ur => ur.RoleName == RoleName.Student) 
+                   && !studentsInGroups.Contains(u.UserID)
+                   && !graduatedStudents.Contains(u.UserID))
             .OrderBy(u => u.UserID)
             .Select(u => new { u.UserID, u.FullName, u.Email })
             .ToListAsync();
@@ -276,6 +283,11 @@ public class ExcelService : IExcelService
             .Select(p => p.ProjectName)
             .ToListAsync();
 
+        var graduatedStudentIds = await _context.GroupMembers
+            .Where(gm => gm.Status == GraduationStatus.Passed)
+            .Select(gm => gm.UserID)
+            .ToListAsync();
+
         var studentsInThisFile = new HashSet<string>();
         var projectCodesInThisFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var projectNamesInThisFile = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -373,6 +385,10 @@ public class ExcelService : IExcelService
                     else if (studentsWithGroups.Contains(mssv))
                     {
                         dto.Errors.Add($"Sinh viên '{mssv}' đã có nhóm trong học kỳ này");
+                    }
+                    else if (graduatedStudentIds.Contains(mssv))
+                    {
+                        dto.Errors.Add($"Sinh viên '{mssv}' đã hoàn thành đồ án tốt nghiệp ở học kỳ trước");
                     }
                 }
             }

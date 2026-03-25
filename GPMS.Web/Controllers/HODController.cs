@@ -308,6 +308,14 @@ public class HODController : Controller
             return View(new List<ReviewRoundDto>());
 
         var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        
+        // Auto-initialize 3 rounds if none exist
+        if (!rounds.Any())
+        {
+            await _reviewRoundService.InitializeDefaultRoundsAsync(activeSemester.SemesterID);
+            rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
+
         return View(rounds);
     }
 
@@ -458,8 +466,15 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteReviewRound(int id)
     {
-        await _reviewRoundService.DeleteReviewRoundAsync(id);
-        TempData["SuccessMessage"] = "Review round deleted successfully.";
+        try 
+        {
+            await _reviewRoundService.DeleteReviewRoundAsync(id);
+            TempData["SuccessMessage"] = "Review round deleted successfully.";
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
         return RedirectToAction(nameof(ReviewRounds));
     }
 
@@ -585,8 +600,10 @@ public class HODController : Controller
             MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
             RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
             SupervisorWorkloads = Models.PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
+            AllSupervisorWorkloads = workloadItems.ToList(),
             RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
         };
+
 
         return View(vm);
     }

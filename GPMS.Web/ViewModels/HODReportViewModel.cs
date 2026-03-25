@@ -26,6 +26,8 @@ public class HODReportViewModel
 
     // --- Supervisor Workload ---
     public Models.PaginatedList<SupervisorWorkloadItem> SupervisorWorkloads { get; set; } = null!;
+    public List<SupervisorWorkloadItem> AllSupervisorWorkloads { get; set; } = new();
+
 
 
     // --- Mentor Decision Stats per Round ---

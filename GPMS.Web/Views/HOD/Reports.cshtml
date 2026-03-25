@@ -436,69 +436,100 @@
                 <span class="material-symbols-outlined text-primary-500 text-lg">supervisor_account</span>
                 Khối lượng Giảng viên Hướng dẫn
             </h2>
-            <span class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 dark:bg-dark-700 rounded-full">@Model.SupervisorWorkloads.Count GVHD</span>
+            <span class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 dark:bg-dark-700 rounded-full">@Model.AllSupervisorWorkloads.Count GVHD</span>
         </div>
 
-        @if (Model.SupervisorWorkloads.Any())
+        @if (Model.AllSupervisorWorkloads.Any())
         {
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-slate-50/80 dark:bg-dark-700/50">
-                        <tr>
-                            <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
-                            <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
-                            <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Đề tài</th>
-                            <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Nhóm</th>
-                            <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinh viên</th>
-                            <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tải trọng</th>
+            var maxProjects = Model.AllSupervisorWorkloads.Max(s => s.ProjectCount);
+            maxProjects = maxProjects > 0 ? maxProjects : 1;
+
+            <!-- Screen View (Paginated) -->
+            <div class="print:hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50/80 dark:bg-dark-700/50">
+                            <tr>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
+                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Đề tài</th>
+                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinh viên</th>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tải trọng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
+                            @{ var sIdx = (Model.SupervisorWorkloads.PageIndex - 1) * Model.SupervisorWorkloads.PageSize; }
+                            @foreach (var sup in Model.SupervisorWorkloads)
+                            {
+                                sIdx++;
+                                var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
+                                var barColor = loadPct >= 80 ? "bg-red-500" : loadPct >= 50 ? "bg-amber-500" : "bg-emerald-500";
+
+                                <tr class="hover:bg-slate-50/80 dark:hover:bg-dark-700/30 transition-colors">
+                                    <td class="py-4 px-6 text-xs font-bold text-slate-300">@sIdx</td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                                @sup.LecturerName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <span class="font-semibold text-slate-700 dark:text-white">@sup.LecturerName</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 font-bold text-sm">@sup.ProjectCount</span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 font-bold text-sm">@sup.StudentCount</span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-2 bg-slate-100 dark:bg-dark-700 rounded-full flex-1" style="min-width: 80px;">
+                                                <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @loadPct%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-slate-500 w-8 text-right">@loadPct%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="print:hidden">
+                    @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
+                </div>
+            </div>
+
+            <!-- Print View (Full Content) -->
+            <div class="hidden print:block">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-2 px-4 font-black uppercase">#</th>
+                            <th class="text-left py-2 px-4 font-black uppercase">Giảng viên</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Đề tài</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Sinh viên</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Tải trọng (%)</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
-                        @{ var idx = 0; var maxProjects = Model.SupervisorWorkloads.Max(s => s.ProjectCount); maxProjects = maxProjects > 0 ? maxProjects : 1; }
-                        @foreach (var sup in Model.SupervisorWorkloads)
+                    <tbody class="divide-y divide-slate-100">
+                        @{ var pIdx = 0; }
+                        @foreach (var sup in Model.AllSupervisorWorkloads)
                         {
-                            idx++;
+                            pIdx++;
                             var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
-                            var barColor = loadPct >= 80 ? "bg-red-500" : loadPct >= 50 ? "bg-amber-500" : "bg-emerald-500";
-
-                            <tr class="hover:bg-slate-50/80 dark:hover:bg-dark-700/30 transition-colors">
-                                <td class="py-4 px-6 text-xs font-bold text-slate-300">@idx</td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                                            @sup.LecturerName.Substring(0, 1).ToUpper()
-                                        </div>
-                                        <span class="font-semibold text-slate-700 dark:text-white">@sup.LecturerName</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 font-bold text-sm">@sup.ProjectCount</span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 font-bold text-sm">@sup.GroupCount</span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 font-bold text-sm">@sup.StudentCount</span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-3">
-                                        <div class="h-2 bg-slate-100 dark:bg-dark-700 rounded-full flex-1" style="min-width: 80px;">
-                                            <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @loadPct%"></div>
-                                        </div>
-                                        <span class="text-xs font-bold text-slate-500 w-8 text-right">@loadPct%</span>
-                                    </div>
-                                </td>
+                            <tr>
+                                <td class="py-2 px-4 text-slate-400">@pIdx</td>
+                                <td class="py-2 px-4 font-semibold">@sup.LecturerName</td>
+                                <td class="py-2 px-4 text-center">@sup.ProjectCount</td>
+                                <td class="py-2 px-4 text-center">@sup.StudentCount</td>
+                                <td class="py-2 px-4 text-center font-bold">@loadPct%</td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-            
-            <!-- Pagination -->
-            <div class="print:hidden">
-                @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
-            </div>
-
         }
         else
         {

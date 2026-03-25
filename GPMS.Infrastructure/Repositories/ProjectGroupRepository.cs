@@ -123,6 +123,9 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
         await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
 
+    public async Task<bool> HasUserGraduatedAsync(string userId) =>
+        await _context.GroupMembers.AnyAsync(m => m.UserID == userId && m.Status == GraduationStatus.Passed);
+
     public async Task<ReviewSessionInfo?> GetGroupDefenseSessionAsync(int groupId) =>
         await _context.ReviewSessions
             .Include(s => s.Room)
