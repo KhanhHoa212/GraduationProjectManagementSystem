@@ -1,3 +1,4 @@
+using System;
 using GPMS.Application.DTOs.Lecturer;
 using GPMS.Application.Interfaces.Repositories;
 using GPMS.Application.Interfaces.Services;
@@ -16,6 +17,8 @@ public class LecturerService : ILecturerService
     private readonly IMentorRoundReviewRepository _mentorRoundReviewRepo;
     private readonly INotificationRepository _notificationRepo;
     private readonly IEmailService _emailService;
+    private readonly ISubmissionRepository _submissionRepo;
+    private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
 
     public LecturerService(
         IProjectGroupRepository groupRepo,
@@ -25,7 +28,9 @@ public class LecturerService : ILecturerService
         IEvaluationRepository evaluationRepo,
         IMentorRoundReviewRepository mentorRoundReviewRepo,
         INotificationRepository notificationRepo,
-        IEmailService emailService)
+        IEmailService emailService,
+        ISubmissionRepository submissionRepo,
+        System.Net.Http.IHttpClientFactory httpClientFactory)
     {
         _groupRepo = groupRepo;
         _assignmentRepo = assignmentRepo;
@@ -35,6 +40,8 @@ public class LecturerService : ILecturerService
         _mentorRoundReviewRepo = mentorRoundReviewRepo;
         _notificationRepo = notificationRepo;
         _emailService = emailService;
+        _submissionRepo = submissionRepo;
+        _httpClientFactory = httpClientFactory;
     }
 
     public async Task<LecturerDashboardDto> GetDashboardDataAsync(string lecturerId)
@@ -252,6 +259,7 @@ public class LecturerService : ILecturerService
                 {
                     RoundId = round.ReviewRoundID,
                     RoundNumber = round.RoundNumber,
+                    SubmissionId = submission?.SubmissionID,
                     Title = $"Round {round.RoundNumber}",
                     RoundType = round.RoundType.ToString(),
                     StartDate = round.StartDate,
@@ -1210,5 +1218,55 @@ public class LecturerService : ILecturerService
             "Feedback" when notification.RelatedEntityID.HasValue => $"/Lecturer/FeedbackApprovalDetail/{notification.RelatedEntityID.Value}",
             _ => "/Lecturer/History"
         };
+    }
+    public async Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId)
+    {
+        var submission = await _submissionRepo.GetByIdAsync(submissionId);
+        if (submission == null || string.IsNullOrEmpty(submission.FileUrl))
+            return null;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var response = await client.GetAsync(submission.FileUrl);
+            
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var content = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+            
+            return (content, submission.FileName, contentType);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role)
+    {
+        var submission = await _submissionRepo.GetByIdAsync(submissionId);
+        if (submission == null) return false;
+
+        if (role == "HeadOfDept") return true;
+
+        if (role == "Student")
+        {
+            // Verify student is in the group associated with the submission
+            return submission.Group.GroupMembers.Any(m => m.UserID == userId);
+        }
+
+        if (role == "Lecturer")
+        {
+            // Supervisor check
+            if (submission.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == userId)) return true;
+
+            // Reviewer check
+            var assignments = await _assignmentRepo.GetByReviewerAsync(userId);
+            return assignments.Any(a => a.GroupID == submission.GroupID && a.ReviewRoundID == submission.Requirement.ReviewRoundID);
+        }
+
+        return false;
     }
 }

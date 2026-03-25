@@ -603,5 +603,27 @@ public class HODController : Controller
         
         return View("EditProject", new ProjectDetailDto());
     }
+
+    public async Task<IActionResult> DownloadSubmission(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        if (!await _projectService.CanUserAccessSubmissionAsync(userId, id, "HeadOfDept"))
+        {
+            TempData["ErrorMessage"] = "You do not have permission to download this file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var fileInfo = await _projectService.GetSubmissionFileAsync(id);
+        if (fileInfo == null)
+        {
+            TempData["ErrorMessage"] = "Unable to download the requested file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
+    }
 }
 

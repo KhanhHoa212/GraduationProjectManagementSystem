@@ -13,7 +13,15 @@ public class SubmissionRepository : ISubmissionRepository
     private readonly GpmsDbContext _context;
     public SubmissionRepository(GpmsDbContext context) => _context = context;
 
-    public async Task<Submission?> GetByIdAsync(int submissionId) => await _context.Submissions.FindAsync(submissionId);
+    public async Task<Submission?> GetByIdAsync(int submissionId) => 
+        await _context.Submissions
+            .Include(s => s.Requirement)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.GroupMembers)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+            .FirstOrDefaultAsync(s => s.SubmissionID == submissionId);
     public async Task<SubmissionRequirement?> GetRequirementByIdAsync(int requirementId) => 
         await _context.SubmissionRequirements.Include(r => r.ReviewRound).FirstOrDefaultAsync(r => r.RequirementID == requirementId);
     public async Task<IEnumerable<Submission>> GetByGroupAndRequirementAsync(int groupId, int requirementId) => 
