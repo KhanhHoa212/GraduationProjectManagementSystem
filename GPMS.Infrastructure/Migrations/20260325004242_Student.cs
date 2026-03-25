@@ -800,16 +800,16 @@ namespace GPMS.Infrastructure.Migrations
                 columns: new[] { "UserID", "AvatarUrl", "CreatedAt", "Email", "FullName", "Phone", "Username" },
                 values: new object[,]
                 {
-                    { "ADMIN001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(842), "admin@fpt.edu.vn", "System Admin", null, "admin" },
-                    { "GV001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(854), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
-                    { "GV002", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(860), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
-                    { "GV003", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(862), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
-                    { "HOD001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(864), "hod@fpt.edu.vn", "Head of Department", null, null },
-                    { "SE180001", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(866), "student1@fpt.edu.vn", "Student One", null, null },
-                    { "SE180002", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(867), "student2@fpt.edu.vn", "Student Two", null, null },
-                    { "SE180003", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(869), "student3@fpt.edu.vn", "Student Three", null, null },
-                    { "SE180004", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(871), "student4@fpt.edu.vn", "Student Four", null, null },
-                    { "SE180005", null, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(872), "student5@fpt.edu.vn", "Student Five", null, null }
+                    { "ADMIN001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4942), "admin@fpt.edu.vn", "System Admin", null, "admin" },
+                    { "GV001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4951), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
+                    { "GV002", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4953), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
+                    { "GV003", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4956), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
+                    { "HOD001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4957), "hod@fpt.edu.vn", "Head of Department", null, null },
+                    { "SE180001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4959), "student1@fpt.edu.vn", "Student One", null, null },
+                    { "SE180002", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4961), "student2@fpt.edu.vn", "Student Two", null, null },
+                    { "SE180003", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4963), "student3@fpt.edu.vn", "Student Three", null, null },
+                    { "SE180004", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4964), "student4@fpt.edu.vn", "Student Four", null, null },
+                    { "SE180005", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4966), "student5@fpt.edu.vn", "Student Five", null, null }
                 });
 
             migrationBuilder.InsertData(
@@ -826,16 +826,16 @@ namespace GPMS.Infrastructure.Migrations
                 columns: new[] { "UserRoleID", "AssignedAt", "RoleName", "UserID" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(898), "Admin", "ADMIN001" },
-                    { 2, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(899), "Lecturer", "GV001" },
-                    { 3, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(900), "Lecturer", "GV002" },
-                    { 4, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(901), "Lecturer", "GV003" },
-                    { 5, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(903), "Student", "SE180001" },
-                    { 6, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(903), "Student", "SE180002" },
-                    { 7, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(904), "Student", "SE180003" },
-                    { 8, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(905), "Student", "SE180004" },
-                    { 9, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(906), "Student", "SE180005" },
-                    { 10, new DateTime(2026, 3, 21, 10, 29, 5, 87, DateTimeKind.Utc).AddTicks(902), "HeadOfDept", "HOD001" }
+                    { 1, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4988), "Admin", "ADMIN001" },
+                    { 2, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4989), "Lecturer", "GV001" },
+                    { 3, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4990), "Lecturer", "GV002" },
+                    { 4, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991), "Lecturer", "GV003" },
+                    { 5, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4992), "Student", "SE180001" },
+                    { 6, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993), "Student", "SE180002" },
+                    { 7, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993), "Student", "SE180003" },
+                    { 8, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994), "Student", "SE180004" },
+                    { 9, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994), "Student", "SE180005" },
+                    { 10, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991), "HeadOfDept", "HOD001" }
                 });
 
             migrationBuilder.InsertData(
