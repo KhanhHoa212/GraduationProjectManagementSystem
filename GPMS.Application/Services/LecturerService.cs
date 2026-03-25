@@ -747,18 +747,24 @@ public class LecturerService : ILecturerService
         return (true, string.Empty);
     }
 
-    public async Task<bool> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment)
+    public async Task<(bool Success, string ErrorMessage)> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment)
     {
         var group = await _groupRepo.GetByIdAsync(groupId);
         if (group?.Project == null)
         {
-            return false;
+            return (false, "Project group not found.");
         }
 
         var isAuthorizedSupervisor = group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId);
         if (!isAuthorizedSupervisor)
         {
-            return false;
+            return (false, "You are not allowed to update this mentor gate.");
+        }
+
+        var reviewerHasStarted = group.Evaluations.Any(e => e.ReviewRoundID == roundId);
+        if (reviewerHasStarted)
+        {
+            return (false, "Mentor gate is locked because reviewer evaluation has already started for this round.");
         }
 
         var gate = group.MentorRoundReviews.FirstOrDefault(m => m.ReviewRoundID == roundId)
@@ -788,7 +794,7 @@ public class LecturerService : ILecturerService
             _mentorRoundReviewRepo.Update(gateRecord);
         }
         await _mentorRoundReviewRepo.SaveChangesAsync();
-        return true;
+        return (true, string.Empty);
     }
 
     public async Task<bool> ApproveFeedbackAsync(string supervisorId, FeedbackApprovalDecisionDto model)

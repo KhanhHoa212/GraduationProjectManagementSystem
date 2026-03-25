@@ -16,6 +16,6 @@ public interface ILecturerService
     Task<LecturerHistoryDto> GetHistoryAsync(string lecturerId);
     Task<LecturerEvaluationFormDto?> GetEvaluationFormAsync(string reviewerId, int assignmentId);
     Task<(bool Success, string ErrorMessage)> SubmitEvaluationAsync(string reviewerId, EvaluationSubmitDto model);
-    Task<bool> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment);
+    Task<(bool Success, string ErrorMessage)> ReviewRoundGateAsync(string supervisorId, int groupId, int roundId, MentorGateStatus decision, string? progressComment);
     Task<bool> ApproveFeedbackAsync(string supervisorId, FeedbackApprovalDecisionDto model);
 }

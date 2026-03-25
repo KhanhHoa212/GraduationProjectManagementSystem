@@ -190,10 +190,10 @@ public class LecturerController : Controller
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var success = await _lecturerService.ReviewRoundGateAsync(userId, groupId, roundId, decision, progressComment);
-        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+        var result = await _lecturerService.ReviewRoundGateAsync(userId, groupId, roundId, decision, progressComment);
+        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
             ? "Mentor gate updated successfully."
-            : "Unable to update mentor gate for this round.";
+            : result.ErrorMessage;
         return RedirectToAction(nameof(ProjectGroupDetail), new { id = groupId });
     }
 
