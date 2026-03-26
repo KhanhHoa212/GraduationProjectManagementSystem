@@ -79,9 +79,17 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         await EnsureSubmissionAsync(groupId: gId2, requirementId: round3Report.RequirementID, fileName: "Group102_R3_Final_Report.pdf", fileUrl: "/uploads/test-data/group102/final-report.pdf", fileSizeMb: 8.3m);
         await EnsureSubmissionAsync(groupId: gId2, requirementId: round3Slides.RequirementID, fileName: "Group102_R3_Defense_Slides.pdf", fileUrl: "/uploads/test-data/group102/defense-slides.pdf", fileSizeMb: 3.4m);
 
-        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId0, today.AddDays(1).AddHours(9), "https://meet.google.com/gpms-r2-ai01", null, "Round 2 interim review for Group 100.");
-        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId1, today.AddDays(1).AddHours(14), "https://meet.google.com/gpms-r2-hc01", null, "Round 2 interim review for Group 101.");
-        await EnsureReviewSessionAsync(round3.ReviewRoundID, gId2, today.AddDays(12).AddHours(8), null, 3, "Final defense in Hall-A.");
+        // Past sessions (Round 1)
+        await EnsureReviewSessionAsync(round1.ReviewRoundID, gId0, today.AddDays(-7).AddHours(10), null, 1, "Round 1 initial review - Past.");
+        await EnsureReviewSessionAsync(round1.ReviewRoundID, gId1, today.AddDays(-6).AddHours(15), null, 2, "Round 1 initial review - Past.");
+
+        // Today sessions (Round 2)
+        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId0, today.AddHours(9), "https://meet.google.com/gpms-r2-ai01", null, "Round 2 interim review for Group 100.");
+        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId1, today.AddHours(14), "https://meet.google.com/gpms-r2-hc01", null, "Round 2 interim review for Group 101.");
+
+        // Future sessions (Round 2 & 3)
+        await EnsureReviewSessionAsync(round2.ReviewRoundID, gId2, today.AddDays(3).AddHours(13), "https://meet.google.com/gpms-r2-test", null, "Round 2 test session - Near Future.");
+        await EnsureReviewSessionAsync(round3.ReviewRoundID, gId2, today.AddDays(12).AddHours(8), null, 3, "Final defense in Hall-A - Far Future.");
 
         await EnsureAssignmentAsync(round2.ReviewRoundID, gId0, "GV002");
         await EnsureAssignmentAsync(round2.ReviewRoundID, gId1, "GV001");
