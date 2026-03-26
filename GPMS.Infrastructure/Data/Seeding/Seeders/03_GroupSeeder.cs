@@ -2,6 +2,11 @@ using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Bogus;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace GPMS.Infrastructure.Data.Seeding.Seeders;
 
@@ -17,51 +22,63 @@ public class GroupSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
-        if (activeSemester == null) return;
+        if (await _context.ProjectGroups.CountAsync() > 10) return;
 
-        if (await _context.ProjectGroups.AnyAsync(g => g.GroupName.StartsWith("Team "))) return;
-
-        var projects = await _context.Projects.Where(p => p.SemesterID == activeSemester.SemesterID).ToListAsync();
+        var faker = new Faker("vi");
+        
         var students = await _context.Users
-            .Where(u => u.UserID.StartsWith("SE18"))
+            .Where(u => u.UserID.StartsWith("SE19"))
             .OrderBy(u => u.UserID)
-            .Take(30) // Take up to 30 students for 10 groups
+            .ToListAsync();
+            
+        var projects = await _context.Projects
+            .Where(p => p.SemesterID >= 5) // Active/Upcoming semesters
+            .OrderBy(p => p.ProjectID)
             .ToListAsync();
 
+        if (!students.Any() || !projects.Any()) return;
+
+        // Shuffle projects to give random unique assignments
+        var projectQueue = new Queue<Project>(faker.Random.Shuffle(projects));
+
+        var groupMembers = new List<GroupMember>();
         int studentIdx = 0;
-        foreach (var project in projects)
+        int groupCounter = 1;
+
+        while (studentIdx < students.Count && projectQueue.Any())
         {
-            for (int g = 1; g <= 2; g++)
+            var project = projectQueue.Dequeue();
+            
+            var group = new ProjectGroup
             {
-                var @group = new ProjectGroup
-                {
-                    ProjectID = project.ProjectID,
-                    GroupName = $"Team {(char)('A' + (studentIdx / 3))}",
-                    CreatedAt = DateTime.UtcNow
-                };
+                ProjectID = project.ProjectID,
+                GroupName = $"Team {groupCounter:D2}",
+                CreatedAt = project.CreatedAt.AddDays(faker.Random.Int(1, 5))
+            };
+            
+            _context.ProjectGroups.Add(group);
+            await _context.SaveChangesAsync(); 
 
-                _context.ProjectGroups.Add(@group);
-                await _context.SaveChangesAsync();
+            int groupSize = faker.PickRandom(4, 5);
+            bool hasLeader = false;
 
-                // Add 3 members: 1 Leader + 2 Members
-                for (int m = 0; m < 3; m++)
+            for (int i = 0; i < groupSize && studentIdx < students.Count; i++)
+            {
+                groupMembers.Add(new GroupMember
                 {
-                    if (studentIdx < students.Count)
-                    {
-                        _context.GroupMembers.Add(new GroupMember
-                        {
-                            GroupID = group.GroupID,
-                            UserID = students[studentIdx].UserID,
-                            RoleInGroup = m == 0 ? GroupRole.Leader : GroupRole.Member,
-                            JoinedAt = DateTime.UtcNow
-                        });
-                        studentIdx++;
-                    }
-                }
+                    GroupID = group.GroupID,
+                    UserID = students[studentIdx].UserID,
+                    RoleInGroup = !hasLeader ? GroupRole.Leader : GroupRole.Member,
+                    JoinedAt = group.CreatedAt.AddDays(1)
+                });
+                hasLeader = true;
+                studentIdx++;
             }
+            groupCounter++;
         }
 
+
+        await _context.GroupMembers.AddRangeAsync(groupMembers);
         await _context.SaveChangesAsync();
     }
 }

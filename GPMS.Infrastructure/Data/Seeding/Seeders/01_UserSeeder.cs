@@ -2,7 +2,11 @@ using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
-using BCrypt.Net;
+using Bogus;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System;
 
 namespace GPMS.Infrastructure.Data.Seeding.Seeders;
 
@@ -18,55 +22,28 @@ public class UserSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Users.CountAsync() >= 9 + 8) return;
+        // Chỉ seed thêm nếu DB hiện tại có ít user
+        if (await _context.Users.CountAsync() > 50) return;
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword("123456");
 
-        // 2 New Lecturers
-        var newLecturers = new List<User>
-        {
-            new User
-            {
-                UserID = "GV004",
-                FullName = "Trần Thị Bích",
-                Email = "bichtt@fpt.edu.vn",
-                Username = "bichtt",
-                Status = UserStatus.Active,
-                CreatedAt = DateTime.UtcNow,
-                UserCredentials = new List<UserCredential>
-                {
-                    new UserCredential { PasswordHash = passwordHash, AuthProvider = AuthProvider.Internal }
-                }
-            },
-            new User
-            {
-                UserID = "GV005",
-                FullName = "Lê Minh Khoa",
-                Email = "khoalm@fpt.edu.vn",
-                Username = "khoalm",
-                Status = UserStatus.Active,
-                CreatedAt = DateTime.UtcNow,
-                UserCredentials = new List<UserCredential>
-                {
-                    new UserCredential { PasswordHash = passwordHash, AuthProvider = AuthProvider.Internal }
-                }
-            }
-        };
+        // Setting Bogus locale to Vietnamese
+        var faker = new Faker("vi");
 
-        // 6 New Students
-        var studentNames = new[] { "Nguyễn Văn An", "Trần Thị Bình", "Lê Hoàng Cường", "Phạm Minh Đức", "Hoàng Thu Thảo", "Đỗ Tuấn Anh" };
-        var newStudents = new List<User>();
-        for (int i = 0; i < 6; i++)
+        // 1. Generate 30 Lecturers
+        var newLecturers = new List<User>();
+        for (int i = 1; i <= 30; i++)
         {
-            var studentId = $"SE18000{6 + i}";
-            var names = studentNames[i].Split(' ');
-            var lastName = names[^1].ToLower();
-            newStudents.Add(new User
+            var id = $"GV9{i:D3}";
+            var fullName = faker.Name.FullName();
+            var username = id.ToLower();
+            
+            newLecturers.Add(new User
             {
-                UserID = studentId,
-                FullName = studentNames[i],
-                Email = $"{lastName}{studentId.ToLower()}@fpt.edu.vn",
-                Username = studentId.ToLower(),
+                UserID = id,
+                FullName = fullName,
+                Email = $"{username}@fpt.edu.vn",
+                Username = username,
                 Status = UserStatus.Active,
                 CreatedAt = DateTime.UtcNow,
                 UserCredentials = new List<UserCredential>
@@ -76,24 +53,36 @@ public class UserSeeder : IDataSeeder
             });
         }
 
-        foreach (var user in newLecturers)
+        // 2. Generate 200 Students
+        var newStudents = new List<User>();
+        for (int i = 1; i <= 200; i++)
         {
-            if (!await _context.Users.AnyAsync(u => u.UserID == user.UserID))
+            var id = $"SE19{i:D4}";
+            var fullName = faker.Name.FullName();
+            var username = id.ToLower();
+
+            newStudents.Add(new User
             {
-                _context.Users.Add(user);
-                _context.UserRoles.Add(new UserRole { UserID = user.UserID, RoleName = RoleName.Lecturer, AssignedAt = DateTime.UtcNow });
-            }
+                UserID = id,
+                FullName = fullName,
+                Email = $"{username}@fpt.edu.vn",
+                Username = username,
+                Status = UserStatus.Active,
+                CreatedAt = DateTime.UtcNow,
+                UserCredentials = new List<UserCredential>
+                {
+                    new UserCredential { PasswordHash = passwordHash, AuthProvider = AuthProvider.Internal }
+                }
+            });
         }
 
-        foreach (var user in newStudents)
-        {
-            if (!await _context.Users.AnyAsync(u => u.UserID == user.UserID))
-            {
-                _context.Users.Add(user);
-                _context.UserRoles.Add(new UserRole { UserID = user.UserID, RoleName = RoleName.Student, AssignedAt = DateTime.UtcNow });
-            }
-        }
+        await _context.Users.AddRangeAsync(newLecturers);
+        await _context.Users.AddRangeAsync(newStudents);
+        
+        await _context.UserRoles.AddRangeAsync(newLecturers.Select(l => new UserRole { UserID = l.UserID, RoleName = RoleName.Lecturer, AssignedAt = DateTime.UtcNow }));
+        await _context.UserRoles.AddRangeAsync(newStudents.Select(s => new UserRole { UserID = s.UserID, RoleName = RoleName.Student, AssignedAt = DateTime.UtcNow }));
 
         await _context.SaveChangesAsync();
     }
 }
+

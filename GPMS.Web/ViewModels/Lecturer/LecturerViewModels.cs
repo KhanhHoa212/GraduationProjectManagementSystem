@@ -105,6 +105,7 @@ namespace GPMS.Web.ViewModels.Lecturer
     {
         public int RoundId { get; set; }
         public int RoundNumber { get; set; }
+        public int? SubmissionId { get; set; }
         public string Title { get; set; } = string.Empty;
         public string RoundType { get; set; } = string.Empty;
         public DateTime StartDate { get; set; }
@@ -245,6 +246,8 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int RoundNumber { get; set; }
         public string RoundType { get; set; } = string.Empty;
         public DateTime? ScheduledAt { get; set; }
+        public string? SubmissionFileName { get; set; }
+        public string? SubmissionUrl { get; set; }
         public List<GroupMemberItem> Members { get; set; } = new();
         public List<ChecklistItemRow> ChecklistItems { get; set; } = new();
         public int? ExistingEvaluationID { get; set; }
@@ -300,12 +303,24 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int OnlineSessionsCount { get; set; }
         public int OfflineSessionsCount { get; set; }
         public int UpcomingDeadlinesCount { get; set; }
+        public int NeedsAttentionCount { get; set; }
+        public int WeekSessionsCount { get; set; }
+        public string SelectedRole { get; set; } = "all";
+        public string SelectedRange { get; set; } = "week";
+        public int WeekOffset { get; set; }
+        public string WeekLabel { get; set; } = string.Empty;
+        public DateTime WeekStartDate { get; set; }
+        public DateTime WeekEndDate { get; set; }
+        public ScheduleFocusViewModel? FocusCard { get; set; }
         public List<ScheduleEntryViewModel> Entries { get; set; } = new();
+        public List<ScheduleDayGroupViewModel> DayGroups { get; set; } = new();
+        public List<ScheduleWeekDayViewModel> WeekDays { get; set; } = new();
         public List<DeadlineAlertViewModel> Deadlines { get; set; } = new();
     }
 
     public class ScheduleEntryViewModel
     {
+        public string RoleKey { get; set; } = "mentor";
         public string RoleLabel { get; set; } = string.Empty;
         public int GroupID { get; set; }
         public string GroupName { get; set; } = string.Empty;
@@ -317,7 +332,17 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Location { get; set; } = string.Empty;
         public string? MeetLink { get; set; }
         public string? Guidance { get; set; }
-        public string ActionUrl { get; set; } = string.Empty;
+        public string StatusKey { get; set; } = "upcoming";
+        public string StatusLabel { get; set; } = "Upcoming";
+        public string StatusTone { get; set; } = "info";
+        public bool NeedsAttention { get; set; }
+        public bool IsToday { get; set; }
+        public bool IsPast { get; set; }
+        public string TimeHint { get; set; } = string.Empty;
+        public string PrimaryActionText { get; set; } = "Open";
+        public string PrimaryActionUrl { get; set; } = string.Empty;
+        public string? SecondaryActionText { get; set; }
+        public string? SecondaryActionUrl { get; set; }
     }
 
     public class DeadlineAlertViewModel
@@ -328,6 +353,32 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Severity { get; set; } = "info";
         public string ActionUrl { get; set; } = string.Empty;
         public string ActionText { get; set; } = string.Empty;
+    }
+
+    public class ScheduleFocusViewModel
+    {
+        public string Eyebrow { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ActionText { get; set; } = string.Empty;
+        public string ActionUrl { get; set; } = string.Empty;
+        public string? SecondaryActionText { get; set; }
+        public string? SecondaryActionUrl { get; set; }
+    }
+
+    public class ScheduleDayGroupViewModel
+    {
+        public DateTime Date { get; set; }
+        public string Label { get; set; } = string.Empty;
+        public List<ScheduleEntryViewModel> Entries { get; set; } = new();
+    }
+
+    public class ScheduleWeekDayViewModel
+    {
+        public DateTime Date { get; set; }
+        public string DayLabel { get; set; } = string.Empty;
+        public bool IsToday { get; set; }
+        public List<ScheduleEntryViewModel> Entries { get; set; } = new();
     }
 
     // -------------------------------------------------------

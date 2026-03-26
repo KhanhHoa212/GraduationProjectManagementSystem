@@ -14,6 +14,9 @@ public interface ISubmissionRepository
     Task<IEnumerable<(SubmissionRequirement Requirement, Submission? Submission)>> GetActiveSubmissionsByStudentAsync(string studentId);
     Task<IEnumerable<(SubmissionRequirement Requirement, Submission? Submission)>> GetAllSubmissionsByStudentAsync(string studentId);
     
+    // For Reporting
+    Task<IEnumerable<Submission>> GetByGroupIdsAsync(IEnumerable<int> groupIds);
+
     Task AddAsync(Submission submission);
     Task SaveChangesAsync();
 }

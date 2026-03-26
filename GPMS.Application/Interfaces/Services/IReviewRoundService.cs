@@ -9,4 +9,5 @@ public interface IReviewRoundService
     Task CreateReviewRoundAsync(CreateReviewRoundDto dto);
     Task UpdateReviewRoundAsync(int id, CreateReviewRoundDto dto);
     Task DeleteReviewRoundAsync(int id);
+    Task<bool> InitializeDefaultRoundsAsync(int semesterId);
 }

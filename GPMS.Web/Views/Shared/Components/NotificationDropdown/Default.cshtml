@@ -1,0 +1,250 @@
+@model IEnumerable<GPMS.Application.DTOs.NotificationDto>
+@{
+    int unreadCount = ViewBag.UnreadCount ?? 0;
+}
+
+<div class="relative inline-block text-left" id="notification-dropdown">
+    <!-- Bell Button -->
+    <button type="button" 
+            id="notification-btn"
+            class="relative p-2.5 text-dark-500 dark:text-dark-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-dark-700 rounded-xl transition-all group">
+        <span class="material-symbols-outlined group-hover:scale-110 transition-transform">notifications</span>
+        <span id="bell-dot" class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_0_2px_#ffffff] dark:shadow-[0_0_0_2px_#1E293B] animate-pulse @(unreadCount > 0 ? "" : "hidden")"></span>
+    </button>
+
+    <!-- Dropdown Menu -->
+    <div id="notification-menu" 
+         class="absolute top-[calc(100%+8px)] right-0 w-80 sm:w-96 bg-white dark:bg-dark-800 rounded-2xl shadow-2xl border border-slate-100 dark:border-dark-700 hidden z-50 origin-top-right transform transition-all duration-200">
+        
+        <div class="px-5 py-4 border-b border-slate-50 dark:border-dark-700 flex items-center justify-between">
+            <div>
+                <h3 class="text-sm font-bold text-dark-900 dark:text-white">Notifications</h3>
+                <p class="text-[11px] text-dark-400 mt-0.5" id="unread-count-text">You have @unreadCount unread messages</p>
+            </div>
+            <button id="mark-all-btn" onclick="markAllNotificationsAsRead()" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 transition-colors @(unreadCount > 0 ? "" : "hidden")">Mark all as read</button>
+        </div>
+
+        <div class="max-h-[400px] overflow-y-auto py-2 custom-scrollbar" id="notification-items-container">
+            @if (!Model.Any())
+            {
+                <div class="px-5 py-10 text-center" id="empty-notifications">
+                    <div class="w-12 h-12 bg-dark-50 dark:bg-dark-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <span class="material-symbols-outlined text-dark-200 dark:text-dark-600">notifications_off</span>
+                    </div>
+                    <p class="text-xs text-dark-400">No notifications yet</p>
+                </div>
+            }
+            else
+            {
+                @foreach (var notification in Model)
+                {
+                    <div id="notification-item-@notification.NotificationID" 
+                         class="notification-item flex items-start gap-3 px-5 py-3.5 hover:bg-slate-50 dark:hover:bg-dark-700/50 transition-all border-b border-slate-50 dark:border-dark-700/50 last:border-0 @(!notification.IsRead ? "is-unread bg-primary-50/30 dark:bg-primary-900/10" : "") group/item">
+                        <a href="@GetActionLink(notification)" 
+                           onclick="markNotificationAsRead(@notification.NotificationID)"
+                           class="flex items-start gap-3 flex-1 min-w-0">
+                            
+                            <div class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center @GetIconBg(notification.Type)">
+                                <span class="material-symbols-outlined @GetIconColor(notification.Type) text-[18px]">
+                                    @GetIconName(notification.Type)
+                                </span>
+                            </div>
+
+                            <div class="flex-1 min-w-0">
+                                <div class="flex justify-between items-start mb-0.5">
+                                    <span class="text-[13px] font-bold text-dark-900 dark:text-white truncate">@notification.Title</span>
+                                    <span class="unread-dot w-1.5 h-1.5 bg-primary-500 rounded-full shrink-0 mt-1.5 @(notification.IsRead ? "hidden" : "")"></span>
+                                </div>
+                                <p class="text-[12px] text-dark-500 dark:text-dark-400 line-clamp-2 leading-relaxed">@notification.Content</p>
+                                <span class="text-[10px] text-dark-300 dark:text-dark-500 font-medium mt-1 inline-block">@GetTimeAgo(notification.CreatedAt)</span>
+                            </div>
+                        </a>
+
+                        <!-- Toggle Read Status Button -->
+                        <button onclick="event.preventDefault(); event.stopPropagation(); toggleReadStatus(this, @notification.NotificationID)" 
+                                class="toggle-read-btn shrink-0 w-7 h-7 rounded-full flex items-center justify-center border border-slate-100 dark:border-dark-700 hover:bg-white dark:hover:bg-dark-600 shadow-sm transition-all opacity-0 group-hover/item:opacity-100"
+                                data-is-read="@notification.IsRead.ToString().ToLower()"
+                                title="@(notification.IsRead ? "Mark as unread" : "Mark as read")">
+                            <span class="material-symbols-outlined text-[16px] @(notification.IsRead ? "text-dark-300" : "text-primary-500 font-bold")">
+                                @(notification.IsRead ? "radio_button_unchecked" : "check_circle")
+                            </span>
+                        </button>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="border-t border-slate-50 dark:border-dark-700 p-3 text-center">
+            <a href="@(User.IsInRole("Student") ? Url.Action("Notifications", "Student") : "#")" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center justify-center gap-1.5 group/all">
+                View all notifications
+                <span class="material-symbols-outlined text-sm group-hover/all:translate-x-0.5 transition-transform">arrow_forward</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentUnreadCount = @unreadCount;
+
+    function updateUnreadUI(newCount) {
+        currentUnreadCount = Math.max(0, newCount);
+        const textElem = document.getElementById('unread-count-text');
+        const bellDot = document.getElementById('bell-dot');
+        const markAllBtn = document.getElementById('mark-all-btn');
+
+        if (textElem) textElem.innerText = `You have ${currentUnreadCount} unread messages`;
+        if (bellDot) {
+            if (currentUnreadCount > 0) bellDot.classList.remove('hidden');
+            else bellDot.classList.add('hidden');
+        }
+        if (markAllBtn) {
+            if (currentUnreadCount > 0) markAllBtn.classList.remove('hidden');
+            else markAllBtn.classList.add('hidden');
+        }
+    }
+
+    function markNotificationAsRead(id) {
+        const item = document.getElementById(`notification-item-${id}`);
+        if (item && item.classList.contains('is-unread')) {
+            $.post('/Notification/MarkAsRead', { id: id }, function() {
+                const btn = item.querySelector('.toggle-read-btn');
+                if (btn) updateSingleNotificationUI(btn, true);
+            });
+        }
+    }
+
+    function toggleReadStatus(btn, id) {
+        const isRead = btn.getAttribute('data-is-read') === 'true';
+        const url = isRead ? '/Notification/MarkAsUnread' : '/Notification/MarkAsRead';
+        
+        $.post(url, { id: id }, function() {
+            updateSingleNotificationUI(btn, !isRead);
+        });
+    }
+
+    function updateSingleNotificationUI(btn, nowRead) {
+        const item = btn.closest('.notification-item');
+        const dot = item.querySelector('.unread-dot');
+        const icon = btn.querySelector('span');
+
+        if (nowRead) {
+            item.classList.remove('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
+            if (dot) dot.classList.add('hidden');
+            icon.innerText = 'radio_button_unchecked';
+            icon.classList.remove('text-primary-500', 'font-bold');
+            icon.classList.add('text-dark-300');
+            btn.setAttribute('data-is-read', 'true');
+            btn.setAttribute('title', 'Mark as unread');
+            updateUnreadUI(currentUnreadCount - 1);
+        } else {
+            item.classList.add('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
+            if (dot) dot.classList.remove('hidden');
+            icon.innerText = 'check_circle';
+            icon.classList.remove('text-dark-300');
+            icon.classList.add('text-primary-500', 'font-bold');
+            btn.setAttribute('data-is-read', 'false');
+            btn.setAttribute('title', 'Mark as read');
+            updateUnreadUI(currentUnreadCount + 1);
+        }
+    }
+
+    function markAllNotificationsAsRead() {
+        $.post('/Notification/MarkAllAsRead', function() {
+            const unreadItems = document.querySelectorAll('.notification-item.is-unread');
+            unreadItems.forEach(item => {
+                const btn = item.querySelector('.toggle-read-btn');
+                if (btn) updateSingleNotificationUI(btn, true);
+            });
+            updateUnreadUI(0);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('notification-btn');
+        const menu = document.getElementById('notification-menu');
+        const dropdown = document.getElementById('notification-dropdown');
+
+        if (btn && menu) {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = menu.classList.contains('hidden');
+                if (isHidden) {
+                    menu.classList.remove('hidden');
+                    menu.classList.add('animate-in');
+                } else {
+                    menu.classList.add('hidden');
+                    menu.classList.remove('animate-in');
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!dropdown.contains(e.target)) {
+                    menu.classList.add('hidden');
+                    menu.classList.remove('animate-in');
+                }
+            });
+        }
+    });
+
+    // Handle initial state and animations
+    const style = document.createElement('style');
+    style.innerHTML = `
+        #notification-menu.animate-in {
+            display: block !important;
+            animation: notificationEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @@keyframes notificationEnter {
+            from { 
+                opacity: 0; 
+                transform: translateY(-12px) scale(0.96); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+@functions {
+    string GetIconName(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "alarm",
+        GPMS.Domain.Enums.NotificationType.Feedback => "notifications",
+        GPMS.Domain.Enums.NotificationType.Schedule => "calendar_month",
+        GPMS.Domain.Enums.NotificationType.Review => "rate_review",
+        _ => "info"
+    };
+
+    string GetIconBg(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "bg-red-50 dark:bg-red-900/20",
+        GPMS.Domain.Enums.NotificationType.Feedback => "bg-orange-50 dark:bg-orange-900/20",
+        GPMS.Domain.Enums.NotificationType.Schedule => "bg-blue-50 dark:bg-blue-900/20",
+        GPMS.Domain.Enums.NotificationType.Review => "bg-purple-50 dark:bg-purple-900/20",
+        _ => "bg-gray-50 dark:bg-gray-800"
+    };
+
+    string GetIconColor(GPMS.Domain.Enums.NotificationType type) => type switch {
+        GPMS.Domain.Enums.NotificationType.Deadline => "text-red-500",
+        GPMS.Domain.Enums.NotificationType.Feedback => "text-orange-500",
+        GPMS.Domain.Enums.NotificationType.Schedule => "text-blue-500",
+        GPMS.Domain.Enums.NotificationType.Review => "text-purple-500",
+        _ => "text-gray-500"
+    };
+
+    string GetActionLink(GPMS.Application.DTOs.NotificationDto n) => n.Type switch {
+        GPMS.Domain.Enums.NotificationType.Feedback => Url.Action("Feedback", "Student", new { roundId = n.RelatedEntityID }) ?? "#",
+        GPMS.Domain.Enums.NotificationType.Deadline => Url.Action("Submissions", "Student") ?? "#",
+        GPMS.Domain.Enums.NotificationType.Schedule => Url.Action("Schedule", "Student") ?? "#",
+        _ => "#"
+    };
+
+    string GetTimeAgo(DateTime dateTime) {
+        var timeSpan = DateTime.UtcNow - dateTime.ToUniversalTime();
+        if (timeSpan <= TimeSpan.FromSeconds(60)) return "just now";
+        if (timeSpan <= TimeSpan.FromMinutes(60)) return $"{timeSpan.Minutes}m ago";
+        if (timeSpan <= TimeSpan.FromHours(24)) return $"{timeSpan.Hours}h ago";
+        if (timeSpan <= TimeSpan.FromDays(7)) return $"{timeSpan.Days}d ago";
+        return dateTime.ToString("dd/MM/yyyy");
+    }
+}

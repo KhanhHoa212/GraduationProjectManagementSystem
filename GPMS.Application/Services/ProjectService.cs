@@ -24,6 +24,8 @@ public class ProjectService : IProjectService
     private readonly IReviewRoundService _reviewRoundService;
     private readonly IMajorRepository _majorRepository;
     private readonly IMapper _mapper;
+    private readonly System.Net.Http.IHttpClientFactory _httpClientFactory;
+    private readonly IReviewerAssignmentRepository _assignmentRepository;
 
     public ProjectService(
         IProjectRepository projectRepository,
@@ -36,7 +38,9 @@ public class ProjectService : IProjectService
         IFileService fileService,
         IReviewRoundService reviewRoundService,
         IMajorRepository majorRepository,
-        IMapper mapper)
+        IMapper mapper,
+        System.Net.Http.IHttpClientFactory httpClientFactory,
+        IReviewerAssignmentRepository assignmentRepository)
     {
         _projectRepository = projectRepository;
         _groupRepository = groupRepository;
@@ -49,6 +53,8 @@ public class ProjectService : IProjectService
         _reviewRoundService = reviewRoundService;
         _majorRepository = majorRepository;
         _mapper = mapper;
+        _httpClientFactory = httpClientFactory;
+        _assignmentRepository = assignmentRepository;
     }
 
     public async Task<IEnumerable<ProjectDto>> GetAllProjectsAsync()
@@ -200,6 +206,21 @@ public class ProjectService : IProjectService
         await _projectRepository.SaveChangesAsync();
     }
 
+    public async Task<bool> DeleteProjectAsync(int projectId)
+    {
+        var project = await _projectRepository.GetDetailAsync(projectId);
+        if (project == null) return false;
+
+        // Note: ProjectGroups, ProjectSupervisors should be deleted either by cascade or explicitly
+        // If cascade is not set, we might need to remove them here.
+        // Assuming _projectRepository.DeleteAsync handles it or it's cascade.
+        // Based on GetDetailAsync, we have the details.
+
+        await _projectRepository.DeleteAsync(project);
+        await _projectRepository.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId)
     {
         var allProjects = semesterId.HasValue
@@ -300,8 +321,20 @@ public class ProjectService : IProjectService
         if (student == null)
             return (false, "Student not found.");
 
-        if (await _groupRepository.IsUserInAnyGroupAsync(userId))
-            return (false, "Student is already assigned to a project group.");
+        var project = await _projectRepository.GetByIdAsync(projectId);
+        if (project == null)
+            return (false, "Project not found.");
+
+        // 1. Check if graduated (Passed in any project)
+        if (await _groupRepository.HasUserGraduatedAsync(userId))
+            return (false, "Sinh viên đã hoàn thành đồ án tốt nghiệp ở học kỳ trước.");
+
+        // 2. Check if already in a group for the SAME semester
+        var projectsInSemester = await _projectRepository.GetBySemesterWithDetailsAsync(project.SemesterID);
+        var isAlreadyInSemesterGroup = projectsInSemester.Any(p => p.ProjectGroups.Any(g => g.GroupMembers.Any(m => m.UserID == userId)));
+        
+        if (isAlreadyInSemesterGroup)
+            return (false, "Sinh viên đã được chỉ định vào một nhóm đồ án khác trong học kỳ này.");
 
         var group = await _groupRepository.GetByProjectIdWithMembersAsync(projectId);
         if (group == null)
@@ -670,7 +703,58 @@ public class ProjectService : IProjectService
                 // Silently skip if error occurs for one row
             }
         }
-
         return (count, $"Đã nhập thành công {count} dự án.");
+    }
+
+    public async Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId)
+    {
+        var submission = await _submissionRepository.GetByIdAsync(submissionId);
+        if (submission == null || string.IsNullOrEmpty(submission.FileUrl))
+            return null;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            var response = await client.GetAsync(submission.FileUrl);
+            
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            var content = await response.Content.ReadAsByteArrayAsync();
+            var contentType = response.Content.Headers.ContentType?.ToString() ?? "application/octet-stream";
+            
+            return (content, submission.FileName, contentType);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    public async Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role)
+    {
+        var submission = await _submissionRepository.GetByIdAsync(submissionId);
+        if (submission == null) return false;
+
+        if (role == "HeadOfDept") return true;
+
+        if (role == "Student")
+        {
+            var project = await _projectRepository.GetProjectByStudentIdAsync(userId);
+            // Check if any of project.ProjectGroups has an ID matching submission.GroupID
+            return project != null && project.ProjectGroups.Any(g => g.GroupID == submission.GroupID);
+        }
+
+        if (role == "Lecturer")
+        {
+            // Supervisor check
+            if (submission.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == userId)) return true;
+
+            // Reviewer check
+            var assignments = await _assignmentRepository.GetByReviewerAsync(userId);
+            return assignments.Any(a => a.GroupID == submission.GroupID && a.ReviewRoundID == submission.Requirement.ReviewRoundID);
+        }
+
+        return false;
     }
 }

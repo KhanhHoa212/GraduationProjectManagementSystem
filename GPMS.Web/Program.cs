@@ -38,7 +38,7 @@ builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
 builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IMajorRepository, MajorRepository>();
 builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
-
+builder.Services.AddScoped<IGroupRoundProgressRepository, GroupRoundProgressRepository>();
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
@@ -50,20 +50,25 @@ builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
+<<<<<<< HEAD
 builder.Services.AddScoped<IMajorService, MajorService>();
 
+=======
+builder.Services.AddScoped<IReportService, ReportService>();
+>>>>>>> d26abd4bc7ab423215c6a114b41071b99dec5d67
 
 
 // Register Infrastructure (including Seeders)
 builder.Services.AddInfrastructure(builder.Configuration);
 
 // Register AutoMapper
-builder.Services.AddAutoMapper(cfg => {}, typeof(MappingProfile).Assembly);
+builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 builder.Services.AddControllersWithViews()
     .AddRazorRuntimeCompilation();
 
 builder.Services.AddRazorPages();
+builder.Services.AddHttpClient();
 
 // Memory cache (for system logs + visit tracking)
 builder.Services.AddMemoryCache();
@@ -94,6 +99,7 @@ builder.Services.AddScoped<IFileService, CloudinaryService>();
 
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
+builder.Services.AddHostedService<GPMS.Web.Services.DeadlineReminderHostedService>();
 
 var app = builder.Build();
 

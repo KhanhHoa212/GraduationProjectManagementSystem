@@ -62,6 +62,13 @@ public enum RoundType
     Offline
 }
 
+public enum GraduationStatus
+{
+    InProgress,
+    Passed,
+    Failed
+}
+
 public enum RoundStatus
 {
     Planned,

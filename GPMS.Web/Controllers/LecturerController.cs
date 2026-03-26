@@ -105,7 +105,20 @@ public class LecturerController : Controller
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        LecturerProjectGroupDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetProjectGroupDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var memberEmails = dto.Members
             .Select(m => m.Email)
             .Where(email => !string.IsNullOrWhiteSpace(email))
@@ -135,6 +148,7 @@ public class LecturerController : Controller
             {
                 RoundId = m.RoundId,
                 RoundNumber = m.RoundNumber,
+                SubmissionId = m.SubmissionId,
                 Title = m.Title,
                 RoundType = m.RoundType,
                 StartDate = m.StartDate,
@@ -177,10 +191,10 @@ public class LecturerController : Controller
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var success = await _lecturerService.ReviewRoundGateAsync(userId, groupId, roundId, decision, progressComment);
-        TempData[success ? "SuccessMessage" : "ErrorMessage"] = success
+        var result = await _lecturerService.ReviewRoundGateAsync(userId, groupId, roundId, decision, progressComment);
+        TempData[result.Success ? "SuccessMessage" : "ErrorMessage"] = result.Success
             ? "Mentor gate updated successfully."
-            : "Unable to update mentor gate for this round.";
+            : result.ErrorMessage;
         return RedirectToAction(nameof(ProjectGroupDetail), new { id = groupId });
     }
 
@@ -218,7 +232,24 @@ public class LecturerController : Controller
     // -------------------------------------------------------
     public async Task<IActionResult> FeedbackApprovalDetail(int id = 1)
     {
-        var dto = await _lecturerService.GetFeedbackApprovalDetailAsync(id);
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        LecturerFeedbackApprovalDetailDto dto;
+        try
+        {
+            dto = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         var vm = new FeedbackApprovalDetailViewModel
         {
             FeedbackID = dto.FeedbackId,
@@ -299,21 +330,42 @@ public class LecturerController : Controller
         return View(vm);
     }
 
-    public async Task<IActionResult> Schedule()
+    public async Task<IActionResult> Schedule(string? role = null, string? range = null, int weekOffset = 0)
     {
         var userId = GetUserId();
         if (string.IsNullOrWhiteSpace(userId))
             return Challenge();
 
-        var dto = await _lecturerService.GetScheduleAsync(userId);
+        var dto = await _lecturerService.GetScheduleAsync(userId, role, range, weekOffset);
         var vm = new LecturerScheduleViewModel
         {
             TodaySessionsCount = dto.TodaySessionsCount,
             OnlineSessionsCount = dto.OnlineSessionsCount,
             OfflineSessionsCount = dto.OfflineSessionsCount,
             UpcomingDeadlinesCount = dto.UpcomingDeadlinesCount,
+            NeedsAttentionCount = dto.NeedsAttentionCount,
+            WeekSessionsCount = dto.WeekSessionsCount,
+            SelectedRole = dto.ActiveRoleFilter,
+            SelectedRange = dto.ActiveRangeFilter,
+            WeekOffset = dto.WeekOffset,
+            WeekLabel = dto.WeekLabel,
+            WeekStartDate = dto.WeekStartDate,
+            WeekEndDate = dto.WeekEndDate,
+            FocusCard = dto.FocusCard == null
+                ? null
+                : new ScheduleFocusViewModel
+                {
+                    Eyebrow = dto.FocusCard.Eyebrow,
+                    Title = dto.FocusCard.Title,
+                    Description = dto.FocusCard.Description,
+                    ActionText = dto.FocusCard.ActionText,
+                    ActionUrl = dto.FocusCard.ActionUrl,
+                    SecondaryActionText = dto.FocusCard.SecondaryActionText,
+                    SecondaryActionUrl = dto.FocusCard.SecondaryActionUrl
+                },
             Entries = dto.Entries.Select(e => new ScheduleEntryViewModel
             {
+                RoleKey = e.RoleKey,
                 RoleLabel = e.RoleLabel,
                 GroupID = e.GroupId,
                 GroupName = e.GroupName,
@@ -325,7 +377,80 @@ public class LecturerController : Controller
                 Location = e.Location,
                 MeetLink = e.MeetLink,
                 Guidance = e.Guidance,
-                ActionUrl = e.ActionUrl
+                StatusKey = e.StatusKey,
+                StatusLabel = e.StatusLabel,
+                StatusTone = e.StatusTone,
+                NeedsAttention = e.NeedsAttention,
+                IsToday = e.IsToday,
+                IsPast = e.IsPast,
+                TimeHint = e.TimeHint,
+                PrimaryActionText = e.PrimaryActionText,
+                PrimaryActionUrl = e.PrimaryActionUrl,
+                SecondaryActionText = e.SecondaryActionText,
+                SecondaryActionUrl = e.SecondaryActionUrl
+            }).ToList(),
+            DayGroups = dto.DayGroups.Select(g => new ScheduleDayGroupViewModel
+            {
+                Date = g.Date,
+                Label = g.Label,
+                Entries = g.Entries.Select(e => new ScheduleEntryViewModel
+                {
+                    RoleKey = e.RoleKey,
+                    RoleLabel = e.RoleLabel,
+                    GroupID = e.GroupId,
+                    GroupName = e.GroupName,
+                    ProjectName = e.ProjectName,
+                    RoundNumber = e.RoundNumber,
+                    RoundType = e.RoundType,
+                    ScheduledAt = e.ScheduledAt,
+                    IsOnline = e.IsOnline,
+                    Location = e.Location,
+                    MeetLink = e.MeetLink,
+                    Guidance = e.Guidance,
+                    StatusKey = e.StatusKey,
+                    StatusLabel = e.StatusLabel,
+                    StatusTone = e.StatusTone,
+                    NeedsAttention = e.NeedsAttention,
+                    IsToday = e.IsToday,
+                    IsPast = e.IsPast,
+                    TimeHint = e.TimeHint,
+                    PrimaryActionText = e.PrimaryActionText,
+                    PrimaryActionUrl = e.PrimaryActionUrl,
+                    SecondaryActionText = e.SecondaryActionText,
+                    SecondaryActionUrl = e.SecondaryActionUrl
+                }).ToList()
+            }).ToList(),
+            WeekDays = dto.WeekDays.Select(day => new ScheduleWeekDayViewModel
+            {
+                Date = day.Date,
+                DayLabel = day.DayLabel,
+                IsToday = day.IsToday,
+                Entries = day.Entries.Select(e => new ScheduleEntryViewModel
+                {
+                    RoleKey = e.RoleKey,
+                    RoleLabel = e.RoleLabel,
+                    GroupID = e.GroupId,
+                    GroupName = e.GroupName,
+                    ProjectName = e.ProjectName,
+                    RoundNumber = e.RoundNumber,
+                    RoundType = e.RoundType,
+                    ScheduledAt = e.ScheduledAt,
+                    IsOnline = e.IsOnline,
+                    Location = e.Location,
+                    MeetLink = e.MeetLink,
+                    Guidance = e.Guidance,
+                    StatusKey = e.StatusKey,
+                    StatusLabel = e.StatusLabel,
+                    StatusTone = e.StatusTone,
+                    NeedsAttention = e.NeedsAttention,
+                    IsToday = e.IsToday,
+                    IsPast = e.IsPast,
+                    TimeHint = e.TimeHint,
+                    PrimaryActionText = e.PrimaryActionText,
+                    PrimaryActionUrl = e.PrimaryActionUrl,
+                    SecondaryActionText = e.SecondaryActionText,
+                    SecondaryActionUrl = e.SecondaryActionUrl
+                }).ToList()
             }).ToList(),
             Deadlines = dto.Deadlines.Select(d => new DeadlineAlertViewModel
             {
@@ -402,6 +527,8 @@ public class LecturerController : Controller
             RoundNumber = dto.RoundNumber,
             RoundType = dto.ReviewRoundName,
             ScheduledAt = dto.ScheduledAt,
+            SubmissionFileName = dto.SubmissionFileName,
+            SubmissionUrl = dto.SubmissionUrl,
             Members = dto.Members.Select(m => new GroupMemberItem
             {
                 UserId = m.UserId,
@@ -440,6 +567,7 @@ public class LecturerController : Controller
             ItemID = c.ItemId,
             ItemCode = c.ItemCode,
             ItemName = c.ItemName,
+            ItemContent = c.ItemContent,
             ItemType = c.ItemType,
             Section = c.Section,
             RubricDescriptions = c.RubricDescriptions.Select(r => new RubricDescriptionViewModel
@@ -469,7 +597,7 @@ public class LecturerController : Controller
         {
             AssignmentId = model.AssignmentID,
             OverallFeedback = model.ExistingFeedbackContent ?? string.Empty,
-            CriteriaScores = model.CriteriaScores.Select(s => new ScoreInputDto
+            CriteriaScores = model.CriteriaScores.Where(s => s != null).Select(s => new ScoreInputDto
             {
                 CriteriaId = s.CriteriaId,
                 Assessment = s.Assessment,
@@ -477,14 +605,16 @@ public class LecturerController : Controller
             }).ToList()
         };
 
-        var success = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
-        if (success)
+        var result = await _lecturerService.SubmitEvaluationAsync(userId, submitDto);
+        if (result.Success)
         {
             TempData["SuccessMessage"] = "Evaluation submitted successfully.";
             return RedirectToAction(nameof(ReviewAssignments));
         }
 
-        TempData["ErrorMessage"] = "Unable to submit evaluation. Please check the assignment and score inputs.";
+        TempData["ErrorMessage"] = string.IsNullOrWhiteSpace(result.ErrorMessage)
+            ? "Unable to submit evaluation. Please check the assignment and score inputs."
+            : result.ErrorMessage;
         return RedirectToAction(nameof(EvaluationForm), new { id = model.AssignmentID });
     }
 
@@ -516,7 +646,44 @@ public class LecturerController : Controller
             return RedirectToAction(nameof(FeedbackApprovals));
         }
 
-        TempData["ErrorMessage"] = "An error occurred while processing the feedback approval.";
+        try
+        {
+            var currentFeedback = await _lecturerService.GetFeedbackApprovalDetailAsync(userId, model.FeedbackID);
+            TempData["ErrorMessage"] = currentFeedback.ApprovalStatus == ApprovalStatus.Pending
+                ? "An error occurred while processing the feedback approval."
+                : $"This feedback was already {currentFeedback.ApprovalStatus.ToString().ToLowerInvariant()} and is now read-only.";
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound();
+        }
+
         return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = model.FeedbackID });
+    }
+
+    public async Task<IActionResult> DownloadSubmission(int id)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        if (!await _lecturerService.CanUserAccessSubmissionAsync(userId, id, "Lecturer"))
+        {
+            TempData["ErrorMessage"] = "You do not have permission to download this file.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        var fileInfo = await _lecturerService.GetSubmissionFileAsync(id); 
+        if (fileInfo == null)
+        {
+            TempData["ErrorMessage"] = "Unable to download the requested file.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
     }
 }

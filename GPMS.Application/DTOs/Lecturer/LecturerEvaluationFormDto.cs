@@ -18,6 +18,8 @@ public class LecturerEvaluationFormDto
     public int RoundNumber { get; set; }
     public DateTime? ScheduledAt { get; set; }
     public List<StudentMemberDto> Members { get; set; } = new();
+    public string? SubmissionFileName { get; set; }
+    public string? SubmissionUrl { get; set; }
     public List<ChecklistItemDto> ChecklistItems { get; set; } = new();
     public int? ExistingEvaluationId { get; set; }
     public string? ExistingFeedbackContent { get; set; }

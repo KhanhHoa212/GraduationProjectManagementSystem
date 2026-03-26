@@ -81,6 +81,12 @@ public class ProjectRepository : IProjectRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteAsync(Project project)
+    {
+        _context.Projects.Remove(project);
+        return Task.CompletedTask;
+    }
+
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
 }

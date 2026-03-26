@@ -137,10 +137,7 @@
             <div class="h-8 w-px bg-dark-200 dark:bg-dark-700 hidden sm:block mx-1"></div>
 
             <!-- Notifications (Common) -->
-            <button class="relative p-2.5 text-dark-500 dark:text-dark-400 hover:text-primary-500 dark:hover:text-primary-400 hover:bg-primary-50 dark:hover:bg-dark-700 rounded-xl transition-all group">
-                <span class="material-symbols-outlined group-hover:scale-110 transition-transform">notifications</span>
-                <span class="absolute top-2 right-2.5 w-2 h-2 bg-red-500 rounded-full shadow-[0_0_0_2px_#ffffff] dark:shadow-[0_0_0_2px_#1E293B] animate-pulse"></span>
-            </button>
+            @await Component.InvokeAsync("NotificationDropdown")
 
             <!-- User Profile Dropdown (Common) -->
             <div class="relative" id="profile-dropdown">

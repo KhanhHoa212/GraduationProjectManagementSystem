@@ -29,6 +29,7 @@ bin/
 obj/
 publish/
 dist/
+artifacts/
 
 # Visual Studio
 .vs/
@@ -50,3 +51,5 @@ Thumbs.db
 node_modules/
 packages/
 
+
+.fake
