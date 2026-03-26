@@ -1,3 +1,4 @@
+using GPMS.Application.DTOs.Lecturer;
 using GPMS.Domain.Entities;
 using GPMS.Domain.Enums;
 using GPMS.Application.Interfaces.Repositories;
@@ -14,8 +15,11 @@ public class ProjectGroupRepository : IProjectGroupRepository
     private readonly GpmsDbContext _context;
     public ProjectGroupRepository(GpmsDbContext context) => _context = context;
 
+    // ─── Entity methods (write-path) ───────────────────────────────────────────
+
     public async Task<ProjectGroup?> GetByIdAsync(int groupId) =>
         await _context.ProjectGroups
+            .AsSplitQuery()
             .Include(pg => pg.Project)
                 .ThenInclude(p => p.Semester)
             .Include(pg => pg.Project)
@@ -56,6 +60,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task<IEnumerable<ProjectGroup>> GetBySupervisorAsync(string supervisorId) =>
         await _context.ProjectGroups
+            .AsSplitQuery()
             .Include(pg => pg.Project)
                 .ThenInclude(p => p.Semester)
             .Include(pg => pg.Project)
@@ -128,6 +133,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task<ReviewSessionInfo?> GetGroupDefenseSessionAsync(int groupId) =>
         await _context.ReviewSessions
+            .AsSplitQuery()
             .Include(s => s.Room)
             .Include(s => s.ReviewRound)
             .Include(s => s.Group)
@@ -142,6 +148,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task<IEnumerable<ReviewSessionInfo>> GetGroupSchedulesAsync(int groupId) =>
         await _context.ReviewSessions
+            .AsSplitQuery()
             .Include(s => s.Room)
             .Include(s => s.ReviewRound)
             .Include(s => s.Group)
@@ -157,4 +164,92 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
+
+    // ─── DTO Projection methods (read-only) ────────────────────────────────────
+
+    public async Task<IEnumerable<ProjectGroupSummaryDto>> GetSummariesBySupervisorAsync(string supervisorId) =>
+        await _context.ProjectGroups
+            .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .Select(pg => new ProjectGroupSummaryDto
+            {
+                GroupId = pg.GroupID,
+                GroupName = pg.GroupName,
+                ProjectId = pg.ProjectID,
+                ProjectName = pg.Project.ProjectName,
+                ProjectCode = pg.Project.ProjectCode,
+                SemesterId = pg.Project.SemesterID,
+                SemesterCode = pg.Project.Semester.SemesterCode,
+                SupervisorIds = pg.Project.ProjectSupervisors
+                    .Select(ps => ps.LecturerID).ToList(),
+                SupervisorRoles = pg.Project.ProjectSupervisors
+                    .Select(ps => new SupervisorRoleDto
+                    {
+                        LecturerId = ps.LecturerID,
+                        Role = ps.Role.ToString()
+                    }).ToList(),
+                MemberNames = pg.GroupMembers
+                    .Select(m => m.User.FullName).ToList(),
+                Sessions = pg.ReviewSessions
+                    .Select(rs => new GroupSessionSummaryDto
+                    {
+                        ReviewRoundId = rs.ReviewRoundID,
+                        RoundNumber = rs.ReviewRound.RoundNumber,
+                        RoundType = rs.ReviewRound.RoundType.ToString(),
+                        ScheduledAt = rs.ScheduledAt,
+                        MeetLink = rs.MeetLink,
+                        RoomCode = rs.Room != null ? rs.Room.RoomCode : null,
+                        Building = rs.Room != null ? rs.Room.Building : null
+                    }).ToList(),
+                Evaluations = pg.Evaluations
+                    .Select(e => new GroupEvaluationSummaryDto
+                    {
+                        EvaluationId = e.EvaluationID,
+                        ReviewRoundId = e.ReviewRoundID,
+                        ReviewerId = e.ReviewerID,
+                        Status = e.Status.ToString(),
+                        SubmittedAt = e.SubmittedAt,
+                        FeedbackId = e.Feedback != null ? e.Feedback.FeedbackID : (int?)null,
+                        ApprovalStatus = e.Feedback != null && e.Feedback.FeedbackApproval != null
+                            ? e.Feedback.FeedbackApproval.ApprovalStatus.ToString()
+                            : null
+                    }).ToList(),
+                Submissions = pg.Submissions
+                    .Select(s => new GroupSubmissionSummaryDto
+                    {
+                        ReviewRoundId = s.Requirement.ReviewRoundID,
+                        DocumentName = s.Requirement.DocumentName
+                    }).ToList()
+            })
+            .ToListAsync();
+
+    public async Task<LecturerProjectGroupDetailDto?> GetDetailDtoAsync(int groupId) =>
+        await _context.ProjectGroups
+            .Where(pg => pg.GroupID == groupId)
+            .Select(pg => new LecturerProjectGroupDetailDto
+            {
+                GroupId = pg.GroupID,
+                GroupName = pg.GroupName,
+                ProjectName = pg.Project.ProjectName,
+                ProjectCode = pg.Project.ProjectCode,
+                Semester = pg.Project.Semester.SemesterCode,
+                SupervisorName = pg.Project.ProjectSupervisors
+                    .OrderBy(ps => ps.Role == ProjectRole.Main ? 0 : 1)
+                    .Select(ps => ps.Lecturer.FullName)
+                    .FirstOrDefault() ?? "N/A",
+                Members = pg.GroupMembers
+                    .Select(m => new StudentMemberDto
+                    {
+                        UserId = m.UserID,
+                        FullName = m.User.FullName,
+                        Email = m.User.Email,
+                        RoleInGroup = m.RoleInGroup.ToString(),
+                        AvatarUrl = "https://ui-avatars.com/api/?name=" +
+                                    Uri.EscapeDataString(m.User.FullName ?? "U") +
+                                    "&background=E5E7EB&color=374151"
+                    }).ToList(),
+                // Milestones & NextMeeting are populated in Service after round data is fetched
+                Milestones = new List<MilestoneDetailDto>(),
+                NextMeeting = null
+            })
+            .FirstOrDefaultAsync();
 }
