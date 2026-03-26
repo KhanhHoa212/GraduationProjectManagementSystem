@@ -87,35 +87,6 @@
                     </div>
                 </div>
 
-                <script>
-                    document.addEventListener('DOMContentLoaded', () => {
-                        const btn = document.getElementById('semester-btn');
-                        const menu = document.getElementById('semester-menu');
-                        const dropdown = document.getElementById('semester-dropdown');
-
-                        if (btn && menu) {
-                            btn.addEventListener('click', (e) => {
-                                e.stopPropagation();
-                                const isHidden = menu.classList.contains('hidden');
-                                
-                                if (isHidden) {
-                                    menu.classList.remove('hidden', 'animate-out', 'fade-out', 'zoom-out-95');
-                                    menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
-                                } else {
-                                    menu.classList.add('hidden');
-                                    menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
-                                }
-                            });
-
-                            document.addEventListener('click', (e) => {
-                                if (!dropdown.contains(e.target)) {
-                                    menu.classList.add('hidden');
-                                    menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
-                                }
-                            });
-                        }
-                    });
-                </script>
             }
 
             <style>
@@ -165,42 +136,13 @@
                         <span class="text-sm font-medium">Hồ sơ cá nhân</span>
                     </a>
                     <div class="h-px bg-slate-100 my-1 mx-4"></div>
-                    <a asp-controller="Auth" asp-action="Logout" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors group/logout">
+                    <a asp-controller="Auth" asp-action="Logout" hx-boost="false" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors group/logout">
                         <span class="material-symbols-outlined text-[20px] group-hover/logout:translate-x-1 transition-transform">logout</span>
                         <span class="text-sm font-medium">Đăng xuất</span>
                     </a>
                 </div>
             </div>
 
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const profileBtn = document.getElementById('profile-btn');
-                    const profileMenu = document.getElementById('profile-menu');
-                    const profileDropdown = document.getElementById('profile-dropdown');
-
-                    if (profileBtn && profileMenu) {
-                        profileBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const isHidden = profileMenu.classList.contains('hidden');
-                            
-                            if (isHidden) {
-                                profileMenu.classList.remove('hidden', 'animate-out', 'fade-out', 'zoom-out-95');
-                                profileMenu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
-                            } else {
-                                profileMenu.classList.add('hidden');
-                                profileMenu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
-                            }
-                        });
-
-                        document.addEventListener('click', (e) => {
-                            if (profileDropdown && !profileDropdown.contains(e.target)) {
-                                profileMenu.classList.add('hidden');
-                                profileMenu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
-                            }
-                        });
-                    }
-                });
-            </script>
 
             <style>
                 #profile-menu.animate-in {

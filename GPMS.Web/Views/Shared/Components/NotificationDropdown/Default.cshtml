@@ -84,127 +84,106 @@
 </div>
 
 <script>
-    let currentUnreadCount = @unreadCount;
+    (function() {
+        window.currentUnreadCount = @unreadCount;
 
-    function updateUnreadUI(newCount) {
-        currentUnreadCount = Math.max(0, newCount);
-        const textElem = document.getElementById('unread-count-text');
-        const bellDot = document.getElementById('bell-dot');
-        const markAllBtn = document.getElementById('mark-all-btn');
+        if (!window.notificationDropdownInitialized) {
+            window.updateUnreadUI = function(newCount) {
+                window.currentUnreadCount = Math.max(0, newCount);
+                const textElem = document.getElementById('unread-count-text');
+                const bellDot = document.getElementById('bell-dot');
+                const markAllBtn = document.getElementById('mark-all-btn');
 
-        if (textElem) textElem.innerText = `You have ${currentUnreadCount} unread messages`;
-        if (bellDot) {
-            if (currentUnreadCount > 0) bellDot.classList.remove('hidden');
-            else bellDot.classList.add('hidden');
-        }
-        if (markAllBtn) {
-            if (currentUnreadCount > 0) markAllBtn.classList.remove('hidden');
-            else markAllBtn.classList.add('hidden');
-        }
-    }
+                if (textElem) textElem.innerText = `You have ${window.currentUnreadCount} unread messages`;
+                if (bellDot) {
+                    if (window.currentUnreadCount > 0) bellDot.classList.remove('hidden');
+                    else bellDot.classList.add('hidden');
+                }
+                if (markAllBtn) {
+                    if (window.currentUnreadCount > 0) markAllBtn.classList.remove('hidden');
+                    else markAllBtn.classList.add('hidden');
+                }
+            };
 
-    function markNotificationAsRead(id) {
-        const item = document.getElementById(`notification-item-${id}`);
-        if (item && item.classList.contains('is-unread')) {
-            $.post('/Notification/MarkAsRead', { id: id }, function() {
-                const btn = item.querySelector('.toggle-read-btn');
-                if (btn) updateSingleNotificationUI(btn, true);
-            });
-        }
-    }
+            window.markNotificationAsRead = function(id) {
+                const item = document.getElementById(`notification-item-${id}`);
+                if (item && item.classList.contains('is-unread')) {
+                    $.post('/Notification/MarkAsRead', { id: id }, function() {
+                        const btn = item.querySelector('.toggle-read-btn');
+                        if (btn) updateSingleNotificationUI(btn, true);
+                    });
+                }
+            };
 
-    function toggleReadStatus(btn, id) {
-        const isRead = btn.getAttribute('data-is-read') === 'true';
-        const url = isRead ? '/Notification/MarkAsUnread' : '/Notification/MarkAsRead';
-        
-        $.post(url, { id: id }, function() {
-            updateSingleNotificationUI(btn, !isRead);
-        });
-    }
+            window.toggleReadStatus = function(btn, id) {
+                const isRead = btn.getAttribute('data-is-read') === 'true';
+                const url = isRead ? '/Notification/MarkAsUnread' : '/Notification/MarkAsRead';
+                
+                $.post(url, { id: id }, function() {
+                    updateSingleNotificationUI(btn, !isRead);
+                });
+            };
 
-    function updateSingleNotificationUI(btn, nowRead) {
-        const item = btn.closest('.notification-item');
-        const dot = item.querySelector('.unread-dot');
-        const icon = btn.querySelector('span');
+            window.updateSingleNotificationUI = function(btn, nowRead) {
+                const item = btn.closest('.notification-item');
+                const dot = item.querySelector('.unread-dot');
+                const icon = btn.querySelector('span');
 
-        if (nowRead) {
-            item.classList.remove('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
-            if (dot) dot.classList.add('hidden');
-            icon.innerText = 'radio_button_unchecked';
-            icon.classList.remove('text-primary-500', 'font-bold');
-            icon.classList.add('text-dark-300');
-            btn.setAttribute('data-is-read', 'true');
-            btn.setAttribute('title', 'Mark as unread');
-            updateUnreadUI(currentUnreadCount - 1);
-        } else {
-            item.classList.add('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
-            if (dot) dot.classList.remove('hidden');
-            icon.innerText = 'check_circle';
-            icon.classList.remove('text-dark-300');
-            icon.classList.add('text-primary-500', 'font-bold');
-            btn.setAttribute('data-is-read', 'false');
-            btn.setAttribute('title', 'Mark as read');
-            updateUnreadUI(currentUnreadCount + 1);
-        }
-    }
-
-    function markAllNotificationsAsRead() {
-        $.post('/Notification/MarkAllAsRead', function() {
-            const unreadItems = document.querySelectorAll('.notification-item.is-unread');
-            unreadItems.forEach(item => {
-                const btn = item.querySelector('.toggle-read-btn');
-                if (btn) updateSingleNotificationUI(btn, true);
-            });
-            updateUnreadUI(0);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const btn = document.getElementById('notification-btn');
-        const menu = document.getElementById('notification-menu');
-        const dropdown = document.getElementById('notification-dropdown');
-
-        if (btn && menu) {
-            btn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isHidden = menu.classList.contains('hidden');
-                if (isHidden) {
-                    menu.classList.remove('hidden');
-                    menu.classList.add('animate-in');
+                if (nowRead) {
+                    item.classList.remove('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
+                    if (dot) dot.classList.add('hidden');
+                    icon.innerText = 'radio_button_unchecked';
+                    icon.classList.remove('text-primary-500', 'font-bold');
+                    icon.classList.add('text-dark-300');
+                    btn.setAttribute('data-is-read', 'true');
+                    btn.setAttribute('title', 'Mark as unread');
+                    updateUnreadUI(window.currentUnreadCount - 1);
                 } else {
-                    menu.classList.add('hidden');
-                    menu.classList.remove('animate-in');
+                    item.classList.add('bg-primary-50/30', 'dark:bg-primary-900/10', 'is-unread');
+                    if (dot) dot.classList.remove('hidden');
+                    icon.innerText = 'check_circle';
+                    icon.classList.remove('text-dark-300');
+                    icon.classList.add('text-primary-500', 'font-bold');
+                    btn.setAttribute('data-is-read', 'false');
+                    btn.setAttribute('title', 'Mark as read');
+                    updateUnreadUI(window.currentUnreadCount + 1);
                 }
-            });
+            };
 
-            document.addEventListener('click', (e) => {
-                if (!dropdown.contains(e.target)) {
-                    menu.classList.add('hidden');
-                    menu.classList.remove('animate-in');
-                }
-            });
-        }
-    });
+            window.markAllNotificationsAsRead = function() {
+                $.post('/Notification/MarkAllAsRead', function() {
+                    const unreadItems = document.querySelectorAll('.notification-item.is-unread');
+                    unreadItems.forEach(item => {
+                        const btn = item.querySelector('.toggle-read-btn');
+                        if (btn) updateSingleNotificationUI(btn, true);
+                    });
+                    updateUnreadUI(0);
+                });
+            };
 
-    // Handle initial state and animations
-    const style = document.createElement('style');
-    style.innerHTML = `
-        #notification-menu.animate-in {
-            display: block !important;
-            animation: notificationEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @@keyframes notificationEnter {
-            from { 
-                opacity: 0; 
-                transform: translateY(-12px) scale(0.96); 
+            // Handle animations styles once
+            if (!document.getElementById('notification-menu-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-menu-styles';
+                style.innerHTML = `
+                    #notification-menu.animate-in {
+                        display: block !important;
+                        animation: notificationEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+                    }
+                    @@keyframes notificationEnter {
+                        from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+                        to { opacity: 1; transform: translateY(0) scale(1); }
+                    }
+                `;
+                document.head.appendChild(style);
             }
-            to { 
-                opacity: 1; 
-                transform: translateY(0) scale(1); 
-            }
+
+            window.notificationDropdownInitialized = true;
+        } else {
+            // Already initialized, just sync UI with server data
+            updateUnreadUI(@unreadCount);
         }
-    `;
-    document.head.appendChild(style);
+    })();
 </script>
 
 @functions {
