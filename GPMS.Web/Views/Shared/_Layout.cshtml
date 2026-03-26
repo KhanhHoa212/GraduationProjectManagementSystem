@@ -1,5 +1,6 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" class="scroll-smooth light">
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
 
 <head>
     <meta charset="UTF-8" />
@@ -27,6 +28,7 @@
 
     <!-- Tailwind CSS v3 via CDN (For development) -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -151,7 +153,8 @@
     @await RenderSectionAsync("Styles", required: false)
 </head>
 
-<body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden">
+<body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden" 
+      hx-headers='{"X-CSRF-Token": "@Antiforgery.GetAndStoreTokens(Context).RequestToken"}'>
     <!-- Toast Container -->
         <div id="toastContainer" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
         
@@ -171,6 +174,10 @@
 
             <!-- Sidebar Navigation -->
             <div id="main-sidebar"
+                hx-boost="true"
+                hx-target="#content-column"
+                hx-select="#content-column"
+                hx-swap="innerHTML transition:true"
                 class="z-50 transition-transform duration-300 w-64 shrink-0 shadow-2xl lg:shadow-[2px_0_10px_rgba(0,0,0,0.1)] lg:relative absolute top-0 left-0 bg-sidebar dark:bg-dark-800 h-full -translate-x-full lg:translate-x-0">
             @await Html.PartialAsync("_Sidebar")
             </div>
@@ -180,13 +187,18 @@
                 class="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 hidden lg:hidden transition-opacity"></div>
 
             <!-- Main Content Column -->
-            <div class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+            <div id="content-column" 
+                hx-boost="true" 
+                hx-target="this" 
+                hx-select="#content-column" 
+                hx-swap="innerHTML transition:true"
+                class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
 
                 <!-- Top Header -->
             @await Html.PartialAsync("_Header")
 
                 <!-- Page Content Body -->
-                <main class="flex-1 overflow-y-auto overflow-x-hidden custom-main-scroll bg-[#F5F7FA] dark:bg-dark-900">
+                <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden custom-main-scroll bg-[#F5F7FA] dark:bg-dark-900">
                     <div class="w-full min-h-full p-4 lg:p-8 pb-24 text-dark-900 dark:text-dark-100 relative">
                     @RenderBody()
                     </div>
@@ -247,15 +259,96 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const sidebar = document.getElementById('main-sidebar');
                 const overlay = document.getElementById('sidebar-overlay');
-                const mobileBtn = document.getElementById('mobile-menu-btn');
                 const loadingOverlay = document.getElementById('loading-overlay');
 
-                if (mobileBtn) {
-                    mobileBtn.addEventListener('click', () => {
+                // Global delegated event handler for dynamic header elements
+                document.addEventListener('click', (e) => {
+                    // 1. Mobile Sidebar Toggle
+                    if (e.target.closest('#mobile-menu-btn')) {
                         sidebar.classList.remove('-translate-x-full');
                         overlay.classList.remove('hidden');
-                    });
-                }
+                        return;
+                    }
+
+                    // 2. Semester Dropdown Toggle
+                    const semesterBtn = e.target.closest('#semester-btn');
+                    if (semesterBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('semester-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('profile-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 3. Profile Dropdown Toggle
+                    const profileBtn = e.target.closest('#profile-btn');
+                    if (profileBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('profile-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('semester-menu')?.classList.add('hidden');
+                            document.getElementById('notification-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 4. Notification Dropdown Toggle
+                    const notificationBtn = e.target.closest('#notification-btn');
+                    if (notificationBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('notification-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('semester-menu')?.classList.add('hidden');
+                            document.getElementById('profile-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 5. Click outside to close dropdowns
+                    const semesterDropdown = document.getElementById('semester-dropdown');
+                    if (semesterDropdown && !semesterDropdown.contains(e.target)) {
+                        document.getElementById('semester-menu')?.classList.add('hidden');
+                    }
+                    const profileDropdown = document.getElementById('profile-dropdown');
+                    if (profileDropdown && !profileDropdown.contains(e.target)) {
+                        document.getElementById('profile-menu')?.classList.add('hidden');
+                    }
+                    const notificationDropdown = document.getElementById('notification-dropdown');
+                    if (notificationDropdown && !notificationDropdown.contains(e.target)) {
+                        document.getElementById('notification-menu')?.classList.add('hidden');
+                    }
+                });
 
                 if (overlay) {
                     overlay.addEventListener('click', () => {
@@ -276,15 +369,92 @@
                 document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not([data-no-load])').forEach(link => {
                     link.addEventListener('click', function (e) {
                         const href = this.getAttribute('href');
-                        if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey && !this.classList.contains('no-spinner')) {
+                        // Skip if link is effectively boosted by HTMX
+                        const boostAttrEl = this.closest('[hx-boost]');
+                        const isEffectivelyBoosted = boostAttrEl && boostAttrEl.getAttribute('hx-boost') === 'true';
+                        
+                        if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey && !this.classList.contains('no-spinner') && !isEffectivelyBoosted) {
                             setTimeout(() => loadingOverlay.classList.add('active'), 50);
                         }
                     });
                 });
 
-                window.addEventListener('pageshow', () => {
+                // window.addEventListener('pageshow', ...) moved outside to handle BFcache more reliably
+
+                // HTMX Loading Overlay Support
+                document.addEventListener('htmx:beforeRequest', () => {
+                    loadingOverlay.classList.add('active');
+                });
+                document.addEventListener('htmx:afterRequest', () => {
                     loadingOverlay.classList.remove('active');
                 });
+                document.addEventListener('htmx:onLoadError', () => {
+                    loadingOverlay.classList.remove('active');
+                    showToast('Có lỗi xảy ra khi tải trang.', 'error');
+                });
+
+                // Sync Sidebar Active State
+                function syncSidebarActiveState() {
+                    const currentPath = window.location.pathname.toLowerCase();
+                    const sidebarLinks = document.querySelectorAll('#main-sidebar nav a');
+                    
+                    sidebarLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (!href || href === '#') return;
+                        
+                        const normalizedHref = href.startsWith('/') ? href.toLowerCase() : '/' + href.toLowerCase();
+                        
+                        // Active condition: EXACT match or special cases
+                        let isActive = currentPath === normalizedHref || currentPath === normalizedHref + '/';
+                        
+                        // Special cases for HOD/Lecturer sub-pages
+                        if (!isActive) {
+                            if (normalizedHref.includes('/hod/projects') && (currentPath.includes('/hod/createproject') || currentPath.includes('/hod/projectdetails'))) isActive = true;
+                            if (normalizedHref.includes('/hod/reviewrounds') && (currentPath.includes('/hod/createreviewround') || currentPath.includes('/hod/editreviewround'))) isActive = true;
+                        }
+
+                        const icon = link.querySelector('.material-symbols-outlined');
+                        
+                        if (isActive) {
+                            link.classList.remove('border-transparent', 'text-slate-400', 'font-medium');
+                            link.classList.add('border-[#f4741c]', 'bg-[#f4741c]/10', 'text-[#f4741c]', 'font-semibold');
+                            if (icon) icon.classList.add('filled');
+                        } else {
+                            link.classList.add('border-transparent', 'text-slate-400', 'font-medium');
+                            link.classList.remove('border-[#f4741c]', 'bg-[#f4741c]/10', 'text-[#f4741c]', 'font-semibold');
+                            if (icon) icon.classList.remove('filled');
+                        }
+                    });
+                }
+
+                document.addEventListener('htmx:afterSettle', syncSidebarActiveState);
+                window.addEventListener('popstate', syncSidebarActiveState);
+                syncSidebarActiveState(); // Initial sync
+
+                // HTMX-aware Notification Check
+                document.addEventListener('htmx:afterSettle', (e) => {
+                    const notifyEl = document.querySelector('#htmx-notification-trigger');
+                    if (notifyEl) {
+                        const message = notifyEl.getAttribute('data-message');
+                        const type = notifyEl.getAttribute('data-type') || 'success';
+                        if (message) {
+                            showToast(message, type);
+                        }
+                        notifyEl.remove(); // Cleanup to prevent re-triggering
+                    }
+                });
+            });
+            
+            // Handle loading overlay on back navigation / BFcache
+            window.addEventListener('pageshow', (event) => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.classList.remove('active');
+            });
+            
+            // HTMX history restoration also needs to clear overlay
+            document.addEventListener('htmx:historyRestore', () => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.classList.remove('active');
             });
 
         // Global Toast System

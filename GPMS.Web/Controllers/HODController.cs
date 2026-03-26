@@ -20,6 +20,8 @@ public class HODController : Controller
     private readonly IChecklistService _checklistService;
     private readonly IExcelService _excelService;
     private readonly IReportService _reportService;
+    private readonly IMajorService _majorService;
+    private readonly IUserService _userService;
 
     public HODController(
         IProjectService projectService, 
@@ -27,7 +29,9 @@ public class HODController : Controller
         IReviewRoundService reviewRoundService,
         IChecklistService checklistService,
         IExcelService excelService,
-        IReportService reportService)
+        IReportService reportService,
+        IMajorService majorService,
+        IUserService userService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
@@ -35,6 +39,8 @@ public class HODController : Controller
         _checklistService = checklistService;
         _excelService = excelService;
         _reportService = reportService;
+        _majorService = majorService;
+        _userService = userService;
     }
 
 
@@ -71,7 +77,7 @@ public class HODController : Controller
         return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
 
-    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search, string? majorName)
+    public async Task<IActionResult> Projects(int? semesterId, string? status, string? search, string? majorName, int page = 1)
     {
         var semesters = (await _semesterService.GetAllSemestersAsync()).ToList();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
@@ -110,13 +116,16 @@ public class HODController : Controller
             projects = projects.Where(p => p.MajorName == majorName);
 
         ViewBag.Semesters = semesters;
+        ViewBag.Majors = await _majorService.GetAllMajorsAsync();
         ViewBag.SelectedSemesterId = semesterId == -1 ? -1 : targetSemesterId;
         ViewBag.ActiveSemester = activeSemester;
         ViewBag.CurrentStatus = status;
         ViewBag.CurrentSearch = search;
         ViewBag.CurrentMajor = majorName;
 
-        return View(projects.ToList());
+        // Use PaginatedList (Assuming pageSize = 10 for HOD Projects)
+        var paginatedProjects = Models.PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
+        return View(paginatedProjects);
     }
 
     [HttpGet]
@@ -197,14 +206,17 @@ public class HODController : Controller
     }
 
     // GET: /HOD/EditProject/{id}
-    public async Task<IActionResult> EditProject(int id)
+    public async Task<IActionResult> EditProject(int id, string returnUrl = null)
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         ViewBag.Semesters = semesters;
+        ViewBag.Majors = await _majorService.GetAllMajorsAsync();
+        ViewBag.Lecturers = await _userService.GetAllUsersAsync(role: "Lecturer");
 
         var project = await _projectService.GetProjectDetailAsync(id);
         if (project == null) return NotFound();
 
+        ViewBag.ReturnUrl = returnUrl;
         return View(project);
     }
 
@@ -224,14 +236,18 @@ public class HODController : Controller
     // POST: /HOD/UpdateProject
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> UpdateProject(UpdateProjectDto dto)
+    public async Task<IActionResult> UpdateProject(UpdateProjectDto dto, string returnUrl = null)
     {
         if (!ModelState.IsValid)
             return RedirectToAction(nameof(ProjectDetails), new { id = dto.ProjectID });
 
         await _projectService.UpdateProjectAsync(dto);
         TempData["SuccessMessage"] = "Project updated successfully.";
-        return RedirectToAction(nameof(ProjectDetails), new { id = dto.ProjectID });
+        
+        if (!string.IsNullOrEmpty(returnUrl))
+            return Redirect(returnUrl);
+            
+        return RedirectToAction(nameof(Projects));
     }
 
     [HttpPost]
@@ -306,7 +322,7 @@ public class HODController : Controller
         
         if (activeSemester == null)
             return View(new List<ReviewRoundDto>());
-
+ 
         var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
         
         // Auto-initialize 3 rounds if none exist
@@ -614,6 +630,8 @@ public class HODController : Controller
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         ViewBag.Semesters = semesters;
+        ViewBag.Majors = await _majorService.GetAllMajorsAsync();
+        ViewBag.Lecturers = await _userService.GetAllUsersAsync(role: "Lecturer");
         
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         ViewBag.ActiveSemester = activeSemester;
@@ -643,4 +661,3 @@ public class HODController : Controller
         return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
     }
 }
-

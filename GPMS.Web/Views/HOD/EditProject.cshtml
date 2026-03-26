@@ -98,6 +98,7 @@
                 @{ var formAction = isNew ? "CreateProject" : "UpdateProject"; }
                 <form asp-action="@formAction" method="post">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
                     @if (!isNew && Model != null)
                     {
                         <input type="hidden" name="ProjectID" value="@Model.ProjectID" />
@@ -179,8 +180,10 @@
                                 @if (isNew)
                                 {
                                     <select name="MajorID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                        <option value="1">Software Engineering</option>
-                                        <option value="2">Software Testing</option>
+                                        @foreach (var major in (ViewBag.Majors as IEnumerable<GPMS.Application.DTOs.MajorDto> ?? Enumerable.Empty<GPMS.Application.DTOs.MajorDto>()))
+                                        {
+                                            <option value="@major.MajorID">@major.MajorName</option>
+                                        }
                                     </select>
                                 }
                                 else
