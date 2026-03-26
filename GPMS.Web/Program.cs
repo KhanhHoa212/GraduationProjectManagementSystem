@@ -50,12 +50,8 @@ builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
-<<<<<<< HEAD
 builder.Services.AddScoped<IMajorService, MajorService>();
-
-=======
 builder.Services.AddScoped<IReportService, ReportService>();
->>>>>>> d26abd4bc7ab423215c6a114b41071b99dec5d67
 
 
 // Register Infrastructure (including Seeders)
