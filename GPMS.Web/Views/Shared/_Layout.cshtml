@@ -169,17 +169,20 @@
 
     <!-- Chatbot iframe (Global) -->
     <div id="chatbot-container">
-        <iframe id="chatbot-iframe" src="https://gpms-bot-supporter-fe.onrender.com/" style="position: fixed;
-                       bottom: 24px;
-                       right: 24px;
-                       width: 60px;
-                       height: 60px;
-                       border: none;
-                       z-index: 9990;
-                       border-radius: 50%;
-                       overflow: hidden;
-                       box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);">
-        </iframe>
+        <div id="chatbot-container">
+            <iframe id="chatbot-iframe"
+                    src="https://gpms-bot-supporter-fe.onrender.com/"
+                    style="position: fixed;
+                               bottom: 0;
+                               right: 0;
+                               width: 60px;
+                               height: 60px;
+                               border: none;
+                               z-index: 9999;
+                               border-radius: 50%;
+                               overflow: hidden;">
+            </iframe>
+        </div>
     </div>
 
     <!-- Scrollbar Styling for Main Content -->
@@ -258,15 +261,14 @@
             });
         });
 
-        // Chatbot communication
         window.addEventListener("message", function (event) {
             if (!event.data || typeof event.data !== "object") return;
             const iframe = document.getElementById("chatbot-iframe");
             if (!iframe) return;
             if (event.data.type === "chatbot-open") {
                 iframe.style.width = "400px";
-                iframe.style.height = "520px";
-                iframe.style.borderRadius = "16px";
+                iframe.style.height = "500px";
+                iframe.style.borderRadius = "12px";
             } else if (event.data.type === "chatbot-close") {
                 iframe.style.width = "60px";
                 iframe.style.height = "60px";

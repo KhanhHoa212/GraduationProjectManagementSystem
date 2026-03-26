@@ -63,7 +63,7 @@ public class GpmsDbContext : DbContext
                 .HasForeignKey(m => m.SupervisorID)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         SeedData(modelBuilder);
     }
 
@@ -71,13 +71,25 @@ public class GpmsDbContext : DbContext
     {
         // 1. Faculty
         modelBuilder.Entity<Faculty>().HasData(
-            new Faculty { FacultyID = 1, FacultyCode = "SE", FacultyName = "Software Engineering Faculty" }
+            new Faculty { FacultyID = 1, FacultyCode = "IT", FacultyName = "Information Technology Faculty" },
+            new Faculty { FacultyID = 2, FacultyCode = "EC", FacultyName = "Economy Faculty" },
+            new Faculty { FacultyID = 3, FacultyCode = "DA", FacultyName = "Digital Arts Faculty" },
+            new Faculty { FacultyID = 4, FacultyCode = "LA", FacultyName = "Language Faculty" }
         );
 
         // 2. Majors
         modelBuilder.Entity<Major>().HasData(
             new Major { MajorID = 1, FacultyID = 1, MajorCode = "SE", MajorName = "Software Engineering" },
-            new Major { MajorID = 2, FacultyID = 1, MajorCode = "SS", MajorName = "Software Testing" }
+            new Major { MajorID = 2, FacultyID = 2, MajorCode = "DM", MajorName = "Digital Marketing" },
+            new Major { MajorID = 3, FacultyID = 3, MajorCode = "GD", MajorName = "Graphic Design" },
+            new Major { MajorID = 4, FacultyID = 4, MajorCode = "EN", MajorName = "English" },
+            new Major { MajorID = 5, FacultyID = 4, MajorCode = "JP", MajorName = "Japanese" },
+            new Major { MajorID = 6, FacultyID = 4, MajorCode = "KR", MajorName = "Korean" },
+            new Major { MajorID = 7, FacultyID = 4, MajorCode = "CN", MajorName = "Chinese" },
+            new Major { MajorID = 8, FacultyID = 1, MajorCode = "IA", MajorName = "Information Assurance" },
+            new Major { MajorID = 9, FacultyID = 1, MajorCode = "IC", MajorName = "Integrated Circuit Design" },
+            new Major { MajorID = 10, FacultyID = 2, MajorCode = "FI", MajorName = "Finance" },
+            new Major { MajorID = 11, FacultyID = 2, MajorCode = "MK", MajorName = "Marketing" }
         );
 
         // 3. Expertise Areas
