@@ -121,7 +121,7 @@
                     {
                         foreach (var item in Model)
                         {
-                            <tr class="hover:bg-slate-50/50 transition-colors">
+                            <tr id="project-row-@item.ProjectID" class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-5 font-bold text-slate-800">@item.ProjectCode</td>
                                 <td class="px-6 py-5">
                                     <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">@item.ProjectName</span>
@@ -155,7 +155,7 @@
                                         <a href="/HOD/EditProject/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Chỉnh sửa">
                                             <span class="material-symbols-outlined text-[20px]">edit</span>
                                         </a>
-                                        <button class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
+                                        <button onclick="showDeleteModal(@item.ProjectID)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>
@@ -240,6 +240,25 @@
     </div>
 </div>
 
+<!-- Delete Confirm Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Xác nhận xóa đề tài?</h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                Hành động này <span class="text-red-600 font-bold">không thể hoàn tác</span>. Toàn bộ dữ liệu liên quan đến đề tài này sẽ bị xóa khỏi hệ thống.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Hủy bỏ</button>
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition transform active:scale-95">Xóa vĩnh viễn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         function toggleImportModal() {
@@ -268,9 +287,71 @@
                 display.innerText = input.files[0].name;
                 display.classList.remove('text-slate-500');
                 display.classList.add('text-slate-800', 'font-bold');
-                
-                // Show a small success animation or feedback if needed
             }
         }
+
+        // Project Deletion
+        let projectToDelete = null;
+
+        function showDeleteModal(id) {
+            projectToDelete = id;
+            const modal = document.getElementById('deleteConfirmModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function hideDeleteModal() {
+            projectToDelete = null;
+            const modal = document.getElementById('deleteConfirmModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', async () => {
+            if (!projectToDelete) return;
+            
+            const btn = document.getElementById('confirmDeleteBtn');
+            const originalText = btn.innerText;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ri-loader-4-line animate-spin text-lg"></i>';
+
+            try {
+                const response = await fetch(`/HOD/DeleteProject?id=${projectToDelete}`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    showToast(data.message, 'success');
+                    
+                    // Capture ID before hiding modal
+                    const idToRemove = projectToDelete;
+                    hideDeleteModal();
+                    
+                    // Remove row dynamically with animation
+                    const row = document.getElementById(`project-row-${idToRemove}`);
+                    if (row) {
+                        row.style.transition = 'all 0.5s ease';
+                        row.style.opacity = '0';
+                        row.style.transform = 'translateX(20px)';
+                        
+                        setTimeout(() => {
+                            row.remove();
+                            // Check if table is empty
+                            const tbody = document.querySelector('tbody');
+                            if (tbody && tbody.querySelectorAll('tr[id^="project-row-"]').length === 0) {
+                                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td></tr>';
+                            }
+                        }, 500);
+                    }
+                } else {
+                    showToast(data.message, 'error');
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            } catch (error) {
+                showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
+                btn.disabled = false;
+                btn.innerText = originalText;
+            }
+        });
     </script>
 }

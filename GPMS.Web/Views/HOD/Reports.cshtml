@@ -1,348 +1,542 @@
-﻿@{
+@model GPMS.Web.ViewModels.HODReportViewModel
+@{
     ViewData["Title"] = "Reports";
     Layout = "_Layout";
+    
+    // Helper values
+    var totalProjects = Model.TotalProjects > 0 ? Model.TotalProjects : 1; // avoid division by zero
+    var draftPct = (int)Math.Round((double)Model.DraftProjects / totalProjects * 100);
+    var activePct = (int)Math.Round((double)Model.ActiveProjects / totalProjects * 100);
+    var completedPct = (int)Math.Round((double)Model.CompletedProjects / totalProjects * 100);
+    var cancelledPct = (int)Math.Round((double)Model.CancelledProjects / totalProjects * 100);
+    var maxMajor = Model.MajorDistribution.Any() ? Model.MajorDistribution.Max(m => m.ProjectCount) : 1;
 }
 
-<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
-    <div class="p-6">
-        <div class="max-w-7xl mx-auto space-y-6">
-            <!-- Header -->
-            <div class="flex items-start justify-between mb-8">
-                <div>
-                    <nav class="flex items-center gap-2 text-sm mb-4">
-                        <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">GPMS</a>
-                        <span class="text-slate-400 dark:text-slate-600">/</span>
-                        <span class="text-slate-900 dark:text-slate-100 font-medium">Reports</span>
-                    </nav>
-                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Báo cáo thống kê</h1>
-                    <p class="text-slate-600 dark:text-slate-400 mt-2">Thống kê tổng hợp về dữ liệu và thống kê liên quan</p>
-                </div>
-                <div class="flex gap-3">
-                    <button class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 transition">
-                        <span class="material-symbols-outlined" style="font-size: 20px;">picture_as_pdf</span>
-                        Xuất PDF
-                    </button>
-                    <button class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium flex items-center gap-2 transition">
-                        <span class="material-symbols-outlined" style="font-size: 20px;">table_chart</span>
-                        Xuất Excel
-                    </button>
-                </div>
-            </div>
+@section Styles {
+    <style>
+        @@media print {
+            /* Ẩn hoàn toàn các thành phần UI không liên quan */
+            aside, header, nav, .print\:hidden, #chatbot-container, #toastContainer, #sidebar-overlay { 
+                display: none !important; 
+            }
+            
+            /* RESET LAYOUT SHELL: Đây là phần quan trọng nhất */
+            /* Phải ép tất cả các container bọc ngoài về overflow visible và height auto */
+            html, body {
+                height: auto !important;
+                overflow: visible !important;
+                background: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
 
-            <!-- KPI Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <!-- Total Groups -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Tổng số nhóm</p>
-                            <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">142</h3>
-                        </div>
-                        <span class="text-green-600 dark:text-green-400 text-sm font-medium px-2 py-1 bg-green-100 dark:bg-green-900 rounded">+2.5%</span>
-                    </div>
-                    <div class="h-1 bg-green-500 rounded-full w-full"></div>
-                </div>
+            /* Target các div layout trong _Layout.cshtml */
+            .flex.h-screen.overflow-hidden,
+            .flex-1.flex.flex-col.h-full.overflow-hidden,
+            main.flex-1.overflow-y-auto {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+                position: static !important;
+                width: 100% !important;
+            }
 
-                <!-- Completion Rate -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Tỉ lệ hoàn thành</p>
-                            <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">88%</h3>
-                        </div>
-                        <span class="text-[#F37021] dark:text-orange-400 text-sm font-medium px-2 py-1 bg-orange-100 dark:bg-orange-900 rounded">+1.2%</span>
-                    </div>
-                    <div class="h-1 bg-[#F37021] rounded-full w-88" style="width: 88%;"></div>
-                </div>
+            main {
+                margin: 0 !important;
+                padding: 1cm !important; /* Lề trang in */
+            }
 
-                <!-- Average Score -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Điểm trung bình</p>
-                            <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">7.8</h3>
-                        </div>
-                        <span class="text-emerald-600 dark:text-emerald-400 text-sm font-medium px-2 py-1 bg-emerald-100 dark:bg-emerald-900 rounded">+0.3</span>
-                    </div>
-                    <div class="h-1 bg-emerald-500 rounded-full w-full"></div>
-                </div>
+            /* Reset container nội dung */
+            #reportContent, .space-y-8 {
+                display: block !important;
+                height: auto !important;
+                overflow: visible !important;
+            }
 
-                <!-- Pass Rate -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-start justify-between mb-4">
-                        <div>
-                            <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Tỉ lệ thông qua</p>
-                            <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">94.5%</h3>
-                        </div>
-                        <span class="text-blue-600 dark:text-blue-400 text-sm font-medium px-2 py-1 bg-blue-100 dark:bg-blue-900 rounded">-3.4%</span>
-                    </div>
-                    <div class="h-1 bg-blue-500 rounded-full" style="width: 94.5%;"></div>
-                </div>
-            </div>
+            /* Giữ nguyên màu sắc khi in */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
 
-            <!-- Charts Row 1 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Average Score by Review Rounds -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Điểm trung bình theo các vòng Review</h2>
-                    <div class="flex items-end justify-around h-64">
-                        <!-- Bar 1 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 bg-gradient-to-t from-[#F37021] to-orange-400 rounded-t-lg" style="height: 85%;"></div>
-                            <p class="text-sm font-semibold text-slate-900 dark:text-white mt-4">8.5</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Review 1</p>
-                        </div>
+            /* Tránh ngắt trang giữa chừng bên trong các card/bảng */
+            .bg-white, tr, .grid > div, .rounded-2xl {
+                page-break-inside: avoid !important;
+                break-inside: avoid-page !important;
+                float: none !important;
+            }
 
-                        <!-- Bar 2 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 bg-gradient-to-t from-blue-500 to-blue-400 rounded-t-lg" style="height: 72%;"></div>
-                            <p class="text-sm font-semibold text-slate-900 dark:text-white mt-4">7.2</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Review 2</p>
-                        </div>
+            /* Gap giữa các section */
+            .space-y-8 > div {
+                margin-bottom: 3rem !important;
+                page-break-after: auto !important;
+            }
 
-                        <!-- Bar 3 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 bg-gradient-to-t from-green-500 to-green-400 rounded-t-lg" style="height: 78%;"></div>
-                            <p class="text-sm font-semibold text-slate-900 dark:text-white mt-4">7.8</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Review 3</p>
-                        </div>
+            /* Fix table layout khi in */
+            table {
+                page-break-inside: auto;
+                width: 100% !important;
+            }
+            thead { display: table-header-group; }
+            tfoot { display: table-footer-group; }
 
-                        <!-- Bar 4 -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 bg-gradient-to-t from-purple-500 to-purple-400 rounded-t-lg" style="height: 85%;"></div>
-                            <p class="text-sm font-semibold text-slate-900 dark:text-white mt-4">8.5</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-400 mt-1">Final Defence</p>
-                        </div>
-                    </div>
-                </div>
+            /* Giảm bớt shadow và format lại charts */
+            .shadow-sm, .shadow-md, .shadow-lg { 
+                box-shadow: none !important; 
+                border: 1px solid #e2e8f0 !important; 
+            }
+        }
 
-                <!-- Group Status Distribution -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Trạng thái nhóm đó ơn</h2>
-                    <div class="flex items-center justify-center gap-8">
-                        <!-- Donut Chart -->
-                        <div class="relative w-48 h-48">
-                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
-                                <!-- Completed (60%) -->
-                                <circle cx="60" cy="60" r="45" fill="none" stroke="#10b981" stroke-width="12" stroke-dasharray="169.6 283" stroke-linecap="round"></circle>
-                                <!-- Active (30%) -->
-                                <circle cx="60" cy="60" r="45" fill="none" stroke="#F37021" stroke-width="12" stroke-dasharray="84.8 283" stroke-linecap="round" style="stroke-dashoffset: -169.6;"></circle>
-                                <!-- Draft (10%) -->
-                                <circle cx="60" cy="60" r="45" fill="none" stroke="#cbd5e1" stroke-width="12" stroke-dasharray="28.3 283" stroke-linecap="round" style="stroke-dashoffset: -254.4;"></circle>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <p class="text-3xl font-bold text-slate-900 dark:text-white">142</p>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400">Tổng nhóm</p>
-                                </div>
-                            </div>
-                        </div>
 
-                        <!-- Legend -->
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-900 dark:text-white">Completed</p>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400">85 nhóm (60%)</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full bg-[#F37021]"></div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-900 dark:text-white">Active</p>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400">42 nhóm (30%)</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600"></div>
-                                <div>
-                                    <p class="text-sm font-medium text-slate-900 dark:text-white">Draft</p>
-                                    <p class="text-xs text-slate-600 dark:text-slate-400">15 nhóm (10%)</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    </style>
+}
+
+
+<div class="space-y-8" id="reportContent">
+    <!-- ===== HEADER ===== -->
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Báo cáo tổng quan</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-500 text-base">calendar_today</span>
+                Kỳ hiển thị: <span class="font-bold text-primary-600">@Model.SemesterCode — @Model.AcademicYear</span>
+            </p>
+        </div>
+
+        <!-- Tiện ích (Filter + Print) -->
+        <div class="flex flex-col sm:flex-row items-center gap-3 print:hidden">
+            <form method="get" asp-action="Reports" id="filterForm" class="w-full sm:w-auto">
+                <select name="semesterId" class="w-full sm:w-48 px-4 py-2 border border-slate-200 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-xl focus:ring-2 focus:ring-primary-500" onchange="document.getElementById('filterForm').submit()">
+                    <option value="-1">✅ Tất cả các kỳ</option>
+                    @if (ViewBag.Semesters != null)
+                    {
+                        foreach (var sem in ViewBag.Semesters)
+                        {
+                            var isSelected = ViewBag.SelectedSemesterId == sem.SemesterID;
+                            if (isSelected)
+                            {
+                                <option value="@sem.SemesterID" selected>@sem.SemesterCode (@sem.AcademicYear)</option>
+                            }
+                            else
+                            {
+                                <option value="@sem.SemesterID">@sem.SemesterCode (@sem.AcademicYear)</option>
+                            }
+                        }
+                    }
+                </select>
+            </form>
+
+            <button type="button" onclick="window.print()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-slate-900 dark:bg-primary-600 text-white px-5 py-2 rounded-xl hover:bg-slate-800 dark:hover:bg-primary-700 transition-colors shadow-sm">
+                <span class="material-symbols-outlined text-sm">print</span>
+                <span class="font-semibold text-sm">Xuất PDF</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ===== KPI CARDS ===== -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+        <!-- Total Projects -->
+        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-primary-200 transition-all duration-300">
+            <div class="absolute -top-4 -right-4 w-20 h-20 bg-primary-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-primary-500 text-[22px]">account_tree</span>
                 </div>
             </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Đề tài</p>
+            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalProjects</p>
+        </div>
 
-            <!-- Charts Row 2 -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Submission Timeliness -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Tỉ lệ nộp bài Đúng hạn vs Trễ hạn</h2>
-                    <div class="space-y-4">
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-slate-900 dark:text-white">Đúng hạn</span>
-                                <span class="text-sm font-semibold text-slate-900 dark:text-white">74%</span>
-                            </div>
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-emerald-500" style="width: 74%;"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-slate-900 dark:text-white">Trễ hạn</span>
-                                <span class="text-sm font-semibold text-slate-900 dark:text-white">18%</span>
-                            </div>
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-red-500" style="width: 18%;"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-medium text-slate-900 dark:text-white">Chưa nộp</span>
-                                <span class="text-sm font-semibold text-slate-900 dark:text-white">8%</span>
-                            </div>
-                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-                                <div class="h-full bg-slate-400" style="width: 8%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Submission Distribution by Round -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white mb-6">Phân bố nộp bài theo vòng Review</h2>
-                    <div class="space-y-4">
-                        <div class="flex items-end justify-around h-40">
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 bg-blue-500 rounded-t" style="height: 85%;"></div>
-                                <p class="text-xs font-semibold text-slate-900 dark:text-white mt-2">Review 1</p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400">121</p>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 bg-blue-500 rounded-t" style="height: 92%;"></div>
-                                <p class="text-xs font-semibold text-slate-900 dark:text-white mt-2">Review 2</p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400">131</p>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 bg-blue-500 rounded-t" style="height: 78%;"></div>
-                                <p class="text-xs font-semibold text-slate-900 dark:text-white mt-2">Review 3</p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400">111</p>
-                            </div>
-                            <div class="flex flex-col items-center">
-                                <div class="w-10 bg-slate-400 rounded-t" style="height: 45%;"></div>
-                                <p class="text-xs font-semibold text-slate-900 dark:text-white mt-2">Final</p>
-                                <p class="text-xs text-slate-600 dark:text-slate-400">64</p>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Total Groups -->
+        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-blue-200 transition-all duration-300">
+            <div class="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-blue-500 text-[22px]">groups</span>
                 </div>
             </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nhóm</p>
+            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalGroups</p>
+        </div>
 
-            <!-- Workload Tables Row -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Reviewer Workload -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="p-6 border-b border-slate-200 dark:border-slate-800">
-                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Khối lượng công việc Reviewer</h2>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 dark:bg-slate-800">
-                                <tr>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">GIẢNG VIÊN</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">NHÓM REVIEW</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">TẢI TRONG (%)</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">ĐÁNH GIÁ</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">Nguyễn Văn Thành</td>
-                                    <td class="py-4 px-6 text-slate-600 dark:text-slate-400">12</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex-1" style="min-width: 60px;">
-                                                <div class="h-full bg-blue-500 rounded-full" style="width: 80%;"></div>
-                                            </div>
-                                            <span class="text-xs font-medium text-slate-900 dark:text-white">80%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">4.8</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">Lê Thị Hoa</td>
-                                    <td class="py-4 px-6 text-slate-600 dark:text-slate-400">10</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex-1" style="min-width: 60px;">
-                                                <div class="h-full bg-blue-500 rounded-full" style="width: 85%;"></div>
-                                            </div>
-                                            <span class="text-xs font-medium text-slate-900 dark:text-white">85%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">4.1</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">Trần Anh Quân</td>
-                                    <td class="py-4 px-6 text-slate-600 dark:text-slate-400">15</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex-1" style="min-width: 60px;">
-                                                <div class="h-full bg-red-500 rounded-full" style="width: 100%;"></div>
-                                            </div>
-                                            <span class="text-xs font-medium text-slate-900 dark:text-white">100%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">4.2</td>
-                                </tr>
-                            </tbody>
-                        </table>
+        <!-- Total Students -->
+        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
+            <div class="absolute -top-4 -right-4 w-20 h-20 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-emerald-500 text-[22px]">school</span>
+                </div>
+            </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sinh viên</p>
+            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalStudents</p>
+        </div>
+
+        <!-- Total Supervisors -->
+        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-violet-200 transition-all duration-300">
+            <div class="absolute -top-4 -right-4 w-20 h-20 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+            <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center">
+                    <span class="material-symbols-outlined text-violet-500 text-[22px]">person_search</span>
+                </div>
+            </div>
+            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">GVHD</p>
+            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalSupervisors</p>
+        </div>
+    </div>
+
+    <!-- ===== ROW 2: PROJECT STATUS + MAJOR DISTRIBUTION ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <!-- Project Status Distribution (3/5) -->
+        <div class="lg:col-span-3 bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-500 text-lg">donut_small</span>
+                Trạng thái Đề tài
+            </h2>
+
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <!-- Donut Chart -->
+                <div class="relative w-48 h-48 shrink-0">
+                    @{
+                        // SVG donut chart calculations
+                        double circumference = 2 * Math.PI * 45;
+                        double draftArc = circumference * draftPct / 100;
+                        double activeArc = circumference * activePct / 100;
+                        double completedArc = circumference * completedPct / 100;
+                        double cancelledArc = circumference * cancelledPct / 100;
+                        double offset1 = 0;
+                        double offset2 = -draftArc;
+                        double offset3 = -(draftArc + activeArc);
+                        double offset4 = -(draftArc + activeArc + completedArc);
+                    }
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                        @if(draftPct > 0)
+                        {
+                            <circle cx="60" cy="60" r="45" fill="none" stroke="#94A3B8" stroke-width="14"
+                                    stroke-dasharray="@draftArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@offset1.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" class="transition-all duration-700"></circle>
+                        }
+                        @if(activePct > 0)
+                        {
+                            <circle cx="60" cy="60" r="45" fill="none" stroke="#F37021" stroke-width="14"
+                                    stroke-dasharray="@activeArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@offset2.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" class="transition-all duration-700"></circle>
+                        }
+                        @if(completedPct > 0)
+                        {
+                            <circle cx="60" cy="60" r="45" fill="none" stroke="#10B981" stroke-width="14"
+                                    stroke-dasharray="@completedArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@offset3.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" class="transition-all duration-700"></circle>
+                        }
+                        @if(cancelledPct > 0)
+                        {
+                            <circle cx="60" cy="60" r="45" fill="none" stroke="#EF4444" stroke-width="14"
+                                    stroke-dasharray="@cancelledArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-dashoffset="@offset4.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
+                                    stroke-linecap="round" class="transition-all duration-700"></circle>
+                        }
+                    </svg>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <p class="text-3xl font-black text-slate-900 dark:text-white">@Model.TotalProjects</p>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Supervisor Workload -->
-                <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
-                    <div class="p-6 border-b border-slate-200 dark:border-slate-800">
-                        <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Khối lượng công việc Giảng viên hướng dẫn</h2>
+                <!-- Legend -->
+                <div class="grid grid-cols-2 gap-x-8 gap-y-4 flex-1">
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-slate-400 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Draft</p>
+                            <p class="text-xs text-slate-400">@Model.DraftProjects đề tài (@draftPct%)</p>
+                        </div>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-sm">
-                            <thead class="bg-slate-50 dark:bg-slate-800">
-                                <tr>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">GIẢNG VIÊN</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">NHÓM HƯỚNG DẪN</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">DUNG HẠN (%)</th>
-                                    <th class="text-left py-3 px-6 font-semibold text-slate-700 dark:text-slate-300">ĐIỂM TB NHÓM</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">Vũ Minh Tuấn</td>
-                                    <td class="py-4 px-6 text-slate-600 dark:text-slate-400">8</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex-1" style="min-width: 60px;">
-                                                <div class="h-full bg-emerald-500 rounded-full" style="width: 96%;"></div>
-                                            </div>
-                                            <span class="text-xs font-medium text-slate-900 dark:text-white">96%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">8.4</td>
-                                </tr>
-                                <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">Phạm Ngọc Lân</td>
-                                    <td class="py-4 px-6 text-slate-600 dark:text-slate-400">6</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-2">
-                                            <div class="h-2 bg-slate-200 dark:bg-slate-700 rounded-full flex-1" style="min-width: 60px;">
-                                                <div class="h-full bg-emerald-500 rounded-full" style="width: 92%;"></div>
-                                            </div>
-                                            <span class="text-xs font-medium text-slate-900 dark:text-white">92%</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-slate-900 dark:text-white font-medium">7.9</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-[#F37021] shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Active</p>
+                            <p class="text-xs text-slate-400">@Model.ActiveProjects đề tài (@activePct%)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Completed</p>
+                            <p class="text-xs text-slate-400">@Model.CompletedProjects đề tài (@completedPct%)</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full bg-red-500 shrink-0"></div>
+                        <div>
+                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Cancelled</p>
+                            <p class="text-xs text-slate-400">@Model.CancelledProjects đề tài (@cancelledPct%)</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Major Distribution (2/5) -->
+        <div class="lg:col-span-2 bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-500 text-lg">domain</span>
+                Phân bố Chuyên ngành
+            </h2>
+
+            @if (Model.MajorDistribution.Any())
+            {
+                <div class="space-y-4">
+                    @{ var majorColors = new[] { "bg-primary-500", "bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500" }; var i = 0; }
+                    @foreach (var major in Model.MajorDistribution)
+                    {
+                        var pct = (int)Math.Round((double)major.ProjectCount / totalProjects * 100);
+                        var color = majorColors[i % majorColors.Length];
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-semibold text-slate-700 dark:text-white">@major.MajorName</span>
+                                <span class="text-xs font-bold text-slate-500">@major.ProjectCount đề tài · @pct%</span>
+                            </div>
+                            <div class="h-3 bg-slate-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                                <div class="h-full @color rounded-full transition-all duration-700" style="width: @pct%"></div>
+                            </div>
+                        </div>
+                        i++;
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
+                    <span class="material-symbols-outlined text-3xl mb-2">info</span>
+                    <p class="text-sm">Chưa có dữ liệu</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ===== ROW 3: SUBMISSION STATS + MENTOR DECISIONS ===== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Submission Stats per Round -->
+        <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-emerald-500 text-lg">upload_file</span>
+                Tình hình nộp bài theo vòng Review
+            </h2>
+
+            @if (Model.RoundSubmissionStats.Any())
+            {
+                <div class="space-y-5">
+                    @foreach (var round in Model.RoundSubmissionStats)
+                    {
+                        var total = round.OnTimeCount + round.LateCount + round.NotSubmittedCount;
+                        total = total > 0 ? total : 1;
+                        var onTimePct = (int)Math.Round((double)round.OnTimeCount / total * 100);
+                        var latePct = (int)Math.Round((double)round.LateCount / total * 100);
+                        var notSubPct = (int)Math.Round((double)round.NotSubmittedCount / total * 100);
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-slate-700 dark:text-white">Review @round.RoundNumber</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">@total bài</span>
+                            </div>
+                            <!-- Stacked bar -->
+                            <div class="flex h-4 rounded-full overflow-hidden bg-slate-100 dark:bg-dark-700 gap-px">
+                                @if (onTimePct > 0)
+                                {
+                                    <div class="bg-emerald-500 transition-all duration-500" style="width: @onTimePct%" title="Đúng hạn: @round.OnTimeCount"></div>
+                                }
+                                @if (latePct > 0)
+                                {
+                                    <div class="bg-amber-500 transition-all duration-500" style="width: @latePct%" title="Trễ hạn: @round.LateCount"></div>
+                                }
+                                @if (notSubPct > 0)
+                                {
+                                    <div class="bg-slate-300 dark:bg-dark-600 transition-all duration-500" style="width: @notSubPct%" title="Chưa nộp: @round.NotSubmittedCount"></div>
+                                }
+                            </div>
+                            <div class="flex items-center gap-4 mt-1.5">
+                                <span class="text-[10px] text-emerald-600 font-bold">✓ @round.OnTimeCount đúng hạn</span>
+                                <span class="text-[10px] text-amber-600 font-bold">⏱ @round.LateCount trễ</span>
+                                <span class="text-[10px] text-slate-400 font-bold">○ @round.NotSubmittedCount chưa nộp</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
+                    <span class="material-symbols-outlined text-3xl mb-2">event_busy</span>
+                    <p class="text-sm">Chưa có vòng review nào</p>
+                </div>
+            }
+        </div>
+
+        <!-- Mentor Decision Progress per Round -->
+        <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                <span class="material-symbols-outlined text-violet-500 text-lg">how_to_reg</span>
+                Quyết định GVHD (Mentor Gate)
+            </h2>
+
+            @if (Model.RoundMentorStats.Any())
+            {
+                <div class="space-y-5">
+                    @foreach (var round in Model.RoundMentorStats)
+                    {
+                        var totalDecisions = round.AcceptedCount + round.RejectedCount + round.PendingCount + round.StoppedCount;
+                        totalDecisions = totalDecisions > 0 ? totalDecisions : 1;
+
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-bold text-slate-700 dark:text-white">Review @round.RoundNumber</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">@totalDecisions nhóm</span>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2">
+                                <div class="text-center bg-emerald-50 dark:bg-emerald-500/10 rounded-xl py-2.5 px-1">
+                                    <p class="text-lg font-black text-emerald-600">@round.AcceptedCount</p>
+                                    <p class="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Accepted</p>
+                                </div>
+                                <div class="text-center bg-red-50 dark:bg-red-500/10 rounded-xl py-2.5 px-1">
+                                    <p class="text-lg font-black text-red-600">@round.RejectedCount</p>
+                                    <p class="text-[9px] font-bold text-red-500 uppercase tracking-wider">Rejected</p>
+                                </div>
+                                <div class="text-center bg-amber-50 dark:bg-amber-500/10 rounded-xl py-2.5 px-1">
+                                    <p class="text-lg font-black text-amber-600">@round.PendingCount</p>
+                                    <p class="text-[9px] font-bold text-amber-500 uppercase tracking-wider">Pending</p>
+                                </div>
+                                <div class="text-center bg-slate-50 dark:bg-dark-700 rounded-xl py-2.5 px-1">
+                                    <p class="text-lg font-black text-slate-500">@round.StoppedCount</p>
+                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Stopped</p>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
+                    <span class="material-symbols-outlined text-3xl mb-2">pending_actions</span>
+                    <p class="text-sm">Chưa có dữ liệu đánh giá</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ===== ROW 4: SUPERVISOR WORKLOAD TABLE ===== -->
+    <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 dark:border-dark-700 flex items-center justify-between">
+            <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary-500 text-lg">supervisor_account</span>
+                Khối lượng Giảng viên Hướng dẫn
+            </h2>
+            <span class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 dark:bg-dark-700 rounded-full">@Model.AllSupervisorWorkloads.Count GVHD</span>
+        </div>
+
+        @if (Model.AllSupervisorWorkloads.Any())
+        {
+            var maxProjects = Model.AllSupervisorWorkloads.Max(s => s.ProjectCount);
+            maxProjects = maxProjects > 0 ? maxProjects : 1;
+
+            <!-- Screen View (Paginated) -->
+            <div class="print:hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50/80 dark:bg-dark-700/50">
+                            <tr>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
+                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Đề tài</th>
+                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinh viên</th>
+                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tải trọng</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
+                            @{ var sIdx = (Model.SupervisorWorkloads.PageIndex - 1) * Model.SupervisorWorkloads.PageSize; }
+                            @foreach (var sup in Model.SupervisorWorkloads)
+                            {
+                                sIdx++;
+                                var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
+                                var barColor = loadPct >= 80 ? "bg-red-500" : loadPct >= 50 ? "bg-amber-500" : "bg-emerald-500";
+
+                                <tr class="hover:bg-slate-50/80 dark:hover:bg-dark-700/30 transition-colors">
+                                    <td class="py-4 px-6 text-xs font-bold text-slate-300">@sIdx</td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
+                                                @sup.LecturerName.Substring(0, 1).ToUpper()
+                                            </div>
+                                            <span class="font-semibold text-slate-700 dark:text-white">@sup.LecturerName</span>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 font-bold text-sm">@sup.ProjectCount</span>
+                                    </td>
+                                    <td class="py-4 px-6 text-center">
+                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 font-bold text-sm">@sup.StudentCount</span>
+                                    </td>
+                                    <td class="py-4 px-6">
+                                        <div class="flex items-center gap-3">
+                                            <div class="h-2 bg-slate-100 dark:bg-dark-700 rounded-full flex-1" style="min-width: 80px;">
+                                                <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @loadPct%"></div>
+                                            </div>
+                                            <span class="text-xs font-bold text-slate-500 w-8 text-right">@loadPct%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="print:hidden">
+                    @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
+                </div>
+            </div>
+
+            <!-- Print View (Full Content) -->
+            <div class="hidden print:block">
+                <table class="w-full text-xs">
+                    <thead>
+                        <tr class="border-b border-slate-200">
+                            <th class="text-left py-2 px-4 font-black uppercase">#</th>
+                            <th class="text-left py-2 px-4 font-black uppercase">Giảng viên</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Đề tài</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Sinh viên</th>
+                            <th class="text-center py-2 px-4 font-black uppercase">Tải trọng (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @{ var pIdx = 0; }
+                        @foreach (var sup in Model.AllSupervisorWorkloads)
+                        {
+                            pIdx++;
+                            var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
+                            <tr>
+                                <td class="py-2 px-4 text-slate-400">@pIdx</td>
+                                <td class="py-2 px-4 font-semibold">@sup.LecturerName</td>
+                                <td class="py-2 px-4 text-center">@sup.ProjectCount</td>
+                                <td class="py-2 px-4 text-center">@sup.StudentCount</td>
+                                <td class="py-2 px-4 text-center font-bold">@loadPct%</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <span class="material-symbols-outlined text-4xl mb-3">person_off</span>
+                <p class="text-sm font-medium">Chưa có giảng viên nào được phân công</p>
+            </div>
+        }
     </div>
 </div>

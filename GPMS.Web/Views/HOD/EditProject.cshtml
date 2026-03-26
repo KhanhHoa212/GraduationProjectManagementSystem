@@ -1,4 +1,4 @@
-﻿@model GPMS.Application.DTOs.ProjectDetailDto
+@model GPMS.Application.DTOs.ProjectDetailDto
 @using GPMS.Domain.Enums
 @{
     ViewData["Title"] = "Project Details";
@@ -111,17 +111,37 @@
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Academic Semester</label>
                                 @if (isNew)
                                 {
-                                    <select name="SemesterID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
-                                        @foreach (var s in semesterList)
-                                        {
-                                            <option value="@s.SemesterID">@s.SemesterCode — @s.AcademicYear</option>
-                                        }
-                                    </select>
+                                    var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
+                                    if (activeSemester != null)
+                                    {
+                                        <input type="hidden" name="SemesterID" value="@activeSemester.SemesterID" />
+                                        <div class="relative">
+                                            <input type="text" value="@activeSemester.SemesterCode — @activeSemester.AcademicYear" readonly
+                                                   class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-500 font-semibold cursor-not-allowed" />
+                                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                                <i class="ri-lock-2-line text-xs"></i>
+                                            </span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <select name="SemesterID" class="w-full border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all">
+                                            @foreach (var s in semesterList)
+                                            {
+                                                <option value="@s.SemesterID">@s.SemesterCode — @s.AcademicYear</option>
+                                            }
+                                        </select>
+                                    }
                                 }
                                 else
                                 {
-                                    <input type="text" value="@(Model?.SemesterCode ?? "—")" disabled
-                                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-400 font-semibold cursor-not-allowed" />
+                                    <div class="relative">
+                                        <input type="text" value="@(Model?.SemesterCode ?? "—") — @(Model?.AcademicYear ?? "")" readonly
+                                               class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-500 font-semibold cursor-not-allowed" />
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                                            <i class="ri-lock-2-line text-xs"></i>
+                                        </span>
+                                    </div>
                                 }
                             </div>
                             <div>
@@ -252,8 +272,6 @@
                 {
                     @* EDIT MODE: fully interactive *@
 
-                    @* Toast notification *@
-                    <div id="memberToast" class="hidden mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"></div>
 
                     @* Search + Add row *@
                     <div class="px-6 py-4 bg-slate-50/70 border-b border-slate-100">
@@ -438,16 +456,6 @@
         let searchTimeout = null;
         let currentMemberCount = @memberCount;
 
-        // ── Toast ──────────────────────────────────────────
-        function showToast(message, isSuccess) {
-            const toast = document.getElementById('memberToast');
-            toast.className = `mx-6 mt-4 px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                isSuccess ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-red-50 text-red-600 border border-red-200'}`;
-            toast.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isSuccess ? 'check_circle' : 'error'}</span>${message}`;
-            toast.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            setTimeout(() => { toast.className = 'hidden'; }, 4000);
-        }
 
         function updateMemberCount(delta) {
             currentMemberCount += delta;
@@ -506,7 +514,7 @@
         // ── Add Member ──────────────────────────────────────
         document.getElementById('addMemberBtn').addEventListener('click', async () => {
             if (!selectedStudent) {
-                showToast('Please select a student from the search results first.', false);
+                showToast('Please select a student from the search results first.', 'warning');
                 searchInput.focus();
                 return;
             }
@@ -527,9 +535,9 @@
                 appendMemberRow(selectedStudent);
                 searchInput.value = '';
                 selectedStudent = null;
-                showToast(data.message, true);
+                showToast(data.message, 'success');
             } else {
-                showToast(data.message, false);
+                showToast(data.message, 'error');
             }
         });
 
@@ -587,9 +595,9 @@
                     document.getElementById('memberTableBody').innerHTML =
                         '<tr id="emptyRow"><td colspan="4" class="py-10 text-center text-sm text-slate-400">No members assigned yet.</td></tr>';
                 }
-                showToast('Member removed.', true);
+                showToast('Member removed.', 'success');
             } else {
-                showToast('Failed to remove member.', false);
+                showToast('Failed to remove member.', 'error');
             }
         }
 
@@ -608,10 +616,10 @@
                 const isLeader = newRole === 'Leader';
                 selectEl.className = `text-[11px] font-bold border rounded-full px-2.5 py-0.5 cursor-pointer focus:outline-none transition-all ${
                     isLeader ? 'bg-primary/10 text-primary border-primary/20' : 'bg-blue-50 text-blue-600 border-blue-100'}`;
-                showToast(`Role updated to ${newRole}.`, true);
+                showToast(`Role updated to ${newRole}.`, 'success');
             } else {
                 selectEl.value = prevValue;
-                showToast(data.message, false);
+                showToast(data.message, 'error');
             }
         }
     </script>

@@ -17,55 +17,58 @@ public class ReviewRoundSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
-        if (activeSemester == null) return;
+        var semesters = await _context.Semesters.Where(s => s.SemesterID >= 5).ToListAsync();
+        if (!semesters.Any()) return;
 
-        int semesterId = activeSemester.SemesterID;
-        int year = activeSemester.StartDate.Year;
-
-        var rounds = await _context.ReviewRounds.Where(r => r.SemesterID == semesterId).ToListAsync();
-        if (!rounds.Any())
+        foreach (var sem in semesters)
         {
-            rounds = new List<ReviewRound>
+            int semesterId = sem.SemesterID;
+            int year = sem.StartDate.Year;
+            int month = sem.StartDate.Month;
+
+            var rounds = await _context.ReviewRounds.Where(r => r.SemesterID == semesterId).ToListAsync();
+            if (!rounds.Any())
             {
-                new ReviewRound
+                rounds = new List<ReviewRound>
                 {
-                    SemesterID = semesterId,
-                    RoundNumber = 1,
-                    RoundType = RoundType.Online,
-                    Status = RoundStatus.Completed,
-                    StartDate = new DateTime(year, 1, 15),
-                    EndDate = new DateTime(year, 2, 15),
-                    SubmissionDeadline = new DateTime(year, 2, 10)
-                },
-                new ReviewRound
-                {
-                    SemesterID = semesterId,
-                    RoundNumber = 2,
-                    RoundType = RoundType.Offline,
-                    Status = RoundStatus.Ongoing,
-                    StartDate = new DateTime(year, 2, 20),
-                    EndDate = new DateTime(year, 3, 20),
-                    SubmissionDeadline = new DateTime(year, 3, 15)
-                },
-                new ReviewRound
-                {
-                    SemesterID = semesterId,
-                    RoundNumber = 3,
-                    RoundType = RoundType.Offline,
-                    Status = RoundStatus.Planned,
-                    StartDate = new DateTime(year, 4, 1),
-                    EndDate = new DateTime(year, 4, 20),
-                    SubmissionDeadline = new DateTime(year, 4, 15)
-                }
-            };
+                    new ReviewRound
+                    {
+                        SemesterID = semesterId,
+                        RoundNumber = 1,
+                        RoundType = RoundType.Online,
+                        Status = sem.Status == SemesterStatus.Closed ? RoundStatus.Completed : RoundStatus.Completed,
+                        StartDate = new DateTime(year, month, 15),
+                        EndDate = new DateTime(year, month, 28),
+                        SubmissionDeadline = new DateTime(year, month, 25)
+                    },
+                    new ReviewRound
+                    {
+                        SemesterID = semesterId,
+                        RoundNumber = 2,
+                        RoundType = RoundType.Offline,
+                        Status = sem.Status == SemesterStatus.Closed ? RoundStatus.Completed : RoundStatus.Ongoing,
+                        StartDate = new DateTime(year, month + 1, 5),
+                        EndDate = new DateTime(year, month + 1, 20),
+                        SubmissionDeadline = new DateTime(year, month + 1, 15)
+                    },
+                    new ReviewRound
+                    {
+                        SemesterID = semesterId,
+                        RoundNumber = 3,
+                        RoundType = RoundType.Offline,
+                        Status = sem.Status == SemesterStatus.Closed ? RoundStatus.Completed : RoundStatus.Planned,
+                        StartDate = new DateTime(year, month + 2, 1),
+                        EndDate = new DateTime(year, month + 2, 20),
+                        SubmissionDeadline = new DateTime(year, month + 2, 15)
+                    }
+                };
 
-            _context.ReviewRounds.AddRange(rounds);
-            await _context.SaveChangesAsync();
-        }
+                _context.ReviewRounds.AddRange(rounds);
+                await _context.SaveChangesAsync();
+            }
 
-        foreach (var round in rounds)
-        {
+            foreach (var round in rounds)
+            {
             // Checklist
             var checklist = await _context.ReviewChecklists
                 .Include(c => c.ChecklistItems)
@@ -277,8 +280,11 @@ public class ReviewRoundSeeder : IDataSeeder
                     }
                 });
             }
-        }
+        } // end foreach round
+        } // end foreach semester
 
         await _context.SaveChangesAsync();
     }
 }
+
+

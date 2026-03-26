@@ -12,11 +12,13 @@ namespace GPMS.Application.Services;
 public class ReviewRoundService : IReviewRoundService
 {
     private readonly IReviewRoundRepository _repository;
+    private readonly ISemesterRepository _semesterRepository;
     private readonly IMapper _mapper;
 
-    public ReviewRoundService(IReviewRoundRepository repository, IMapper mapper)
+    public ReviewRoundService(IReviewRoundRepository repository, ISemesterRepository semesterRepository, IMapper mapper)
     {
         _repository = repository;
+        _semesterRepository = semesterRepository;
         _mapper = mapper;
     }
 
@@ -28,8 +30,8 @@ public class ReviewRoundService : IReviewRoundService
         bool anyChanged = false;
         foreach (var r in rounds)
         {
-            var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                                 r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+            var expectedStatus = r.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                                 r.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                                  GPMS.Domain.Enums.RoundStatus.Ongoing;
             if (r.Status != expectedStatus)
             {
@@ -50,8 +52,8 @@ public class ReviewRoundService : IReviewRoundService
         if (r == null) return null;
 
         var now = System.DateTime.Now;
-        var expectedStatus = r.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                             r.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        var expectedStatus = r.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                             r.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                              GPMS.Domain.Enums.RoundStatus.Ongoing;
         if (r.Status != expectedStatus)
         {
@@ -65,11 +67,17 @@ public class ReviewRoundService : IReviewRoundService
 
     public async Task CreateReviewRoundAsync(CreateReviewRoundDto dto)
     {
+        var existingRounds = await _repository.GetBySemesterAsync(dto.SemesterID);
+        if (existingRounds.Count() >= 3)
+        {
+            throw new System.InvalidOperationException("Mỗi học kỳ chỉ được phép có tối đa 3 vòng review.");
+        }
+
         var entity = _mapper.Map<ReviewRound>(dto);
         
         var now = System.DateTime.Now;
-        entity.Status = entity.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                        entity.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        entity.Status = entity.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                        entity.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                         GPMS.Domain.Enums.RoundStatus.Ongoing;
 
         if (dto.SubmissionRequirements != null && dto.SubmissionRequirements.Any())
@@ -99,8 +107,8 @@ public class ReviewRoundService : IReviewRoundService
         _mapper.Map(dto, existing);
 
         var now = System.DateTime.Now;
-        existing.Status = existing.StartDate > now ? GPMS.Domain.Enums.RoundStatus.Planned : 
-                          existing.EndDate < now ? GPMS.Domain.Enums.RoundStatus.Completed : 
+        existing.Status = existing.StartDate.Date > now.Date ? GPMS.Domain.Enums.RoundStatus.Planned : 
+                          existing.EndDate.Date < now.Date ? GPMS.Domain.Enums.RoundStatus.Completed : 
                           GPMS.Domain.Enums.RoundStatus.Ongoing;
 
         // Sync requirements explicitly
@@ -152,10 +160,44 @@ public class ReviewRoundService : IReviewRoundService
 
     public async Task DeleteReviewRoundAsync(int id)
     {
-        var existing = await _repository.GetByIdAsync(id);
-        if (existing == null) throw new KeyNotFoundException("Review round not found.");
+        throw new System.InvalidOperationException("Không thể xóa các vòng review mặc định của học kỳ.");
+    }
 
-        _repository.Delete(existing);
+    public async Task<bool> InitializeDefaultRoundsAsync(int semesterId)
+    {
+        var existingRounds = await _repository.GetBySemesterAsync(semesterId);
+        if (existingRounds.Any()) return false;
+
+        var semester = await _semesterRepository.GetByIdAsync(semesterId);
+        if (semester == null) return false;
+
+        var now = System.DateTime.Now;
+        var semesterStart = semester.StartDate;
+        
+        // Define 3 rounds with 4-week intervals (default)
+        for (int i = 1; i <= 3; i++)
+        {
+            var roundStart = semesterStart.AddDays((i - 1) * 28); // Every 4 weeks
+            var roundEnd = roundStart.AddDays(27).AddHours(23).AddMinutes(59);
+            
+            var round = new ReviewRound
+            {
+                SemesterID = semesterId,
+                RoundNumber = i,
+                RoundType = i == 3 ? Domain.Enums.RoundType.Offline : Domain.Enums.RoundType.Online, // Final round usually Presentation
+                StartDate = roundStart,
+                EndDate = roundEnd,
+                SubmissionDeadline = roundEnd.AddHours(-2), // 2 hours before round end
+                Description = $"Vòng Review {i} cho học kỳ {semester.SemesterCode}",
+                Status = roundStart.Date > now.Date ? Domain.Enums.RoundStatus.Planned : 
+                         roundEnd.Date < now.Date ? Domain.Enums.RoundStatus.Completed : 
+                         Domain.Enums.RoundStatus.Ongoing
+            };
+
+            await _repository.AddAsync(round);
+        }
+
         await _repository.SaveChangesAsync();
+        return true;
     }
 }

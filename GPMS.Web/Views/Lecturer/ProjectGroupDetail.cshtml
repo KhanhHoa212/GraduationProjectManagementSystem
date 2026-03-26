@@ -1,4 +1,4 @@
-﻿@using System
+@using System
 @using System.Linq
 @using GPMS.Domain.Enums
 @using GPMS.Web.ViewModels.Lecturer
@@ -283,7 +283,7 @@
                                     <div class="flex flex-wrap gap-3">
                                         @if (!string.IsNullOrWhiteSpace(activeMilestone.SubmissionUrl))
                                         {
-                                            <a href="@activeMilestone.SubmissionUrl" target="_blank" class="inline-flex items-center gap-1.5 text-sm font-bold text-primary-500 hover:text-primary-600 transition-colors">
+                                            <a asp-action="DownloadSubmission" asp-route-id="@activeMilestone.SubmissionId" class="no-spinner inline-flex items-center gap-1.5 text-sm font-bold text-primary-500 hover:text-primary-600 transition-colors">
                                                 <span class="material-symbols-outlined text-[18px]">download</span>
                                                 Download
                                             </a>

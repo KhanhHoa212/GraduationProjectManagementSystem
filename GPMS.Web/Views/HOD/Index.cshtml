@@ -1,21 +1,20 @@
-﻿@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
 @{
-    ViewBag.Title = "Dashboard";
+    ViewBag.Title = "HOD Dashboard";
     ViewBag.CurrentPage = "Dashboard";
     ViewBag.BreadcrumbSection = "Dashboard";
     Layout = "_Layout";
 
     int totalProjects = ViewBag.TotalProjects ?? 0;
     int missingSup = ViewBag.MissingSupervisor ?? 0;
-    // int missingMem = ViewBag.MissingMembers ?? 0;
-    int unassigned = missingSup; // Just mapping to pending assignments
+    int unassigned = missingSup;
 
     int draftCt = ViewBag.DraftCount ?? 0;
     int activeCt = ViewBag.ActiveCount ?? 0;
     int compCt = ViewBag.CompletedCount ?? 0;
     int totalCt = (ViewBag.TotalProjects ?? 0) == 0 ? 1 : (int)ViewBag.TotalProjects;
 
-    double circ = 534;
+    double circ = 565.48; // 2 * pi * r (r=90)
     double compLen = (double)compCt / totalCt * circ;
     double activeLen = (double)activeCt / totalCt * circ;
     double draftLen = (double)draftCt / totalCt * circ;
@@ -23,299 +22,412 @@
     double compOffset = 0;
     double activeOffset = -compLen;
     double draftOffset = -(compLen + activeLen);
+    
+    var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
 }
 
-<!-- Dashboard Constraints & Typography -->
 <style>
-    .saas-card {
-        background: #FFFFFF;
-        border-radius: 12px;
-        padding: 24px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        border: 1px solid #E2E8F0;
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
     }
     
-    .saas-stat-number {
-        font-size: 2.25rem;
-        line-height: 2.5rem;
-        font-weight: 700;
-        color: #0F172A;
-        letter-spacing: -0.025em;
+    .stat-card-glow-blue { box-shadow: 0 0 20px rgba(37, 99, 235, 0.1); }
+    .stat-card-glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
+    .stat-card-glow-amber { box-shadow: 0 0 20px rgba(245, 158, 11, 0.1); }
+    .stat-card-glow-rose { box-shadow: 0 0 20px rgba(244, 63, 94, 0.1); }
+
+    .donut-segment {
+        transition: stroke-dashoffset 1s ease-in-out, stroke-width 0.3s ease;
+        cursor: pointer;
+    }
+    .donut-segment:hover {
+        stroke-width: 24;
     }
 
-    .saas-text-muted { color: #64748B; }
-    .saas-text-neutral { color: #334155; }
-    .saas-text-heading { color: #0F172A; }
-    
-    .saas-bg-muted { background: #F8FAFC; }
+    /* Animation for timeline dots */
+    @@keyframes pulse-subtle {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    .animate-pulse-subtle {
+        animation: pulse-subtle 2s infinite ease-in-out;
+    }
 </style>
 
-<!-- Dashboard Content -->
-<div class="space-y-6">
+<div class="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
     
-    <!-- Row 1: Statistics Cards -->
+    <!-- Top Header Section with Semester Info -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight dark:text-white">HOD Insights</h1>
+            <p class="text-slate-600 font-medium mt-1 dark:text-slate-400">Welcome back! Here's what's happening in <span class="text-primary-600 font-bold">@(activeSemester?.SemesterCode ?? "Current Semester")</span>.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="px-4 py-2 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-slate-200 dark:border-dark-700 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-300">System Active</span>
+            </div>
+            <button class="p-2.5 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-slate-200 dark:border-dark-700 hover:bg-slate-50 dark:hover:bg-dark-700 transition-all text-slate-600 dark:text-slate-400">
+                <i class="ri-refresh-line text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Card 1: Total Projects -->
-        <div class="saas-card flex flex-col justify-between">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Total Projects</span>
-                <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                    <span class="material-symbols-outlined text-[20px]">folder_copy</span>
+        <!-- Total Projects -->
+        <div class="glass-card stat-card-glow-blue p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            @{
+                int assignedCount = totalProjects - unassigned;
+                double assignmentRate = totalProjects > 0 ? (double)assignedCount / totalProjects * 100 : 0;
+            }
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-folder-zip-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Total Projects</span>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">@totalProjects</h3>
                 </div>
             </div>
-            <div>
-                <div class="saas-stat-number">@totalProjects</div>
-                <div class="flex items-center gap-1.5 mt-2">
-                    <span class="flex items-center text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-xs font-semibold">
-                        <span class="material-symbols-outlined text-[14px]">trending_up</span>
-                        Active
-                    </span>
-                    <span class="text-xs font-medium saas-text-muted">this semester</span>
+            <div class="mt-5 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
+                    <span class="text-slate-500">Assignment Rate</span>
+                    <span class="text-blue-600">@Math.Round(assignmentRate)%</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Card 2: Current Review Round -->
-        <div class="saas-card flex flex-col justify-between">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Current Phase</span>
-                <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
-                    <span class="material-symbols-outlined text-[20px]">update</span>
-                </div>
-            </div>
-            <div>
-                <div class="saas-stat-number text-emerald-600">Round 1</div>
-                <div class="flex items-center gap-1.5 mt-2">
-                    <span class="flex items-center text-emerald-700 font-medium text-xs">
-                        <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-                        Ongoing Phase
-                    </span>
+                <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500 rounded-full transition-all duration-1000" style="width: @(assignmentRate.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Card 3: Pending Assignment -->
-        <div class="saas-card flex flex-col justify-between">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Pending Assignment</span>
-                <div class="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-500">
-                    <span class="material-symbols-outlined text-[20px]">person_add</span>
+        <!-- Current Stage -->
+        <div class="glass-card stat-card-glow-emerald p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            @{
+                var rounds = (ViewBag.ReviewRounds as IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>)?.OrderBy(r => r.RoundNumber).ToList();
+                var ongoingRound = rounds?.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                var nextRound = ongoingRound == null ? rounds?.OrderBy(r => r.StartDate).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Planned) : null;
+                var phaseName = ongoingRound != null ? (ongoingRound.RoundNumber == 0 ? "Final Defense" : $"Round {ongoingRound.RoundNumber}") : (nextRound != null ? $"Upcoming: R{nextRound.RoundNumber}" : "Planning");
+                var phaseStatus = ongoingRound != null ? "Active" : (nextRound != null ? "Scheduled" : "Wait");
+            }
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-xl text-primary-600 dark:text-primary-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-pulse-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Current Stage</span>
+                    <h3 class="text-3xl font-bold text-primary-600 dark:text-primary-400 mt-1 whitespace-nowrap">@phaseName</h3>
                 </div>
             </div>
-            <div>
-                <div class="saas-stat-number">@unassigned</div>
-                <div class="flex items-center gap-1.5 mt-2">
-                    <span class="flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-xs font-semibold">
-                        <span class="material-symbols-outlined text-[14px]">warning</span>
-                        Attention Needed
-                    </span>
-                </div>
+            <div class="mt-5 flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-primary-500 @(ongoingRound != null ? "animate-pulse" : "")"></div>
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-400">@phaseStatus Stage</span>
             </div>
         </div>
 
-        <!-- Card 4: Upcoming Deadlines -->
-        <div class="saas-card flex flex-col justify-between border-l-4 border-l-red-500">
-            <div class="flex justify-between items-start mb-4">
-                <span class="text-sm font-semibold saas-text-muted uppercase tracking-wider">Deadlines (7 Days)</span>
-                <div class="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center text-red-500">
-                    <span class="material-symbols-outlined text-[20px]">event_busy</span>
+        <!-- Unassigned -->
+        <div class="glass-card stat-card-glow-amber p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-user-follow-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Unassigned Sup.</span>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">@unassigned</h3>
                 </div>
             </div>
-            <div>
-                <div class="saas-stat-number text-red-600">3</div>
-                <div class="flex items-center gap-1.5 mt-2">
-                    <span class="flex items-center text-red-600 font-medium text-xs">
-                        <span class="material-symbols-outlined text-[16px] mr-1">timer</span>
-                        Approaching rapidly
-                    </span>
+            <div class="mt-5">
+                <a href="/HOD/AssignSupervisor" class="text-xs font-bold text-amber-600 hover:text-amber-700 underline underline-offset-4 decoration-2 decoration-amber-100 hover:decoration-amber-400 transition-all uppercase tracking-tight">Assign Now <i class="ri-arrow-right-line"></i></a>
+            </div>
+        </div>
+
+        <!-- Deadlines -->
+        <div class="glass-card stat-card-glow-rose p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-rose-50 dark:bg-rose-900/20 rounded-xl text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-calendar-check-line text-2xl"></i>
                 </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Critical Deadlines</span>
+                    <h3 class="text-3xl font-bold text-rose-600 dark:text-rose-400 mt-1">3</h3>
+                </div>
+            </div>
+            <div class="mt-5 flex items-center gap-2">
+                <span class="flex items-center text-rose-600 text-xs font-semibold">
+                    <i class="ri-error-warning-line mr-1 text-[14px]"></i> Within 7 days
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- Row 2: Analytics Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Left: Donut Chart -->
-        <div class="saas-card flex flex-col">
-            <h3 class="text-lg font-bold saas-text-heading mb-6">Project Status</h3>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Project Status Chart -->
+        <div class="lg:col-span-4 glass-card p-8 rounded-3xl flex flex-col">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Project Status</h3>
+                <div class="size-8 rounded-full bg-slate-50 dark:bg-dark-700 flex items-center justify-center text-slate-400">
+                    <i class="ri-pie-chart-2-line"></i>
+                </div>
+            </div>
             
-            <div class="flex-1 flex flex-col items-center justify-center mb-6 relative">
-                <svg viewBox="0 0 200 200" class="w-52 h-52">
-                    <!-- Donut Background -->
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="#F1F5F9" stroke-width="25"></circle>
-
-                    <!-- Completed (#10B981) -->
-                    <circle cx="100" cy="100" r="85" fill="none" class="stroke-emerald-500" stroke-width="25" 
-                            stroke-dasharray="@compLen 534" stroke-dashoffset="@compOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+            <div class="flex-1 flex flex-col items-center justify-center relative py-6">
+                <!-- SVG Donut -->
+                <svg viewBox="0 0 220 220" class="w-56 h-56 drop-shadow-xl">
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-slate-50 dark:stroke-dark-700" stroke-width="16"></circle>
+                    
+                    <!-- Completed -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-emerald-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@compLen 565.48" stroke-dashoffset="@compOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
                             
-                    <!-- Active (#2563EB) -->
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="#2563EB" stroke-width="25" 
-                            stroke-dasharray="@activeLen 534" stroke-dashoffset="@activeOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+                    <!-- Active -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-primary-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@activeLen 565.48" stroke-dashoffset="@activeOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
                             
-                    <!-- Draft (#F59E0B) -->
-                    <circle cx="100" cy="100" r="85" fill="none" stroke="#F59E0B" stroke-width="25" 
-                            stroke-dasharray="@draftLen 534" stroke-dashoffset="@draftOffset" transform="rotate(-90 100 100)" stroke-linecap="butt"></circle>
+                    <!-- Draft -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-amber-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@draftLen 565.48" stroke-dashoffset="@draftOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
                 </svg>
                 
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-3xl font-bold saas-text-heading">@(ViewBag.TotalProjects ?? 0)</span>
-                    <span class="text-xs font-semibold saas-text-muted uppercase tracking-wider">Total</span>
+                <div class="absolute inset-0 flex flex-col items-center justify-center pt-2">
+                    <span class="text-5xl font-bold text-slate-900 dark:text-white tracking-tighter">@totalProjects</span>
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Total Units</span>
                 </div>
             </div>
 
-            <div class="space-y-3">
-                <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-amber-500 ring-2 ring-amber-500/20"></div>
-                        <span class="font-medium saas-text-neutral">Draft</span>
+            <div class="grid grid-cols-1 gap-4 mt-8 pt-8 border-t border-slate-100 dark:border-dark-700">
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-amber-500 shadow-sm shadow-amber-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Draft Projects</span>
                     </div>
-                    <span class="font-bold saas-text-heading">@draftCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)draftCt / totalCt * 100)%)</span></span>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@draftCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)draftCt / totalCt * 100)%</span>
+                    </div>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full" style="background-color: #2563EB; box-shadow: 0 0 0 2px rgba(37,99,235,0.2);"></div>
-                        <span class="font-medium saas-text-neutral">Active</span>
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-primary-500 shadow-sm shadow-primary-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Active Stage</span>
                     </div>
-                    <span class="font-bold saas-text-heading">@activeCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)activeCt / totalCt * 100)%)</span></span>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@activeCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)activeCt / totalCt * 100)%</span>
+                    </div>
                 </div>
-                <div class="flex items-center justify-between text-sm">
-                    <div class="flex items-center gap-2">
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20"></div>
-                        <span class="font-medium saas-text-neutral">Completed</span>
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Finalized</span>
                     </div>
-                    <span class="font-bold saas-text-heading">@compCt <span class="text-xs text-slate-400 font-normal ml-1">(@Math.Round((double)compCt / totalCt * 100)%)</span></span>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@compCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)compCt / totalCt * 100)%</span>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right: Semester Timeline Progress -->
-        <div class="saas-card lg:col-span-2 flex flex-col">
-            <h3 class="text-lg font-bold saas-text-heading mb-8">Semester Timeline Progress</h3>
-            
-            <div class="flex-1 px-2 pt-4">
-                <!-- Horizontal Stepper -->
-                <div class="relative flex justify-between w-full max-w-2xl mx-auto mb-16">
-                    <!-- Connecting line -->
-                    <div class="absolute top-1/2 left-0 right-0 h-1 bg-slate-200 -translate-y-1/2 rounded-full z-0"></div>
-                    <!-- Filled line -->
-                    <div class="absolute top-1/2 left-0 h-1 bg-blue-600 -translate-y-1/2 rounded-full z-0" style="width: 25%;"></div>
-
-                    <!-- Step 1 (Ongoing) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-blue-600 border-4 border-white flex items-center justify-center shadow-md">
-                            <span class="material-symbols-outlined text-white text-[20px] font-bold">check</span>
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-bold saas-text-heading text-sm">Round 1</div>
-                            <div class="text-[10px] uppercase font-bold text-blue-600 tracking-wider mt-1">Ongoing</div>
-                        </div>
+        <!-- Semester Journey (Vertical Stepper) -->
+        <div class="lg:col-span-8 glass-card p-0 rounded-3xl flex flex-col overflow-hidden relative border border-slate-200/50 dark:border-dark-700">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 bg-white/50 dark:bg-dark-800/50 flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="size-9 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600">
+                        <i class="ri-direction-line text-lg"></i>
                     </div>
-
-                    <!-- Step 2 (Planned) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-slate-400 font-bold">
-                            2
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-semibold saas-text-neutral text-sm">Round 2</div>
-                            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Planned</div>
-                        </div>
-                    </div>
-
-                    <!-- Step 3 (Defense) -->
-                    <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 rounded-full bg-white border-2 border-slate-300 flex items-center justify-center text-slate-400 font-bold">
-                            3
-                        </div>
-                        <div class="absolute top-14 text-center w-32">
-                            <div class="font-semibold saas-text-neutral text-sm">Defense</div>
-                            <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mt-1">Planned</div>
-                        </div>
-                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Semester Journey</h3>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-dark-700 text-slate-500 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    <i class="ri-calendar-line"></i> Progression Map
                 </div>
             </div>
 
-            <!-- Focus panels -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-auto">
-                <div class="saas-bg-muted rounded-xl p-5 border border-slate-200/60">
-                    <div class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2">Current Focus</div>
-                    <div class="text-sm font-bold saas-text-heading">Proposal Submissions & Initial Reviews</div>
-                </div>
-                <div class="bg-orange-50/50 rounded-xl p-5 border border-orange-100">
-                    <div class="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">Upcoming Deadline</div>
-                    <div class="text-sm font-bold saas-text-heading">Final Review Assignment - 20 Oct</div>
+            <div class="p-8 relative z-10">
+                <div class="relative pl-4 space-y-8">
+                    @if (rounds != null && rounds.Any())
+                    {
+                        <!-- Vertical Connector Line -->
+                        <div class="absolute left-[23px] top-2 bottom-8 w-0.5 bg-slate-100 dark:bg-dark-700 z-0">
+                            @{
+                                var completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
+                                var ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                                var lineProgressHeight = ongoingIndex != -1 ? ongoingIndex : completedCount;
+                                var stepHeight = 100.0 / (rounds.Count > 1 ? rounds.Count - 1 : 1);
+                                var linePercentage = Math.Min(100, lineProgressHeight * stepHeight);
+                            }
+                            <div class="absolute top-0 left-0 w-full bg-primary-500 transition-all duration-1000" style="height: @(linePercentage.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                        </div>
+
+                        for (int i = 0; i < rounds.Count; i++)
+                        {
+                            var r = rounds[i];
+                            var isCompleted = r.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                            var isOngoing = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                            
+                            var nodeBase = "size-5 rounded-full z-10 relative mt-1.5 transition-all duration-500 border-2";
+                            var nodeStyle = isCompleted ? "bg-primary-500 border-primary-500 shadow-sm" 
+                                          : (isOngoing ? "bg-white dark:bg-dark-900 border-primary-500 ring-4 ring-primary-50 dark:ring-primary-900/20" 
+                                          : "bg-white dark:bg-dark-800 border-slate-200 dark:border-dark-700");
+                            
+                            var rowBg = isOngoing ? "bg-primary-50/30 dark:bg-primary-900/10 border-primary-100 dark:border-primary-900/20" : "bg-transparent border-transparent";
+
+                            <div class="relative flex gap-8 group">
+                                <!-- Node -->
+                                <div class="flex flex-col items-center">
+                                    <div class="@nodeBase @nodeStyle flex items-center justify-center">
+                                        @if (isCompleted) {
+                                            <i class="ri-check-line text-[10px] text-white"></i>
+                                        } else if (isOngoing) {
+                                            <div class="size-1.5 rounded-full bg-primary-500 animate-pulse"></div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Content Row -->
+                                <div class="flex-1 pb-4 @rowBg -mt-2 p-4 rounded-2xl border transition-all hover:bg-slate-50/50 dark:hover:bg-dark-700/30">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                        <div>
+                                            <div class="flex items-center gap-3">
+                                                <h4 class="text-base font-bold text-slate-900 dark:text-white">@(r.RoundNumber == 0 ? "Final Defense" : $"Round {r.RoundNumber}")</h4>
+                                                @if (isOngoing)
+                                                {
+                                                    <span class="px-2 py-0.5 bg-primary-500 text-white text-[9px] font-bold rounded uppercase tracking-wider animate-pulse">Live Now</span>
+                                                }
+                                                else if (isCompleted)
+                                                {
+                                                    <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-tight flex items-center gap-1">
+                                                        <i class="ri-checkbox-circle-fill"></i> Succeeded
+                                                    </span>
+                                                }
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                                                @(r.RoundNumber == 0 ? "Final assessment and grade submission" : (r.RoundNumber == 1 ? "Proposal presentation and initial feedback" : "Mid-term progress validation"))
+                                            </p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300">@r.StartDate.ToString("dd MMM") - @r.EndDate.ToString("dd MMM")</div>
+                                            <div class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase mt-1">@((r.EndDate - r.StartDate).Days) Day Window</div>
+                                        </div>
+                                    </div>
+
+                                    @if (isOngoing)
+                                    {
+                                        <div class="mt-4 pt-4 border-t border-primary-200/50 dark:border-primary-900/30 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="bg-white dark:bg-dark-800 p-3 rounded-xl border border-primary-100 dark:border-primary-900/40 shadow-sm">
+                                                <div class="flex items-center gap-2 mb-1.5">
+                                                    <i class="ri-flashlight-line text-primary-600"></i>
+                                                    <span class="text-[10px] font-bold text-slate-900 dark:text-white uppercase">Active Focus</span>
+                                                </div>
+                                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Review pending submissions and provide mentor feedback.</p>
+                                            </div>
+                                            <div class="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-900/40 shadow-sm">
+                                                <div class="flex items-center gap-2 mb-1.5 text-amber-600">
+                                                    <i class="ri-time-line"></i>
+                                                    <span class="text-[10px] font-bold uppercase">Immediate Action</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200">R@(r.RoundNumber) Grading</span>
+                                                    <span class="text-[10px] font-bold text-amber-600">Due 20 Oct</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="py-20 text-center">
+                            <i class="ri-calendar-event-line text-4xl text-slate-200 mb-4 block"></i>
+                            <p class="text-slate-400 font-semibold">No timeline stages defined for this semester.</p>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Row 3: Operations -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Bottom Management Row -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start pb-12">
         
-        <!-- Action Required Table -->
-        <div class="saas-card lg:col-span-2 !p-0 overflow-hidden flex flex-col">
-            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-white">
-                <h3 class="text-lg font-bold saas-text-heading">Recent Projects</h3>
-                <a href="/HOD/Projects" class="text-sm font-semibold text-blue-600 hover:text-blue-700 transition">View All</a>
+        <!-- Recent Projects Table -->
+        <div class="xl:col-span-8 glass-card rounded-3xl overflow-hidden flex flex-col shadow-2xl shadow-slate-200/50 dark:shadow-none">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center bg-white dark:bg-dark-800">
+                <div class="flex items-center gap-3">
+                    <div class="size-10 bg-slate-900 dark:bg-slate-700 rounded-xl flex items-center justify-center text-white">
+                        <i class="ri-list-settings-line text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Recent Projects</h3>
+                </div>
+                <a href="/HOD/Projects" class="px-4 py-2 bg-slate-50 dark:bg-dark-700 hover:bg-slate-100 dark:hover:bg-dark-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-200 dark:border-dark-600 uppercase tracking-widest">Explore All</a>
             </div>
             
             <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left">
-                    <thead class="bg-slate-50 text-slate-500 font-semibold text-xs uppercase tracking-wider border-b border-slate-100">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-slate-50/80 dark:bg-dark-800/80 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] border-b border-slate-100 dark:border-dark-700">
                         <tr>
-                            <th class="px-6 py-4">Project ID</th>
-                            <th class="px-6 py-4">Project Name</th>
-                            <th class="px-6 py-4">Status & Focus</th>
-                            <th class="px-6 py-4 text-center">Action</th>
+                            <th class="px-8 py-5">Project Index</th>
+                            <th class="px-8 py-5">Title & Context</th>
+                            <th class="px-8 py-5">Evolution Status</th>
+                            <th class="px-8 py-5 text-right">Utility</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
                         @if (Model != null && Model.Any())
                         {
                             foreach (var item in Model)
                             {
-                                string issueType = "";
-                                string issueColor = "";
-                                string dotColor = "";
+                                string statusLabel = "";
+                                string statusStyle = "";
+                                string iconClass = "";
 
                                 if (string.IsNullOrEmpty(item.SupervisorName))
                                 {
-                                    issueType = "No Sup / " + item.Status.ToString();
-                                    issueColor = "text-amber-700 bg-amber-50 border-amber-100";
-                                    dotColor = "bg-amber-500";
+                                    statusLabel = "Unassigned";
+                                    statusStyle = "text-amber-600 border-amber-500/50";
+                                    iconClass = "ri-user-unfollow-line";
                                 }
                                 else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Draft)
                                 {
-                                    issueType = "Draft";
-                                    issueColor = "text-slate-700 bg-slate-50 border-slate-200";
-                                    dotColor = "bg-slate-500";
+                                    statusLabel = "In Draft";
+                                    statusStyle = "text-slate-500 border-slate-400/50";
+                                    iconClass = "ri-draft-line";
                                 }
                                 else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Completed)
                                 {
-                                    issueType = "Completed";
-                                    issueColor = "text-emerald-700 bg-emerald-50 border-emerald-100";
-                                    dotColor = "bg-emerald-600";
+                                    statusLabel = "Finalized";
+                                    statusStyle = "text-emerald-600 border-emerald-500/50";
+                                    iconClass = "ri-checkbox-circle-line";
                                 }
                                 else
                                 {
-                                    issueType = "Active";
-                                    issueColor = "text-blue-700 bg-blue-50 border-blue-100";
-                                    dotColor = "bg-blue-600";
+                                    statusLabel = "Active Live";
+                                    statusStyle = "text-blue-600 border-blue-500/50";
+                                    iconClass = "ri-rocket-line";
                                 }
 
-                                <tr class="hover:bg-slate-50/50 transition duration-150">
-                                    <td class="px-6 py-4 font-bold text-slate-800">@item.ProjectCode</td>
-                                    <td class="px-6 py-4 font-medium saas-text-neutral">
-                                        <div class="line-clamp-1">@item.ProjectName</div>
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-800/50 transition-colors group">
+                                    <td class="px-8 py-5">
+                                        <div class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">@item.ProjectCode</div>
+                                        <div class="text-[10px] text-slate-400 mt-1">Học kỳ: @item.SemesterCode</div>
                                     </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold @issueColor border uppercase tracking-wider">
-                                            <span class="w-1.5 h-1.5 rounded-full @dotColor"></span> @issueType
+                                    <td class="px-8 py-5">
+                                        <div class="font-bold text-slate-800 dark:text-slate-200 max-w-xs truncate group-hover:text-primary-600 transition-colors">@item.ProjectName</div>
+                                        <div class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Spec: @item.MajorName</div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-dark-700 rounded-lg text-[10px] font-bold @statusStyle border-l-4 shadow-sm uppercase tracking-tight">
+                                            <i class="@iconClass opacity-70"></i> @statusLabel
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-center">
-                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="inline-flex justify-center items-center px-4 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold rounded-md transition shadow-sm">View</a>
+                                    <td class="px-8 py-5 text-right">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-2 hover:bg-white dark:hover:bg-dark-700 text-slate-400 hover:text-slate-900 dark:hover:text-white inline-flex rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-dark-600">
+                                            <i class="ri-arrow-right-up-line text-lg"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             }
@@ -323,7 +435,14 @@
                         else
                         {
                             <tr>
-                                <td colspan="4" class="px-6 py-10 text-center text-slate-500 font-medium">No projects available for this semester.</td>
+                                <td colspan="4" class="px-8 py-16 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="size-16 bg-slate-50 dark:bg-dark-800 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
+                                            <i class="ri-survey-line text-4xl"></i>
+                                        </div>
+                                        <span class="text-slate-500 font-bold">No telemetry data for this semester.</span>
+                                    </div>
+                                </td>
                             </tr>
                         }
                     </tbody>
@@ -331,55 +450,55 @@
             </div>
         </div>
 
-        <!-- Recent Activity Panel -->
-        <div class="saas-card !p-0 flex flex-col">
-            <div class="px-6 py-5 border-b border-slate-100 bg-white rounded-t-xl">
-                <h3 class="text-lg font-bold saas-text-heading">Recent Activity</h3>
+        <!-- Activity Feed -->
+        <div class="xl:col-span-4 glass-card rounded-3xl flex flex-col overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 bg-white dark:bg-dark-800">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Live Activity</h3>
             </div>
             
-            <div class="p-6 flex-1 bg-white">
-                <div class="relative border-l border-slate-200 ml-4 space-y-8">
+            <div class="p-8 flex-1 bg-white dark:bg-dark-800/50">
+                <div class="space-y-10 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-dark-700">
                     
-                    <!-- Activity 1 -->
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[18px] top-0 w-9 h-9 bg-orange-100 rounded-full flex items-center justify-center border-4 border-white">
-                            <span class="material-symbols-outlined text-[16px] text-orange-600 font-bold">description</span>
+                    <!-- Activity Item 1 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 dark:text-orange-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-file-text-line text-sm"></i>
                         </div>
                         <div>
-                            <div class="font-bold saas-text-heading text-sm">New proposal submitted</div>
-                            <div class="text-sm saas-text-muted mt-1 leading-snug">Group G32 uploaded "Eco-Tracker" docs.</div>
-                            <div class="text-xs font-semibold text-slate-400 mt-2">10 minutes ago</div>
+                            <div class="text-sm font-bold text-slate-900 dark:text-white leading-tight">New Document Upload</div>
+                            <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Group <span class="text-orange-600 font-bold">G32</span> uploaded "System Architecture" for Review 1.</p>
+                            <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest">12m ago</div>
                         </div>
                     </div>
 
-                    <!-- Activity 2 -->
-                    <div class="relative pl-8">
-                        <div class="absolute -left-[18px] top-0 w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center border-4 border-white">
-                            <span class="material-symbols-outlined text-[18px] text-slate-600 font-bold">rate_review</span>
+                    <!-- Activity Item 2 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-user-star-line text-sm"></i>
                         </div>
                         <div>
-                            <div class="font-bold saas-text-heading text-sm">Review completed</div>
-                            <div class="text-sm saas-text-muted mt-1 leading-snug">Dr. Sarah finished reviewing G08.</div>
-                            <div class="text-xs font-semibold text-slate-400 mt-2">2 hours ago</div>
+                            <div class="text-sm font-black text-slate-900 dark:text-white leading-tight">Review Finalized</div>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed"><span class="text-blue-600 font-bold">Dr. Nguyen</span> completed evaluation for "AI Home Security".</p>
+                            <div class="text-[10px] font-black text-slate-300 dark:text-slate-500 mt-2 uppercase tracking-widest">2h ago</div>
                         </div>
                     </div>
 
-                    <!-- Activity 3 -->
-                    <div class="relative pl-8 pb-4">
-                        <div class="absolute -left-[18px] top-0 w-9 h-9 bg-emerald-100 rounded-full flex items-center justify-center border-4 border-white">
-                            <span class="material-symbols-outlined text-[18px] text-emerald-600 font-bold">event_available</span>
+                    <!-- Activity Item 3 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-calendar-check-line text-sm"></i>
                         </div>
                         <div>
-                            <div class="font-bold saas-text-heading text-sm">Defense schedule updated</div>
-                            <div class="text-sm saas-text-muted mt-1 leading-snug">Final defense calendar for SP25 is live.</div>
-                            <div class="text-xs font-semibold text-slate-400 mt-2">Yesterday</div>
+                            <div class="text-sm font-black text-slate-900 dark:text-white leading-tight">Defense Calendar Live</div>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">The final defense schedule for <span class="font-bold">SP26</span> has been publicized.</p>
+                            <div class="text-[10px] font-black text-slate-300 dark:text-slate-500 mt-2 uppercase tracking-widest">Yesterday</div>
                         </div>
                     </div>
                 </div>
             </div>
             
-            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 rounded-b-xl">
-                <button class="w-full py-2.5 bg-white border border-slate-200 shadow-sm rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-50 transition">View History</button>
+            <div class="px-8 py-5 bg-slate-50 dark:bg-dark-800/80 border-t border-slate-100 dark:border-dark-700">
+                <button class="w-full py-3 bg-white dark:bg-dark-700 border border-slate-200 dark:border-dark-600 shadow-sm rounded-2xl text-[10px] font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-dark-600 transition-all uppercase tracking-widest">View Event History</button>
             </div>
         </div>
     </div>

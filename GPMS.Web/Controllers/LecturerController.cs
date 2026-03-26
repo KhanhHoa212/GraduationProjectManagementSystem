@@ -148,6 +148,7 @@ public class LecturerController : Controller
             {
                 RoundId = m.RoundId,
                 RoundNumber = m.RoundNumber,
+                SubmissionId = m.SubmissionId,
                 Title = m.Title,
                 RoundType = m.RoundType,
                 StartDate = m.StartDate,
@@ -662,5 +663,27 @@ public class LecturerController : Controller
         }
 
         return RedirectToAction(nameof(FeedbackApprovalDetail), new { id = model.FeedbackID });
+    }
+
+    public async Task<IActionResult> DownloadSubmission(int id)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        if (!await _lecturerService.CanUserAccessSubmissionAsync(userId, id, "Lecturer"))
+        {
+            TempData["ErrorMessage"] = "You do not have permission to download this file.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        var fileInfo = await _lecturerService.GetSubmissionFileAsync(id); 
+        if (fileInfo == null)
+        {
+            TempData["ErrorMessage"] = "Unable to download the requested file.";
+            return RedirectToAction(nameof(Dashboard));
+        }
+
+        return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
     }
 }
