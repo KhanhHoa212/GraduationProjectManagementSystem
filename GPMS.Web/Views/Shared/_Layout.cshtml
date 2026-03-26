@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" class="scroll-smooth light">
 
 <head>
@@ -13,17 +13,12 @@
         rel="stylesheet" />
 
     <!-- Material Symbols Outlined -->
-    <<<<<<< HEAD <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
-    =======
+    
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
     <!-- Remix Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
 
-    >>>>>>> d26abd4bc7ab423215c6a114b41071b99dec5d67
     <!-- Lecturer Specific CSS (Tailwind overrides if any) -->
     @if (User.IsInRole("Lecturer"))
     {
@@ -157,9 +152,9 @@
 </head>
 
 <body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden">
-    <<<<<<< HEAD=======<!-- Toast Container -->
+    <!-- Toast Container -->
         <div id="toastContainer" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
-        >>>>>>> d26abd4bc7ab423215c6a114b41071b99dec5d67
+        
 
         <!-- Loading Overlay -->
         <div id="loading-overlay">
@@ -292,8 +287,6 @@
                 });
             });
 
-<<<<<<< HEAD
-=======
         // Global Toast System
         function showToast(message, type = 'info', duration = 4000) {
             const container = document.getElementById('toastContainer');
@@ -365,7 +358,6 @@
         }
 
         // Chatbot communication
->>>>>>> d26abd4bc7ab423215c6a114b41071b99dec5d67
             window.addEventListener("message", function (event) {
                 if (!event.data || typeof event.data !== "object") return;
                 const iframe = document.getElementById("chatbot-iframe");
