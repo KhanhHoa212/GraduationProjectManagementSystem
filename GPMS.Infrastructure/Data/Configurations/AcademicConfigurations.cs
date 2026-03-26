@@ -11,7 +11,7 @@ public class FacultyConfiguration : IEntityTypeConfiguration<Faculty>
     {
         builder.ToTable("Faculties");
         builder.HasKey(f => f.FacultyID);
-        builder.Property(f => f.FacultyCode).IsRequired().HasMaxLength(10).IsUnicode(false);
+        builder.Property(f => f.FacultyCode).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.HasIndex(f => f.FacultyCode).IsUnique();
         builder.Property(f => f.FacultyName).IsRequired().HasMaxLength(100);
     }
@@ -23,7 +23,7 @@ public class MajorConfiguration : IEntityTypeConfiguration<Major>
     {
         builder.ToTable("Majors");
         builder.HasKey(m => m.MajorID);
-        builder.Property(m => m.MajorCode).IsRequired().HasMaxLength(10).IsUnicode(false);
+        builder.Property(m => m.MajorCode).IsRequired().HasMaxLength(3).IsUnicode(false);
         builder.HasIndex(m => m.MajorCode).IsUnique();
         builder.Property(m => m.MajorName).IsRequired().HasMaxLength(100);
 

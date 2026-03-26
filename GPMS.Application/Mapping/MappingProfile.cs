@@ -74,5 +74,10 @@ public class MappingProfile : Profile
         // SubmissionRequirement mapping
         CreateMap<SubmissionRequirement, SubmissionRequirementDto>().ReverseMap();
 
+        // Major mapping
+        CreateMap<Major, MajorDto>()
+            .ForMember(dest => dest.FacultyName, opt => opt.MapFrom(src => src.Faculty != null ? src.Faculty.FacultyName : string.Empty));
+        CreateMap<CreateMajorDto, Major>();
+        CreateMap<UpdateMajorDto, Major>();
     }
 }

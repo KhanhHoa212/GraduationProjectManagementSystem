@@ -37,6 +37,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<ISemesterRepository, SemesterRepository>();
 builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IMajorRepository, MajorRepository>();
+builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
 
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
@@ -49,6 +50,7 @@ builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
+builder.Services.AddScoped<IMajorService, MajorService>();
 
 
 
