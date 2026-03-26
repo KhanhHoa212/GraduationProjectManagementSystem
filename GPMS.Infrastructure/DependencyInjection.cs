@@ -10,6 +10,8 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         // Data Seeders
+        services.AddScoped<IDataSeeder, FacultySeeder>();
+        services.AddScoped<IDataSeeder, MajorSeeder>();
         services.AddScoped<IDataSeeder, SchemaPatchSeeder>();
         services.AddScoped<IDataSeeder, UserSeeder>();
         services.AddScoped<IDataSeeder, ProjectSeeder>();

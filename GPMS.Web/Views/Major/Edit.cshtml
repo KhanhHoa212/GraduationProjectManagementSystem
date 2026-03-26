@@ -1,0 +1,61 @@
+@model GPMS.Web.ViewModels.EditMajorViewModel
+@{
+    ViewData["Title"] = "Update Major";
+    ViewData["BreadcrumbTitle"] = "Update Major";
+    Layout = "_Layout";
+}
+
+<div class="max-w-2xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center gap-3 mb-1">
+            <a asp-action="Index" class="p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors no-underline">
+                <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            </a>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">Update Major</h1>
+        </div>
+        <p class="text-slate-500 text-sm ml-11">Modify the details of an existing academic major.</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden">
+        <div class="p-8">
+            <form asp-action="Edit" method="post" class="space-y-6">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="MajorID" />
+                <div asp-validation-summary="ModelOnly" class="p-4 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl"></div>
+
+                <div>
+                    <label asp-for="MajorCode" class="block text-sm font-bold text-slate-700 mb-2">Major Code</label>
+                    <input asp-for="MajorCode" placeholder="e.g., SE" 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all" />
+                    <p class="text-[11px] text-slate-400 mt-1.5 font-medium">Short identifier for the major (e.g. SE, SS, IA)</p>
+                    <span asp-validation-for="MajorCode" class="text-xs text-red-500 mt-1 block"></span>
+                </div>
+
+                <div>
+                    <label asp-for="MajorName" class="block text-sm font-bold text-slate-700 mb-2">Major Name</label>
+                    <input asp-for="MajorName" placeholder="e.g., Information Technology" 
+                           class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all" />
+                    <span asp-validation-for="MajorName" class="text-xs text-red-500 mt-1 block"></span>
+                </div>
+
+                <div>
+                    <label asp-for="FacultyID" class="block text-sm font-bold text-slate-700 mb-2">Faculty</label>
+                    <select asp-for="FacultyID" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/30 focus:border-primary outline-none transition-all appearance-none"
+                            asp-items="@(new SelectList(Model.Faculties ?? new List<GPMS.Domain.Entities.Faculty>(), "FacultyID", "FacultyName"))">
+                        <option value="">-- Select Faculty --</option>
+                    </select>
+                    <span asp-validation-for="FacultyID" class="text-xs text-red-500 mt-1 block"></span>
+                </div>
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <a asp-action="Index" class="px-6 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50 rounded-xl transition-all no-underline">Cancel</a>
+                    <button type="submit" class="px-8 py-3 bg-primary hover:bg-orange-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-primary/30 transition-all">
+                        Update Major
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
