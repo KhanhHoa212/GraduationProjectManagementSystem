@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>
+@model IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>
 @{
     ViewData["Title"] = "Review Rounds";
     Layout = "_Layout";
@@ -18,7 +18,7 @@
                     <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Vòng Review</h1>
                     <p class="text-slate-600 dark:text-slate-400 mt-2">Thiết lập và theo dõi các giai đoạn đánh giá đề án trong học kỳ.</p>
                 </div>
-                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition">
+                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition @(Model != null && Model.Count() >= 3 ? "hidden" : "")">
                     <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
                     Tạo vòng review mới
                 </a>
@@ -40,14 +40,14 @@
                                 int completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
                                 int ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
                                 
+                                int lastActiveIndex = ongoingIndex != -1 ? ongoingIndex : 
+                                                     (completedCount > 0 ? completedCount - 1 : -1);
+                                
                                 double progressPercentage = 0;
                                 int totalSegments = rounds.Count - 1;
                                 
-                                if (ongoingIndex != -1) {
-                                    progressPercentage = (ongoingIndex * 100.0 / totalSegments); 
-                                } else if (completedCount > 0) {
-                                    progressPercentage = ((completedCount) * 100.0 / totalSegments);
-                                    if (completedCount == rounds.Count) progressPercentage = 100;
+                                if (lastActiveIndex != -1) {
+                                    progressPercentage = (lastActiveIndex * 100.0 / totalSegments); 
                                 }
                                 progressPercentage = Math.Min(100, Math.Max(0, progressPercentage));
 
@@ -74,7 +74,10 @@
                                     </div>
                                     <div class="mt-4 text-center">
                                         <h3 class="font-semibold text-slate-900 dark:text-white">Review @r.RoundNumber</h3>
-                                        <span class="inline-block mt-2 px-3 py-1 @statusColorBg @statusTextColor text-xs font-semibold rounded-full">@r.Status</span>
+                                        <span class="inline-block mt-2 px-3 py-1 @statusColorBg @statusTextColor text-xs font-semibold rounded-full">
+                                            @(r.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
+                                              r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                        </span>
                                         <p class="text-sm text-slate-600 dark:text-slate-400 mt-3 whitespace-nowrap">@r.StartDate.ToString("dd/MM") - @r.EndDate.ToString("dd/MM")</p>
                                     </div>
                                 </div>
@@ -192,18 +195,17 @@
                                             }
                                         </td>
                                         <td class="py-4 px-6">
-                                            <span class="px-3 py-1 @rowStatusColorBg @rowStatusTextColor text-xs font-semibold rounded-full">@item.Status</span>
+                                            <span class="px-3 py-1 @rowStatusColorBg @rowStatusTextColor text-xs font-semibold rounded-full">
+                                                @(item.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
+                                                  item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                            </span>
                                         </td>
                                         <td class="py-4 px-6">
                                             <div class="flex items-center gap-2">
-                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition inline-block" title="Edit">
-                                                    <span class="material-symbols-outlined" style="font-size: 18px;">edit</span>
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Edit Schedule & Settings">
+                                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit_calendar</span>
+                                                    <span class="ml-1 font-medium">Configure</span>
                                                 </a>
-                                                <form asp-action="DeleteReviewRound" method="post" asp-route-id="@item.ReviewRoundID" class="inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vòng này?');">
-                                                    <button type="submit" class="p-1 text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition" title="Delete">
-                                                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
-                                                    </button>
-                                                </form>
                                             </div>
                                         </td>
                                     </tr>

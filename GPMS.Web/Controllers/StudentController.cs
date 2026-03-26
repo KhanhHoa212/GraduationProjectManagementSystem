@@ -174,6 +174,28 @@ public class StudentController : Controller
         return RedirectToAction("Submissions");
     }
 
+    public async Task<IActionResult> DownloadSubmission(int id)
+    {
+        var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(studentId))
+            return RedirectToAction("Login", "Auth");
+
+        if (!await _projectService.CanUserAccessSubmissionAsync(studentId, id, "Student"))
+        {
+            TempData["Error"] = "You do not have permission to download this file.";
+            return RedirectToAction("Submissions");
+        }
+
+        var fileInfo = await _projectService.GetSubmissionFileAsync(id);
+        if (fileInfo == null)
+        {
+            TempData["Error"] = "Unable to download the requested file.";
+            return RedirectToAction("Submissions");
+        }
+
+        return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
+    }
+
     public async Task<IActionResult> Feedback(int? roundId)
     {
         var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);

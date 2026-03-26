@@ -47,7 +47,7 @@ public class ProjectGroupConfiguration : IEntityTypeConfiguration<ProjectGroup>
         builder.HasOne(pg => pg.Project)
             .WithMany(p => p.ProjectGroups)
             .HasForeignKey(pg => pg.ProjectID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
@@ -60,6 +60,11 @@ public class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMember>
 
         builder.Property(gm => gm.RoleInGroup)
             .HasConversion<string>()
+            .HasMaxLength(20);
+
+        builder.Property(gm => gm.Status)
+            .HasConversion<string>()
+            .HasDefaultValue(GraduationStatus.InProgress)
             .HasMaxLength(20);
 
         builder.Property(gm => gm.JoinedAt).HasDefaultValueSql("GETDATE()");

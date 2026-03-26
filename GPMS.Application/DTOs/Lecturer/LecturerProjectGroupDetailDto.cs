@@ -34,6 +34,7 @@ public class MilestoneDetailDto
 {
     public int RoundId { get; set; }
     public int RoundNumber { get; set; }
+    public int? SubmissionId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string RoundType { get; set; } = string.Empty;
     public DateTime StartDate { get; set; }

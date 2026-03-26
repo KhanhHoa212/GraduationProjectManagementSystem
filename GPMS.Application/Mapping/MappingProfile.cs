@@ -25,6 +25,7 @@ public class MappingProfile : Profile
         CreateMap<Project, ProjectDto>()
             .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major != null ? src.Major.MajorName : null))
             .ForMember(dest => dest.SemesterCode, opt => opt.MapFrom(src => src.Semester != null ? src.Semester.SemesterCode : null))
+            .ForMember(dest => dest.AcademicYear, opt => opt.MapFrom(src => src.Semester != null ? src.Semester.AcademicYear : null))
             .ForMember(dest => dest.SupervisorID, opt => opt.MapFrom(src => 
                 src.ProjectSupervisors.FirstOrDefault(ps => ps.Role == ProjectRole.Main) != null ? src.ProjectSupervisors.FirstOrDefault(ps => ps.Role == ProjectRole.Main)!.LecturerID : null))
             .ForMember(dest => dest.SupervisorName, opt => opt.MapFrom(src => 
@@ -44,6 +45,7 @@ public class MappingProfile : Profile
         // Project -> ProjectDetailDto
         CreateMap<Project, ProjectDetailDto>()
             .ForMember(dest => dest.SemesterCode, opt => opt.MapFrom(src => src.Semester != null ? src.Semester.SemesterCode : null))
+            .ForMember(dest => dest.AcademicYear, opt => opt.MapFrom(src => src.Semester != null ? src.Semester.AcademicYear : null))
             .ForMember(dest => dest.MajorName, opt => opt.MapFrom(src => src.Major != null ? src.Major.MajorName : null))
             .ForMember(dest => dest.SupervisorID, opt => opt.MapFrom(src => 
                 src.ProjectSupervisors.FirstOrDefault(ps => ps.Role == ProjectRole.Main) != null ? src.ProjectSupervisors.FirstOrDefault(ps => ps.Role == ProjectRole.Main)!.LecturerID : null))
@@ -74,5 +76,10 @@ public class MappingProfile : Profile
         // SubmissionRequirement mapping
         CreateMap<SubmissionRequirement, SubmissionRequirementDto>().ReverseMap();
 
+        // Major mapping
+        CreateMap<Major, MajorDto>()
+            .ForMember(dest => dest.FacultyName, opt => opt.MapFrom(src => src.Faculty != null ? src.Faculty.FacultyName : string.Empty));
+        CreateMap<CreateMajorDto, Major>();
+        CreateMap<UpdateMajorDto, Major>();
     }
 }

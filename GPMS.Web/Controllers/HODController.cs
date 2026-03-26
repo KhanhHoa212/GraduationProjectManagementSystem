@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
-
+using System.Threading.Tasks;
+using System.Linq;
+using System.Collections.Generic;
+using GPMS.Web.ViewModels;
 namespace GPMS.Web.Controllers;
 
 [Authorize(Roles = "HeadOfDept")]
@@ -16,19 +19,22 @@ public class HODController : Controller
     private readonly IReviewRoundService _reviewRoundService;
     private readonly IChecklistService _checklistService;
     private readonly IExcelService _excelService;
+    private readonly IReportService _reportService;
 
     public HODController(
         IProjectService projectService, 
         ISemesterService semesterService, 
         IReviewRoundService reviewRoundService,
         IChecklistService checklistService,
-        IExcelService excelService)
+        IExcelService excelService,
+        IReportService reportService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
         _reviewRoundService = reviewRoundService;
         _checklistService = checklistService;
         _excelService = excelService;
+        _reportService = reportService;
     }
 
 
@@ -55,6 +61,12 @@ public class HODController : Controller
         ViewBag.ActiveCount = projects.Count(p => p.Status == ProjectStatus.Active);
         ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
         ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
+
+        // Fetch review rounds for the timeline
+        if (activeSemester != null)
+        {
+            ViewBag.ReviewRounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
 
         return View(projects.OrderByDescending(p => p.CreatedAt).Take(5));
     }
@@ -222,6 +234,13 @@ public class HODController : Controller
         return RedirectToAction(nameof(ProjectDetails), new { id = dto.ProjectID });
     }
 
+    [HttpPost]
+    public async Task<IActionResult> DeleteProject(int id)
+    {
+        var success = await _projectService.DeleteProjectAsync(id);
+        return Json(new { success, message = success ? "Xóa đề tài thành công." : "Không thể xóa đề tài này." });
+    }
+
     // ============================================================
     // Member Management (JSON API)
     // ============================================================
@@ -289,6 +308,14 @@ public class HODController : Controller
             return View(new List<ReviewRoundDto>());
 
         var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        
+        // Auto-initialize 3 rounds if none exist
+        if (!rounds.Any())
+        {
+            await _reviewRoundService.InitializeDefaultRoundsAsync(activeSemester.SemesterID);
+            rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
+        }
+
         return View(rounds);
     }
 
@@ -314,7 +341,7 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Only for NEW rounds)
         if (dto.EndDate <= DateTime.Now)
         {
             ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
@@ -396,12 +423,12 @@ public class HODController : Controller
             ModelState.AddModelError("EndDate", "End date must be greater than start date.");
         }
 
-        // 2. Future Date Validation
+        // 2. Future Date Validation (Loosened for editing existing rounds)
         var now = DateTime.Now;
-        if (dto.EndDate <= now)
-        {
-            ModelState.AddModelError("EndDate", "Review round cannot end in the past.");
-        }
+        // Only block if EndDate was formerly in the future and is now being moved to the past
+        // Actually, just allow it for Edit.
+        // if (dto.EndDate <= now) { ... }
+        
 
         // 3. Sequential Validation
         var existingRounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(dto.SemesterID))
@@ -439,8 +466,15 @@ public class HODController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteReviewRound(int id)
     {
-        await _reviewRoundService.DeleteReviewRoundAsync(id);
-        TempData["SuccessMessage"] = "Review round deleted successfully.";
+        try 
+        {
+            await _reviewRoundService.DeleteReviewRoundAsync(id);
+            TempData["SuccessMessage"] = "Review round deleted successfully.";
+        }
+        catch (System.InvalidOperationException ex)
+        {
+            TempData["ErrorMessage"] = ex.Message;
+        }
         return RedirectToAction(nameof(ReviewRounds));
     }
 
@@ -512,7 +546,68 @@ public class HODController : Controller
     }
 
     public IActionResult AssignReviewer() => View();
-    public IActionResult Reports() => View();
+    [HttpGet("Reports")]
+    public async Task<IActionResult> Reports(int? semesterId, int page = 1)
+    {
+        ViewData["Title"] = "Reports";
+        ViewData["BreadcrumbTitle"] = "Reports";
+
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        int? targetSemesterId;
+        if (semesterId == -1)
+        {
+            targetSemesterId = null; 
+        }
+        else if (semesterId == null)
+        {
+            targetSemesterId = activeSemester?.SemesterID;
+        }
+        else
+        {
+            targetSemesterId = semesterId;
+        }
+
+        ViewBag.Semesters = semesters;
+        ViewBag.SelectedSemesterId = semesterId == -1 ? -1 : targetSemesterId;
+
+        var dto = await _reportService.GetHODReportAsync(targetSemesterId);
+        
+        var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
+        
+        // Paginate workloads (pageSize = 10 to match _Pagination.cshtml)
+        var workloadItems = dto.SupervisorWorkloads.Select(s => new SupervisorWorkloadItem 
+        { 
+            LecturerName = s.LecturerName, 
+            ProjectCount = s.ProjectCount, 
+            GroupCount = s.GroupCount, 
+            StudentCount = s.StudentCount 
+        });
+
+        var vm = new HODReportViewModel
+        {
+            TotalProjects = dto.TotalProjects,
+            TotalGroups = dto.TotalGroups,
+            TotalStudents = dto.TotalStudents,
+            TotalSupervisors = dto.TotalSupervisors,
+            SemesterCode = targetSemObj?.SemesterCode ?? "Tất cả",
+            AcademicYear = targetSemObj?.AcademicYear ?? "N/A",
+            DraftProjects = dto.DraftProjects,
+            ActiveProjects = dto.ActiveProjects,
+            CompletedProjects = dto.CompletedProjects,
+            CancelledProjects = dto.CancelledProjects,
+            MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
+            RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
+            SupervisorWorkloads = Models.PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
+            AllSupervisorWorkloads = workloadItems.ToList(),
+            RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
+        };
+
+
+        return View(vm);
+    }
+
     
     [HttpGet]
     public async Task<IActionResult> CreateProject()
@@ -524,6 +619,28 @@ public class HODController : Controller
         ViewBag.ActiveSemester = activeSemester;
         
         return View("EditProject", new ProjectDetailDto());
+    }
+
+    public async Task<IActionResult> DownloadSubmission(int id)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        if (!await _projectService.CanUserAccessSubmissionAsync(userId, id, "HeadOfDept"))
+        {
+            TempData["ErrorMessage"] = "You do not have permission to download this file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var fileInfo = await _projectService.GetSubmissionFileAsync(id);
+        if (fileInfo == null)
+        {
+            TempData["ErrorMessage"] = "Unable to download the requested file.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
     }
 }
 

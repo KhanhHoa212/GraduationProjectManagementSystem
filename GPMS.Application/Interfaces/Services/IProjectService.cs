@@ -1,4 +1,6 @@
 using GPMS.Application.DTOs;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace GPMS.Application.Interfaces.Services;
 
@@ -9,6 +11,7 @@ public interface IProjectService
     Task<ProjectDetailDto?> GetProjectDetailAsync(int projectId);
     Task CreateProjectAsync(CreateProjectDto dto);
     Task UpdateProjectAsync(UpdateProjectDto dto);
+    Task<bool> DeleteProjectAsync(int projectId);
     Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null);
     
     // Student Dashboard
@@ -36,5 +39,9 @@ public interface IProjectService
     Task<IEnumerable<ProjectDefenseScheduleDto>> GetProjectDefenseScheduleAsync(string studentId);
     // Bulk Import
     Task<(int successCount, string message)> BulkImportProjectsAsync(IEnumerable<ProjectImportRowDto> projects, int semesterId, string? requestedBy);
+    
+    // Download Proxy
+    Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
+    Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
 }
 

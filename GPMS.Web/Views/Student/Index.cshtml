@@ -1,4 +1,4 @@
-﻿@model GPMS.Web.ViewModels.StudentDashboardViewModel
+@model GPMS.Web.ViewModels.StudentDashboardViewModel
 
 @{
     ViewData["Title"] = "My Project";
@@ -235,8 +235,8 @@
                                         <div class="flex items-center justify-end gap-2">
                                             @if (item.IsSubmitted)
                                             {
-                                                <a href="@(item.FileUrl?.Replace("/upload/", "/upload/fl_attachment/"))" target="_blank"
-                                                   class="p-2 text-[#64748b] hover:text-[#2563eb] transition-colors" title="Download Submission">
+                                                <a asp-action="DownloadSubmission" asp-controller="Student" asp-route-id="@item.SubmissionID"
+                                                   class="no-spinner p-2 text-[#64748b] hover:text-[#2563eb] transition-colors" title="Download Submission">
                                                     <span class="material-symbols-outlined text-[20px]">download</span>
                                                 </a>
                                             }
