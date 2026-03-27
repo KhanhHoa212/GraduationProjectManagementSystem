@@ -1,0 +1,156 @@
+@model GPMS.Web.Models.PaginatedList<GPMS.Application.DTOs.ProjectDto>
+@using GPMS.Domain.Enums
+@{
+    ViewBag.Title = "Quản lý đề tài";
+    Layout = "_Layout";
+
+    var semesters = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? new List<GPMS.Application.DTOs.SemesterDto>();
+    var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
+    var currentSearch = ViewBag.CurrentSearch as string;
+}
+
+<div class="space-y-6 px-4 py-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined bg-primary-500 text-white p-2 rounded-xl shadow-lg shadow-primary-500/20">account_tree</span>
+                Danh sách đề tài toàn hệ thống
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Giám sát và quản lý toàn bộ các đồ án đang triển khai</p>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+        <form method="get" action="/Admin/Projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Semester Filter -->
+            <div class="space-y-2">
+                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1">Lọc theo học kỳ</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors pointer-events-none">calendar_month</span>
+                    <select name="semesterId" onchange="this.form.submit()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-semibold text-slate-700 appearance-none cursor-pointer">
+                        <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">Tất cả học kỳ</option>
+                        @foreach (var sem in semesters.OrderByDescending(s => s.StartDate))
+                        {
+                            <option value="@sem.SemesterID" selected="@(selectedSemesterId == sem.SemesterID ? "selected" : null)">
+                                @sem.SemesterCode - @sem.AcademicYear
+                            </option>
+                        }
+                    </select>
+                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="space-y-2">
+                <label class="block text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] px-1">Tìm kiếm nhanh</label>
+                <div class="relative group">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors">search</span>
+                    <input type="text" name="search" value="@currentSearch" placeholder="Mã, tên đề tài hoặc giảng viên..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-primary-500/10 focus:border-primary-500 outline-none transition-all font-medium text-slate-800" />
+                </div>
+            </div>
+
+            <!-- Stats Helper (Optional) -->
+            <div class="flex items-end pb-1">
+                <div class="px-4 py-2 bg-slate-100 rounded-xl border border-slate-200 flex items-center gap-3">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Tổng cộng:</span>
+                    <span class="text-sm font-black text-primary-600">@Model.TotalItems đề tài</span>
+                </div>
+            </div>
+            
+            <input type="submit" class="hidden" />
+        </form>
+    </div>
+
+    <!-- Table Card -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden border-separate">
+        <div class="overflow-x-auto min-h-[400px]">
+            <table class="w-full text-sm text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/80 border-b border-slate-100">
+                        <th class="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Mã đề tài</th>
+                        <th class="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Thông tin đề tài</th>
+                        <th class="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Học kỳ</th>
+                        <th class="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest">Trạng thái</th>
+                        <th class="px-6 py-4 font-black text-slate-400 text-[10px] uppercase tracking-widest text-center">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50">
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="px-6 py-20 text-center">
+                                <div class="flex flex-col items-center gap-2 opacity-40">
+                                    <span class="material-symbols-outlined text-6xl">empty_dashboard</span>
+                                    <p class="font-bold text-slate-400 uppercase tracking-widest text-xs">Không tìm thấy dữ liệu nào</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <span class="px-3 py-1 bg-slate-100 text-slate-600 font-bold rounded-lg text-xs border border-slate-200">
+                                        @item.ProjectCode
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-800 line-clamp-1 group-hover:text-primary-500 transition-colors">@item.ProjectName</span>
+                                        <div class="flex items-center gap-3 mt-1.5">
+                                            <span class="text-xs text-slate-400 flex items-center gap-1 font-medium">
+                                                <span class="material-symbols-outlined text-[14px]">person_outline</span>
+                                                GVHD: <span class="text-slate-600">@(item.SupervisorName ?? "N/A")</span>
+                                            </span>
+                                            <span class="text-[10px] text-slate-300">•</span>
+                                            <span class="text-xs text-slate-400 flex items-center gap-1 font-medium">
+                                                <span class="material-symbols-outlined text-[14px]">school</span>
+                                                Major: <span class="text-slate-600">@(item.MajorName ?? "Common")</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="text-slate-700 font-bold">@item.SemesterCode</span>
+                                        <span class="text-[10px] text-slate-400 font-medium">@item.AcademicYear</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    @{
+                                        var badgeClass = item.Status switch {
+                                            ProjectStatus.Active => "bg-emerald-500/10 text-emerald-600 border-emerald-100",
+                                            ProjectStatus.Draft => "bg-amber-500/10 text-amber-600 border-amber-100",
+                                            ProjectStatus.Completed => "bg-blue-500/10 text-blue-600 border-blue-100",
+                                            ProjectStatus.Cancelled => "bg-red-500/10 text-red-600 border-red-100",
+                                            _ => "bg-slate-100 text-slate-500 border-slate-200"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-black border uppercase tracking-wider @badgeClass">
+                                        @item.Status
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="/Admin/ProjectDetails/@item.ProjectID" class="p-2 text-slate-400 hover:text-primary-500 hover:bg-primary-50 rounded-xl transition-all no-underline" title="Xem chi tiết">
+                                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="p-4 border-t border-slate-100">
+            @await Html.PartialAsync("_Pagination", Model)
+        </div>
+    </div>
+</div>

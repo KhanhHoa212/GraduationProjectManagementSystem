@@ -235,7 +235,7 @@
                                         <div class="flex items-center justify-end gap-2">
                                             @if (item.IsSubmitted)
                                             {
-                                                <a asp-action="DownloadSubmission" asp-controller="Student" asp-route-id="@item.SubmissionID"
+                                                <a asp-action="DownloadSubmission" asp-controller="Student" asp-route-id="@item.SubmissionID" hx-boost="false"
                                                    class="no-spinner p-2 text-[#64748b] hover:text-[#2563eb] transition-colors" title="Download Submission">
                                                     <span class="material-symbols-outlined text-[20px]">download</span>
                                                 </a>
