@@ -47,6 +47,9 @@ builder.Services.AddScoped<ISemesterService, SemesterService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IProjectService, ProjectService>();
 builder.Services.AddScoped<ILecturerService, LecturerService>();
+builder.Services.AddScoped<ILecturerScheduleService, LecturerScheduleService>();
+builder.Services.AddScoped<ILecturerWorkflowService, LecturerWorkflowService>();
+builder.Services.AddScoped<ISubmissionAccessService, SubmissionAccessService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
@@ -54,7 +57,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
 builder.Services.AddScoped<IMajorService, MajorService>();
 builder.Services.AddScoped<IReportService, ReportService>();
-builder.Services.AddScoped<IMeetingService, GoogleCalendarService>();
+
 
 
 // Register Infrastructure (including Seeders)

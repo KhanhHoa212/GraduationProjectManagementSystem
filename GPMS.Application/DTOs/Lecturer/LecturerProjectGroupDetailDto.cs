@@ -54,7 +54,6 @@ public class MilestoneDetailDto
     public string? FeedbackStatus { get; set; }
     public DateTime? ScheduledAt { get; set; }
     public string? Location { get; set; }
-    public string? MeetLink { get; set; }
 }
 
 public class MeetingScheduleDto
@@ -62,6 +61,5 @@ public class MeetingScheduleDto
     public DateTime ScheduledAt { get; set; }
     public bool IsOnline { get; set; }
     public string Location { get; set; } = string.Empty;
-    public string? MeetLink { get; set; }
     public string Title { get; set; } = string.Empty;
 }

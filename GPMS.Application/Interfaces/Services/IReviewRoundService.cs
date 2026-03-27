@@ -14,8 +14,4 @@ public interface IReviewRoundService
     Task DeleteReviewRoundAsync(int id);
     Task<bool> InitializeDefaultRoundsAsync(int semesterId);
     
-    // Session Management
-    Task<IEnumerable<ReviewSessionInfo>> GetGroupSessionsAsync(int roundId);
-    Task<bool> ScheduleSessionAsync(ScheduleSessionUpdateDto dto);
-    Task<bool> GenerateMeetingLinkAsync(int sessionId);
 }

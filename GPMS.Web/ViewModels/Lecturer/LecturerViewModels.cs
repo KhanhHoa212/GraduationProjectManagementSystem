@@ -36,7 +36,6 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string Location { get; set; } = string.Empty;
         public int DurationMinutes { get; set; }
         public bool IsHighlight { get; set; }
-        public string? MeetLink { get; set; }
         public string? ActionUrl { get; set; }
     }
 
@@ -97,7 +96,6 @@ namespace GPMS.Web.ViewModels.Lecturer
         public DateTime ScheduledAt { get; set; }
         public string Title { get; set; } = string.Empty;
         public string Location { get; set; } = string.Empty;
-        public string? MeetLink { get; set; }
         public bool IsOnline { get; set; }
     }
 
@@ -126,7 +124,6 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string? FeedbackStatus { get; set; }
         public DateTime? ScheduledAt { get; set; }
         public string? Location { get; set; }
-        public string? MeetLink { get; set; }
     }
 
     // -------------------------------------------------------
@@ -224,7 +221,6 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string RoundType { get; set; } = string.Empty;
         public DateTime? ScheduledAt { get; set; }
         public string? Location { get; set; }
-        public string? MeetLink { get; set; }
         public bool HasEvaluation { get; set; }
         public int? EvaluationID { get; set; }
         public string? StatusNote { get; set; }
@@ -330,7 +326,6 @@ namespace GPMS.Web.ViewModels.Lecturer
         public DateTime ScheduledAt { get; set; }
         public bool IsOnline { get; set; }
         public string Location { get; set; } = string.Empty;
-        public string? MeetLink { get; set; }
         public string? Guidance { get; set; }
         public string StatusKey { get; set; } = "upcoming";
         public string StatusLabel { get; set; } = "Upcoming";

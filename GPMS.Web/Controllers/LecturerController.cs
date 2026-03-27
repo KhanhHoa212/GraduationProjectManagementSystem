@@ -57,7 +57,6 @@ public class LecturerController : Controller
                 StartTime = s.StartTime,
                 DurationMinutes = s.DurationMinutes,
                 IsHighlight = s.IsHighlight,
-                MeetLink = s.MeetLink,
                 ActionUrl = s.ActionUrl
             }).ToList()
         };
@@ -168,15 +167,13 @@ public class LecturerController : Controller
 
                 FeedbackStatus = m.FeedbackStatus,
                 ScheduledAt = m.ScheduledAt,
-                Location = m.Location,
-                MeetLink = m.MeetLink
+                Location = m.Location
             }).ToList(),
             NextMeeting = dto.NextMeeting == null ? null : new MeetingInfoItem
             {
                 ScheduledAt = dto.NextMeeting.ScheduledAt,
                 Title = dto.NextMeeting.Title,
                 Location = dto.NextMeeting.Location,
-                MeetLink = dto.NextMeeting.MeetLink,
                 IsOnline = dto.NextMeeting.IsOnline
             }
         };
@@ -318,7 +315,6 @@ public class LecturerController : Controller
                 RoundType = a.RoundType,
                 ScheduledAt = a.ScheduledAt,
                 Location = a.Location,
-                MeetLink = a.MeetLink,
                 HasEvaluation = a.HasEvaluation,
                 EvaluationID = a.EvaluationId,
                 StatusNote = a.StatusNote
@@ -375,7 +371,6 @@ public class LecturerController : Controller
                 ScheduledAt = e.ScheduledAt,
                 IsOnline = e.IsOnline,
                 Location = e.Location,
-                MeetLink = e.MeetLink,
                 Guidance = e.Guidance,
                 StatusKey = e.StatusKey,
                 StatusLabel = e.StatusLabel,
@@ -405,7 +400,6 @@ public class LecturerController : Controller
                     ScheduledAt = e.ScheduledAt,
                     IsOnline = e.IsOnline,
                     Location = e.Location,
-                    MeetLink = e.MeetLink,
                     Guidance = e.Guidance,
                     StatusKey = e.StatusKey,
                     StatusLabel = e.StatusLabel,
@@ -437,7 +431,6 @@ public class LecturerController : Controller
                     ScheduledAt = e.ScheduledAt,
                     IsOnline = e.IsOnline,
                     Location = e.Location,
-                    MeetLink = e.MeetLink,
                     Guidance = e.Guidance,
                     StatusKey = e.StatusKey,
                     StatusLabel = e.StatusLabel,

@@ -5,7 +5,6 @@ public class ReviewSessionInfo
     public int SessionID { get; set; }
     public int ReviewRoundID { get; set; }
     public int GroupID { get; set; }
-    public string? MeetLink { get; set; }
     public DateTime ScheduledAt { get; set; }
     public int? RoomID { get; set; }
     public string? Notes { get; set; }

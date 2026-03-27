@@ -23,8 +23,6 @@ public class HODController : Controller
     private readonly IReportService _reportService;
     private readonly IMajorService _majorService;
     private readonly IUserService _userService;
-    private readonly IRoomRepository _roomRepository;
-    private readonly IProjectGroupRepository _groupRepository;
 
     public HODController(
         IProjectService projectService, 
@@ -34,9 +32,7 @@ public class HODController : Controller
         IExcelService excelService,
         IReportService reportService,
         IMajorService majorService,
-        IUserService userService,
-        IRoomRepository roomRepository,
-        IProjectGroupRepository groupRepository)
+        IUserService userService)
     {
         _projectService = projectService;
         _semesterService = semesterService;
@@ -46,8 +42,6 @@ public class HODController : Controller
         _reportService = reportService;
         _majorService = majorService;
         _userService = userService;
-        _roomRepository = roomRepository;
-        _groupRepository = groupRepository;
     }
 
 
@@ -666,63 +660,5 @@ public class HODController : Controller
         }
 
         return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
-    }
-
-    // ============================================================
-    // Session Scheduling
-    // ============================================================
-
-    public async Task<IActionResult> ScheduleSession(int roundId)
-    {
-        var round = await _reviewRoundService.GetReviewRoundByIdAsync(roundId);
-        if (round == null) return NotFound();
-
-        var semester = await _semesterService.GetCurrentSemesterAsync();
-        if (semester == null) return NotFound();
-
-        var allGroups = await _groupRepository.GetAllWithDetailsAsync();
-        var semesterGroups = allGroups.Where(g => g.Project?.SemesterID == semester.SemesterID).ToList();
-        var sessions = await _reviewRoundService.GetGroupSessionsAsync(roundId);
-        var rooms = await _roomRepository.GetAllAsync();
-        
-        var viewModel = new ScheduleSessionViewModel
-        {
-            RoundId = roundId,
-            RoundName = $"Vòng {round.RoundNumber}",
-            Rooms = rooms.ToList(),
-            Groups = semesterGroups.Select(group =>
-            {
-                var session = sessions.FirstOrDefault(s => s.GroupID == group.GroupID);
-                return new GroupSessionListItemViewModel
-                {
-                    GroupId = group.GroupID,
-                    GroupName = group.GroupName,
-                    ProjectName = group.Project?.ProjectName ?? "N/A",
-                    SessionId = session?.SessionID,
-                    ScheduledAt = session?.ScheduledAt,
-                    RoomId = session?.RoomID,
-                    MeetLink = session?.MeetLink,
-                    Notes = session?.Notes
-                };
-            }).ToList()
-        };
-
-        return View(viewModel);
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> SaveSession([FromBody] ScheduleSessionUpdateDto dto)
-    {
-        if (dto == null) return Json(new { success = false, message = "Dữ liệu không hợp lệ." });
-        
-        var success = await _reviewRoundService.ScheduleSessionAsync(dto);
-        return Json(new { success, message = success ? "Lưu lịch họp thành công." : "Có lỗi xảy ra." });
-    }
-
-    [HttpPost]
-    public async Task<IActionResult> GenerateSessionMeetLink(int sessionId)
-    {
-        var success = await _reviewRoundService.GenerateMeetingLinkAsync(sessionId);
-        return Json(new { success, message = success ? "Đã tạo link Google Meet thành công." : "Không thể tạo link Meet." });
     }
 }

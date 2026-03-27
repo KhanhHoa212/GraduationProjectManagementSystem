@@ -90,22 +90,16 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
                     .FirstOrDefault(),
                 Location = ra.Group.ReviewSessions
                     .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)
-                    .Select(rs => rs.MeetLink != null && rs.MeetLink != ""
-                        ? "Online meeting"
-                        : rs.Room != null
+                    .Select(rs => ra.ReviewRound.RoundType == RoundType.Online
+                            ? "Online session"
+                            : rs.Room != null
                             ? (rs.Room.Building != null && rs.Room.Building != ""
                                 ? rs.Room.RoomCode + " - " + rs.Room.Building
                                 : rs.Room.RoomCode)
                             : "Location pending")
                     .FirstOrDefault() ?? "Location pending",
-                MeetLink = ra.Group.ReviewSessions
-                    .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)
-                    .Select(rs => rs.MeetLink)
-                    .FirstOrDefault(),
-                IsOnline = ra.Group.ReviewSessions
-                    .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)
-                    .Select(rs => rs.MeetLink != null && rs.MeetLink != "")
-                    .FirstOrDefault(),
+
+                IsOnline = ra.ReviewRound.RoundType == RoundType.Online,
                 HasEvaluation = ra.Group.Evaluations
                     .Any(e => e.ReviewRoundID == ra.ReviewRoundID &&
                               e.ReviewerID == reviewerId &&
@@ -116,6 +110,12 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
                 EvaluationId = ra.Group.Evaluations
                     .Where(e => e.ReviewRoundID == ra.ReviewRoundID && e.ReviewerID == reviewerId)
                     .Select(e => (int?)e.EvaluationID)
+                    .FirstOrDefault(),
+                ApprovalStatus = ra.Group.Evaluations
+                    .Where(e => e.ReviewRoundID == ra.ReviewRoundID && e.ReviewerID == reviewerId)
+                    .Select(e => e.Feedback != null && e.Feedback.FeedbackApproval != null
+                        ? (ApprovalStatus?)e.Feedback.FeedbackApproval.ApprovalStatus
+                        : null)
                     .FirstOrDefault(),
                 StatusNote = ra.Group.MentorRoundReviews
                     .Where(m => m.ReviewRoundID == ra.ReviewRoundID)

@@ -35,6 +35,5 @@ public class DashboardScheduleItemDto
     public string Location { get; set; } = string.Empty;
     public int DurationMinutes { get; set; }
     public bool IsHighlight { get; set; }
-    public string? MeetLink { get; set; }
     public string? ActionUrl { get; set; }
 }
