@@ -170,6 +170,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public async Task<IEnumerable<ProjectGroupSummaryDto>> GetSummariesBySupervisorAsync(string supervisorId) =>
         await _context.ProjectGroups
             .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .AsSplitQuery()
             .Select(pg => new ProjectGroupSummaryDto
             {
                 GroupId = pg.GroupID,

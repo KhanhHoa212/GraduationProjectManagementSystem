@@ -74,6 +74,7 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
             .Where(ra => ra.ReviewerID == reviewerId &&
                          !ra.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == reviewerId))
             .OrderByDescending(ra => ra.ReviewRound.StartDate)
+            .AsSplitQuery()
             .Select(ra => new ReviewAssignmentItemDto
             {
                 AssignmentId = ra.AssignmentID,

@@ -46,9 +46,9 @@ public class LecturerService : ILecturerService
 
     public async Task<LecturerDashboardDto> GetDashboardDataAsync(string lecturerId)
     {
-        var groups = (await _groupRepo.GetBySupervisorAsync(lecturerId)).ToList();
-        var pendingFeedbacks = (await _feedbackRepo.GetPendingApprovalsBySupervisorAsync(lecturerId)).ToList();
-        var assignments = (await _assignmentRepo.GetByReviewerAsync(lecturerId)).ToList();
+        var groups = (await _groupRepo.GetSummariesBySupervisorAsync(lecturerId)).ToList();
+        var pendingFeedbacks = (await _feedbackRepo.GetPendingApprovalDtosBySupervisorAsync(lecturerId)).ToList();
+        var assignments = (await _assignmentRepo.GetAssignmentDtosByReviewerAsync(lecturerId)).ToList();
         var notifications = (await _notificationRepo.GetRecentByRecipientAsync(lecturerId, 5)).ToList();
         var today = DateTime.Today;
         var now = DateTime.Now;
@@ -68,12 +68,12 @@ public class LecturerService : ILecturerService
             })
             .Concat(pendingFeedbacks.Select(f => new DashboardActivityItemDto
             {
-                Title = $"{f.Evaluation?.Group?.GroupName ?? "Group"} feedback awaiting approval",
-                Description = $"Reviewer {f.Evaluation?.Reviewer?.FullName ?? "N/A"} submitted Round {f.Evaluation?.ReviewRound?.RoundNumber ?? 0} feedback.",
+                Title = $"{f.GroupName} feedback awaiting approval",
+                Description = $"Reviewer {f.ReviewerName} submitted Round {f.RoundNumber} feedback.",
                 Timestamp = f.CreatedAt,
                 Icon = "fact_check",
                 IconBgColor = "var(--fpt-orange)",
-                ActionUrl = $"/Lecturer/FeedbackApprovalDetail/{f.FeedbackID}",
+                ActionUrl = $"/Lecturer/FeedbackApprovalDetail/{f.FeedbackId}",
                 ActionText = "Review"
             }))
             .Concat(scheduleEntries.Where(s => s.ScheduledAt >= today)
@@ -342,9 +342,9 @@ public class LecturerService : ILecturerService
 
     public async Task<LecturerScheduleDto> GetScheduleAsync(string lecturerId, string? roleFilter = null, string? rangeFilter = null, int weekOffset = 0)
     {
-        var groups = (await _groupRepo.GetBySupervisorAsync(lecturerId)).ToList();
-        var assignments = (await _assignmentRepo.GetByReviewerAsync(lecturerId)).ToList();
-        var pendingFeedbacks = (await _feedbackRepo.GetPendingApprovalsBySupervisorAsync(lecturerId)).ToList();
+        var groups = (await _groupRepo.GetSummariesBySupervisorAsync(lecturerId)).ToList();
+        var assignments = (await _assignmentRepo.GetAssignmentDtosByReviewerAsync(lecturerId)).ToList();
+        var pendingFeedbacks = (await _feedbackRepo.GetPendingApprovalDtosBySupervisorAsync(lecturerId)).ToList();
         var now = DateTime.Now;
 
         roleFilter = NormalizeRoleFilter(roleFilter);
@@ -792,45 +792,49 @@ public class LecturerService : ILecturerService
     }
 
     private List<LecturerScheduleEntryDto> BuildScheduleEntries(
-        IEnumerable<ProjectGroup> groups,
-        IEnumerable<ReviewerAssignment> assignments,
-        IEnumerable<Feedback> pendingFeedbacks,
+        IEnumerable<ProjectGroupSummaryDto> groups,
+        IEnumerable<ReviewAssignmentItemDto> assignments,
+        IEnumerable<PendingFeedbackItemDto> pendingFeedbacks,
         DateTime now)
     {
-        var pendingFeedbackLookup = pendingFeedbacks
-            .Where(f => f.Evaluation != null)
-            .GroupBy(f => $"{f.Evaluation!.GroupID}:{f.Evaluation.ReviewRoundID}")
-            .ToDictionary(
-                group => group.Key,
-                group => group.OrderByDescending(f => f.CreatedAt).First());
-
-        var mentorEntries = groups.SelectMany(group => group.ReviewSessions.Select(session =>
+        var mentorEntries = groups.SelectMany(group => group.Sessions.Select(session =>
         {
+            var isOnline = !string.IsNullOrWhiteSpace(session.MeetLink);
+            var location = isOnline ? "Online meeting" : (
+                !string.IsNullOrWhiteSpace(session.RoomCode) ? 
+                    (!string.IsNullOrWhiteSpace(session.Building) ? $"{session.RoomCode} - {session.Building}" : session.RoomCode) 
+                    : "Location pending"
+            );
+
             var entry = new LecturerScheduleEntryDto
             {
                 RoleKey = "mentor",
                 RoleLabel = "Mentor",
-                GroupId = group.GroupID,
+                GroupId = group.GroupId,
                 GroupName = group.GroupName,
-                ProjectName = group.Project?.ProjectName ?? "N/A",
-                RoundNumber = session.ReviewRound?.RoundNumber ?? 0,
-                RoundType = session.ReviewRound?.RoundType.ToString() ?? "N/A",
+                ProjectName = group.ProjectName ?? "N/A",
+                RoundNumber = session.RoundNumber,
+                RoundType = session.RoundType ?? "N/A",
                 ScheduledAt = session.ScheduledAt,
-                IsOnline = !string.IsNullOrWhiteSpace(session.MeetLink),
-                Location = ResolveLocation(session),
+                IsOnline = isOnline,
+                Location = location,
                 MeetLink = session.MeetLink,
                 Guidance = "Keep the group aligned before and after the review session.",
                 IsToday = session.ScheduledAt.Date == now.Date,
                 IsPast = session.ScheduledAt < now,
                 TimeHint = BuildTimeHint(session.ScheduledAt, now),
                 PrimaryActionText = "Open group",
-                PrimaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupID}"
+                PrimaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}"
             };
 
-            pendingFeedbackLookup.TryGetValue($"{group.GroupID}:{session.ReviewRoundID}", out var pendingApproval);
+            var pendingEvaluation = group.Evaluations
+                .Where(e => e.ReviewRoundId == session.ReviewRoundId && e.ApprovalStatus == ApprovalStatus.Pending.ToString())
+                .OrderByDescending(e => e.SubmittedAt)
+                .FirstOrDefault();
+
             var isLive = IsLiveSession(session.ScheduledAt, now);
 
-            if (pendingApproval != null)
+            if (pendingEvaluation != null && pendingEvaluation.FeedbackId.HasValue)
             {
                 entry.StatusKey = "needs-approval";
                 entry.StatusLabel = "Need approval";
@@ -838,9 +842,9 @@ public class LecturerService : ILecturerService
                 entry.NeedsAttention = true;
                 entry.Guidance = "Reviewer feedback is waiting for your decision before it is released.";
                 entry.PrimaryActionText = "Review feedback";
-                entry.PrimaryActionUrl = $"/Lecturer/FeedbackApprovalDetail/{pendingApproval.FeedbackID}";
+                entry.PrimaryActionUrl = $"/Lecturer/FeedbackApprovalDetail/{pendingEvaluation.FeedbackId.Value}";
                 entry.SecondaryActionText = "Open group";
-                entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupID}";
+                entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}";
             }
             else if (isLive)
             {
@@ -853,7 +857,7 @@ public class LecturerService : ILecturerService
                     entry.PrimaryActionText = "Join Meet";
                     entry.PrimaryActionUrl = entry.MeetLink;
                     entry.SecondaryActionText = "Open group";
-                    entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupID}";
+                    entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}";
                 }
             }
             else if (session.ScheduledAt < now)
@@ -874,7 +878,7 @@ public class LecturerService : ILecturerService
                     entry.PrimaryActionText = "Join Meet";
                     entry.PrimaryActionUrl = entry.MeetLink;
                     entry.SecondaryActionText = "Open group";
-                    entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupID}";
+                    entry.SecondaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}";
                 }
             }
             else
@@ -890,36 +894,31 @@ public class LecturerService : ILecturerService
         var reviewerEntries = assignments
             .Select(assignment =>
             {
-                var session = assignment.Group?.ReviewSessions?.FirstOrDefault(rs => rs.ReviewRoundID == assignment.ReviewRoundID);
-                if (session == null)
+                if (!assignment.ScheduledAt.HasValue)
                 {
                     return null;
                 }
 
-                var evaluation = assignment.Group?.Evaluations?
-                    .Where(e => e.ReviewRoundID == assignment.ReviewRoundID && e.ReviewerID == assignment.ReviewerID)
-                    .OrderByDescending(e => e.SubmittedAt ?? DateTime.MinValue)
-                    .FirstOrDefault();
-                var approvalStatus = evaluation?.Feedback?.FeedbackApproval?.ApprovalStatus;
-                var hasSubmitted = evaluation?.Status == EvaluationStatus.Submitted;
-                var needsRevision = approvalStatus == ApprovalStatus.Rejected;
-                var waitingMentor = hasSubmitted && approvalStatus == ApprovalStatus.Pending;
-                var needsEvaluation = session.ScheduledAt < now && (!hasSubmitted || needsRevision);
-                var isLive = IsLiveSession(session.ScheduledAt, now);
+                bool hasSubmitted = assignment.HasEvaluation;
+                bool needsRevision = assignment.StatusNote == "Needs Revision";
+                bool waitingMentor = assignment.StatusNote == "Waiting for Mentor Approval" || 
+                                     (hasSubmitted && !needsRevision && assignment.StatusNote == null);
+                bool needsEvaluation = assignment.ScheduledAt.Value < now && (!hasSubmitted || needsRevision);
+                bool isLive = IsLiveSession(assignment.ScheduledAt.Value, now);
 
                 return new LecturerScheduleEntryDto
                 {
                     RoleKey = "reviewer",
                     RoleLabel = "Reviewer",
-                    GroupId = assignment.GroupID,
-                    GroupName = assignment.Group?.GroupName ?? "N/A",
-                    ProjectName = assignment.Group?.Project?.ProjectName ?? "N/A",
-                    RoundNumber = assignment.ReviewRound?.RoundNumber ?? 0,
-                    RoundType = assignment.ReviewRound?.RoundType.ToString() ?? "N/A",
-                    ScheduledAt = session.ScheduledAt,
-                    IsOnline = !string.IsNullOrWhiteSpace(session.MeetLink),
-                    Location = ResolveLocation(session),
-                    MeetLink = session.MeetLink,
+                    GroupId = assignment.GroupId,
+                    GroupName = assignment.GroupName ?? "N/A",
+                    ProjectName = assignment.ProjectName ?? "N/A",
+                    RoundNumber = assignment.RoundNumber,
+                    RoundType = assignment.RoundType ?? "N/A",
+                    ScheduledAt = assignment.ScheduledAt.Value,
+                    IsOnline = assignment.IsOnline,
+                    Location = assignment.Location,
+                    MeetLink = assignment.MeetLink,
                     Guidance = needsRevision
                         ? "Update the evaluation with the mentor's requested changes."
                         : needsEvaluation
@@ -937,7 +936,7 @@ public class LecturerService : ILecturerService
                                     ? "completed"
                                     : isLive
                                         ? "live"
-                                        : session.ScheduledAt.Date == now.Date
+                                        : assignment.ScheduledAt.Value.Date == now.Date
                                             ? "today"
                                             : "upcoming",
                     StatusLabel = needsRevision
@@ -950,7 +949,7 @@ public class LecturerService : ILecturerService
                                     ? "Completed"
                                     : isLive
                                         ? "Live now"
-                                        : session.ScheduledAt.Date == now.Date
+                                        : assignment.ScheduledAt.Value.Date == now.Date
                                             ? "Today"
                                             : "Upcoming",
                     StatusTone = needsRevision || needsEvaluation
@@ -961,24 +960,24 @@ public class LecturerService : ILecturerService
                                 ? "success"
                                 : "info",
                     NeedsAttention = needsRevision || needsEvaluation,
-                    IsToday = session.ScheduledAt.Date == now.Date,
-                    IsPast = session.ScheduledAt < now,
-                    TimeHint = BuildTimeHint(session.ScheduledAt, now),
+                    IsToday = assignment.ScheduledAt.Value.Date == now.Date,
+                    IsPast = assignment.ScheduledAt.Value < now,
+                    TimeHint = BuildTimeHint(assignment.ScheduledAt.Value, now),
                     PrimaryActionText = needsRevision
                         ? "Revise evaluation"
                         : needsEvaluation
                             ? "Open evaluation"
-                            : !string.IsNullOrWhiteSpace(session.MeetLink) && !hasSubmitted && session.ScheduledAt >= now
+                            : !string.IsNullOrWhiteSpace(assignment.MeetLink) && !hasSubmitted && assignment.ScheduledAt.Value >= now
                                 ? "Join Meet"
                                 : "Open evaluation",
-                    PrimaryActionUrl = !string.IsNullOrWhiteSpace(session.MeetLink) && !hasSubmitted && session.ScheduledAt >= now
-                        ? session.MeetLink!
-                        : $"/Lecturer/EvaluationForm/{assignment.AssignmentID}",
-                    SecondaryActionText = !string.IsNullOrWhiteSpace(session.MeetLink) && (!needsRevision && !needsEvaluation) && (session.ScheduledAt >= now)
+                    PrimaryActionUrl = !string.IsNullOrWhiteSpace(assignment.MeetLink) && !hasSubmitted && assignment.ScheduledAt.Value >= now
+                        ? assignment.MeetLink!
+                        : $"/Lecturer/EvaluationForm/{assignment.AssignmentId}",
+                    SecondaryActionText = !string.IsNullOrWhiteSpace(assignment.MeetLink) && (!needsRevision && !needsEvaluation) && (assignment.ScheduledAt.Value >= now)
                         ? "Open evaluation"
                         : null,
-                    SecondaryActionUrl = !string.IsNullOrWhiteSpace(session.MeetLink) && (!needsRevision && !needsEvaluation) && (session.ScheduledAt >= now)
-                        ? $"/Lecturer/EvaluationForm/{assignment.AssignmentID}"
+                    SecondaryActionUrl = !string.IsNullOrWhiteSpace(assignment.MeetLink) && (!needsRevision && !needsEvaluation) && (assignment.ScheduledAt.Value >= now)
+                        ? $"/Lecturer/EvaluationForm/{assignment.AssignmentId}"
                         : null
                 };
             })
@@ -989,8 +988,8 @@ public class LecturerService : ILecturerService
     }
 
     private async Task<List<LecturerDeadlineDto>> BuildDeadlinesAsync(
-        IEnumerable<ProjectGroup> groups,
-        IEnumerable<Feedback> pendingFeedbacks,
+        IEnumerable<ProjectGroupSummaryDto> groups,
+        IEnumerable<PendingFeedbackItemDto> pendingFeedbacks,
         DateTime now)
     {
         var deadlines = new List<LecturerDeadlineDto>();
@@ -1001,11 +1000,11 @@ public class LecturerService : ILecturerService
             var dueAt = feedback.CreatedAt.AddDays(2);
             deadlines.Add(new LecturerDeadlineDto
             {
-                Title = $"Approve feedback for {feedback.Evaluation?.Group?.GroupName ?? "group"}",
-                Description = $"Round {feedback.Evaluation?.ReviewRound?.RoundNumber ?? 0} feedback is waiting for your decision.",
+                Title = $"Approve feedback for {feedback.GroupName}",
+                Description = $"Round {feedback.RoundNumber} feedback is waiting for your decision.",
                 DueAt = dueAt,
                 Severity = dueAt.Date <= today.AddDays(1) ? "danger" : "warning",
-                ActionUrl = $"/Lecturer/FeedbackApprovalDetail/{feedback.FeedbackID}",
+                ActionUrl = $"/Lecturer/FeedbackApprovalDetail/{feedback.FeedbackId}",
                 ActionText = "Review feedback"
             });
         }
@@ -1014,23 +1013,18 @@ public class LecturerService : ILecturerService
 
         foreach (var group in groups)
         {
-            var project = group.Project;
-            if (project == null)
+            var projectId = group.ProjectId;
+            if (!roundsBySemester.TryGetValue(group.SemesterId, out var rounds))
             {
-                continue;
-            }
-
-            if (!roundsBySemester.TryGetValue(project.SemesterID, out var rounds))
-            {
-                rounds = (await _roundRepo.GetBySemesterAsync(project.SemesterID)).ToList();
-                roundsBySemester[project.SemesterID] = rounds;
+                rounds = (await _roundRepo.GetBySemesterAsync(group.SemesterId)).ToList();
+                roundsBySemester[group.SemesterId] = rounds;
             }
 
             foreach (var round in rounds)
             {
                 foreach (var requirement in round.SubmissionRequirements.Where(r => r.Deadline.Date >= today))
                 {
-                    var hasSubmission = group.Submissions.Any(s => s.Requirement?.ReviewRoundID == round.ReviewRoundID);
+                    var hasSubmission = group.Submissions.Any(s => s.ReviewRoundId == round.ReviewRoundID);
                     if (hasSubmission)
                     {
                         continue;
@@ -1042,7 +1036,7 @@ public class LecturerService : ILecturerService
                         Description = $"Round {round.RoundNumber} {round.RoundType} submission is still missing for this supervised group.",
                         DueAt = requirement.Deadline,
                         Severity = requirement.Deadline.Date <= today.AddDays(3) ? "danger" : "info",
-                        ActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupID}",
+                        ActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}",
                         ActionText = "Open group"
                     });
                 }
