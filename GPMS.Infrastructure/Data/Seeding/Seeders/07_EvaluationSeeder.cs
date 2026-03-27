@@ -22,14 +22,13 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Evaluations.CountAsync() > 20) return;
-
         var faker = new Faker("vi");
 
         var assignments = await _context.ReviewerAssignments
             .Include(ra => ra.ReviewRound)
                 .ThenInclude(rr => rr!.ReviewChecklist)
                     .ThenInclude(rc => rc!.ChecklistItems)
+            .Include(ra => ra.Group)
             .Where(ra => ra.ReviewRound.Status == RoundStatus.Completed || ra.ReviewRound.Status == RoundStatus.Ongoing)
             .ToListAsync();
 
@@ -48,6 +47,14 @@ public class EvaluationSeeder : IDataSeeder
             var checklist = ra.ReviewRound.ReviewChecklist;
             if (checklist == null) continue;
             
+            // Check if evaluation already exists
+            var exists = await _context.Evaluations.AnyAsync(e => 
+                e.ReviewRoundID == ra.ReviewRoundID && 
+                e.ReviewerID == ra.ReviewerID && 
+                e.GroupID == ra.GroupID);
+
+            if (exists) continue;
+
             // Randomly skipping some evaluations to mock incomplete data
             if (ra.ReviewRound.Status == RoundStatus.Ongoing && faker.Random.Double() > 0.7) continue;
 
@@ -61,8 +68,6 @@ public class EvaluationSeeder : IDataSeeder
                 OverallComment = faker.Lorem.Paragraphs(1)
             };
 
-            // Needs to add to context to get ID if using Guid or Identity?
-            // Wait, EF Core assigns IDs on SaveChanges, but we can link by object ref
             evaluations.Add(evaluation);
 
             foreach (var item in checklist.ChecklistItems)
@@ -71,7 +76,6 @@ public class EvaluationSeeder : IDataSeeder
                 if (item.ItemType == "Rubric")
                 {
                     var grades = new[] { "Excellent", "Good", "Acceptable", "Fail" };
-                    // Bias towards Acceptable/Good
                     assessment = faker.PickRandom(new[] { "Excellent", "Good", "Good", "Acceptable", "Acceptable", "Acceptable", "Fail" });
                 }
                 else
@@ -113,7 +117,6 @@ public class EvaluationSeeder : IDataSeeder
                     });
                 }
             }
-
             else
             {
                 approvals.Add(new FeedbackApproval
@@ -126,11 +129,14 @@ public class EvaluationSeeder : IDataSeeder
             count++;
         }
 
-        await _context.Evaluations.AddRangeAsync(evaluations);
-        await _context.EvaluationDetails.AddRangeAsync(details);
-        await _context.Feedbacks.AddRangeAsync(feedbacks);
-        await _context.FeedbackApprovals.AddRangeAsync(approvals);
-        await _context.SaveChangesAsync();
+        if (evaluations.Any())
+        {
+            await _context.Evaluations.AddRangeAsync(evaluations);
+            await _context.EvaluationDetails.AddRangeAsync(details);
+            await _context.Feedbacks.AddRangeAsync(feedbacks);
+            await _context.FeedbackApprovals.AddRangeAsync(approvals);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 

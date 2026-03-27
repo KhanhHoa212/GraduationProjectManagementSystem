@@ -22,8 +22,8 @@ public class UserSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        // Chỉ seed thêm nếu DB hiện tại có ít user
-        if (await _context.Users.CountAsync() > 50) return;
+        // Chỉ seed thêm nếu DB hiện tại trống
+        if (await _context.Users.AnyAsync()) return;
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword("123456");
 

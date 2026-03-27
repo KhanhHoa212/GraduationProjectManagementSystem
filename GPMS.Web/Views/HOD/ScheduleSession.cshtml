@@ -1,0 +1,230 @@
+@model GPMS.Web.ViewModels.ScheduleSessionViewModel
+@{
+    ViewData["Title"] = "Xếp lịch bảo vệ - " + Model.RoundName;
+    Layout = "_Layout";
+}
+
+<div class="max-w-6xl mx-auto space-y-8">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <nav class="flex text-[13px] font-bold text-slate-400 mb-2" aria-label="Breadcrumb">
+                <ol class="inline-flex items-center space-x-2">
+                    <li class="inline-flex items-center">
+                        <a asp-action="ReviewRounds" class="hover:text-primary-600 transition-colors">Review Rounds</a>
+                    </li>
+                    <li>
+                        <div class="flex items-center">
+                            <span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+                            <span class="text-slate-600">@Model.RoundName</span>
+                        </div>
+                    </li>
+                </ol>
+            </nav>
+            <h1 class="text-[28px] font-bold text-dark-900 tracking-tight">Xếp lịch bảo vệ</h1>
+            <p class="text-slate-500 text-[15px] mt-1">Sắp xếp thời gian, địa điểm và tạo phòng họp trực tuyến cho sinh viên.</p>
+        </div>
+        <a asp-action="ReviewRounds" class="inline-flex items-center gap-2 px-5 py-2.5 bg-white border-2 border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 font-bold text-sm rounded-xl transition-all shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">arrow_back</span>
+            Quay lại
+        </a>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h2 class="text-lg font-bold text-dark-900 flex items-center gap-2">
+                <span class="p-2 bg-primary-50 text-primary-600 rounded-lg material-symbols-outlined">event_note</span>
+                Danh sách nhóm
+            </h2>
+            <div class="text-xs font-bold text-slate-400 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm">
+                @Model.Groups.Count Groups
+            </div>
+        </div>
+
+        <div class="divide-y divide-slate-100">
+            @foreach (var group in Model.Groups)
+            {
+                <div class="p-6 transition-all hover:bg-slate-50/50" id="row-@group.GroupId">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        <!-- Group Info -->
+                        <div class="flex-1 min-w-[300px]">
+                            <h3 class="text-lg font-black text-dark-900 mb-1">Group @group.GroupName</h3>
+                            <p class="text-sm font-medium text-slate-500 line-clamp-2">@group.ProjectName</p>
+                        </div>
+
+                        <!-- Schedule Controls -->
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Thời gian</label>
+                                <input type="datetime-local" class="schedule-date w-full bg-slate-50 border border-slate-200 text-dark-900 text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium" 
+                                       value="@group.ScheduledAt?.ToString("yyyy-MM-ddTHH:mm")" 
+                                       data-group-id="@group.GroupId" />
+                            </div>
+
+                            <div class="space-y-1.5">
+                                <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest ml-1">Địa điểm</label>
+                                <div class="relative">
+                                    <select class="room-select appearance-none w-full bg-slate-50 border border-slate-200 text-dark-900 text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium pr-10" data-group-id="@group.GroupId">
+                                        <option value="">-- Online (Google Meet) --</option>
+                                        @foreach (var room in Model.Rooms)
+                                        {
+                                            <!option value="@room.RoomID" @(group.RoomId == room.RoomID ? "selected" : "")>
+                                                Phòng @room.RoomCode (@room.Building)
+                                            </!option>
+                                        }
+                                    </select>
+                                    <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">expand_more</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Meet Link & Actions -->
+                        <div class="flex-1 flex flex-col sm:flex-row gap-3 items-end lg:max-w-[350px]">
+                            <div class="w-full space-y-1.5">
+                                <label class="text-[11px] font-bold text-emerald-600 uppercase tracking-widest ml-1 flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-[14px]">video_call</span> Link họp trực tuyến
+                                </label>
+                                <div class="flex gap-2">
+                                    <input type="text" class="meet-link w-full bg-emerald-50/50 border border-emerald-100/50 text-emerald-800 text-sm rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium placeholder-emerald-300" 
+                                           value="@group.MeetLink" 
+                                           placeholder="Chưa có link" data-group-id="@group.GroupId" />
+                                           
+                                    @if (group.SessionId.HasValue)
+                                    {
+                                        <button class="generate-link shrink-0 px-3 flex items-center justify-center bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all shadow-sm" 
+                                                title="Tự động tạo link Google Meet" 
+                                                data-session-id="@group.SessionId">
+                                            <span class="material-symbols-outlined">add_link</span>
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+
+                            <button class="save-session shrink-0 w-full sm:w-auto h-[42px] px-6 bg-primary-600 hover:bg-primary-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-primary-500/20 flex items-center justify-center gap-2" 
+                                    data-group-id="@group.GroupId" data-session-id="@group.SessionId">
+                                <span class="material-symbols-outlined text-[18px]">save</span>
+                                <span>Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Groups.Any())
+            {
+                <div class="p-12 text-center flex flex-col items-center">
+                    <div class="w-20 h-20 bg-slate-50 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
+                        <span class="material-symbols-outlined filled text-4xl">inbox</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-dark-900 mb-1">Không có nhóm nào</h3>
+                    <p class="text-slate-500 text-sm max-w-sm">Chưa có nhóm nào được phân công bảo vệ trong đợt này. Quay lại sau nhé.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            $('.save-session').click(function() {
+                const btn = $(this);
+                const groupId = btn.data('group-id');
+                const sessionId = btn.data('session-id');
+                const row = $(`#row-${groupId}`);
+                const icon = btn.find('.material-symbols-outlined');
+                const text = btn.find('span:not(.material-symbols-outlined)');
+                
+                const data = {
+                    SessionID: sessionId > 0 ? sessionId : null,
+                    GroupID: groupId,
+                    ReviewRoundID: @Model.RoundId,
+                    ScheduledAt: row.find('.schedule-date').val(),
+                    RoomID: row.find('.room-select').val() || null,
+                    MeetLink: row.find('.meet-link').val(),
+                    IsOnline: !row.find('.room-select').val(),
+                    Notes: ""
+                };
+
+                if (!data.ScheduledAt) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Thiếu thông tin',
+                        text: 'Vui lòng chọn thời gian họp.',
+                        confirmButtonColor: '#0f172a'
+                    });
+                    return;
+                }
+
+                btn.prop('disabled', true).addClass('opacity-75 relative').append('<span class="absolute inset-0 flex items-center justify-center bg-primary-600 rounded-xl"><span class="material-symbols-outlined animate-spin">refresh</span></span>');
+
+                fetch('/HOD/SaveSession', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: result.message
+                        }).then(() => location.reload()); // Reload to show generate link button
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Thất bại',
+                            text: result.message,
+                            confirmButtonColor: '#0f172a'
+                        });
+                        btn.prop('disabled', false).find('.absolute').remove();
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Lỗi', 'Đã xảy ra lỗi hệ thống, vui lòng thử lại.', 'error');
+                    btn.prop('disabled', false).find('.absolute').remove();
+                });
+            });
+
+            $('.generate-link').click(function() {
+                const btn = $(this);
+                const sessionId = btn.data('session-id');
+                
+                btn.prop('disabled', true).html('<span class="material-symbols-outlined animate-spin">refresh</span>');
+
+                fetch(`/HOD/GenerateSessionMeetLink?sessionId=${sessionId}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) {
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 3000,
+                            timerProgressBar: true,
+                        });
+                        Toast.fire({
+                            icon: 'success',
+                            title: result.message
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Thất bại', result.message, 'error');
+                        btn.prop('disabled', false).html('<span class="material-symbols-outlined">add_link</span>');
+                    }
+                })
+                .catch(() => {
+                    Swal.fire('Lỗi', 'Đã xảy ra lỗi hệ thống.', 'error');
+                    btn.prop('disabled', false).html('<span class="material-symbols-outlined">add_link</span>');
+                });
+            });
+        });
+    </script>
+}

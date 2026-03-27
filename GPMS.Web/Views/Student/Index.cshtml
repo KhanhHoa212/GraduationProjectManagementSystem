@@ -7,10 +7,38 @@
 
 <div class="max-w-6xl mx-auto space-y-6">
     <!-- Header Section -->
-    <div>
-        <h1 class="text-[28px] font-bold text-[#0f172a] tracking-tight">My Project</h1>
-        <p class="text-[#64748b] text-[15px] mt-1">Manage your graduation project, track progress, and collaborate with your team.</p>
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <h1 class="text-[28px] font-bold text-[#0f172a] tracking-tight">My Project</h1>
+            <p class="text-[#64748b] text-[15px] mt-1">Manage your graduation project, track progress, and collaborate with your team.</p>
+        </div>
+        @if (Model.NextMeeting != null)
+        {
+            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4 animate-fadeIn shadow-sm max-w-md">
+                <div class="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                    <span class="material-symbols-outlined text-[28px]">event_available</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-0.5">Next Meeting</div>
+                    <div class="text-sm font-bold text-[#0f172a] truncate">@Model.NextMeeting.RoundName • @Model.NextMeeting.ScheduledAt.ToString("MMM dd, HH:mm")</div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.NextMeeting.MeetLink))
+                {
+                    <a href="@Model.NextMeeting.MeetLink" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-all shadow-md shadow-emerald-600/20 whitespace-nowrap">
+                        Join Meet
+                    </a>
+                }
+            </div>
+        }
     </div>
+
+    @if (Model.NextMeeting != null && string.IsNullOrEmpty(Model.NextMeeting.MeetLink))
+    {
+        <div class="bg-blue-50 border border-blue-100 rounded-xl p-3 flex items-center gap-3 text-blue-700 text-xs font-medium">
+             <span class="material-symbols-outlined text-[18px]">info</span>
+             Your next meeting is offline at Room @Model.NextMeeting.RoomName (@Model.NextMeeting.Building).
+        </div>
+    }
 
     <!-- Review Progress Section -->
     <div class="bg-white rounded-2xl border border-[#e2e8f0] shadow-sm overflow-hidden mb-8">

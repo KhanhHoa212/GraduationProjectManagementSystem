@@ -13,12 +13,21 @@ public class ReviewRoundService : IReviewRoundService
 {
     private readonly IReviewRoundRepository _repository;
     private readonly ISemesterRepository _semesterRepository;
+    private readonly IReviewSessionRepository _sessionRepository;
+    private readonly IMeetingService _meetingService;
     private readonly IMapper _mapper;
 
-    public ReviewRoundService(IReviewRoundRepository repository, ISemesterRepository semesterRepository, IMapper mapper)
+    public ReviewRoundService(
+        IReviewRoundRepository repository, 
+        ISemesterRepository semesterRepository, 
+        IReviewSessionRepository sessionRepository,
+        IMeetingService meetingService,
+        IMapper mapper)
     {
         _repository = repository;
         _semesterRepository = semesterRepository;
+        _sessionRepository = sessionRepository;
+        _meetingService = meetingService;
         _mapper = mapper;
     }
 
@@ -198,6 +207,72 @@ public class ReviewRoundService : IReviewRoundService
         }
 
         await _repository.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<IEnumerable<ReviewSessionInfo>> GetGroupSessionsAsync(int roundId)
+    {
+        return await _sessionRepository.GetByRoundIdAsync(roundId);
+    }
+
+    public async Task<bool> ScheduleSessionAsync(ScheduleSessionUpdateDto dto)
+    {
+        ReviewSessionInfo? session;
+        if (dto.SessionID.HasValue && dto.SessionID.Value > 0)
+        {
+            session = await _sessionRepository.GetByIdAsync(dto.SessionID.Value);
+            if (session == null) return false;
+            
+            session.ScheduledAt = dto.ScheduledAt;
+            session.RoomID = dto.IsOnline ? null : dto.RoomID;
+            session.MeetLink = dto.IsOnline ? dto.MeetLink : null;
+            session.Notes = dto.Notes;
+            
+            _sessionRepository.Update(session);
+        }
+        else
+        {
+            session = new ReviewSessionInfo
+            {
+                GroupID = dto.GroupID,
+                ReviewRoundID = dto.ReviewRoundID,
+                ScheduledAt = dto.ScheduledAt,
+                RoomID = dto.IsOnline ? null : dto.RoomID,
+                MeetLink = dto.IsOnline ? dto.MeetLink : null,
+                Notes = dto.Notes
+            };
+            await _sessionRepository.AddAsync(session);
+        }
+
+        await _sessionRepository.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> GenerateMeetingLinkAsync(int sessionId)
+    {
+        var session = await _sessionRepository.GetByIdAsync(sessionId);
+        if (session == null) return false;
+
+        var round = session.ReviewRound;
+        var group = session.Group;
+        
+        string title = $"{round.RoundType} Review - Group {group.GroupName}";
+        
+        // Collect emails
+        var emails = new List<string>();
+        emails.AddRange(group.GroupMembers.Select(m => m.User.Email).Where(e => !string.IsNullOrEmpty(e))!);
+        
+        // Add supervisors
+        var supervisors = group.Project.ProjectSupervisors.Select(ps => ps.Lecturer.Email).Where(e => !string.IsNullOrEmpty(e));
+        emails.AddRange(supervisors!);
+
+        // Link generation
+        string meetLink = await _meetingService.CreateMeetingAsync(title, session.ScheduledAt, 60, emails.Distinct().ToList());
+        
+        session.MeetLink = meetLink;
+        _sessionRepository.Update(session);
+        await _sessionRepository.SaveChangesAsync();
+        
         return true;
     }
 }

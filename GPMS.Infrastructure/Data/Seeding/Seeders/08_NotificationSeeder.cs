@@ -22,7 +22,7 @@ public class NotificationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Notifications.CountAsync() > 50) return;
+        if (await _context.Notifications.AnyAsync()) return;
 
         var faker = new Faker("vi");
 

@@ -59,12 +59,16 @@ public class StudentController : Controller
             }
         }
 
+        var schedules = await _projectService.GetProjectDefenseScheduleAsync(studentId);
+        var nextMeeting = schedules?.OrderBy(s => s.ScheduledAt).FirstOrDefault(s => s.ScheduledAt > System.DateTime.Now);
+
         var viewModel = new StudentDashboardViewModel
         {
             Project = project,
             ActiveSubmissions = submissions,
             RecentFeedbacks = feedbacks,
-            ReviewRounds = reviewRounds
+            ReviewRounds = reviewRounds,
+            NextMeeting = nextMeeting
         };
 
         return View(viewModel);

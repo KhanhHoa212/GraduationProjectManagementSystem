@@ -202,9 +202,13 @@
                                         </td>
                                         <td class="py-4 px-6">
                                             <div class="flex items-center gap-2">
-                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Edit Schedule & Settings">
-                                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit_calendar</span>
-                                                    <span class="ml-1 font-medium">Configure</span>
+                                                <a href="/HOD/ScheduleSession?roundId=@item.ReviewRoundID" class="p-2 text-[#F37021] hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all flex items-center gap-1" title="Xếp lịch bảo vệ">
+                                                    <span class="material-symbols-outlined" style="font-size: 20px;">event_note</span>
+                                                    <span class="font-medium">Xếp lịch</span>
+                                                </a>
+                                                <div class="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1"></div>
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Cấu hình vòng">
+                                                    <span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
                                                 </a>
                                             </div>
                                         </td>

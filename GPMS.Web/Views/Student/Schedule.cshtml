@@ -205,9 +205,23 @@
                                     </div>
                                 </div>
 
-                                <button class="w-full py-5 bg-[#F37021] hover:bg-[#F37021]/90 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-orange-900/30 active:scale-[0.98]">
+                                @if (!string.IsNullOrEmpty(schedule.MeetLink))
+                                {
+                                    <div class="mb-5 relative group/btn">
+                                        <div class="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-[1.5rem] blur opacity-50 group-hover/btn:opacity-100 transition duration-1000 group-hover/btn:duration-200 animate-pulse"></div>
+                                        <a href="@schedule.MeetLink" target="_blank" class="relative w-full py-5 bg-emerald-500 hover:bg-emerald-400 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-emerald-900/50 active:scale-[0.98]">
+                                            <span class="material-symbols-outlined filled animate-bounce">video_call</span>
+                                            <span>Join Google Meet</span>
+                                        </a>
+                                    </div>
+                                    <div class="text-center mb-6">
+                                        <p class="text-[11px] font-bold text-emerald-300/80">Click the button above to join the online defense session</p>
+                                    </div>
+                                }
+
+                                <button class="w-full py-5 bg-[#1e3a5f] hover:bg-blue-900 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-900/30 active:scale-[0.98] border border-white/10">
                                     <span class="material-symbols-outlined filled">calendar_add_on</span>
-                                    Add to Google Calendar
+                                    Add to Calendar
                                 </button>
                             </div>
                         </div>

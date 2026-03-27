@@ -22,8 +22,6 @@ public class SubmissionSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Submissions.CountAsync() > 20) return;
-
         var faker = new Faker();
 
         var rounds = await _context.ReviewRounds
@@ -66,6 +64,14 @@ public class SubmissionSeeder : IDataSeeder
 
                 foreach (var req in round.SubmissionRequirements)
                 {
+                    // Check if this submission already exists
+                    var exists = await _context.Submissions.AnyAsync(s =>
+                        s.GroupID == group.GroupID &&
+                        s.RequirementID == req.RequirementID &&
+                        s.Version == 1);
+
+                    if (exists) continue;
+
                     var fileName = req.DocumentName.Contains("Báo cáo") ? "BaoCaoTienDo.pdf" : "SourceCode.zip";
                     submissions.Add(new Submission
                     {
@@ -83,8 +89,11 @@ public class SubmissionSeeder : IDataSeeder
             }
         }
 
-        await _context.Submissions.AddRangeAsync(submissions);
-        await _context.SaveChangesAsync();
+        if (submissions.Any())
+        {
+            await _context.Submissions.AddRangeAsync(submissions);
+            await _context.SaveChangesAsync();
+        }
     }
 }
 
