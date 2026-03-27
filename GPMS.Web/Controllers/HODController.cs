@@ -568,7 +568,7 @@ public class HODController : Controller
     }
 
     public IActionResult AssignReviewer() => View();
-    [HttpGet("Reports")]
+    [HttpGet]
     public async Task<IActionResult> Reports(int? semesterId, int page = 1)
     {
         ViewData["Title"] = "Reports";
@@ -630,7 +630,7 @@ public class HODController : Controller
         return View(vm);
     }
 
-    [HttpGet("ExportReportExcel")]
+    [HttpGet]
     public async Task<IActionResult> ExportReportExcel(int? semesterId)
     {
         var targetSemesterId = semesterId == -1 ? null : semesterId;
