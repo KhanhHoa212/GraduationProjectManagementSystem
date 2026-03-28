@@ -42,6 +42,10 @@ public class EvaluationSeeder : IDataSeeder
 
         var supervisors = await _context.ProjectSupervisors.ToListAsync();
 
+        var existingEvalKeys = new HashSet<(int, int, string)>(
+            await _context.Evaluations.Select(e => new ValueTuple<int, int, string>(e.GroupID, e.ReviewRoundID, e.ReviewerID)).ToListAsync()
+        );
+
         int count = 0;
         foreach (var ra in assignments)
         {
@@ -50,6 +54,10 @@ public class EvaluationSeeder : IDataSeeder
             
             // Randomly skipping some evaluations to mock incomplete data
             if (ra.ReviewRound.Status == RoundStatus.Ongoing && faker.Random.Double() > 0.7) continue;
+
+            // Check if evaluation already exists - Using HashSet
+            if (existingEvalKeys.Contains((ra.GroupID, ra.ReviewRoundID, ra.ReviewerID))) 
+                continue;
 
             var evaluation = new Evaluation
             {
@@ -61,8 +69,6 @@ public class EvaluationSeeder : IDataSeeder
                 OverallComment = faker.Lorem.Paragraphs(1)
             };
 
-            // Needs to add to context to get ID if using Guid or Identity?
-            // Wait, EF Core assigns IDs on SaveChanges, but we can link by object ref
             evaluations.Add(evaluation);
 
             foreach (var item in checklist.ChecklistItems)
@@ -71,7 +77,6 @@ public class EvaluationSeeder : IDataSeeder
                 if (item.ItemType == "Rubric")
                 {
                     var grades = new[] { "Excellent", "Good", "Acceptable", "Fail" };
-                    // Bias towards Acceptable/Good
                     assessment = faker.PickRandom(new[] { "Excellent", "Good", "Good", "Acceptable", "Acceptable", "Acceptable", "Fail" });
                 }
                 else
@@ -93,7 +98,7 @@ public class EvaluationSeeder : IDataSeeder
             {
                 Evaluation = evaluation,
                 Content = faker.Lorem.Sentences(2),
-                CreatedAt = evaluation.SubmittedAt.Value.AddHours(faker.Random.Int(1, 24))
+                CreatedAt = (evaluation.SubmittedAt ?? DateTime.UtcNow).AddHours(faker.Random.Int(1, 24))
             };
             feedbacks.Add(feedback);
 
@@ -113,7 +118,6 @@ public class EvaluationSeeder : IDataSeeder
                     });
                 }
             }
-
             else
             {
                 approvals.Add(new FeedbackApproval
@@ -126,11 +130,21 @@ public class EvaluationSeeder : IDataSeeder
             count++;
         }
 
-        await _context.Evaluations.AddRangeAsync(evaluations);
-        await _context.EvaluationDetails.AddRangeAsync(details);
-        await _context.Feedbacks.AddRangeAsync(feedbacks);
-        await _context.FeedbackApprovals.AddRangeAsync(approvals);
-        await _context.SaveChangesAsync();
+        try 
+        {
+            if (evaluations.Any()) await _context.Evaluations.AddRangeAsync(evaluations);
+            if (details.Any()) await _context.EvaluationDetails.AddRangeAsync(details);
+            if (feedbacks.Any()) await _context.Feedbacks.AddRangeAsync(feedbacks);
+            if (approvals.Any()) await _context.FeedbackApprovals.AddRangeAsync(approvals);
+            
+            if (evaluations.Any() || details.Any() || feedbacks.Any() || approvals.Any())
+                await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            Console.WriteLine($"[Seeding] EvaluationSeeder FAILED: {msg}");
+        }
     }
 }
 

@@ -43,5 +43,15 @@ public interface IProjectService
     // Download Proxy
     Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
     Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
+
+    // Defense Scheduling
+    Task<DefenseScheduleViewModel> GetDefenseScheduleDataAsync(int? roundId, DateTime date);
+    Task<(bool success, string message)> SaveDefenseSessionAsync(CreateDefenseSessionRequest request);
+    Task<(bool success, string message)> DeleteDefenseSessionAsync(int sessionId);
+    
+    // Reviewer Assignment
+    Task<ReviewerAssignmentDto> GetReviewerAssignmentDataAsync(int? roundId);
+    Task<(bool success, string message)> SaveReviewerAssignmentsAsync(UpdateReviewerAssignmentRequest request);
+    Task<(bool success, string message)> RemoveReviewerAsync(RemoveReviewerRequest request);
 }
 

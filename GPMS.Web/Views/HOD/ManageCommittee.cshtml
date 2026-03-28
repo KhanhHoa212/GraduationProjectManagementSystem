@@ -1,0 +1,423 @@
+@model GPMS.Application.DTOs.ManageCommitteeViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Committee Management";
+}
+
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --accent-color: #f37021;
+        --accent-hover: #e55e0f;
+        --header-gradient: linear-gradient(135deg, #f37021, #f4741c);
+    }
+
+    .container-fluid {
+        padding: 2rem;
+        background: #f8f9fa;
+        min-height: calc(100vh - 60px);
+    }
+
+    .premium-card {
+        background: var(--glass-bg);
+        border: none;
+        border-radius: 1.25rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+    .card-header-gradient {
+        background: var(--header-gradient);
+        color: white;
+        padding: 1.5rem 2rem;
+        border: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header-gradient h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .btn-create-committee {
+        background: white;
+        color: var(--accent-color);
+        border: none;
+        padding: 0.6rem 1.5rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .btn-create-committee:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        color: var(--accent-hover);
+    }
+
+    .table-container {
+        padding: 1.5rem;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.75rem;
+    }
+
+    .custom-table th {
+        background: transparent;
+        border: none;
+        color: #6c757d;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        padding: 1rem;
+    }
+
+    .custom-table tr {
+        background: white;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        transition: all 0.2s ease;
+    }
+
+    .custom-table tr:hover {
+        transform: scale(1.002);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+    }
+
+    .custom-table td {
+        padding: 1.25rem 1rem;
+        border: none;
+        vertical-align: middle;
+    }
+
+    .custom-table tr td:first-child { border-radius: 1rem 0 0 1rem; }
+    .custom-table tr td:last-child { border-radius: 0 1rem 1rem 0; }
+
+    .role-badge {
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .badge-chairperson { background: #fee2e2; color: #ef4444; }
+    .badge-secretary { background: #fef3c7; color: #d97706; }
+    .badge-reviewer { background: #ffedd5; color: #f37021; }
+
+    /* Modal Styles */
+    .modal-content {
+        border-radius: 1.5rem;
+        border: none;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        background: var(--header-gradient);
+        color: white;
+        border: none;
+        padding: 1.5rem 2rem;
+    }
+
+    .modal-title { font-weight: 700; }
+
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control, .form-select {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        border: 1px solid #dee2e6;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.1);
+    }
+
+    .btn-save-modal {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.8rem 2rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        width: 100%;
+        margin-top: 1rem;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="premium-card">
+        <div class="card-header-gradient">
+            <input type="hidden" id="committeeId" value="0">
+            <div>
+                <h2 id="modalTitle">Committee Repository</h2>
+                <p class="mb-0 opacity-75">Design and manage specialized panels for final defenses</p>
+            </div>
+            <button class="btn-create-committee" onclick="openCreateModal()">
+                <i class="fas fa-plus me-2"></i>New Committee
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table class="custom-table">
+                <thead>
+                    <tr>
+                        <th>Committee Name</th>
+                        <th>Chairperson</th>
+                        <th>Secretary</th>
+                        <th>Reviewers Panel</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var committee in Model.Committees)
+                    {
+                        <tr>
+                            <td>
+                                <span class="fw-bold text-dark">@committee.CommitteeName</span>
+                            </td>
+                            <td>
+                                <span class="role-badge badge-chairperson">
+                                    <i class="fas fa-user-tie me-1"></i> @committee.ChairpersonName
+                                </span>
+                            </td>
+                            <td>
+                                <span class="role-badge badge-secretary">
+                                    <i class="fas fa-pen-nib me-1"></i> @committee.SecretaryName
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    <span class="role-badge badge-reviewer">
+                                        <i class="fas fa-search me-1"></i> 1: @committee.ReviewerName
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(committee.Reviewer2Name))
+                                    {
+                                        <span class="role-badge badge-reviewer">
+                                            <i class="fas fa-search me-1"></i> 2: @committee.Reviewer2Name
+                                        </span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(committee.Reviewer3Name))
+                                    {
+                                        <span class="role-badge badge-reviewer">
+                                            <i class="fas fa-search me-1"></i> 3: @committee.Reviewer3Name
+                                        </span>
+                                    }
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-flex justify-content-end gap-2">
+                                    <button class="btn btn-sm btn-outline-primary border-0" onclick="editCommittee(@committee.CommitteeID)">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteCommittee(@committee.CommitteeID)">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create/Edit Committee Modal -->
+<div id="createCommitteeModal" class="fixed inset-0 z-[1050] hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeCreateModal()"></div>
+    <div id="modalContainer" class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-[1.5rem] shadow-2xl overflow-hidden border border-slate-200 transition-all duration-300 scale-95 opacity-0">
+        <div class="modal-header d-flex justify-content-between align-items-center" style="background: var(--header-gradient); color: white; padding: 1.5rem 2rem;">
+            <h5 class="modal-title mb-0" id="modalTitleText">Establish New Committee</h5>
+            <button type="button" class="btn-close btn-close-white" style="filter: brightness(0) invert(1);" onclick="closeCreateModal()"></button>
+        </div>
+        <div class="modal-body p-4" style="background: white;">
+                <form id="createCommitteeForm">
+                    <div class="mb-3">
+                        <label class="form-label">Committee Title</label>
+                        <input type="text" class="form-control" id="committeeName" name="CommitteeName" placeholder="e.g. Software Engineering Panel A" required>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-primary">Chairperson</label>
+                            <select class="form-select" id="chairpersonId" name="ChairpersonID" required>
+                                <option value="">Select Chairperson</option>
+                                @foreach (var lect in Model.Lecturers)
+                                {
+                                    <option value="@lect.UserID">@lect.FullName</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label text-success">Secretary</label>
+                            <select class="form-select" id="secretaryId" name="SecretaryID" required>
+                                <option value="">Select Secretary</option>
+                                @foreach (var lect in Model.Lecturers)
+                                {
+                                    <option value="@lect.UserID">@lect.FullName</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-warning">Lead Reviewer (1)</label>
+                        <select class="form-select" id="reviewerId" name="ReviewerID" required>
+                            <option value="">Select Primary Reviewer</option>
+                            @foreach (var lect in Model.Lecturers)
+                                {
+                                    <option value="@lect.UserID">@lect.FullName</option>
+                                }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Reviewer 2 (Optional)</label>
+                        <select class="form-select" id="reviewer2Id" name="Reviewer2ID">
+                            <option value="">None</option>
+                            @foreach (var lect in Model.Lecturers)
+                            {
+                                <option value="@lect.UserID">@lect.FullName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">Reviewer 3 (Optional)</label>
+                        <select class="form-select" id="reviewer3Id" name="Reviewer3ID">
+                            <option value="">None</option>
+                            @foreach (var lect in Model.Lecturers)
+                            {
+                                <option value="@lect.UserID">@lect.FullName</option>
+                            }
+                        </select>
+                    </div>
+
+                    <button type="button" onclick="submitCommittee()" class="btn-save-modal">
+                        Save Committee
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    let isEditing = false;
+
+    function openCreateModal() {
+        isEditing = false;
+        document.getElementById('modalTitleText').innerText = 'Establish New Committee';
+        document.getElementById('committeeId').value = '0';
+        document.getElementById('createCommitteeForm').reset();
+        
+        const modal = document.getElementById('createCommitteeModal');
+        const container = document.getElementById('modalContainer');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            container.classList.remove('scale-95', 'opacity-0');
+            container.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    async function editCommittee(id) {
+        isEditing = true;
+        document.getElementById('modalTitleText').innerText = 'Edit Committee';
+        document.getElementById('committeeId').value = id;
+
+        try {
+            const resp = await fetch(`/HOD/GetCommittee/${id}`);
+            const data = await resp.json();
+            
+            document.getElementById('committeeName').value = data.committeeName;
+            document.getElementById('chairpersonId').value = data.chairpersonID;
+            document.getElementById('secretaryId').value = data.secretaryID;
+            document.getElementById('reviewerId').value = data.reviewerID;
+            document.getElementById('reviewer2Id').value = data.reviewer2ID || '';
+            document.getElementById('reviewer3Id').value = data.reviewer3ID || '';
+            
+            const modal = document.getElementById('createCommitteeModal');
+            const container = document.getElementById('modalContainer');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                container.classList.remove('scale-95', 'opacity-0');
+                container.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        } catch (err) { Swal.fire('Error', 'Failed to load committee data', 'error'); }
+    }
+
+    function closeCreateModal() {
+        const container = document.getElementById('modalContainer');
+        container.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            document.getElementById('createCommitteeModal').classList.add('hidden');
+        }, 300);
+    }
+
+    async function submitCommittee() {
+        const id = document.getElementById('committeeId').value;
+        const data = {
+            CommitteeID: id,
+            CommitteeName: document.getElementById('committeeName').value,
+            ChairpersonID: document.getElementById('chairpersonId').value,
+            SecretaryID: document.getElementById('secretaryId').value,
+            ReviewerID: document.getElementById('reviewerId').value,
+            Reviewer2ID: document.getElementById('reviewer2Id').value || null,
+            Reviewer3ID: document.getElementById('reviewer3Id').value || null
+        };
+
+        const url = isEditing ? `/HOD/UpdateCommittee/${id}` : '/HOD/CreateCommittee';
+        
+        try {
+            const resp = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if (result.success) {
+                location.reload();
+            } else {
+                Swal.fire('Error', 'Failed to save committee. Check settings.', 'error');
+            }
+        } catch (err) { Swal.fire('Error', 'System error', 'error'); }
+    }
+
+    function deleteCommittee(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will remove this committee template permanently.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#4361ee',
+            cancelButtonColor: '#ef4444',
+            confirmButtonText: 'Yes, remove it'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/HOD/DeleteCommittee?id=${id}`, { method: 'POST' })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        location.reload();
+                    }
+                });
+            }
+        });
+    }
+</script>

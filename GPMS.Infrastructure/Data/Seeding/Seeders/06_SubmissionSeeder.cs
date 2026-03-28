@@ -41,6 +41,10 @@ public class SubmissionSeeder : IDataSeeder
 
         var submissions = new List<Submission>();
 
+        var existingSubKeys = new HashSet<(int, int)>(
+            await _context.Submissions.Select(s => new ValueTuple<int, int>(s.GroupID, s.RequirementID)).ToListAsync()
+        );
+
         foreach (var round in rounds)
         {
             var targetGroups = groups.Where(g => g.Project.SemesterID == round.SemesterID).ToList();
@@ -66,6 +70,10 @@ public class SubmissionSeeder : IDataSeeder
 
                 foreach (var req in round.SubmissionRequirements)
                 {
+                    // Check if exists using HashSet
+                    if (existingSubKeys.Contains((group.GroupID, req.RequirementID))) 
+                        continue;
+
                     var fileName = req.DocumentName.Contains("Báo cáo") ? "BaoCaoTienDo.pdf" : "SourceCode.zip";
                     submissions.Add(new Submission
                     {
@@ -83,8 +91,21 @@ public class SubmissionSeeder : IDataSeeder
             }
         }
 
-        await _context.Submissions.AddRangeAsync(submissions);
-        await _context.SaveChangesAsync();
+        try 
+        {
+            if (submissions.Any())
+            {
+                await _context.Submissions.AddRangeAsync(submissions);
+                await _context.SaveChangesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            Console.WriteLine($"[Seeding] SubmissionSeeder FAILED: {msg}");
+            // Still throw to signal failure, or wrap in global if desired
+            // throw; 
+        }
     }
 }
 

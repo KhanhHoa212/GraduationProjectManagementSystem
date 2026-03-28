@@ -21,6 +21,9 @@ public class SemesterRepository : ISemesterRepository
     public async Task<IEnumerable<Semester>> GetAllAsync() => 
         await _context.Semesters.Include(s => s.Projects).ToListAsync();
 
+    public async Task<Semester?> GetActiveSemesterAsync() =>
+        await _context.Semesters.OrderByDescending(s => s.StartDate).FirstOrDefaultAsync();
+
     public async Task AddAsync(Semester semester) => await _context.Semesters.AddAsync(semester);
     public Task UpdateAsync(Semester semester) { _context.Semesters.Update(semester); return Task.CompletedTask; }
     
