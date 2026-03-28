@@ -12,6 +12,8 @@ using GPMS.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using GPMS.Domain.Entities;
 using GPMS.Application.Services;
+using GPMS.Application.Interfaces.Repositories;
+using AutoMapper;
 
 namespace GPMS.Web.Controllers;
 
@@ -26,7 +28,11 @@ public class HODController : Controller
     private readonly IReportService _reportService;
     private readonly IMajorService _majorService;
     private readonly IUserService _userService;
-    private readonly ICommitteeService _committeeService; // Added
+    private readonly ICommitteeService _committeeService;
+    private readonly ISemesterRepository _semesterRepository;
+    private readonly IProjectRepository _projectRepository;
+    private readonly IMajorRepository _majorRepository;
+    private readonly IMapper _mapper;
 
     public HODController(
         IProjectService projectService, 
@@ -37,7 +43,11 @@ public class HODController : Controller
         IReportService reportService,
         IMajorService majorService,
         IUserService userService,
-        ICommitteeService committeeService) // Added
+        ICommitteeService committeeService,
+        ISemesterRepository semesterRepository,
+        IProjectRepository projectRepository,
+        IMajorRepository majorRepository,
+        IMapper mapper)
     {
         _projectService = projectService;
         _semesterService = semesterService;
@@ -48,6 +58,10 @@ public class HODController : Controller
         _majorService = majorService;
         _userService = userService;
         _committeeService = committeeService;
+        _semesterRepository = semesterRepository;
+        _projectRepository = projectRepository;
+        _majorRepository = majorRepository;
+        _mapper = mapper;
     }
 
     [HttpGet]
@@ -644,23 +658,23 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    [HttpGet]
+    [HttpGet("Progress")]
     public async Task<IActionResult> Progress(int? semesterId, string? majorName)
     {
-        var semesters = (await _semesterService.GetAllSemestersAsync()).ToList();
+        var semesters = (await _semesterRepository.GetAllAsync()).OrderByDescending(s => s.StartDate).ToList();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         
         int? targetSemesterId = semesterId == -1 ? null : (semesterId ?? activeSemester?.SemesterID);
-        var majors = await _majorService.GetAllMajorsAsync();
+        var majors = await _majorRepository.GetAllAsync();
         
-        // Fetch groups and rounds
-        var groups = targetSemesterId.HasValue 
-            ? await _projectService.GetProjectsBySemesterAsync(targetSemesterId.Value)
-            : await _projectService.GetAllProjectsAsync();
-            
+        // Fetch projects with all necessary details (Submissions, Evaluations, etc.)
+        IEnumerable<Project> projects = targetSemesterId.HasValue 
+            ? await _projectRepository.GetBySemesterWithDetailsAsync(targetSemesterId.Value)
+            : await _projectRepository.GetAllWithDetailsAsync();
+
         if (!string.IsNullOrEmpty(majorName))
-            groups = groups.Where(g => g.MajorName == majorName);
-            
+            projects = projects.Where(p => p.Major?.MajorName == majorName);
+
         var rounds = targetSemesterId.HasValue
             ? await _reviewRoundService.GetReviewRoundsBySemesterAsync(targetSemesterId.Value)
             : new List<ReviewRoundDto>();
@@ -668,21 +682,28 @@ public class HODController : Controller
         var vm = new HODProgressViewModel
         {
             SemesterID = targetSemesterId,
-            Semesters = semesters,
-            Majors = majors.ToList(),
+            Semesters = _mapper.Map<List<SemesterDto>>(semesters),
+            Majors = _mapper.Map<List<MajorDto>>(majors.ToList()),
             Rounds = rounds.OrderBy(r => r.RoundNumber).ToList(),
-            Groups = groups.Select(g => new GroupProgressItemDto
+            Groups = projects.SelectMany(p => p.ProjectGroups.Select(g => new GroupProgressItemDto
             {
-                GroupID = g.ProjectID, 
-                ProjectCode = g.ProjectCode,
-                ProjectName = g.ProjectName,
-                GroupName = g.Members.FirstOrDefault()?.GroupName ?? ("Group " + g.ProjectCode),
-                MajorName = g.MajorName ?? "N/A",
-                SupervisorName = g.SupervisorName ?? "Unassigned"
-            }).ToList()
+                GroupID = g.GroupID, 
+                ProjectCode = p.ProjectCode,
+                ProjectName = p.ProjectName,
+                GroupName = g.GroupName,
+                MajorName = p.Major?.MajorName ?? "N/A",
+                SupervisorName = p.ProjectSupervisors?.FirstOrDefault(ps => ps.Role == ProjectRole.Main)?.Lecturer?.FullName ?? "Unassigned",
+                RoundStatuses = rounds.Select(r => new RoundProgressStatusDto
+                {
+                    RoundNumber = r.RoundNumber,
+                    IsSubmitted = g.Submissions?.Any(s => s.Requirement?.ReviewRoundID == r.ReviewRoundID) ?? false,
+                    IsApproved = g.MentorRoundReviews?.Any(m => m.ReviewRoundID == r.ReviewRoundID && m.DecisionStatus == MentorGateStatus.Approved) ?? false,
+                    IsEvaluated = g.Evaluations?.Any(e => e.ReviewRoundID == r.ReviewRoundID && e.Status == EvaluationStatus.Submitted) ?? false
+                }).ToList()
+            })).ToList()
         };
 
-        ViewBag.SelectedSemesterId = semesterId ?? activeSemester?.SemesterID;
+        ViewBag.SelectedSemesterId = targetSemesterId;
         ViewBag.CurrentMajor = majorName;
 
         return View(vm);

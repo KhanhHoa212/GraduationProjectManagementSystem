@@ -785,7 +785,7 @@ public class ProjectService : IProjectService
             }
 
             var rounds = (await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID))
-                            .Where(r => r.RoundNumber <= 3)
+                            .Where(r => r.RoundNumber >= 3)
                             .ToList();
             var targetRound = roundId.HasValue ? rounds.FirstOrDefault(r => r.ReviewRoundID == roundId.Value) : rounds.OrderBy(r => r.RoundNumber).FirstOrDefault();
             
