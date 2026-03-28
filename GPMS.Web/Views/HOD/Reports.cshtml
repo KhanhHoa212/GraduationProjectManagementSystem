@@ -59,10 +59,13 @@
                 </div>
             </form>
 
-            <button onclick="window.print()" class="flex items-center gap-2 bg-[#1a2236] text-white px-6 py-2.5 rounded-2xl font-bold text-sm hover:bg-[#252f4a] transition-all shadow-lg shadow-navy-100 group">
-                <span class="material-symbols-outlined group-hover:scale-110 transition-transform">print</span>
-                Xuất Báo cáo
             </button>
+
+            <a asp-action="ExportReportExcel" asp-route-semesterId='@ViewBag.SelectedSemesterId' hx-boost="false"
+               class="no-spinner w-full sm:w-auto flex justify-center items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm no-underline">
+                <span class="material-symbols-outlined text-sm">description</span>
+                <span class="font-semibold text-sm">Xuất Excel</span>
+            </a>
         </div>
     </div>
 
@@ -166,6 +169,107 @@
                         </div>
                         <div class="h-4 bg-slate-50 rounded-full overflow-hidden flex">
                             <div class="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-1000" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <!-- Round-based Statistics Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Submission Progress by Round -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm overflow-hidden relative">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-orange-50/30 rounded-full -mr-16 -mt-16"></div>
+            
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
+                <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                Tiến độ nộp bài theo Giai đoạn
+            </h3>
+            
+            <div class="space-y-8 relative z-10">
+                @foreach (var round in Model.RoundSubmissionStats) {
+                    var total = round.TotalRequired > 0 ? round.TotalRequired : 1;
+                    var onTimePct = (int)Math.Round((double)round.OnTimeCount / total * 100);
+                    var latePct = (int)Math.Round((double)round.LateCount / total * 100);
+                    var pendingPct = 100 - onTimePct - latePct;
+
+                    <div class="group">
+                        <div class="flex justify-between items-end mb-3">
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 group-hover:text-orange-600 transition-colors uppercase tracking-tight">Giai đoạn @round.RoundNumber</h4>
+                                <p class="text-[10px] text-slate-400 font-bold">@round.RoundDescription</p>
+                            </div>
+                            <div class="text-right">
+                                <span class="text-sm font-black text-slate-900">@onTimePct%</span>
+                                <span class="text-[10px] text-slate-400 font-bold ml-1 uppercase">Hoàn thành</span>
+                            </div>
+                        </div>
+                        
+                        <div class="h-5 bg-slate-50 rounded-xl overflow-hidden flex p-1 border border-slate-100 shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-lg shadow-sm transition-all duration-1000" 
+                                 style="width: @onTimePct%" title="Đúng hạn: @round.OnTimeCount"></div>
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg shadow-sm transition-all duration-1000 mx-0.5" 
+                                 style="width: @latePct%" title="Trễ hạn: @round.LateCount"></div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mt-3">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Đúng hạn: @round.OnTimeCount</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Trễ: @round.LateCount</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Chưa nộp: @round.NotSubmittedCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Mentor Decision Stats -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm overflow-hidden relative">
+            <div class="absolute bottom-0 right-0 w-32 h-32 bg-blue-50/30 rounded-full -mr-16 -mb-16"></div>
+            
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                Quyết định của Mentor
+            </h3>
+            
+            <div class="grid grid-cols-1 gap-4 relative z-10">
+                @foreach (var round in Model.RoundMentorStats) {
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 hover:border-blue-200 transition-all hover:bg-white group">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-blue-600 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    @round.RoundNumber
+                                </div>
+                                <span class="text-xs font-black text-slate-900 uppercase tracking-tight">Round @round.RoundNumber</span>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-emerald-600 font-black text-lg">@round.AcceptedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Approved</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-red-500 font-black text-lg">@round.RejectedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Rejected</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-orange-400 font-black text-lg">@round.PendingCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Pending</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-slate-400 font-black text-lg">@round.StoppedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Stopped</p>
+                            </div>
                         </div>
                     </div>
                 }

@@ -1,8 +1,11 @@
 using GPMS.Application.DTOs;
 using GPMS.Application.Interfaces.Services;
 using GPMS.Web.ViewModels;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -23,6 +26,28 @@ public class ProfileController : Controller
     private string? GetCurrentUserId()
     {
         return User.FindFirstValue(ClaimTypes.NameIdentifier);
+    }
+
+    private async Task RefreshSignInAsync(UserDto user)
+    {
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.NameIdentifier, user.UserID),
+            new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim("AvatarUrl", user.AvatarUrl ?? string.Empty)
+        };
+
+        foreach (var role in user.Roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        var authProps = new AuthenticationProperties { IsPersistent = true };
+
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProps);
     }
 
     [HttpGet]
@@ -115,6 +140,14 @@ public class ProfileController : Controller
             };
 
             await _userService.UpdateProfileAsync(dto);
+            
+            // Refresh claims so the header update immediately
+            var updatedUser = await _userService.GetUserByIdAsync(userId);
+            if (updatedUser != null)
+            {
+                await RefreshSignInAsync(updatedUser);
+            }
+
             TempData["SuccessMessage"] = "Profile updated successfully!";
             return RedirectToAction(nameof(Index));
         }

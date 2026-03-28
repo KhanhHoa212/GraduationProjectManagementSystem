@@ -4,16 +4,21 @@ using GPMS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using ClosedXML.Excel;
 using GPMS.Web.ViewModels;
 using Microsoft.AspNetCore.Identity;
 using GPMS.Domain.Entities;
 using GPMS.Application.Services;
 using GPMS.Application.Interfaces.Repositories;
 using AutoMapper;
+using GPMS.Web.Helpers;
+using GPMS.Web.Models;
 
 namespace GPMS.Web.Controllers;
 
@@ -181,7 +186,7 @@ public class HODController : Controller
         ViewBag.CurrentMajor = majorName;
 
         // Use PaginatedList (Assuming pageSize = 10 for HOD Projects)
-        var paginatedProjects = Models.PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
+        var paginatedProjects = PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
         return View(paginatedProjects);
     }
 
@@ -769,13 +774,85 @@ public class HODController : Controller
             CancelledProjects = dto.CancelledProjects,
             MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
             RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
-            SupervisorWorkloads = Models.PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
+            SupervisorWorkloads = PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
             AllSupervisorWorkloads = workloadItems.ToList(),
             RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
         };
 
 
         return View(vm);
+    }
+
+    [HttpGet("ExportReportExcel")]
+    public async Task<IActionResult> ExportReportExcel(int? semesterId)
+    {
+        var targetSemesterId = semesterId == -1 ? null : semesterId;
+        var dto = await _reportService.GetHODReportAsync(targetSemesterId);
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
+
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("HOD Report");
+
+        // Title
+        ws.Cell(1, 1).Value = $"GPMS Report – {targetSemObj?.SemesterCode ?? "All Semesters"}";
+        ws.Cell(1, 1).Style.Font.Bold = true;
+        ws.Cell(1, 1).Style.Font.FontSize = 14;
+        ws.Range(1, 1, 1, 3).Merge();
+
+        ws.Cell(2, 1).Value = "Generated at:";
+        ws.Cell(2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+
+        // KPI Section
+        ws.Cell(4, 1).Value = "KPI Summary";
+        ws.Cell(4, 1).Style.Font.Bold = true;
+        
+        ws.Cell(5, 1).Value = "Total Projects"; ws.Cell(5, 2).Value = dto.TotalProjects;
+        ws.Cell(6, 1).Value = "Total Groups";   ws.Cell(6, 2).Value = dto.TotalGroups;
+        ws.Cell(7, 1).Value = "Total Students"; ws.Cell(7, 2).Value = dto.TotalStudents;
+        ws.Cell(8, 1).Value = "Total Supervisors"; ws.Cell(8, 2).Value = dto.TotalSupervisors;
+
+        // Status Section
+        int row = 10;
+        ws.Cell(row, 1).Value = "Project Status Distribution";
+        ws.Cell(row, 1).Style.Font.Bold = true;
+        row++;
+        ws.Cell(row, 1).Value = "Draft";     ws.Cell(row, 2).Value = dto.DraftProjects; row++;
+        ws.Cell(row, 1).Value = "Active";    ws.Cell(row, 2).Value = dto.ActiveProjects; row++;
+        ws.Cell(row, 1).Value = "Completed"; ws.Cell(row, 2).Value = dto.CompletedProjects; row++;
+        ws.Cell(row, 1).Value = "Cancelled"; ws.Cell(row, 2).Value = dto.CancelledProjects; row++;
+
+        // Workload Section
+        row += 2;
+        ws.Cell(row, 1).Value = "Supervisor Workload";
+        ws.Cell(row, 1).Style.Font.Bold = true;
+        row++;
+        ws.Cell(row, 1).Value = "Lecturer Name";
+        ws.Cell(row, 2).Value = "Project Count";
+        ws.Cell(row, 3).Value = "Student Count";
+        ws.Range(row, 1, row, 3).Style.Font.Bold = true;
+        ws.Range(row, 1, row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#F27123");
+        ws.Range(row, 1, row, 3).Style.Font.FontColor = XLColor.White;
+        row++;
+
+        foreach (var sup in dto.SupervisorWorkloads)
+        {
+            ws.Cell(row, 1).Value = sup.LecturerName;
+            ws.Cell(row, 2).Value = sup.ProjectCount;
+            ws.Cell(row, 3).Value = sup.StudentCount;
+            row++;
+        }
+
+        ws.Columns(1, 3).AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var fileName = $"GPMS_HOD_Report_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+        return File(stream.ToArray(), 
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            fileName);
     }
 
     

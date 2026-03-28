@@ -109,8 +109,9 @@ builder.Services.AddScoped<IFileService, CloudinaryService>();
 builder.Services.Configure<HostOptions>(options =>
     options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
 
-// builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
-// builder.Services.AddHostedService<GPMS.Web.Services.DeadlineReminderHostedService>();
+// Register Background Services
+builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
+builder.Services.AddHostedService<GPMS.Web.Services.ReminderHostedService>();
 
 var app = builder.Build();
 
@@ -151,14 +152,5 @@ app.MapControllerRoute(
 
 app.MapRazorPages();
 
-try 
-{
-    Console.WriteLine(">>> GPMS Web starting on http://localhost:5045");
-    app.Run("http://localhost:5045");
-}
-catch (Exception ex)
-{
-    Console.WriteLine($"[FATAL] Application Host CRASHED: {ex.Message}");
-    if (ex.InnerException != null)
-        Console.WriteLine($"[FATAL] Inner Exception: {ex.InnerException.Message}");
-}
+app.Run();
+

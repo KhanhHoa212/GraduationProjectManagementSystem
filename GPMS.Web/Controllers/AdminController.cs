@@ -657,4 +657,45 @@ public class AdminController : Controller
         }
         return View(logs);
     }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Projects(int? semesterId, string? search, int page = 1)
+    {
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var currentSemester = semesters.FirstOrDefault(s => s.Status == GPMS.Domain.Enums.SemesterStatus.Active);
+        
+        int targetSemesterId = semesterId ?? currentSemester?.SemesterID ?? (semesters.OrderByDescending(s => s.StartDate).FirstOrDefault()?.SemesterID ?? 0);
+        
+        IEnumerable<ProjectDto> projects;
+        if (targetSemesterId == -1) // All semesters
+        {
+            projects = await _projectService.GetAllProjectsAsync();
+        }
+        else
+        {
+            projects = await _projectService.GetProjectsBySemesterAsync(targetSemesterId);
+        }
+        
+        if (!string.IsNullOrEmpty(search))
+        {
+            projects = projects.Where(p => p.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase) 
+                                        || (p.ProjectCode != null && p.ProjectCode.Contains(search, StringComparison.OrdinalIgnoreCase))
+                                        || (p.SupervisorName != null && p.SupervisorName.Contains(search, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        ViewBag.Semesters = semesters;
+        ViewBag.SelectedSemesterId = targetSemesterId;
+        ViewBag.CurrentSearch = search;
+
+        var paginatedProjects = PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
+        return View(paginatedProjects);
+    }
+
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> ProjectDetails(int id)
+    {
+        var project = await _projectService.GetProjectDetailAsync(id);
+        if (project == null) return NotFound();
+        return View(project);
+    }
 }

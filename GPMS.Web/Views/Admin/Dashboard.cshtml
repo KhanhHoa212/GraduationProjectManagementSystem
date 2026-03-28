@@ -27,7 +27,7 @@
                 <span class="material-symbols-outlined text-sm">add</span>
                 Add New User
             </a>
-            <a asp-action="ExportReport" asp-controller="Admin"
+            <a asp-action="ExportReport" asp-controller="Admin" hx-boost="false"
                class="no-spinner flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg font-semibold hover:bg-slate-50 transition-all shadow-sm no-underline text-slate-700">
                 <span class="material-symbols-outlined text-sm">download</span>
                 Export Report
@@ -135,7 +135,7 @@
                     </div>
                     <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
                 </a>
-                <a asp-action="ExportReport" asp-controller="Admin"
+                <a asp-action="ExportReport" asp-controller="Admin" hx-boost="false"
                    class="no-spinner w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-green-50 hover:text-green-700 rounded-xl border border-transparent hover:border-green-200 transition-all group no-underline">
                     <div class="flex items-center gap-3">
                         <span class="material-symbols-outlined text-slate-400 group-hover:text-green-600">cloud_download</span>
