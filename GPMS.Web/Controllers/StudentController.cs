@@ -148,7 +148,7 @@ public class StudentController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SubmitWork(int requirementId, IFormFile file)
+    public async Task<IActionResult> SubmitWork(int requirementId, IFormFile file, int? roundNumber = null)
     {
         var studentId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(studentId))
@@ -157,21 +157,21 @@ public class StudentController : Controller
         if (file == null || file.Length == 0)
         {
             TempData["Error"] = "Please select a file to upload.";
-            return RedirectToAction("Submissions");
+            return RedirectToAction("Submissions", new { round = roundNumber });
         }
 
         var (success, message) = await _projectService.SubmitProjectWorkAsync(studentId, requirementId, file);
 
         if (success)
         {
-            TempData["Success"] = message;
+            TempData["SuccessMessage"] = message;
         }
         else
         {
-            TempData["Error"] = message;
+            TempData["ErrorMessage"] = message;
         }
 
-        return RedirectToAction("Submissions");
+        return RedirectToAction("Submissions", new { round = roundNumber });
     }
 
     public async Task<IActionResult> DownloadSubmission(int id)

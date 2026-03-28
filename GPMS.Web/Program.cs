@@ -95,7 +95,7 @@ builder.Services.AddScoped<IFileService, CloudinaryService>();
 
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
-builder.Services.AddHostedService<GPMS.Web.Services.DeadlineReminderHostedService>();
+builder.Services.AddHostedService<GPMS.Web.Services.ReminderHostedService>();
 
 var app = builder.Build();
 
