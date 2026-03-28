@@ -1,4 +1,4 @@
-﻿@model GPMS.Web.Models.PaginatedList<GPMS.Web.ViewModels.UserViewModel>
+@model GPMS.Web.Models.PaginatedList<GPMS.Web.ViewModels.UserViewModel>
 @{
     ViewData["Title"] = "User Management";
     ViewData["BreadcrumbTitle"] = "User Management";
@@ -19,6 +19,7 @@
                asp-route-search='@ViewData["CurrentSearch"]' 
                asp-route-role='@ViewData["CurrentRole"]' 
                asp-route-status='@ViewData["CurrentStatus"]'
+               hx-boost="false"
                class="no-spinner flex items-center gap-2 rounded-xl bg-white border border-slate-200 text-slate-700 px-5 py-2.5 text-sm font-bold transition-all hover:bg-slate-50 no-underline shadow-sm">
                 <span class="material-symbols-outlined text-[18px]">download</span>
                 <span>Export Excel</span>

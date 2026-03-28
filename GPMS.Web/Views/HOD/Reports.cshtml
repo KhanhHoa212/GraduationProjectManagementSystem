@@ -127,10 +127,16 @@
                 </select>
             </form>
 
-            <button type="button" onclick="window.print()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-slate-900 dark:bg-primary-600 text-white px-5 py-2 rounded-xl hover:bg-slate-800 dark:hover:bg-primary-700 transition-colors shadow-sm">
+            <button type="button" onclick="window.print()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-slate-900 dark:bg-dark-700 text-white px-5 py-2 rounded-xl hover:bg-slate-800 transition-colors shadow-sm">
                 <span class="material-symbols-outlined text-sm">print</span>
                 <span class="font-semibold text-sm">Xuất PDF</span>
             </button>
+
+            <a asp-action="ExportReportExcel" asp-route-semesterId='@ViewBag.SelectedSemesterId' hx-boost="false"
+               class="no-spinner w-full sm:w-auto flex justify-center items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm no-underline">
+                <span class="material-symbols-outlined text-sm">description</span>
+                <span class="font-semibold text-sm">Xuất Excel</span>
+            </a>
         </div>
     </div>
 
