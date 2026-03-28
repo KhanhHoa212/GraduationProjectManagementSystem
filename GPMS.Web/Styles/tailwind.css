@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+@theme {
+    --font-display: "Inter", "sans-serif";
+    --font-body: "Inter", "sans-serif";
+
+    --color-primary: #F37021;
+    --color-secondary: #112D4E;
+    --color-background-light: #f6f6f8;
+    --color-background-dark: #101622;
+    --color-student-blue: #1d4ed8;
+    --color-student-blue-light: #eff6ff;
+    --color-student-gray: #64748b;
+
+    --radius-default: 0.25rem;
+    --radius-lg: 0.5rem;
+    --radius-xl: 0.75rem;
+}
+
+@layer base {
+    body {
+        font-family: var(--font-body);
+    }
+}
+
+@layer components {
+    .btn-primary {
+        @apply bg-primary text-white border-none rounded-lg px-4 py-2 font-semibold hover:bg-orange-600 transition-all shadow-sm;
+    }
+}

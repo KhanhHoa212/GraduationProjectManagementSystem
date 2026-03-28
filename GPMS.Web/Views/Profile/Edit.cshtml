@@ -1,0 +1,102 @@
+@model GPMS.Web.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "Edit Profile";
+}
+
+<div class="max-w-4xl mx-auto py-10 px-4">
+    <!-- Breadcrumb -->
+    <nav class="flex mb-8 text-sm font-medium text-slate-400" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a asp-controller="Home" asp-action="Index" class="hover:text-primary transition-colors no-underline flex items-center">
+                    <span class="material-symbols-outlined text-sm mr-2">home</span>
+                    Home
+                </a>
+            </li>
+            <li class="inline-flex items-center">
+                <a asp-action="Index" class="hover:text-primary transition-colors no-underline flex items-center">
+                    <span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+                    Profile
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <span class="material-symbols-outlined text-sm mx-1">chevron_right</span>
+                    <span class="text-slate-600 font-bold ml-1 md:ml-2">Edit</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+    <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
+        <div class="p-8 border-b border-slate-100 bg-slate-50/50">
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-3">
+                <span class="material-symbols-outlined bg-primary text-white p-2 rounded-xl">manage_accounts</span>
+                Edit Personal Information
+            </h2>
+            <p class="text-slate-500 text-sm mt-1">Update your profile details below.</p>
+        </div>
+
+        <form asp-action="Edit" method="post" enctype="multipart/form-data" class="p-8">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="UserID" />
+            <input type="hidden" asp-for="AvatarUrl" />
+            
+            <div asp-validation-summary="ModelOnly" class="mb-6 p-4 bg-red-50 text-red-700 rounded-xl border-l-4 border-red-500 text-sm italic font-medium"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <!-- Left Column -->
+                <div class="space-y-6">
+                    <div>
+                        <label asp-for="FullName" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1"></label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">person</span>
+                            <input asp-for="FullName" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-800" placeholder="Your full name" />
+                        </div>
+                        <span asp-validation-for="FullName" class="text-xs text-red-500 mt-1 px-1 font-bold"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="Email" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1"></label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">mail</span>
+                            <input asp-for="Email" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-800" placeholder="your@email.com" />
+                        </div>
+                        <span asp-validation-for="Email" class="text-xs text-red-500 mt-1 px-1 font-bold"></span>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-6">
+                    <div>
+                        <label asp-for="Phone" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1"></label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">call</span>
+                            <input asp-for="Phone" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-800" placeholder="0123 456 789" />
+                        </div>
+                        <span asp-validation-for="Phone" class="text-xs text-red-500 mt-1 px-1 font-bold"></span>
+                    </div>
+
+                    <div>
+                        <label asp-for="AvatarFile" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2 px-1"></label>
+                        <div class="relative group">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">upload</span>
+                            <input asp-for="AvatarFile" type="file" accept="image/*" class="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all font-medium text-slate-800 cursor-pointer" />
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 italic">Leave empty to keep current avatar.</p>
+                        <span asp-validation-for="AvatarFile" class="text-xs text-red-500 mt-1 px-1 font-bold"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-4 pt-6 mt-6 border-t border-slate-100">
+                <a asp-action="Index" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl font-bold hover:bg-slate-200 transition-all no-underline">Cancel</a>
+                <button type="submit" class="px-10 py-3 bg-primary text-black rounded-2xl font-bold hover:bg-orange-600 transition-all shadow-lg shadow-orange-200">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

@@ -16,11 +16,43 @@ public class NotificationRepository : INotificationRepository
 
     public async Task<IEnumerable<Notification>> GetByRecipientAsync(string userId) => 
         await _context.Notifications.Where(n => n.RecipientID == userId).ToListAsync();
+        
+    public async Task<IEnumerable<Notification>> GetRecentByRecipientAsync(string userId, int count) =>
+        await _context.Notifications
+            .Where(n => n.RecipientID == userId)
+            .OrderByDescending(n => n.CreatedAt)
+            .Take(count)
+            .ToListAsync();
+
     public async Task AddAsync(Notification notification) => await _context.Notifications.AddAsync(notification);
     public async Task MarkAsReadAsync(int notificationId)
     {
         var n = await _context.Notifications.FindAsync(notificationId);
         if (n != null) { n.IsRead = true; n.ReadAt = DateTime.UtcNow; }
     }
+
+    public async Task MarkAllAsReadAsync(string userId)
+    {
+        var notifications = await _context.Notifications
+            .Where(n => n.RecipientID == userId && !n.IsRead)
+            .ToListAsync();
+            
+        foreach (var n in notifications)
+        {
+            n.IsRead = true;
+            n.ReadAt = DateTime.UtcNow;
+        }
+    }
+    
+    public async Task ToggleReadStatusAsync(int notificationId)
+    {
+        var n = await _context.Notifications.FindAsync(notificationId);
+        if (n != null)
+        {
+            n.IsRead = !n.IsRead;
+            n.ReadAt = n.IsRead ? DateTime.UtcNow : null;
+        }
+    }
+
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 }

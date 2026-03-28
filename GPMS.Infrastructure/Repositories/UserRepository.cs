@@ -30,10 +30,25 @@ public class UserRepository : IUserRepository
         await _context.Users.Include(u => u.UserRoles).ToListAsync();
 
     public async Task<IEnumerable<User>> GetByRoleAsync(RoleName role) => 
-        await _context.Users.Where(u => u.UserRoles.Any(ur => ur.RoleName == role)).ToListAsync();
+        await _context.Users
+            .Include(u => u.UserRoles)
+            .Include(u => u.LecturerExpertises)
+                .ThenInclude(le => le.Expertise)
+            .Include(u => u.LecturerExpertises)
+                .ThenInclude(le => le.Expertise.Major)
+            .Where(u => u.UserRoles.Any(ur => ur.RoleName == role))
+            .ToListAsync();
 
     public async Task AddAsync(User user) => await _context.Users.AddAsync(user);
-    public async Task UpdateAsync(User user) => _context.Users.Update(user);
+    public Task UpdateAsync(User user) { _context.Users.Update(user); return Task.CompletedTask; }
     public async Task<bool> ExistsAsync(string userId) => await _context.Users.AnyAsync(u => u.UserID == userId);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+    public async Task<User?> GetUserByResetTokenAsync(string token)
+    => await _context.Users
+            .Include(u => u.UserCredentials)
+            .FirstOrDefaultAsync(u => u.UserCredentials.Any(c =>
+                c.PasswordResetToken == token &&
+                c.PasswordResetExpiry.HasValue &&
+                c.PasswordResetExpiry > DateTime.UtcNow));
+    
 }

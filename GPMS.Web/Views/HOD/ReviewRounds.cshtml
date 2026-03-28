@@ -1,0 +1,254 @@
+@model IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>
+@{
+    ViewData["Title"] = "Review Rounds";
+    Layout = "_Layout";
+}
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="p-6">
+        <div class="max-w-7xl mx-auto space-y-6">
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-8">
+                <div>
+                    <nav class="flex items-center gap-2 text-sm mb-4">
+                        <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">GPMS</a>
+                        <span class="text-slate-400 dark:text-slate-600">/</span>
+                        <span class="text-slate-900 dark:text-slate-100 font-medium">Vòng Review</span>
+                    </nav>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Vòng Review</h1>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Thiết lập và theo dõi các giai đoạn đánh giá đề án trong học kỳ.</p>
+                </div>
+                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition @(Model != null && Model.Count() >= 3 ? "hidden" : "")">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
+                    Tạo vòng review mới
+                </a>
+            </div>
+
+            <!-- Review Timeline Visualization -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-8 shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="overflow-x-auto pb-4 custom-scrollbar-h">
+                    <div class="flex items-center justify-between relative min-w-[800px]" style="padding: 0 40px;">
+                        @if (Model != null && Model.Any())
+                        {
+                            var rounds = Model.OrderBy(r => r.RoundNumber).ToList();
+                            
+                            // Render progress line if multiple rounds
+                            if (rounds.Count > 1)
+                            {
+                                <div class="absolute left-[5rem] right-[5rem] top-7 h-1 bg-slate-200 dark:bg-slate-700 z-0"></div>
+                                
+                                int completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
+                                int ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                                
+                                int lastActiveIndex = ongoingIndex != -1 ? ongoingIndex : 
+                                                     (completedCount > 0 ? completedCount - 1 : -1);
+                                
+                                double progressPercentage = 0;
+                                int totalSegments = rounds.Count - 1;
+                                
+                                if (lastActiveIndex != -1) {
+                                    progressPercentage = (lastActiveIndex * 100.0 / totalSegments); 
+                                }
+                                progressPercentage = Math.Min(100, Math.Max(0, progressPercentage));
+
+                                <div class="absolute left-[5rem] right-[5rem] top-7 h-1 z-0">
+                                    <div class="h-full bg-[#F37021] transition-all duration-500" style="width: @(progressPercentage.ToString(System.Globalization.CultureInfo.InvariantCulture))%;"></div>
+                                </div>
+                            }
+
+                            for (int i = 0; i < rounds.Count; i++)
+                            {
+                                var r = rounds[i];
+                                var isCompleted = r.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                                var isOngoing = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                                
+                                var statusColorBg = isOngoing ? "bg-orange-100 dark:bg-orange-900" : (isCompleted ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
+                                var statusTextColor = isOngoing ? "text-orange-800 dark:text-orange-200" : (isCompleted ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
+                                
+                                var iconBg = isCompleted || isOngoing ? "bg-[#F37021] text-white border-[#F37021] ring-4 ring-orange-50 dark:ring-slate-800" : "bg-slate-300 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-white dark:border-slate-900 ring-4 ring-slate-50 dark:ring-slate-800";
+                                var iconName = isCompleted ? "check_circle" : (isOngoing ? "sync" : "schedule");
+
+                                <div class="flex flex-col items-center flex-1 z-10">
+                                    <div class="w-14 h-14 rounded-full @iconBg flex items-center justify-center shadow-sm transition-all duration-300">
+                                        <span class="material-symbols-outlined" style="font-size: 24px;">@iconName</span>
+                                    </div>
+                                    <div class="mt-4 text-center">
+                                        <h3 class="font-semibold text-slate-900 dark:text-white">Review @r.RoundNumber</h3>
+                                        <span class="inline-block mt-2 px-3 py-1 @statusColorBg @statusTextColor text-xs font-semibold rounded-full">
+                                            @(r.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
+                                              r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                        </span>
+                                        <p class="text-sm text-slate-600 dark:text-slate-400 mt-3 whitespace-nowrap">@r.StartDate.ToString("dd/MM") - @r.EndDate.ToString("dd/MM")</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <div class="py-4 text-center text-slate-500 w-full">
+                                Chưa có vòng review nào được thiết lập.
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Review Rounds Table -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Danh sách các Vòng Review</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" style="font-size: 20px;">search</span>
+                            <input
+                                type="text"
+                                placeholder="Tìm kiếm vòng..."
+                                class="pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-slate-50 dark:bg-slate-800">
+                            <tr class="border-b border-slate-200 dark:border-slate-700">
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TÊN VÒNG</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">HỌC KỲ</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THỜI GIAN (BĐ - KT)</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TÀI LIỆU YÊU CẦU</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TRẠNG THÁI</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THAO TÁC</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                            @if (Model != null && Model.Any())
+                            {
+                                foreach (var item in Model)
+                                {
+                                    var rowStatusColorBg = item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "bg-orange-100 dark:bg-orange-900" : (item.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "bg-emerald-100 dark:bg-emerald-900" : "bg-slate-100 dark:bg-slate-800");
+                                    var rowStatusTextColor = item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "text-orange-800 dark:text-orange-200" : (item.Status == GPMS.Domain.Enums.RoundStatus.Completed ? "text-emerald-800 dark:text-emerald-200" : "text-slate-800 dark:text-slate-200");
+                                
+                                    <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
+                                        <td class="py-4 px-6">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-400 font-semibold text-sm">
+                                                    R@(item.RoundNumber)
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold text-slate-900 dark:text-white block">Review @(item.RoundNumber)</span>
+                                                    <span class="text-xs text-slate-500">@(item.RoundType)</span>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6 text-slate-600 dark:text-slate-400">@item.SemesterCode</td>
+                                        <td class="py-4 px-6 text-slate-600 dark:text-slate-400">
+                                            <div class="flex flex-col gap-1">
+                                                <span>@item.StartDate.ToString("dd/MM/yyyy") - @item.EndDate.ToString("dd/MM/yyyy")</span>
+                                                <span class="text-[10px] uppercase font-bold text-slate-400">Deadline:</span>
+                                                <span class="px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-semibold rounded w-fit">@item.SubmissionDeadline.ToString("dd/MM/yyyy HH:mm")</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            @if (item.SubmissionRequirements != null && item.SubmissionRequirements.Any())
+                                            {
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach (var req in item.SubmissionRequirements)
+                                                    {
+                                                        <div class="group relative">
+                                                            <div class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg text-xs font-medium border border-blue-100 dark:border-blue-800 cursor-help transition-all hover:bg-blue-100">
+                                                                <span class="material-symbols-outlined text-[14px]">description</span>
+                                                                @req.DocumentName
+                                                                @if (req.IsRequired)
+                                                                {
+                                                                    <span class="text-red-500">*</span>
+                                                                }
+                                                            </div>
+                                                            <!-- Tooltip -->
+                                                            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-48 p-3 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-20 scale-95 group-hover:scale-100">
+                                                                <div class="text-[11px] font-bold text-slate-900 dark:text-white mb-2">@req.DocumentName</div>
+                                                                <div class="space-y-1.5">
+                                                                    <div class="flex justify-between text-[10px]">
+                                                                        <span class="text-slate-400">Định dạng:</span>
+                                                                        <span class="text-slate-700 dark:text-slate-300 font-bold">@(req.AllowedFormats ?? "Mọi định dạng")</span>
+                                                                    </div>
+                                                                    <div class="flex justify-between text-[10px]">
+                                                                        <span class="text-slate-400">Dung lượng:</span>
+                                                                        <span class="text-slate-700 dark:text-slate-300 font-bold">@req.MaxFileSizeMB MB</span>
+                                                                    </div>
+                                                                    @if (!string.IsNullOrEmpty(req.Description))
+                                                                    {
+                                                                        <div class="pt-1.5 border-t border-slate-50 dark:border-slate-700 mt-1.5 text-[10px] text-slate-500 italic">
+                                                                            @req.Description
+                                                                        </div>
+                                                                    }
+                                                                </div>
+                                                                <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white dark:border-t-slate-800"></div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-slate-400 italic text-xs">Không có yêu cầu</span>
+                                            }
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <span class="px-3 py-1 @rowStatusColorBg @rowStatusTextColor text-xs font-semibold rounded-full">
+                                                @(item.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
+                                                  item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                            </span>
+                                        </td>
+                                        <td class="py-4 px-6">
+                                            <div class="flex items-center gap-2">
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Edit Schedule & Settings">
+                                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit_calendar</span>
+                                                    <span class="ml-1 font-medium">Configure</span>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="py-10 text-center text-slate-500 font-medium">Bạn chưa tạo vòng review nào trong học kỳ này</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Hiển thị @(Model?.Count() ?? 0) vòng review</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition" disabled>Trước</button>
+                        <button class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white rounded font-medium">1</button>
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">Sau</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+</div>
+
+@section Styles {
+    <style>
+        .custom-scrollbar-h::-webkit-scrollbar {
+            height: 6px;
+        }
+        .custom-scrollbar-h::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        .custom-scrollbar-h::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        .custom-scrollbar-h::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+}

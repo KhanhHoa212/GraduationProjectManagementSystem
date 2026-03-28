@@ -1,0 +1,509 @@
+{
+  "$schema": "http://json.schemastore.org/sarif-1.0.0",
+  "version": "1.0.0",
+  "runs": [
+    {
+      "tool": {
+        "name": "Microsoft (R) Visual C# Compiler",
+        "version": "4.14.0.0",
+        "fileVersion": "4.14.0-3.25262.10 (8edf7bcd)",
+        "semanticVersion": "4.14.0",
+        "language": "vi-VN"
+      },
+      "results": [
+        {
+          "ruleId": "CS1061",
+          "level": "error",
+          "message": "'ReviewRound' does not contain a definition for 'Title' and no accessible extension method 'Title' accepting a first argument of type 'ReviewRound' could be found (are you missing a using directive or an assembly reference?)",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ChecklistService.cs",
+                "region": {
+                  "startLine": 32,
+                  "startColumn": 54,
+                  "endLine": 32,
+                  "endColumn": 60
+                }
+              }
+            }
+          ]
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 29,
+                  "startColumn": 100,
+                  "endLine": 29,
+                  "endColumn": 172
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 101,
+                  "endLine": 31,
+                  "endColumn": 173
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 31,
+                  "startColumn": 193,
+                  "endLine": 31,
+                  "endColumn": 265
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 33,
+                  "startColumn": 62,
+                  "endLine": 33,
+                  "endColumn": 96
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 40,
+                  "startColumn": 100,
+                  "endLine": 40,
+                  "endColumn": 172
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 101,
+                  "endLine": 42,
+                  "endColumn": 173
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CS8602",
+          "level": "warning",
+          "message": "Dereference of a possibly null reference.",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Mapping/MappingProfile.cs",
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 193,
+                  "endLine": 42,
+                  "endColumn": 265
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/SemesterService.cs",
+                "region": {
+                  "startLine": 74,
+                  "startColumn": 38,
+                  "endLine": 74,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ReviewRoundService.cs",
+                "region": {
+                  "startLine": 75,
+                  "startColumn": 51,
+                  "endLine": 75,
+                  "endColumn": 83
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1862",
+          "level": "note",
+          "message": "Prefer the string comparison method overload of 'string.Contains(string)' that takes a 'StringComparison' enum value to perform a case-insensitive comparison, but keep in mind that this might cause subtle changes in behavior, so make sure to conduct thorough testing after applying the suggestion, or if culturally sensitive comparison is not required, consider using 'StringComparison.OrdinalIgnoreCase'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/UserService.cs",
+                "region": {
+                  "startLine": 42,
+                  "startColumn": 17,
+                  "endLine": 42,
+                  "endColumn": 54
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "LeftOffendingMethod": "ToLower",
+              "RightOffendingMethod": null
+            }
+          }
+        },
+        {
+          "ruleId": "CA1862",
+          "level": "note",
+          "message": "Prefer the string comparison method overload of 'string.Contains(string)' that takes a 'StringComparison' enum value to perform a case-insensitive comparison, but keep in mind that this might cause subtle changes in behavior, so make sure to conduct thorough testing after applying the suggestion, or if culturally sensitive comparison is not required, consider using 'StringComparison.OrdinalIgnoreCase'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/UserService.cs",
+                "region": {
+                  "startLine": 43,
+                  "startColumn": 37,
+                  "endLine": 43,
+                  "endColumn": 71
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "LeftOffendingMethod": "ToLower",
+              "RightOffendingMethod": null
+            }
+          }
+        },
+        {
+          "ruleId": "CA1862",
+          "level": "note",
+          "message": "Prefer the string comparison method overload of 'string.Contains(string)' that takes a 'StringComparison' enum value to perform a case-insensitive comparison, but keep in mind that this might cause subtle changes in behavior, so make sure to conduct thorough testing after applying the suggestion, or if culturally sensitive comparison is not required, consider using 'StringComparison.OrdinalIgnoreCase'",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/UserService.cs",
+                "region": {
+                  "startLine": 44,
+                  "startColumn": 17,
+                  "endLine": 44,
+                  "endColumn": 52
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "LeftOffendingMethod": "ToLower",
+              "RightOffendingMethod": null
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 151,
+                  "startColumn": 88,
+                  "endLine": 151,
+                  "endColumn": 114
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 152,
+                  "startColumn": 85,
+                  "endLine": 152,
+                  "endColumn": 111
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 212,
+                  "startColumn": 45,
+                  "endLine": 212,
+                  "endColumn": 66
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 213,
+                  "startColumn": 54,
+                  "endLine": 213,
+                  "endColumn": 80
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 214,
+                  "startColumn": 76,
+                  "endLine": 214,
+                  "endColumn": 96
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        },
+        {
+          "ruleId": "CA1860",
+          "level": "note",
+          "message": "Prefer comparing 'Count' to 0 rather than using 'Any()', both for clarity and for performance",
+          "locations": [
+            {
+              "resultFile": {
+                "uri": "file:///C:/Users/ASUS/OneDrive/M%C3%A1y%20t%C3%ADnh/Workspace/Theory/2026_Spring/GraduationProjectManagementSystem/GPMS.Application/Services/ProjectService.cs",
+                "region": {
+                  "startLine": 263,
+                  "startColumn": 20,
+                  "endLine": 263,
+                  "endColumn": 44
+                }
+              }
+            }
+          ],
+          "properties": {
+            "warningLevel": 1,
+            "customProperties": {
+              "DiagnosticPropertyKey": "Count"
+            }
+          }
+        }
+      ],
+      "rules": {
+        "CA1860": {
+          "id": "CA1860",
+          "shortDescription": "Avoid using 'Enumerable.Any()' extension method",
+          "fullDescription": "Prefer using 'IsEmpty', 'Count' or 'Length' properties whichever available, rather than calling 'Enumerable.Any()'. The intent is clearer and it is more performant than using 'Enumerable.Any()' extension method.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1860",
+          "properties": {
+            "category": "Performance",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CA1862": {
+          "id": "CA1862",
+          "shortDescription": "Use the 'StringComparison' method overloads to perform case-insensitive string comparisons",
+          "fullDescription": "Avoid calling 'ToLower', 'ToUpper', 'ToLowerInvariant' and 'ToUpperInvariant' to perform case-insensitive string comparisons because they lead to an allocation. Instead, prefer calling the method overloads of 'Contains', 'IndexOf' and 'StartsWith' that take a 'StringComparison' enum value to perform case-insensitive comparisons. Switching to using an overload that takes a 'StringComparison' might cause subtle changes in behavior, so it's important to conduct thorough testing after applying the suggestion. Additionally, if a culturally sensitive comparison is not required, consider using 'StringComparison.OrdinalIgnoreCase'.",
+          "defaultLevel": "note",
+          "helpUri": "https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1862",
+          "properties": {
+            "category": "Performance",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Telemetry",
+              "EnabledRuleInAggressiveMode"
+            ]
+          }
+        },
+        "CS1061": {
+          "id": "CS1061",
+          "defaultLevel": "error",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS1061)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry",
+              "NotConfigurable"
+            ]
+          }
+        },
+        "CS8602": {
+          "id": "CS8602",
+          "shortDescription": "Dereference of a possibly null reference.",
+          "defaultLevel": "warning",
+          "helpUri": "https://msdn.microsoft.com/query/roslyn.query?appId=roslyn&k=k(CS8602)",
+          "properties": {
+            "category": "Compiler",
+            "isEnabledByDefault": true,
+            "tags": [
+              "Compiler",
+              "Telemetry"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

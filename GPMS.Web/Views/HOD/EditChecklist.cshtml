@@ -1,0 +1,289 @@
+﻿@using GPMS.Application.DTOs
+@model ChecklistDto
+@{
+    ViewData["Title"] = "Chỉnh sửa Checklist";
+    Layout = "_Layout";
+    var isRubric = Model.ReviewRoundTitle.Contains("3") || Model.Items.Any(i => i.ItemType == "Rubric");
+    var defaultType = isRubric ? "Rubric" : "YesNo";
+}
+
+<div class="p-6 max-w-6xl mx-auto" id="checklistApp">
+    <!-- Breadcrumb & Header -->
+    <div class="mb-6 flex justify-between items-start">
+        <div>
+            <nav class="flex mb-2 text-sm text-gray-500">
+                <a href="/HOD/ChecklistDetails/@Model.ReviewRoundID" class="hover:text-orange-500 flex items-center gap-1">
+                    <i class="ri-arrow-left-line"></i>
+                    Quay lại chi tiết
+                </a>
+            </nav>
+            <h1 class="text-2xl font-bold text-gray-800">Chỉnh sửa Checklist</h1>
+            <p class="text-gray-500">@Model.ReviewRoundTitle · Cấu hình tiêu chí đánh giá</p>
+        </div>
+        <button onclick="saveChecklist()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md font-bold flex items-center gap-2">
+            <i class="ri-save-line"></i>
+            Lưu thay đổi
+        </button>
+    </div>
+
+    <!-- Main Editor -->
+    <div class="space-y-8" id="itemsContainer">
+        <!-- Sections will be rendered here by JS -->
+    </div>
+
+    <!-- Add Section Button -->
+    <div class="mt-8 border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50 flex flex-col items-center">
+        <h4 class="font-bold text-gray-400 mb-4">Thêm Section mới</h4>
+        <div class="flex gap-4 w-full max-w-lg">
+            <input type="text" id="newSectionCode" placeholder="Mã (vd: P1)" class="w-24 border-gray-300 rounded-lg">
+            <input type="text" id="newSectionName" placeholder="Tên Section" class="flex-grow border-gray-300 rounded-lg">
+            <button onclick="addSection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
+                <i class="ri-add-line"></i> Thêm
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Template for YesNo Item -->
+<template id="yesNoItemTemplate">
+    <div class="item-row py-4 border-b group flex gap-4 items-center animate-fadeIn">
+        <div class="cursor-move text-gray-300 hover:text-gray-600 transition-colors">
+            <i class="ri-grid-fill"></i>
+        </div>
+        <input type="text" class="item-code w-20 border-gray-200 rounded bg-gray-50 text-xs font-mono" placeholder="Code">
+        <input type="text" class="item-content flex-grow border-gray-300 rounded-lg" placeholder="Nội dung câu hỏi...">
+        <button onclick="removeItem(this)" class="text-gray-300 hover:text-red-500 transition-colors p-2">
+            <i class="ri-delete-bin-line"></i>
+        </button>
+    </div>
+</template>
+
+<!-- Template for Rubric Item -->
+<template id="rubricItemTemplate">
+    <div class="item-card bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 group animate-fadeIn">
+        <div class="flex justify-between items-start mb-4">
+            <div class="flex gap-4 flex-grow">
+                <div class="cursor-move text-gray-300 hover:text-gray-600 pt-2"><i class="ri-grid-fill"></i></div>
+                <div class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="md:col-span-1">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mã tiêu chí</label>
+                        <input type="text" class="item-code w-full border-gray-300 rounded-lg text-sm" placeholder="Mã (vd: P1)">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tên tiêu chí</label>
+                        <input type="text" class="item-name w-full border-gray-300 rounded-lg text-sm font-bold" placeholder="Tên tiêu chí">
+                    </div>
+                    <div class="md:col-span-4">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nội dung chi tiết (Evaluation Criteria)</label>
+                        <textarea class="item-content w-full border-gray-300 rounded-lg text-sm" rows="3" placeholder="Các tiêu chí con, ví dụ: &#10;• Tiêu chí 1 &#10;• Tiêu chí 2"></textarea>
+                    </div>
+                </div>
+            </div>
+            <button onclick="removeItem(this)" class="text-gray-300 hover:text-red-500 transition-colors p-2"><i class="ri-delete-bin-line text-lg"></i></button>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 border-t pt-6">
+            <div class="space-y-3">
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-green-500 mt-2"></span>
+                    <textarea class="rubric-excellent w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔵 EXCELLENT (8-10): Mô tả tiêu chí này khi đạt mức xuất sắc..."></textarea>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-blue-500 mt-2"></span>
+                    <textarea class="rubric-good w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔵 GOOD (6-8): Mô tả mức tốt..."></textarea>
+                </div>
+            </div>
+            <div class="space-y-3">
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 mt-2"></span>
+                    <textarea class="rubric-acceptable w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🟡 ACCEPTABLE (4-6): Mô tả mức đạt..."></textarea>
+                </div>
+                <div class="flex gap-2 items-start">
+                    <span class="w-2 h-2 rounded-full bg-red-500 mt-2"></span>
+                    <textarea class="rubric-fail w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔴 FAIL (0-4): Mô tả mức không đạt..."></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    let checklistData = @Html.Raw(Json.Serialize(Model));
+    const isRubricType = @isRubric.ToString().ToLower();
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderChecklist();
+    });
+
+    function renderChecklist() {
+        const container = document.getElementById('itemsContainer');
+        container.innerHTML = '';
+
+        const sections = {};
+        checklistData.items.forEach(item => {
+            const secName = item.section || 'General';
+            if (!sections[secName]) sections[secName] = [];
+            sections[secName].push(item);
+        });
+
+        // Current unique sections in data
+        const uniqueSections = Object.keys(sections).sort();
+
+        uniqueSections.forEach(secName => {
+            const sectionDiv = document.createElement('div');
+            sectionDiv.className = 'section-group bg-white/50 rounded-2xl p-6 border-2 border-transparent hover:border-blue-50 transition-all';
+            sectionDiv.id = 'section-' + secName;
+            sectionDiv.innerHTML = `
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-black text-gray-700 flex items-center gap-3">
+                        <span class="px-3 py-1 bg-gray-100 rounded text-sm font-bold text-gray-400">#</span>
+                        ${secName}
+                    </h3>
+                    <div class="flex gap-2">
+                        <button onclick="addItemToSection('${secName}')" class="text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-1 rounded transition-colors">
+                            + Thêm item vào section này
+                        </button>
+                        <button onclick="removeSection('${secName}')" class="text-gray-400 hover:text-red-500 p-1"><i class="ri-delete-bin-line"></i></button>
+                    </div>
+                </div>
+                <div class="items-list space-y-2" data-section="${secName}"></div>
+            `;
+            container.appendChild(sectionDiv);
+
+            const listContainer = sectionDiv.querySelector('.items-list');
+            sections[secName].sort((a,b) => a.orderIndex - b.orderIndex).forEach(item => {
+                const itemEl = createItemElement(item);
+                listContainer.appendChild(itemEl);
+            });
+        });
+    }
+
+    function createItemElement(item) {
+        const templateId = isRubricType ? 'rubricItemTemplate' : 'yesNoItemTemplate';
+        const template = document.getElementById(templateId);
+        const clone = template.content.cloneNode(true);
+        const root = clone.querySelector('div');
+        
+        root.dataset.itemId = item.itemID;
+        root.querySelector('.item-code').value = item.itemCode || '';
+        root.querySelector('.item-content').value = item.itemContent || '';
+        
+        if (isRubricType) {
+            root.querySelector('.item-name').value = item.itemName || '';
+            const rubrics = item.rubrics || [];
+            root.querySelector('.rubric-excellent').value = rubrics.find(r => r.gradeLevel === 'Excellent')?.description || '';
+            root.querySelector('.rubric-good').value = rubrics.find(r => r.gradeLevel === 'Good')?.description || '';
+            root.querySelector('.rubric-acceptable').value = rubrics.find(r => r.gradeLevel === 'Acceptable')?.description || '';
+            root.querySelector('.rubric-fail').value = rubrics.find(r => r.gradeLevel === 'Fail')?.description || '';
+        }
+
+        return root;
+    }
+
+    function addItemToSection(secName) {
+        const newItem = {
+            itemID: 0,
+            itemCode: '',
+            itemContent: '',
+            itemName: '',
+            itemType: isRubricType ? 'Rubric' : 'YesNo',
+            section: secName,
+            orderIndex: 999,
+            rubrics: []
+        };
+        const listContainer = document.querySelector(`.items-list[data-section="${secName}"]`);
+        const el = createItemElement(newItem);
+        listContainer.appendChild(el);
+        el.querySelector('.item-code').focus();
+    }
+
+    function addSection() {
+        const code = document.getElementById('newSectionCode').value.trim();
+        const name = document.getElementById('newSectionName').value.trim();
+        if (!name) return;
+        
+        const secName = code ? `${code} - ${name}` : name;
+        addItemToSection(secName);
+        document.getElementById('newSectionCode').value = '';
+        document.getElementById('newSectionName').value = '';
+        renderChecklist(); // Re-render to see the new section header
+    }
+
+    function removeSection(secName) {
+        if (!confirm(`Xóa toàn bộ section "${secName}" và các câu hỏi bên trong?`)) return;
+        const listContainer = document.querySelector(`.items-list[data-section="${secName}"]`);
+        listContainer.closest('.section-group').remove();
+    }
+
+    function removeItem(btn) {
+        btn.closest('.item-row, .item-card').remove();
+    }
+
+    async function saveChecklist() {
+        const data = {
+            reviewRoundID: checklistData.reviewRoundID,
+            title: checklistData.title || "Review Checklist",
+            description: checklistData.description,
+            items: []
+        };
+
+        const sectionGroups = document.querySelectorAll('.section-group');
+        let order = 1;
+
+        sectionGroups.forEach(group => {
+            const secName = group.querySelector('.items-list').dataset.section;
+            const itemEls = group.querySelectorAll('.item-row, .item-card');
+            
+            itemEls.forEach(el => {
+                const item = {
+                    itemID: parseInt(el.dataset.itemId) || 0,
+                    itemCode: el.querySelector('.item-code').value,
+                    itemContent: el.querySelector('.item-content').value,
+                    itemType: isRubricType ? 'Rubric' : 'YesNo',
+                    section: secName,
+                    orderIndex: order++,
+                    rubrics: []
+                };
+
+                if (isRubricType) {
+                    item.itemName = el.querySelector('.item-name').value;
+                    item.rubrics = [
+                        { gradeLevel: 'Excellent', description: el.querySelector('.rubric-excellent').value },
+                        { gradeLevel: 'Good', description: el.querySelector('.rubric-good').value },
+                        { gradeLevel: 'Acceptable', description: el.querySelector('.rubric-acceptable').value },
+                        { gradeLevel: 'Fail', description: el.querySelector('.rubric-fail').value }
+                    ];
+                }
+                data.items.push(item);
+            });
+        });
+
+        if (data.items.length === 0) {
+            alert('Vui lòng thêm ít nhất một câu hỏi/tiêu chí.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/HOD/SaveChecklist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Đã lưu thành công!');
+                location.href = '/HOD/ChecklistDetails/' + data.reviewRoundID;
+            } else {
+                alert(result.message);
+            }
+        } catch (err) {
+            alert('Lỗi khi lưu dữ liệu.');
+        }
+    }
+</script>
+
+<style>
+    .animate-fadeIn { animation: fadeIn 0.4s ease-out; }
+    @@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .cursor-move { cursor: grab; }
+</style>

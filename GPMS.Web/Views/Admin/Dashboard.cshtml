@@ -1,0 +1,285 @@
+@model GPMS.Web.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    Layout = "_Layout";
+
+    // Percentages for role bar
+    double studPct  = Model.TotalUsers > 0 ? (double)Model.TotalStudents  / Model.TotalUsers * 100 : 0;
+    double lectPct  = Model.TotalUsers > 0 ? (double)Model.TotalLecturers / Model.TotalUsers * 100 : 0;
+    double hodPct   = Model.TotalUsers > 0 ? (double)Model.TotalHODs      / Model.TotalUsers * 100 : 0;
+    double admPct   = Model.TotalUsers > 0 ? (double)Model.TotalAdmins    / Model.TotalUsers * 100 : 0;
+
+    // Chart data serialised for JS
+    var chartLabels = System.Text.Json.JsonSerializer.Serialize(Model.WeeklyVisits.Select(v => v.DayLabel).ToList());
+    var chartData   = System.Text.Json.JsonSerializer.Serialize(Model.WeeklyVisits.Select(v => v.Count).ToList());
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Header Section -->
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <div>
+            <h2 class="text-2xl font-black tracking-tight text-slate-900">System Overview</h2>
+            <p class="text-slate-500 text-sm">Real-time performance metrics for Graduation Project Management System</p>
+        </div>
+        <div class="flex gap-3">
+            <a asp-action="Create" asp-controller="Admin"
+               class="flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-all shadow-sm no-underline">
+                <span class="material-symbols-outlined text-sm">add</span>
+                Add New User
+            </a>
+            <a asp-action="ExportReport" asp-controller="Admin" hx-boost="false"
+               class="no-spinner flex items-center gap-2 bg-white border border-slate-200 px-4 py-2 rounded-lg font-semibold hover:bg-slate-50 transition-all shadow-sm no-underline text-slate-700">
+                <span class="material-symbols-outlined text-sm">download</span>
+                Export Report
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+
+        <!-- 1. Total Users -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-blue-100 text-blue-600 rounded-lg material-symbols-outlined">groups</span>
+                <span class="text-blue-500 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Live Data</span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">Total Users</p>
+            <p class="text-3xl font-black mt-1">@Model.TotalUsers.ToString("N0")</p>
+            <!-- Role distribution bar -->
+            <div class="mt-4 flex gap-1 overflow-hidden h-1.5">
+                <div class="bg-blue-500 rounded-full"   style="width: @studPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%" title="Students"></div>
+                <div class="bg-orange-500 rounded-full" style="width: @lectPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%" title="Lecturers"></div>
+                <div class="bg-purple-500 rounded-full" style="width: @hodPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"  title="HOD"></div>
+                <div class="bg-slate-400 rounded-full"  style="width: @admPct.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)%"  title="Admins"></div>
+            </div>
+            <div class="mt-2 flex justify-between text-[10px] uppercase font-bold text-slate-400">
+                <span>Stud: @Model.TotalStudents</span>
+                <span>Lect: @Model.TotalLecturers</span>
+                <span>HOD: @Model.TotalHODs</span>
+                <span>Adm: @Model.TotalAdmins</span>
+            </div>
+        </div>
+
+        <!-- 2. Current Semester Projects -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-green-100 text-green-600 rounded-lg material-symbols-outlined">school</span>
+                <span class="text-green-500 text-xs font-bold bg-green-50 px-2 py-1 rounded">Current</span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">Total Projects</p>
+            <p class="text-3xl font-black mt-1">@Model.CurrentSemesterProjectCount.ToString("N0")</p>
+            <p class="text-xs text-slate-400 mt-2 flex items-center gap-1">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                Semester: <strong class="ml-1 text-slate-600">@Model.CurrentSemesterCode</strong>
+            </p>
+        </div>
+
+        <!-- 3. Active Projects (same card, now real data) -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-primary/10 text-primary rounded-lg material-symbols-outlined">assignment</span>
+                <span class="text-primary text-xs font-bold bg-primary/5 px-2 py-1 rounded">Today</span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">Today's Visits</p>
+            <p class="text-3xl font-black mt-1">@(Model.WeeklyVisits.LastOrDefault()?.Count ?? 0)</p>
+            <p class="text-xs text-slate-400 mt-2 italic">Dashboard page hits today</p>
+        </div>
+
+        <!-- 4. Weekly Visits Total -->
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
+            <div class="flex items-center justify-between mb-4">
+                <span class="p-2 bg-violet-100 text-violet-600 rounded-lg material-symbols-outlined">bar_chart</span>
+                <span class="text-violet-500 text-xs font-bold bg-violet-50 px-2 py-1 rounded">7 Days</span>
+            </div>
+            <p class="text-sm text-slate-500 font-medium">Visits (Last 7 Days)</p>
+            <p class="text-3xl font-black mt-1">@Model.WeeklyVisits.Sum(v => v.Count).ToString("N0")</p>
+            <p class="text-xs text-slate-400 mt-2 italic">Unique dashboard sessions</p>
+        </div>
+    </div>
+
+    <!-- Middle Section: Chart & Quick Actions -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+
+        <!-- Bar Chart: 7-day visits -->
+        <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="font-bold text-lg text-slate-800">User Visit Activity</h3>
+                    <p class="text-slate-400 text-xs">Dashboard visits over the last 7 days</p>
+                </div>
+                <span class="text-xs bg-primary/10 text-primary font-bold px-3 py-1 rounded-full">Last 7 Days</span>
+            </div>
+            <div class="relative h-64">
+                <canvas id="visitChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+            <h3 class="font-bold text-lg mb-6 text-slate-800">Quick Actions</h3>
+            <div class="space-y-4">
+                <a asp-action="Create" asp-controller="Admin"
+                   class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-primary/5 hover:text-primary rounded-xl border border-transparent hover:border-primary/20 transition-all group no-underline">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400 group-hover:text-primary">person_add</span>
+                        <span class="font-semibold text-sm text-slate-700 group-hover:text-primary">Add New User</span>
+                    </div>
+                    <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </a>
+                <a asp-action="SemesterCreate" asp-controller="Admin"
+                   class="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-primary/5 hover:text-primary rounded-xl border border-transparent hover:border-primary/20 transition-all group no-underline">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400 group-hover:text-primary">calendar_add_on</span>
+                        <span class="font-semibold text-sm text-slate-700 group-hover:text-primary">Add New Semester</span>
+                    </div>
+                    <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </a>
+                <a asp-action="ExportReport" asp-controller="Admin" hx-boost="false"
+                   class="no-spinner w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-green-50 hover:text-green-700 rounded-xl border border-transparent hover:border-green-200 transition-all group no-underline">
+                    <div class="flex items-center gap-3">
+                        <span class="material-symbols-outlined text-slate-400 group-hover:text-green-600">cloud_download</span>
+                        <span class="font-semibold text-sm text-slate-700 group-hover:text-green-700">Export Report (.xlsx)</span>
+                    </div>
+                    <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">chevron_right</span>
+                </a>
+                <div class="pt-4 mt-2 border-t border-slate-100">
+                    <p class="text-xs font-bold text-slate-400 uppercase mb-3 tracking-wider">User Breakdown</p>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Students</span>
+                            <span class="font-bold text-blue-600">@Model.TotalStudents</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Lecturers</span>
+                            <span class="font-bold text-orange-500">@Model.TotalLecturers</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">HODs</span>
+                            <span class="font-bold text-purple-500">@Model.TotalHODs</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-500">Admins</span>
+                            <span class="font-bold text-slate-600">@Model.TotalAdmins</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Logs Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+            <div>
+                <h3 class="font-bold text-lg text-slate-800">Recent System Logs</h3>
+                <span class="text-slate-400 text-xs font-medium">Latest @Model.RecentLogs.Count entries (in-memory, resets on restart)</span>
+            </div>
+            <a asp-action="SystemLogs" class="text-primary text-sm font-bold hover:underline no-underline">View All Logs</a>
+        </div>
+        <div class="overflow-x-auto">
+            @if (!Model.RecentLogs.Any())
+            {
+                <div class="py-16 text-center text-slate-400">
+                    <span class="material-symbols-outlined text-4xl block mb-2">receipt_long</span>
+                    <p class="text-sm font-medium">No system logs yet.</p>
+                    <p class="text-xs mt-1">Logs appear after creating or updating users / semesters.</p>
+                </div>
+            }
+            else
+            {
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4">Action</th>
+                            <th class="px-6 py-4">Target</th>
+                            <th class="px-6 py-4">Timestamp</th>
+                            <th class="px-6 py-4">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var log in Model.RecentLogs)
+                        {
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @{
+                                            var icon  = log.Action.Contains("Created")  ? "person_add"
+                                                      : log.Action.Contains("Updated")  ? "update"
+                                                      : log.Action.Contains("Semester") ? "calendar_month"
+                                                      : "info";
+                                            var clr   = log.Action.Contains("Created")  ? "text-blue-500 bg-blue-50"
+                                                      : log.Action.Contains("Updated")  ? "text-orange-500 bg-orange-50"
+                                                      : "text-green-500 bg-green-50";
+                                        }
+                                        <span class="material-symbols-outlined @clr p-1.5 rounded-lg text-sm">@icon</span>
+                                        <span class="text-sm font-medium text-slate-700">@log.Action</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-bold text-slate-900">@log.Target</td>
+                                <td class="px-6 py-4 text-sm text-slate-500">@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td class="px-6 py-4">
+                                    @{
+                                        var badgeClass = log.Status == "Success"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700";
+                                    }
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold @badgeClass uppercase">@log.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script>
+        (function () {
+            const labels = @Html.Raw(chartLabels);
+            const data   = @Html.Raw(chartData);
+
+            const ctx = document.getElementById('visitChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Visits',
+                        data: data,
+                        backgroundColor: 'rgba(242, 113, 35, 0.75)',
+                        borderColor: '#F27123',
+                        borderWidth: 2,
+                        borderRadius: 6,
+                        hoverBackgroundColor: 'rgba(242, 113, 35, 0.95)',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => ` ${ctx.parsed.y} visit${ctx.parsed.y !== 1 ? 's' : ''}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1, precision: 0 },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        },
+                        x: {
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        })();
+    </script>
+}

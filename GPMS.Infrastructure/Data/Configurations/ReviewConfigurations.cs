@@ -50,7 +50,7 @@ public class ReviewSessionInfoConfiguration : IEntityTypeConfiguration<ReviewSes
         builder.HasOne(rs => rs.Group)
             .WithMany(g => g.ReviewSessions)
             .HasForeignKey(rs => rs.GroupID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(rs => rs.Room)
             .WithMany(r => r.ReviewSessions)
@@ -78,7 +78,7 @@ public class ReviewerAssignmentConfiguration : IEntityTypeConfiguration<Reviewer
         builder.HasOne(ra => ra.Group)
             .WithMany(g => g.ReviewerAssignments)
             .HasForeignKey(ra => ra.GroupID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
         builder.HasOne(ra => ra.Reviewer)
             .WithMany(u => u.ReviewerAssignments)

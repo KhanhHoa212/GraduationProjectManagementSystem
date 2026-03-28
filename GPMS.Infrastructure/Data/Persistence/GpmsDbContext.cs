@@ -31,14 +31,39 @@ public class GpmsDbContext : DbContext
     public DbSet<EvaluationDetail> EvaluationDetails { get; set; }
     public DbSet<Feedback> Feedbacks { get; set; }
     public DbSet<FeedbackApproval> FeedbackApprovals { get; set; }
+    public DbSet<MentorRoundReview> MentorRoundReviews { get; set; }
     public DbSet<Room> Rooms { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<GroupRoundProgress> GroupRoundProgresses { get; set; }
+    public DbSet<RubricDescription> RubricDescriptions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(GpmsDbContext).Assembly);
-        
+        modelBuilder.Entity<MentorRoundReview>(entity =>
+        {
+            entity.HasKey(m => new { m.ReviewRoundID, m.GroupID });
+
+            entity.Property(m => m.SupervisorID)
+                .HasMaxLength(20);
+
+            entity.HasOne(m => m.ReviewRound)
+                .WithMany(r => r.MentorRoundReviews)
+                .HasForeignKey(m => m.ReviewRoundID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Group)
+                .WithMany(g => g.MentorRoundReviews)
+                .HasForeignKey(m => m.GroupID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(m => m.Supervisor)
+                .WithMany(u => u.MentorRoundReviews)
+                .HasForeignKey(m => m.SupervisorID)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         SeedData(modelBuilder);
     }
 
@@ -46,13 +71,25 @@ public class GpmsDbContext : DbContext
     {
         // 1. Faculty
         modelBuilder.Entity<Faculty>().HasData(
-            new Faculty { FacultyID = 1, FacultyCode = "SE", FacultyName = "Software Engineering Faculty" }
+            new Faculty { FacultyID = 1, FacultyCode = "IT", FacultyName = "Information Technology Faculty" },
+            new Faculty { FacultyID = 2, FacultyCode = "EC", FacultyName = "Economy Faculty" },
+            new Faculty { FacultyID = 3, FacultyCode = "DA", FacultyName = "Digital Arts Faculty" },
+            new Faculty { FacultyID = 4, FacultyCode = "LA", FacultyName = "Language Faculty" }
         );
 
         // 2. Majors
         modelBuilder.Entity<Major>().HasData(
             new Major { MajorID = 1, FacultyID = 1, MajorCode = "SE", MajorName = "Software Engineering" },
-            new Major { MajorID = 2, FacultyID = 1, MajorCode = "SS", MajorName = "Software Testing" }
+            new Major { MajorID = 2, FacultyID = 2, MajorCode = "DM", MajorName = "Digital Marketing" },
+            new Major { MajorID = 3, FacultyID = 3, MajorCode = "GD", MajorName = "Graphic Design" },
+            new Major { MajorID = 4, FacultyID = 4, MajorCode = "EN", MajorName = "English" },
+            new Major { MajorID = 5, FacultyID = 4, MajorCode = "JP", MajorName = "Japanese" },
+            new Major { MajorID = 6, FacultyID = 4, MajorCode = "KR", MajorName = "Korean" },
+            new Major { MajorID = 7, FacultyID = 4, MajorCode = "CN", MajorName = "Chinese" },
+            new Major { MajorID = 8, FacultyID = 1, MajorCode = "IA", MajorName = "Information Assurance" },
+            new Major { MajorID = 9, FacultyID = 1, MajorCode = "IC", MajorName = "Integrated Circuit Design" },
+            new Major { MajorID = 10, FacultyID = 2, MajorCode = "FI", MajorName = "Finance" },
+            new Major { MajorID = 11, FacultyID = 2, MajorCode = "MK", MajorName = "Marketing" }
         );
 
         // 3. Expertise Areas
@@ -64,15 +101,15 @@ public class GpmsDbContext : DbContext
 
         // 4. Semester
         modelBuilder.Entity<Semester>().HasData(
-            new Semester 
-            { 
-                SemesterID = 1, 
-                SemesterCode = "SP25", 
-                AcademicYear = "2024-2025", 
-                StartDate = new DateTime(2025, 1, 1), 
-                EndDate = new DateTime(2025, 4, 30), 
-                Status = SemesterStatus.Active 
-            }
+            new Semester { SemesterID = 1, SemesterCode = "SP24", AcademicYear = "2023-2024", StartDate = new DateTime(2024, 1, 1), EndDate = new DateTime(2024, 4, 30), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 2, SemesterCode = "SU24", AcademicYear = "2023-2024", StartDate = new DateTime(2024, 5, 1), EndDate = new DateTime(2024, 8, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 3, SemesterCode = "FALL24", AcademicYear = "2024-2025", StartDate = new DateTime(2024, 9, 1), EndDate = new DateTime(2024, 12, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 4, SemesterCode = "SP25", AcademicYear = "2024-2025", StartDate = new DateTime(2025, 1, 1), EndDate = new DateTime(2025, 4, 30), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 5, SemesterCode = "SU25", AcademicYear = "2024-2025", StartDate = new DateTime(2025, 5, 1), EndDate = new DateTime(2025, 8, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 6, SemesterCode = "FALL25", AcademicYear = "2025-2026", StartDate = new DateTime(2025, 9, 1), EndDate = new DateTime(2025, 12, 31), Status = SemesterStatus.Closed },
+            new Semester { SemesterID = 7, SemesterCode = "SP26", AcademicYear = "2025-2026", StartDate = new DateTime(2026, 1, 1), EndDate = new DateTime(2026, 4, 30), Status = SemesterStatus.Active },
+            new Semester { SemesterID = 8, SemesterCode = "SU26", AcademicYear = "2025-2026", StartDate = new DateTime(2026, 5, 1), EndDate = new DateTime(2026, 8, 31), Status = SemesterStatus.Upcoming },
+            new Semester { SemesterID = 9, SemesterCode = "FALL26", AcademicYear = "2026-2027", StartDate = new DateTime(2026, 9, 1), EndDate = new DateTime(2026, 12, 31), Status = SemesterStatus.Upcoming }
         );
 
         // 5. Rooms
@@ -88,6 +125,7 @@ public class GpmsDbContext : DbContext
             new User { UserID = "GV001", FullName = "Lecturer One", Email = "giao-vien1@fpt.edu.vn", Status = UserStatus.Active },
             new User { UserID = "GV002", FullName = "Lecturer Two", Email = "giao-vien2@fpt.edu.vn", Status = UserStatus.Active },
             new User { UserID = "GV003", FullName = "Lecturer Three", Email = "giao-vien3@fpt.edu.vn", Status = UserStatus.Active },
+            new User { UserID = "HOD001", FullName = "Head of Department", Email = "hod@fpt.edu.vn", Status = UserStatus.Active },
             new User { UserID = "SE180001", FullName = "Student One", Email = "student1@fpt.edu.vn", Status = UserStatus.Active },
             new User { UserID = "SE180002", FullName = "Student Two", Email = "student2@fpt.edu.vn", Status = UserStatus.Active },
             new User { UserID = "SE180003", FullName = "Student Three", Email = "student3@fpt.edu.vn", Status = UserStatus.Active },
@@ -101,6 +139,7 @@ public class GpmsDbContext : DbContext
             new UserRole { UserRoleID = 2, UserID = "GV001", RoleName = RoleName.Lecturer },
             new UserRole { UserRoleID = 3, UserID = "GV002", RoleName = RoleName.Lecturer },
             new UserRole { UserRoleID = 4, UserID = "GV003", RoleName = RoleName.Lecturer },
+            new UserRole { UserRoleID = 10, UserID = "HOD001", RoleName = RoleName.HeadOfDept },
             new UserRole { UserRoleID = 5, UserID = "SE180001", RoleName = RoleName.Student },
             new UserRole { UserRoleID = 6, UserID = "SE180002", RoleName = RoleName.Student },
             new UserRole { UserRoleID = 7, UserID = "SE180003", RoleName = RoleName.Student },

@@ -1,0 +1,321 @@
+@model GPMS.Application.DTOs.ProjectDetailDto
+@using GPMS.Domain.Enums
+@{
+    ViewData["Title"] = "Project Overview";
+    Layout = "_Layout";
+    
+    var statusBadgeClass = Model.Status switch {
+        ProjectStatus.Active => "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200",
+        ProjectStatus.Draft => "bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200",
+        ProjectStatus.Completed => "bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200",
+        _ => "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+    };
+}
+
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div class="p-6">
+        <div class="max-w-6xl mx-auto space-y-6">
+            <!-- Breadcrumb Navigation -->
+            <nav class="flex items-center gap-2 text-sm mb-6">
+                <a href="/HOD/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 no-underline">GPMS</a>
+                <span class="text-slate-400 dark:text-slate-600">/</span>
+                <a href="/HOD/Projects" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 no-underline">Projects</a>
+                <span class="text-slate-400 dark:text-slate-600">/</span>
+                <span class="text-slate-900 dark:text-slate-100 font-medium">Chi tiết</span>
+            </nav>
+
+            <!-- Project Header Section -->
+            <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-4">
+                        <div class="w-16 h-16 rounded-lg bg-gradient-to-br from-[#F37021] to-orange-600 flex items-center justify-center text-white text-2xl font-bold">
+                            @Model.ProjectCode.Substring(0, Math.Min(2, Model.ProjectCode.Length))
+                        </div>
+    
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h1 class="text-2xl font-bold text-slate-900 dark:text-white">@Model.ProjectCode · @Model.ProjectName</h1>
+                                <span class="px-3 py-1 @statusBadgeClass text-xs font-semibold rounded-full uppercase">@Model.Status</span>
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-400 mt-2">@Model.MajorName | Học kỳ @Model.SemesterCode</p>
+                        </div>
+                    </div>
+                    <a href="/HOD/EditProject/@Model.ProjectID?returnUrl=@(Context.Request.Path + Context.Request.QueryString)" class="px-6 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 font-medium transition no-underline">
+                        Chỉnh sửa
+                    </a>
+                </div>
+
+                <!-- Project Info Grid -->
+                <div class="grid grid-cols-3 gap-6 mt-8 pt-8 border-t border-slate-200 dark:border-slate-700">
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Chuyên ngành</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.MajorName</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Học kỳ</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.SemesterCode</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Ngày tạo</p>
+                        <p class="text-lg font-semibold text-slate-900 dark:text-white mt-1">@Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6">
+                <!-- Left Column - Team & Supervisor -->
+                <div class="col-span-2 space-y-6">
+                    <!-- Team Members Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">group</span>
+                                <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Team Members</h2>
+                            </div>
+                            <span class="px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-medium rounded-full">@Model.Members.Count Students</span>
+                        </div>
+
+                        <div class="space-y-3">
+                            @if (Model.Members.Any())
+                            {
+                                foreach (var member in Model.Members)
+                                {
+                                    var initials = string.Concat(member.FullName.Split(' ').Take(2).Select(w => w.Length > 0 ? w[0].ToString().ToUpper() : ""));
+                                    <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                                                @initials
+                                            </div>
+                                            <div>
+                                                <p class="font-semibold text-slate-900 dark:text-white">@member.FullName</p>
+                                                <p class="text-xs text-slate-500 dark:text-slate-400">MSSV: @member.UserID</p>
+                                            </div>
+                                        </div>
+                                        <span class="px-3 py-1 @(member.RoleInGroup == GroupRole.Leader ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200" : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300") text-xs font-semibold rounded-full">@member.RoleInGroup</span>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="text-center py-6 text-slate-400 italic">Chưa có thành viên</div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Assigned Supervisor Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">person_check</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Assigned Supervisor</h2>
+                        </div>
+
+                        <div class="flex items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                            <div class="w-14 h-14 rounded-lg bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-semibold text-lg">
+                                @(Model.SupervisorName?.Split(' ').LastOrDefault()?.Substring(0, 1) ?? "S")@(Model.SupervisorName?.Split(' ').FirstOrDefault()?.Substring(0, 1) ?? "P")
+                            </div>
+                            <div class="flex-1">
+                                <p class="font-semibold text-slate-900 dark:text-white">@(Model.SupervisorName ?? "Chưa phân công")</p>
+                                <p class="text-sm text-slate-600 dark:text-slate-400">Giảng viên hướng dẫn · @Model.MajorName</p>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.SupervisorName))
+                            {
+                                <button class="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-300 dark:hover:bg-slate-600 text-sm font-medium transition">
+                                    View Profile
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Submissions & Evaluations Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
+                        <!-- Tabs -->
+                        <div class="flex border-b border-slate-200 dark:border-slate-800">
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-900 dark:text-white border-b-2 border-[#F37021] bg-white dark:bg-slate-900 transition">
+                                Submissions
+                            </button>
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent transition">
+                                Evaluations
+                            </button>
+                            <button class="flex-1 px-6 py-4 text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent transition">
+                                Feedback
+                            </button>
+                        </div>
+
+                        <!-- Tab Content -->
+                        <div class="p-6">
+                            <!-- Submission Deadline Alert (Placeholder for now) -->
+                            <div class="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg flex items-start gap-3">
+                                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400 flex-shrink-0" style="font-size: 20px;">warning</span>
+                                <div>
+                                    <p class="font-semibold text-orange-900 dark:text-orange-100">Cập nhật tiến độ</p>
+                                    <p class="text-sm text-orange-800 dark:text-orange-200">Các mốc nộp bài sắp tới sẽ được cập nhật dựa trên lộ trình Review Rounds.</p>
+                                </div>
+                            </div>
+
+                            <!-- Submission Table -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-slate-50 dark:bg-slate-800">
+                                        <tr>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Loại tài liệu</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Tên file</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Ngày nộp</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Trạng thái</th>
+                                            <th class="text-left py-3 px-4 font-semibold text-slate-700 dark:text-slate-300">Tải về</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                                        @if (Model.Submissions.Any())
+                                        {
+                                            foreach (var sub in Model.Submissions.OrderByDescending(s => s.SubmittedAt))
+                                            {
+                                                var statusColor = sub.Status switch {
+                                                    SubmissionStatus.OnTime => "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30",
+                                                    SubmissionStatus.Late => "text-amber-600 bg-amber-50 dark:bg-amber-900/30",
+                                                    SubmissionStatus.Replaced => "text-slate-600 bg-slate-50 dark:bg-slate-900/30",
+                                                    _ => "text-slate-600 bg-slate-50 dark:bg-slate-900/30"
+                                                };
+                                                <tr>
+                                                    <td class="py-4 px-4 font-medium text-slate-900 dark:text-white">@sub.DocumentName</td>
+                                                    <td class="py-4 px-4 text-slate-600 dark:text-slate-400">@sub.FileName</td>
+                                                    <td class="py-4 px-4 text-slate-500 dark:text-slate-400">@sub.SubmittedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                                    <td class="py-4 px-4">
+                                                        <span class="px-2 py-1 rounded-md text-[10px] font-bold @statusColor uppercase tracking-wider">@sub.Status</span>
+                                                    </td>
+                                                    <td class="py-4 px-4">
+                                                        <div class="flex items-center gap-3">
+                                                            @{
+                                                                var extension = System.IO.Path.GetExtension(sub.FileName)?.ToLower();
+                                                                var canView = extension != ".zip" && extension != ".rar" && extension != ".7z";
+                                                            }
+                                                            @if (canView)
+                                                            {
+                                                                <a href="@sub.FileUrl" target="_blank" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300" title="View in browser">
+                                                                    <span class="material-symbols-outlined text-[18px]">open_in_new</span>
+                                                                </a>
+                                                            }
+                                                            <a asp-action="DownloadSubmission" asp-controller="HOD" asp-route-id="@sub.SubmissionID" hx-boost="false" class="no-spinner text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300" title="Download">
+                                                                <span class="material-symbols-outlined text-[20px]">download</span>
+                                                            </a>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <tr>
+                                                <td colspan="5" class="py-10 text-center text-slate-500 italic">Nhóm chưa nộp tài liệu nào.</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Timeline & Reviewers -->
+                <div class="space-y-6">
+                    <!-- Review Timeline Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">timeline</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Review Timeline</h2>
+                        </div>
+
+                        <div class="space-y-4">
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                <div class="relative pl-3">
+                                    <!-- Vertical Line -->
+                                    <div class="absolute left-[17px] top-2 bottom-6 w-0.5 bg-slate-200 dark:bg-slate-800 z-0"></div>
+
+                                    @foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                                    {
+                                        var isCompleted = round.Status == RoundStatus.Completed || round.EndDate < DateTime.Now;
+                                        var isActive = round.Status == RoundStatus.Ongoing || (round.StartDate <= DateTime.Now && round.EndDate >= DateTime.Now);
+                                        
+                                        var dotClass = isCompleted ? "bg-emerald-500 ring-emerald-100 dark:ring-emerald-900/30" : 
+                                                       isActive ? "bg-blue-500 ring-blue-100 dark:ring-blue-900/30 animate-pulse" : 
+                                                       "bg-slate-300 dark:bg-slate-700 ring-slate-100 dark:ring-slate-800";
+                                        
+                                        var statusText = isCompleted ? "COMPLETED" : isActive ? "IN PROGRESS" : "UPCOMING";
+                                        var statusClass = isCompleted ? "text-emerald-600 bg-emerald-50/50 dark:bg-emerald-900/20" : 
+                                                          isActive ? "text-blue-600 bg-blue-50/50 dark:bg-blue-900/20" : 
+                                                          "text-slate-500 bg-slate-50/50 dark:bg-slate-900/20";
+
+                                        <div class="relative z-10 flex gap-4 pb-8 last:pb-0">
+                                            <div class="flex-shrink-0">
+                                                <div class="w-2.5 h-2.5 rounded-full @dotClass ring-[6px] shadow-sm mt-1.5 relative ml-[1px]"></div>
+                                            </div>
+                                            <div class="flex-1">
+                                                <div class="flex justify-between items-start">
+                                                    <div>
+                                                        <p class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-none pt-1">Vòng @round.RoundNumber (@round.RoundType)</p>
+                                                        <p class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold mt-1.5">
+                                                            @(isCompleted ? $"Kết thúc: {round.EndDate:dd/MM/yyyy}" : $"Hạn nộp: {round.SubmissionDeadline:dd/MM/yyyy}")
+                                                        </p>
+                                                    </div>
+                                                    <span class="text-[9px] font-extrabold @statusClass uppercase tracking-widest px-2 py-0.5 rounded border border-current opacity-70">
+                                                        @statusText
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="flex gap-4">
+                                    <div class="flex flex-col items-center">
+                                        <div class="w-4 h-4 rounded-full bg-slate-300 dark:bg-slate-700 border-4 border-slate-100 dark:border-slate-800"></div>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-slate-900 dark:text-white text-sm">Chưa có lộ trình</p>
+                                        <p class="text-xs text-slate-500 dark:text-slate-400">Học kỳ này chưa thiết lập các vòng Review.</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Reviewer Section -->
+                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
+                        <div class="flex items-center gap-2 mb-6">
+                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">assignment_ind</span>
+                            <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Reviewer theo Vòng</h2>
+                        </div>
+
+                        <div class="space-y-4">
+                            @if (Model.ReviewRounds.Any())
+                            {
+                                foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                                {
+                                    <div class="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-100 dark:border-slate-800 relative overflow-hidden group">
+                                        <div class="absolute top-0 right-0 w-16 h-16 bg-[#F37021]/5 -mr-8 -mt-8 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <span class="text-xs font-bold text-slate-500 uppercase">Vòng @round.RoundNumber (@round.RoundType)</span>
+                                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold">@round.Status</span>
+                                        </div>
+                                        <div class="flex items-center gap-2 text-sm text-slate-500 italic">
+                                            <span class="material-symbols-outlined text-sm">hourglass_empty</span>
+                                            <span>Chưa phân công hội đồng...</span>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border-l-4 border-slate-300">
+                                    <p class="text-sm text-slate-500 italic">Thông tin hội đồng chấm sẽ xuất hiện khi các vòng Review bắt đầu.</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

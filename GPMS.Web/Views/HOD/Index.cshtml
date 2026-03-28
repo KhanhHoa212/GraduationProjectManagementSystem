@@ -1,0 +1,506 @@
+@model IEnumerable<GPMS.Application.DTOs.ProjectDto>
+@{
+    ViewBag.Title = "HOD Dashboard";
+    ViewBag.CurrentPage = "Dashboard";
+    ViewBag.BreadcrumbSection = "Dashboard";
+    Layout = "_Layout";
+
+    int totalProjects = ViewBag.TotalProjects ?? 0;
+    int missingSup = ViewBag.MissingSupervisor ?? 0;
+    int unassigned = missingSup;
+
+    int draftCt = ViewBag.DraftCount ?? 0;
+    int activeCt = ViewBag.ActiveCount ?? 0;
+    int compCt = ViewBag.CompletedCount ?? 0;
+    int totalCt = (ViewBag.TotalProjects ?? 0) == 0 ? 1 : (int)ViewBag.TotalProjects;
+
+    double circ = 565.48; // 2 * pi * r (r=90)
+    double compLen = (double)compCt / totalCt * circ;
+    double activeLen = (double)activeCt / totalCt * circ;
+    double draftLen = (double)draftCt / totalCt * circ;
+
+    double compOffset = 0;
+    double activeOffset = -compLen;
+    double draftOffset = -(compLen + activeLen);
+    
+    var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
+}
+
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+    
+    .stat-card-glow-blue { box-shadow: 0 0 20px rgba(37, 99, 235, 0.1); }
+    .stat-card-glow-emerald { box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
+    .stat-card-glow-amber { box-shadow: 0 0 20px rgba(245, 158, 11, 0.1); }
+    .stat-card-glow-rose { box-shadow: 0 0 20px rgba(244, 63, 94, 0.1); }
+
+    .donut-segment {
+        transition: stroke-dashoffset 1s ease-in-out, stroke-width 0.3s ease;
+        cursor: pointer;
+    }
+    .donut-segment:hover {
+        stroke-width: 24;
+    }
+
+    /* Animation for timeline dots */
+    @@keyframes pulse-subtle {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    .animate-pulse-subtle {
+        animation: pulse-subtle 2s infinite ease-in-out;
+    }
+</style>
+
+<div class="max-w-[1600px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    
+    <!-- Top Header Section with Semester Info -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-3xl font-bold text-slate-900 tracking-tight dark:text-white">HOD Insights</h1>
+            <p class="text-slate-600 font-medium mt-1 dark:text-slate-400">Welcome back! Here's what's happening in <span class="text-primary-600 font-bold">@(activeSemester?.SemesterCode ?? "Current Semester")</span>.</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <div class="px-4 py-2 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-slate-200 dark:border-dark-700 flex items-center gap-3">
+                <div class="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
+                <span class="text-sm font-semibold text-slate-800 dark:text-slate-300">System Active</span>
+            </div>
+            <button class="p-2.5 bg-white dark:bg-dark-800 rounded-xl shadow-sm border border-slate-200 dark:border-dark-700 hover:bg-slate-50 dark:hover:bg-dark-700 transition-all text-slate-600 dark:text-slate-400">
+                <i class="ri-refresh-line text-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Projects -->
+        <div class="glass-card stat-card-glow-blue p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            @{
+                int assignedCount = totalProjects - unassigned;
+                double assignmentRate = totalProjects > 0 ? (double)assignedCount / totalProjects * 100 : 0;
+            }
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-folder-zip-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Total Projects</span>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">@totalProjects</h3>
+                </div>
+            </div>
+            <div class="mt-5 flex flex-col gap-2">
+                <div class="flex justify-between items-center text-[10px] font-bold uppercase tracking-tight">
+                    <span class="text-slate-500">Assignment Rate</span>
+                    <span class="text-blue-600">@Math.Round(assignmentRate)%</span>
+                </div>
+                <div class="h-1.5 w-full bg-slate-100 dark:bg-dark-700 rounded-full overflow-hidden">
+                    <div class="h-full bg-blue-500 rounded-full transition-all duration-1000" style="width: @(assignmentRate.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Current Stage -->
+        <div class="glass-card stat-card-glow-emerald p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            @{
+                var rounds = (ViewBag.ReviewRounds as IEnumerable<GPMS.Application.DTOs.ReviewRoundDto>)?.OrderBy(r => r.RoundNumber).ToList();
+                var ongoingRound = rounds?.FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                var nextRound = ongoingRound == null ? rounds?.OrderBy(r => r.StartDate).FirstOrDefault(r => r.Status == GPMS.Domain.Enums.RoundStatus.Planned) : null;
+                var phaseName = ongoingRound != null ? (ongoingRound.RoundNumber == 0 ? "Final Defense" : $"Round {ongoingRound.RoundNumber}") : (nextRound != null ? $"Upcoming: R{nextRound.RoundNumber}" : "Planning");
+                var phaseStatus = ongoingRound != null ? "Active" : (nextRound != null ? "Scheduled" : "Wait");
+            }
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-primary-50 dark:bg-primary-900/20 rounded-xl text-primary-600 dark:text-primary-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-pulse-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Current Stage</span>
+                    <h3 class="text-3xl font-bold text-primary-600 dark:text-primary-400 mt-1 whitespace-nowrap">@phaseName</h3>
+                </div>
+            </div>
+            <div class="mt-5 flex items-center gap-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-primary-500 @(ongoingRound != null ? "animate-pulse" : "")"></div>
+                <span class="text-xs font-semibold text-slate-600 dark:text-slate-400">@phaseStatus Stage</span>
+            </div>
+        </div>
+
+        <!-- Unassigned -->
+        <div class="glass-card stat-card-glow-amber p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-user-follow-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Unassigned Sup.</span>
+                    <h3 class="text-3xl font-bold text-slate-900 dark:text-white mt-1">@unassigned</h3>
+                </div>
+            </div>
+            <div class="mt-5">
+                <a href="/HOD/AssignSupervisor" class="text-xs font-bold text-amber-600 hover:text-amber-700 underline underline-offset-4 decoration-2 decoration-amber-100 hover:decoration-amber-400 transition-all uppercase tracking-tight">Assign Now <i class="ri-arrow-right-line"></i></a>
+            </div>
+        </div>
+
+        <!-- Deadlines -->
+        <div class="glass-card stat-card-glow-rose p-6 rounded-2xl group transition-all hover:-translate-y-1">
+            <div class="flex justify-between items-start">
+                <div class="p-3 bg-rose-50 dark:bg-rose-900/20 rounded-xl text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform">
+                    <i class="ri-calendar-check-line text-2xl"></i>
+                </div>
+                <div class="text-right">
+                    <span class="text-xs font-semibold text-slate-500 uppercase tracking-widest leading-none">Critical Deadlines</span>
+                    <h3 class="text-3xl font-bold text-rose-600 dark:text-rose-400 mt-1">3</h3>
+                </div>
+            </div>
+            <div class="mt-5 flex items-center gap-2">
+                <span class="flex items-center text-rose-600 text-xs font-semibold">
+                    <i class="ri-error-warning-line mr-1 text-[14px]"></i> Within 7 days
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Project Status Chart -->
+        <div class="lg:col-span-4 glass-card p-8 rounded-3xl flex flex-col">
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Project Status</h3>
+                <div class="size-8 rounded-full bg-slate-50 dark:bg-dark-700 flex items-center justify-center text-slate-400">
+                    <i class="ri-pie-chart-2-line"></i>
+                </div>
+            </div>
+            
+            <div class="flex-1 flex flex-col items-center justify-center relative py-6">
+                <!-- SVG Donut -->
+                <svg viewBox="0 0 220 220" class="w-56 h-56 drop-shadow-xl">
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-slate-50 dark:stroke-dark-700" stroke-width="16"></circle>
+                    
+                    <!-- Completed -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-emerald-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@compLen 565.48" stroke-dashoffset="@compOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
+                            
+                    <!-- Active -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-primary-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@activeLen 565.48" stroke-dashoffset="@activeOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
+                            
+                    <!-- Draft -->
+                    <circle cx="110" cy="110" r="90" fill="none" class="stroke-amber-500 donut-segment" stroke-width="16" 
+                            stroke-dasharray="@draftLen 565.48" stroke-dashoffset="@draftOffset" transform="rotate(-90 110 110)" stroke-linecap="round"></circle>
+                </svg>
+                
+                <div class="absolute inset-0 flex flex-col items-center justify-center pt-2">
+                    <span class="text-5xl font-bold text-slate-900 dark:text-white tracking-tighter">@totalProjects</span>
+                    <span class="text-[11px] font-semibold text-slate-500 uppercase tracking-widest mt-1">Total Units</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 mt-8 pt-8 border-t border-slate-100 dark:border-dark-700">
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-amber-500 shadow-sm shadow-amber-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Draft Projects</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@draftCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)draftCt / totalCt * 100)%</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-primary-500 shadow-sm shadow-primary-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Active Stage</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@activeCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)activeCt / totalCt * 100)%</span>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <div class="size-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-200"></div>
+                        <span class="text-sm font-semibold text-slate-700 dark:text-slate-300">Finalized</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-sm font-bold text-slate-800 dark:text-white">@compCt</span>
+                        <span class="text-[10px] font-semibold text-slate-500 ml-1">@Math.Round((double)compCt / totalCt * 100)%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Semester Journey (Vertical Stepper) -->
+        <div class="lg:col-span-8 glass-card p-0 rounded-3xl flex flex-col overflow-hidden relative border border-slate-200/50 dark:border-dark-700">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 bg-white/50 dark:bg-dark-800/50 flex items-center justify-between relative z-10">
+                <div class="flex items-center gap-3">
+                    <div class="size-9 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center text-primary-600">
+                        <i class="ri-direction-line text-lg"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Semester Journey</h3>
+                </div>
+                <div class="flex items-center gap-2 px-3 py-1 bg-slate-50 dark:bg-dark-700 text-slate-500 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                    <i class="ri-calendar-line"></i> Progression Map
+                </div>
+            </div>
+
+            <div class="p-8 relative z-10">
+                <div class="relative pl-4 space-y-8">
+                    @if (rounds != null && rounds.Any())
+                    {
+                        <!-- Vertical Connector Line -->
+                        <div class="absolute left-[23px] top-2 bottom-8 w-0.5 bg-slate-100 dark:bg-dark-700 z-0">
+                            @{
+                                var completedCount = rounds.Count(r => r.Status == GPMS.Domain.Enums.RoundStatus.Completed);
+                                var ongoingIndex = rounds.FindIndex(r => r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing);
+                                var lineProgressHeight = ongoingIndex != -1 ? ongoingIndex : completedCount;
+                                var stepHeight = 100.0 / (rounds.Count > 1 ? rounds.Count - 1 : 1);
+                                var linePercentage = Math.Min(100, lineProgressHeight * stepHeight);
+                            }
+                            <div class="absolute top-0 left-0 w-full bg-primary-500 transition-all duration-1000" style="height: @(linePercentage.ToString(System.Globalization.CultureInfo.InvariantCulture))%"></div>
+                        </div>
+
+                        for (int i = 0; i < rounds.Count; i++)
+                        {
+                            var r = rounds[i];
+                            var isCompleted = r.Status == GPMS.Domain.Enums.RoundStatus.Completed;
+                            var isOngoing = r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing;
+                            
+                            var nodeBase = "size-5 rounded-full z-10 relative mt-1.5 transition-all duration-500 border-2";
+                            var nodeStyle = isCompleted ? "bg-primary-500 border-primary-500 shadow-sm" 
+                                          : (isOngoing ? "bg-white dark:bg-dark-900 border-primary-500 ring-4 ring-primary-50 dark:ring-primary-900/20" 
+                                          : "bg-white dark:bg-dark-800 border-slate-200 dark:border-dark-700");
+                            
+                            var rowBg = isOngoing ? "bg-primary-50/30 dark:bg-primary-900/10 border-primary-100 dark:border-primary-900/20" : "bg-transparent border-transparent";
+
+                            <div class="relative flex gap-8 group">
+                                <!-- Node -->
+                                <div class="flex flex-col items-center">
+                                    <div class="@nodeBase @nodeStyle flex items-center justify-center">
+                                        @if (isCompleted) {
+                                            <i class="ri-check-line text-[10px] text-white"></i>
+                                        } else if (isOngoing) {
+                                            <div class="size-1.5 rounded-full bg-primary-500 animate-pulse"></div>
+                                        }
+                                    </div>
+                                </div>
+
+                                <!-- Content Row -->
+                                <div class="flex-1 pb-4 @rowBg -mt-2 p-4 rounded-2xl border transition-all hover:bg-slate-50/50 dark:hover:bg-dark-700/30">
+                                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                                        <div>
+                                            <div class="flex items-center gap-3">
+                                                <h4 class="text-base font-bold text-slate-900 dark:text-white">@(r.RoundNumber == 0 ? "Final Defense" : $"Round {r.RoundNumber}")</h4>
+                                                @if (isOngoing)
+                                                {
+                                                    <span class="px-2 py-0.5 bg-primary-500 text-white text-[9px] font-bold rounded uppercase tracking-wider animate-pulse">Live Now</span>
+                                                }
+                                                else if (isCompleted)
+                                                {
+                                                    <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-tight flex items-center gap-1">
+                                                        <i class="ri-checkbox-circle-fill"></i> Succeeded
+                                                    </span>
+                                                }
+                                            </div>
+                                            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+                                                @(r.RoundNumber == 0 ? "Final assessment and grade submission" : (r.RoundNumber == 1 ? "Proposal presentation and initial feedback" : "Mid-term progress validation"))
+                                            </p>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-[11px] font-bold text-slate-700 dark:text-slate-300">@r.StartDate.ToString("dd MMM") - @r.EndDate.ToString("dd MMM")</div>
+                                            <div class="text-[9px] font-semibold text-slate-400 dark:text-slate-500 uppercase mt-1">@((r.EndDate - r.StartDate).Days) Day Window</div>
+                                        </div>
+                                    </div>
+
+                                    @if (isOngoing)
+                                    {
+                                        <div class="mt-4 pt-4 border-t border-primary-200/50 dark:border-primary-900/30 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="bg-white dark:bg-dark-800 p-3 rounded-xl border border-primary-100 dark:border-primary-900/40 shadow-sm">
+                                                <div class="flex items-center gap-2 mb-1.5">
+                                                    <i class="ri-flashlight-line text-primary-600"></i>
+                                                    <span class="text-[10px] font-bold text-slate-900 dark:text-white uppercase">Active Focus</span>
+                                                </div>
+                                                <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400">Review pending submissions and provide mentor feedback.</p>
+                                            </div>
+                                            <div class="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-xl border border-amber-100 dark:border-amber-900/40 shadow-sm">
+                                                <div class="flex items-center gap-2 mb-1.5 text-amber-600">
+                                                    <i class="ri-time-line"></i>
+                                                    <span class="text-[10px] font-bold uppercase">Immediate Action</span>
+                                                </div>
+                                                <div class="flex justify-between items-center">
+                                                    <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200">R@(r.RoundNumber) Grading</span>
+                                                    <span class="text-[10px] font-bold text-amber-600">Due 20 Oct</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="py-20 text-center">
+                            <i class="ri-calendar-event-line text-4xl text-slate-200 mb-4 block"></i>
+                            <p class="text-slate-400 font-semibold">No timeline stages defined for this semester.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Management Row -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start pb-12">
+        
+        <!-- Recent Projects Table -->
+        <div class="xl:col-span-8 glass-card rounded-3xl overflow-hidden flex flex-col shadow-2xl shadow-slate-200/50 dark:shadow-none">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center bg-white dark:bg-dark-800">
+                <div class="flex items-center gap-3">
+                    <div class="size-10 bg-slate-900 dark:bg-slate-700 rounded-xl flex items-center justify-center text-white">
+                        <i class="ri-list-settings-line text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Recent Projects</h3>
+                </div>
+                <a href="/HOD/Projects" class="px-4 py-2 bg-slate-50 dark:bg-dark-700 hover:bg-slate-100 dark:hover:bg-dark-600 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-200 dark:border-dark-600 uppercase tracking-widest">Explore All</a>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left border-collapse">
+                    <thead class="bg-slate-50/80 dark:bg-dark-800/80 text-slate-400 font-black text-[10px] uppercase tracking-[0.2em] border-b border-slate-100 dark:border-dark-700">
+                        <tr>
+                            <th class="px-8 py-5">Project Index</th>
+                            <th class="px-8 py-5">Title & Context</th>
+                            <th class="px-8 py-5">Evolution Status</th>
+                            <th class="px-8 py-5 text-right">Utility</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
+                        @if (Model != null && Model.Any())
+                        {
+                            foreach (var item in Model)
+                            {
+                                string statusLabel = "";
+                                string statusStyle = "";
+                                string iconClass = "";
+
+                                if (string.IsNullOrEmpty(item.SupervisorName))
+                                {
+                                    statusLabel = "Unassigned";
+                                    statusStyle = "text-amber-600 border-amber-500/50";
+                                    iconClass = "ri-user-unfollow-line";
+                                }
+                                else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Draft)
+                                {
+                                    statusLabel = "In Draft";
+                                    statusStyle = "text-slate-500 border-slate-400/50";
+                                    iconClass = "ri-draft-line";
+                                }
+                                else if (item.Status == GPMS.Domain.Enums.ProjectStatus.Completed)
+                                {
+                                    statusLabel = "Finalized";
+                                    statusStyle = "text-emerald-600 border-emerald-500/50";
+                                    iconClass = "ri-checkbox-circle-line";
+                                }
+                                else
+                                {
+                                    statusLabel = "Active Live";
+                                    statusStyle = "text-blue-600 border-blue-500/50";
+                                    iconClass = "ri-rocket-line";
+                                }
+
+                                <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-800/50 transition-colors group">
+                                    <td class="px-8 py-5">
+                                        <div class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">@item.ProjectCode</div>
+                                        <div class="text-[10px] text-slate-400 mt-1">Học kỳ: @item.SemesterCode</div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <div class="font-bold text-slate-800 dark:text-slate-200 max-w-xs truncate group-hover:text-primary-600 transition-colors">@item.ProjectName</div>
+                                        <div class="text-[10px] text-slate-400 font-bold mt-1 uppercase tracking-tighter">Spec: @item.MajorName</div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-dark-700 rounded-lg text-[10px] font-bold @statusStyle border-l-4 shadow-sm uppercase tracking-tight">
+                                            <i class="@iconClass opacity-70"></i> @statusLabel
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-2 hover:bg-white dark:hover:bg-dark-700 text-slate-400 hover:text-slate-900 dark:hover:text-white inline-flex rounded-lg transition-all border border-transparent hover:border-slate-200 dark:hover:border-dark-600">
+                                            <i class="ri-arrow-right-up-line text-lg"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="px-8 py-16 text-center">
+                                    <div class="flex flex-col items-center">
+                                        <div class="size-16 bg-slate-50 dark:bg-dark-800 rounded-2xl flex items-center justify-center text-slate-300 mb-4">
+                                            <i class="ri-survey-line text-4xl"></i>
+                                        </div>
+                                        <span class="text-slate-500 font-bold">No telemetry data for this semester.</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="xl:col-span-4 glass-card rounded-3xl flex flex-col overflow-hidden">
+            <div class="px-8 py-6 border-b border-slate-100 dark:border-dark-700 bg-white dark:bg-dark-800">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">Live Activity</h3>
+            </div>
+            
+            <div class="p-8 flex-1 bg-white dark:bg-dark-800/50">
+                <div class="space-y-10 relative before:absolute before:left-[17px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100 dark:before:bg-dark-700">
+                    
+                    <!-- Activity Item 1 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center text-orange-600 dark:text-orange-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-file-text-line text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-slate-900 dark:text-white leading-tight">New Document Upload</div>
+                            <p class="text-[11px] font-semibold text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">Group <span class="text-orange-600 font-bold">G32</span> uploaded "System Architecture" for Review 1.</p>
+                            <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mt-2 uppercase tracking-widest">12m ago</div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 2 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center text-blue-600 dark:text-blue-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-user-star-line text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-slate-900 dark:text-white leading-tight">Review Finalized</div>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed"><span class="text-blue-600 font-bold">Dr. Nguyen</span> completed evaluation for "AI Home Security".</p>
+                            <div class="text-[10px] font-black text-slate-300 dark:text-slate-500 mt-2 uppercase tracking-widest">2h ago</div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Item 3 -->
+                    <div class="relative pl-12">
+                        <div class="absolute left-0 top-0 size-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/20 flex items-center justify-center text-emerald-600 dark:text-emerald-400 border-[3px] border-white dark:border-dark-800 z-10 shadow-sm">
+                            <i class="ri-calendar-check-line text-sm"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-black text-slate-900 dark:text-white leading-tight">Defense Calendar Live</div>
+                            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">The final defense schedule for <span class="font-bold">SP26</span> has been publicized.</p>
+                            <div class="text-[10px] font-black text-slate-300 dark:text-slate-500 mt-2 uppercase tracking-widest">Yesterday</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-8 py-5 bg-slate-50 dark:bg-dark-800/80 border-t border-slate-100 dark:border-dark-700">
+                <button class="w-full py-3 bg-white dark:bg-dark-700 border border-slate-200 dark:border-dark-600 shadow-sm rounded-2xl text-[10px] font-bold text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-dark-600 transition-all uppercase tracking-widest">View Event History</button>
+            </div>
+        </div>
+    </div>
+
+</div>

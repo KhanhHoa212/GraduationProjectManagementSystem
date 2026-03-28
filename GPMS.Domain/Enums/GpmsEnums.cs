@@ -62,6 +62,13 @@ public enum RoundType
     Offline
 }
 
+public enum GraduationStatus
+{
+    InProgress,
+    Passed,
+    Failed
+}
+
 public enum RoundStatus
 {
     Planned,
@@ -71,9 +78,10 @@ public enum RoundStatus
 
 public enum SubmissionStatus
 {
-    OnTime,
-    Late,
-    Replaced
+    OnTime = 0,
+    Late = 1,
+    Replaced = 2,
+    NotSubmitted = 3
 }
 
 public enum EvaluationStatus
@@ -88,6 +96,20 @@ public enum ApprovalStatus
     Approved,
     Rejected,
     AutoReleased
+}
+
+public enum ChecklistInputType
+{
+    NumericScore,
+    YesNoNa,
+    GradeLevel
+}
+
+public enum MentorGateStatus
+{
+    Pending,
+    Approved,
+    Rejected
 }
 
 public enum RoomType
@@ -111,4 +133,18 @@ public enum NotificationType
     Feedback,
     Review,
     System
+}
+
+public enum ChecklistType
+{
+    YesNo,
+    Rubric
+}
+
+public enum MentorDecision
+{
+    Pending,
+    Accepted,
+    Rejected,
+    Stopped
 }

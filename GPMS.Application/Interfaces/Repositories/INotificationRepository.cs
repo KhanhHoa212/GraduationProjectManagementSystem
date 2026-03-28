@@ -7,7 +7,10 @@ namespace GPMS.Application.Interfaces.Repositories;
 public interface INotificationRepository
 {
     Task<IEnumerable<Notification>> GetByRecipientAsync(string userId);
+    Task<IEnumerable<Notification>> GetRecentByRecipientAsync(string userId, int count);
     Task AddAsync(Notification notification);
     Task MarkAsReadAsync(int notificationId);
+    Task MarkAllAsReadAsync(string userId);
+    Task ToggleReadStatusAsync(int notificationId);
     Task SaveChangesAsync();
 }

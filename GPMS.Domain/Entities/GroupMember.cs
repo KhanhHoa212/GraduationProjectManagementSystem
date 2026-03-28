@@ -7,6 +7,7 @@ public class GroupMember
     public int GroupID { get; set; }
     public string UserID { get; set; } = string.Empty;
     public GroupRole RoleInGroup { get; set; } = GroupRole.Member;
+    public GraduationStatus Status { get; set; } = GraduationStatus.InProgress;
     public DateTime JoinedAt { get; set; } = DateTime.UtcNow;
 
     // Navigation

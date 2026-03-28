@@ -47,7 +47,7 @@ public class ProjectGroupConfiguration : IEntityTypeConfiguration<ProjectGroup>
         builder.HasOne(pg => pg.Project)
             .WithMany(p => p.ProjectGroups)
             .HasForeignKey(pg => pg.ProjectID)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
 
@@ -62,6 +62,11 @@ public class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMember>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(gm => gm.Status)
+            .HasConversion<string>()
+            .HasDefaultValue(GraduationStatus.InProgress)
+            .HasMaxLength(20);
+
         builder.Property(gm => gm.JoinedAt).HasDefaultValueSql("GETDATE()");
 
         builder.HasOne(gm => gm.Group)
@@ -72,6 +77,33 @@ public class GroupMemberConfiguration : IEntityTypeConfiguration<GroupMember>
         builder.HasOne(gm => gm.User)
             .WithMany(u => u.GroupMemberships)
             .HasForeignKey(gm => gm.UserID)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class GroupRoundProgressConfiguration : IEntityTypeConfiguration<GroupRoundProgress>
+{
+    public void Configure(EntityTypeBuilder<GroupRoundProgress> builder)
+    {
+        builder.ToTable("GroupRoundProgresses");
+        builder.HasKey(grp => new { grp.GroupID, grp.ReviewRoundID });
+
+        builder.Property(grp => grp.MentorDecision)
+            .HasConversion<string>()
+            .HasDefaultValue(MentorDecision.Pending)
+            .HasMaxLength(20);
+
+        builder.Property(grp => grp.MentorComment).HasMaxLength(500);
+        builder.Property(grp => grp.UpdatedAt).HasDefaultValueSql("GETDATE()");
+
+        builder.HasOne(grp => grp.Group)
+            .WithMany(g => g.GroupRoundProgresses)
+            .HasForeignKey(grp => grp.GroupID)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(grp => grp.ReviewRound)
+            .WithMany(rr => rr.GroupRoundProgresses)
+            .HasForeignKey(grp => grp.ReviewRoundID)
             .OnDelete(DeleteBehavior.Cascade);
     }
 }

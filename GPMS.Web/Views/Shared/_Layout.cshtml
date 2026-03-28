@@ -1,52 +1,556 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth light">
+@inject Microsoft.AspNetCore.Antiforgery.IAntiforgery Antiforgery
+
 <head>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - GPMS.Web</title>
+    <title>@(ViewData["BreadcrumbTitle"] ?? ViewData["Title"] ?? "Portal") - GPMS</title>
 
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+
+    <!-- Material Symbols Outlined -->
+    
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet" />
+
+    <!-- Lecturer Specific CSS (Tailwind overrides if any) -->
+    @if (User.IsInRole("Lecturer"))
+    {
+        <link rel="stylesheet" href="~/css/lecturer-portal.css" asp-append-version="true" />
+    }
+
+    <!-- Tailwind CSS v3 via CDN (For development) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Inter', 'sans-serif']
+                    },
+                    colors: {
+                        primary: {
+                            50: '#FEF5F1',
+                            100: '#FDE9E1',
+                            200: '#FBD3C3',
+                            300: '#F8BDA5',
+                            400: '#F59980',
+                            500: '#F37021', // FPT Orange
+                            600: '#E55E0F',
+                            700: '#C24B08',
+                            800: '#9B3F0A',
+                            900: '#7E360C',
+                        },
+                        dark: {
+                            50: '#F8FAFC',
+                            100: '#F1F5F9',
+                            200: '#E2E8F0',
+                            300: '#CBD5E1',
+                            400: '#94A3B8',
+                            500: '#64748B',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1E293B',
+                            900: '#0F172A',
+                        },
+                        background: {
+                            light: '#f6f6f8',
+                            dark: '#101622',
+                        },
+                        sidebar: '#1a2236',
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            @@apply bg-[#F5F7FA] dark:bg-dark-900 text-dark-900 dark:text-white transition-colors duration-300;
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .material-symbols-outlined.filled {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        .card {
+            @@apply bg-white dark:bg-dark-800 rounded-[12px] shadow-[0_4px_12px_rgba(0, 0, 0, 0.05)] border border-transparent dark:border-dark-700 transition-all duration-300;
+        }
+
+        .btn-primary {
+            @@apply bg-primary-500 hover:bg-primary-600 text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2;
+        }
+
+        .btn-secondary {
+            @@apply bg-dark-100 dark:bg-dark-700 hover:bg-dark-200 dark:hover:bg-dark-600 text-dark-900 dark:text-white font-medium px-4 py-2 rounded-lg transition-colors duration-200 inline-flex items-center gap-2;
+        }
+
+        /* Toast Animations */
+        .toast-enter {
+            opacity: 0;
+            transform: translateX(80px);
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .toast-show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-leave {
+            opacity: 0;
+            transform: translateX(80px);
+            transition: all 0.3s ease-in;
+        }
+
+        .toast-progress-bar {
+            transition: width 0.1s linear;
+        }
+
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0s, opacity 0.2s linear;
+        }
+
+        .dark #loading-overlay {
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        #loading-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+    @await RenderSectionAsync("Styles", required: false)
 </head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GPMS.Web</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
+
+<body class="bg-[#F5F7FA] dark:bg-dark-900 antialiased selection:bg-primary-500 selection:text-white overflow-hidden" 
+      hx-headers='{"X-CSRF-Token": "@Antiforgery.GetAndStoreTokens(Context).RequestToken"}'>
+    <!-- Toast Container -->
+        <div id="toastContainer" class="fixed top-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none"></div>
+        
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay">
+            <div
+                class="flex flex-col items-center gap-4 bg-white dark:bg-dark-800 p-6 rounded-2xl shadow-xl border border-dark-100 dark:border-dark-700">
+                <div class="w-12 h-12 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin">
                 </div>
+                <p class="text-primary-500 font-bold animate-pulse text-sm tracking-widest uppercase">Processing...</p>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - GPMS.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Main Layout wrapper -->
+        <div class="flex h-screen overflow-hidden w-full">
 
-    <script src="~/js/site.js" asp-append-version="true"></script>
+            <!-- Sidebar Navigation -->
+            <div id="main-sidebar"
+                hx-boost="true"
+                hx-target="#content-column"
+                hx-select="#content-column"
+                hx-swap="innerHTML transition:true"
+                class="z-50 transition-transform duration-300 w-64 shrink-0 shadow-2xl lg:shadow-[2px_0_10px_rgba(0,0,0,0.1)] lg:relative absolute top-0 left-0 bg-sidebar dark:bg-dark-800 h-full -translate-x-full lg:translate-x-0">
+            @await Html.PartialAsync("_Sidebar")
+            </div>
+
+            <!-- Mobile Sidebar Overlay -->
+            <div id="sidebar-overlay"
+                class="fixed inset-0 bg-black/50 backdrop-blur-[2px] z-40 hidden lg:hidden transition-opacity"></div>
+
+            <!-- Main Content Column -->
+            <div id="content-column" 
+                hx-boost="true" 
+                hx-target="this" 
+                hx-select="#content-column" 
+                hx-swap="innerHTML transition:true"
+                class="flex-1 flex flex-col h-full overflow-hidden w-full relative">
+
+                <!-- Top Header -->
+            @await Html.PartialAsync("_Header")
+
+                <!-- Page Content Body -->
+                <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden custom-main-scroll bg-[#F5F7FA] dark:bg-dark-900">
+                    <div class="w-full min-h-full p-4 lg:p-8 pb-24 text-dark-900 dark:text-dark-100 relative">
+                    @RenderBody()
+                    </div>
+                </main>
+
+            </div>
+        </div>
+
+        <!-- Chatbot iframe (Global) -->
+        <div id="chatbot-container">
+            <div id="chatbot-container">
+                <iframe id="chatbot-iframe" src="https://gpms-bot-supporter-fe.onrender.com/" style="position: fixed;
+                               bottom: 0;
+                               right: 0;
+                               width: 60px;
+                               height: 60px;
+                               border: none;
+                               z-index: 9999;
+                               border-radius: 50%;
+                               overflow: hidden;">
+                </iframe>
+            </div>
+        </div>
+
+        <!-- Scrollbar Styling for Main Content -->
+        <style>
+            .custom-main-scroll::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+            }
+
+            .custom-main-scroll::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .custom-main-scroll::-webkit-scrollbar-thumb {
+                background-color: theme('colors.dark.200');
+                border-radius: 10px;
+                border: 2px solid theme('colors.dark.50');
+            }
+
+            .dark .custom-main-scroll::-webkit-scrollbar-thumb {
+                background-color: theme('colors.dark.600');
+                border: 2px solid theme('colors.dark.900');
+            }
+
+            .custom-main-scroll::-webkit-scrollbar-thumb:hover {
+                background-color: theme('colors.dark.400');
+            }
+
+            .dark .custom-main-scroll::-webkit-scrollbar-thumb:hover {
+                background-color: theme('colors.dark.500');
+            }
+        </style>
+
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const sidebar = document.getElementById('main-sidebar');
+                const overlay = document.getElementById('sidebar-overlay');
+                const loadingOverlay = document.getElementById('loading-overlay');
+
+                // Global delegated event handler for dynamic header elements
+                document.addEventListener('click', (e) => {
+                    // 1. Mobile Sidebar Toggle
+                    if (e.target.closest('#mobile-menu-btn')) {
+                        sidebar.classList.remove('-translate-x-full');
+                        overlay.classList.remove('hidden');
+                        return;
+                    }
+
+                    // 2. Semester Dropdown Toggle
+                    const semesterBtn = e.target.closest('#semester-btn');
+                    if (semesterBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('semester-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('profile-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 3. Profile Dropdown Toggle
+                    const profileBtn = e.target.closest('#profile-btn');
+                    if (profileBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('profile-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('semester-menu')?.classList.add('hidden');
+                            document.getElementById('notification-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in', 'fade-in', 'zoom-in-95');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in', 'fade-in', 'zoom-in-95');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 4. Notification Dropdown Toggle
+                    const notificationBtn = e.target.closest('#notification-btn');
+                    if (notificationBtn) {
+                        e.stopPropagation();
+                        const menu = document.getElementById('notification-menu');
+                        if (menu) {
+                            const isHidden = menu.classList.contains('hidden');
+                            // Close other dropdowns
+                            document.getElementById('semester-menu')?.classList.add('hidden');
+                            document.getElementById('profile-menu')?.classList.add('hidden');
+                            
+                            if (isHidden) {
+                                menu.classList.remove('hidden');
+                                menu.classList.add('animate-in');
+                            } else {
+                                menu.classList.add('hidden');
+                                menu.classList.remove('animate-in');
+                            }
+                        }
+                        return;
+                    }
+
+                    // 5. Click outside to close dropdowns
+                    const semesterDropdown = document.getElementById('semester-dropdown');
+                    if (semesterDropdown && !semesterDropdown.contains(e.target)) {
+                        document.getElementById('semester-menu')?.classList.add('hidden');
+                    }
+                    const profileDropdown = document.getElementById('profile-dropdown');
+                    if (profileDropdown && !profileDropdown.contains(e.target)) {
+                        document.getElementById('profile-menu')?.classList.add('hidden');
+                    }
+                    const notificationDropdown = document.getElementById('notification-dropdown');
+                    if (notificationDropdown && !notificationDropdown.contains(e.target)) {
+                        document.getElementById('notification-menu')?.classList.add('hidden');
+                    }
+                });
+
+                if (overlay) {
+                    overlay.addEventListener('click', () => {
+                        sidebar.classList.add('-translate-x-full');
+                        overlay.classList.add('hidden');
+                    });
+                }
+
+                // Global Loading Overlay hook
+                document.querySelectorAll('form').forEach(form => {
+                    form.addEventListener('submit', function () {
+                        if (this.checkValidity() && !this.classList.contains('no-spinner')) {
+                            loadingOverlay.classList.add('active');
+                        }
+                    });
+                });
+
+                document.querySelectorAll('a:not([target="_blank"]):not([href^="#"]):not([href^="javascript:"]):not([data-no-load])').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        const href = this.getAttribute('href');
+                        // Skip if link is effectively boosted by HTMX
+                        const boostAttrEl = this.closest('[hx-boost]');
+                        const isEffectivelyBoosted = boostAttrEl && boostAttrEl.getAttribute('hx-boost') === 'true';
+                        
+                        if (href && !e.ctrlKey && !e.shiftKey && !e.metaKey && !this.classList.contains('no-spinner') && !isEffectivelyBoosted) {
+                            setTimeout(() => loadingOverlay.classList.add('active'), 50);
+                        }
+                    });
+                });
+
+                // window.addEventListener('pageshow', ...) moved outside to handle BFcache more reliably
+
+                // HTMX Loading Overlay Support
+                document.addEventListener('htmx:beforeRequest', () => {
+                    loadingOverlay.classList.add('active');
+                });
+                document.addEventListener('htmx:afterRequest', () => {
+                    loadingOverlay.classList.remove('active');
+                });
+                document.addEventListener('htmx:onLoadError', () => {
+                    loadingOverlay.classList.remove('active');
+                    showToast('Có lỗi xảy ra khi tải trang.', 'error');
+                });
+
+                // Sync Sidebar Active State
+                function syncSidebarActiveState() {
+                    const currentPath = window.location.pathname.toLowerCase();
+                    const sidebarLinks = document.querySelectorAll('#main-sidebar nav a');
+                    
+                    sidebarLinks.forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (!href || href === '#') return;
+                        
+                        const normalizedHref = href.startsWith('/') ? href.toLowerCase() : '/' + href.toLowerCase();
+                        
+                        // Active condition: EXACT match or special cases
+                        let isActive = currentPath === normalizedHref || currentPath === normalizedHref + '/';
+                        
+                        // Special cases for HOD/Lecturer sub-pages
+                        if (!isActive) {
+                            if (normalizedHref.includes('/hod/projects') && (currentPath.includes('/hod/createproject') || currentPath.includes('/hod/projectdetails'))) isActive = true;
+                            if (normalizedHref.includes('/hod/reviewrounds') && (currentPath.includes('/hod/createreviewround') || currentPath.includes('/hod/editreviewround'))) isActive = true;
+                        }
+
+                        const icon = link.querySelector('.material-symbols-outlined');
+                        
+                        if (isActive) {
+                            link.classList.remove('border-transparent', 'text-slate-400', 'font-medium');
+                            link.classList.add('border-[#f4741c]', 'bg-[#f4741c]/10', 'text-[#f4741c]', 'font-semibold');
+                            if (icon) icon.classList.add('filled');
+                        } else {
+                            link.classList.add('border-transparent', 'text-slate-400', 'font-medium');
+                            link.classList.remove('border-[#f4741c]', 'bg-[#f4741c]/10', 'text-[#f4741c]', 'font-semibold');
+                            if (icon) icon.classList.remove('filled');
+                        }
+                    });
+                }
+
+                document.addEventListener('htmx:afterSettle', syncSidebarActiveState);
+                window.addEventListener('popstate', syncSidebarActiveState);
+                syncSidebarActiveState(); // Initial sync
+
+                // HTMX-aware Notification Check
+                document.addEventListener('htmx:afterSettle', (e) => {
+                    const notifyEl = document.querySelector('#htmx-notification-trigger');
+                    if (notifyEl) {
+                        const message = notifyEl.getAttribute('data-message');
+                        const type = notifyEl.getAttribute('data-type') || 'success';
+                        if (message) {
+                            showToast(message, type);
+                        }
+                        notifyEl.remove(); // Cleanup to prevent re-triggering
+                    }
+                });
+            });
+            
+            // Handle loading overlay on back navigation / BFcache
+            window.addEventListener('pageshow', (event) => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.classList.remove('active');
+            });
+            
+            // HTMX history restoration also needs to clear overlay
+            document.addEventListener('htmx:historyRestore', () => {
+                const overlay = document.getElementById('loading-overlay');
+                if (overlay) overlay.classList.remove('active');
+            });
+
+        // Global Toast System
+        function showToast(message, type = 'info', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const configs = {
+                success: { border: 'border-green-500', icon: 'ri-check-line', iconBg: 'bg-green-500', title: 'Thông báo!', barColor: 'bg-green-500' },
+                error:   { border: 'border-red-500',   icon: 'ri-close-line', iconBg: 'bg-red-500',   title: 'Lỗi!',       barColor: 'bg-red-500'   },
+                warning: { border: 'border-amber-500', icon: 'ri-error-warning-line', iconBg: 'bg-amber-500', title: 'Cảnh báo!', barColor: 'bg-amber-500' },
+                info:    { border: 'border-blue-500',  icon: 'ri-information-line',   iconBg: 'bg-blue-500',  title: 'Thông tin!', barColor: 'bg-blue-500' }
+            };
+            const c = configs[type] || configs.info;
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex flex-col bg-white rounded-lg shadow-xl border-l-4 ${c.border} min-w-[320px] max-w-sm overflow-hidden toast-enter`;
+            toast.innerHTML = `
+                <div class="flex items-start gap-3 p-4">
+                    <div class="flex-shrink-0">
+                        <div class="size-8 rounded-full ${c.iconBg} flex items-center justify-center text-white shadow-sm">
+                            <i class="${c.icon} text-lg"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow min-w-0">
+                        <h4 class="text-sm font-bold text-gray-800">${c.title}</h4>
+                        <p class="text-xs text-gray-400 leading-snug mt-0.5">${message}</p>
+                    </div>
+                    <button onclick="this.closest('.pointer-events-auto').remove()" class="text-gray-300 hover:text-gray-500 transition-colors">
+                        <i class="ri-close-line text-lg"></i>
+                    </button>
+                </div>
+                <div class="h-1.5 w-full bg-gray-50 mt-auto">
+                    <div class="toast-progress-bar h-full ${c.barColor} opacity-60" style="width: 100%"></div>
+                </div>
+            `;
+
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => toast.classList.add('toast-show'));
+            });
+
+            const progressBar = toast.querySelector('.toast-progress-bar');
+            const startTime = Date.now();
+
+            const timer = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = Math.max(0, 100 - (elapsed / duration * 100));
+                progressBar.style.width = remaining + '%';
+
+                if (elapsed >= duration) {
+                    clearInterval(timer);
+                    toast.classList.remove('toast-show');
+                    toast.classList.add('toast-leave');
+                    setTimeout(() => toast.remove(), 400);
+                }
+            }, 10);
+
+            toast.querySelector('button').addEventListener('click', () => clearInterval(timer));
+        }
+
+        // Handle Server-side TempData
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>setTimeout(() => showToast('@Html.Raw(TempData["SuccessMessage"])', 'success', 5000), 300);</text>
+        }
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <text>setTimeout(() => showToast('@Html.Raw(TempData["ErrorMessage"])', 'error', 6000), 300);</text>
+        }
+
+        // Chatbot communication
+            window.addEventListener("message", function (event) {
+                if (!event.data || typeof event.data !== "object") return;
+                const iframe = document.getElementById("chatbot-iframe");
+                if (!iframe) return;
+                if (event.data.type === "chatbot-open") {
+                    iframe.style.width = "400px";
+                    iframe.style.height = "500px";
+                    iframe.style.borderRadius = "12px";
+                } else if (event.data.type === "chatbot-close") {
+                    iframe.style.width = "60px";
+                    iframe.style.height = "60px";
+                    iframe.style.borderRadius = "50%";
+                }
+            }, false);
+        </script>
+
+        <!-- Lecturer Specific JS -->
+    @if (User.IsInRole("Lecturer"))
+    {
+            <script src="~/js/lecturer-portal.js" asp-append-version="true"></script>
+    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>
+
 </html>

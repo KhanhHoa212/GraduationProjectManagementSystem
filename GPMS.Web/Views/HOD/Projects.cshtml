@@ -1,0 +1,373 @@
+@model GPMS.Web.Models.PaginatedList<GPMS.Application.DTOs.ProjectDto>
+@using GPMS.Domain.Enums
+@{
+    ViewBag.Title = "Projects";
+    ViewBag.CurrentPage = "Projects";
+    ViewBag.BreadcrumbSection = "Project";
+    Layout = "_Layout";
+
+    var semesters = ViewBag.Semesters as IEnumerable<GPMS.Application.DTOs.SemesterDto> ?? new List<GPMS.Application.DTOs.SemesterDto>();
+    var selectedSemesterId = ViewBag.SelectedSemesterId as int?;
+    var currentStatus = ViewBag.CurrentStatus as string;
+    var currentSearch = ViewBag.CurrentSearch as string;
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="htmx-notification-trigger" class="hidden" data-message="@TempData["SuccessMessage"]" data-type="success"></div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div id="htmx-notification-trigger" class="hidden" data-message="@TempData["ErrorMessage"]" data-type="error"></div>
+}
+
+<!-- Projects List Content -->
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800">Danh sách Đề tài</h1>
+            <p class="text-slate-500 text-sm mt-1">Quản lý toàn bộ đề tài trong hệ thống</p>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="toggleImportModal()" class="bg-[#F37021] hover:bg-orange-600 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-orange-600">
+                <span class="material-symbols-outlined text-[20px]">upload_file</span>
+                <span>Import Excel</span>
+            </button>
+            <a href="/HOD/CreateProject" class="bg-[#1E3A5F] hover:bg-slate-800 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm no-underline">
+                <span class="material-symbols-outlined text-[20px]">add</span>
+                <span>Tạo đề tài mới</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters Card -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
+        <form method="get" action="/HOD/Projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Semester Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HỌC KỲ</label>
+                <select name="semesterId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">Tất cả học kỳ</option>
+                    @foreach (var sem in semesters)
+                    {
+                        if (selectedSemesterId.HasValue && sem.SemesterID == selectedSemesterId.Value)
+                        {
+                            <option value="@sem.SemesterID" selected>@sem.SemesterCode</option>
+                        }
+                        else
+                        {
+                            <option value="@sem.SemesterID">@sem.SemesterCode</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Specialization Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CHUYÊN NGÀNH</label>
+                <select name="majorName" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả chuyên ngành</option>
+                    @foreach (var major in (ViewBag.Majors as IEnumerable<GPMS.Application.DTOs.MajorDto> ?? Enumerable.Empty<GPMS.Application.DTOs.MajorDto>()))
+                    {
+                        <option value="@major.MajorName" selected="@(ViewBag.CurrentMajor == major.MajorName ? "selected" : null)">@major.MajorName</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Status Filter -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TRẠNG THÁI</label>
+                <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
+                    <option value="">Tất cả trạng thái</option>
+                    @foreach (var st in Enum.GetValues(typeof(ProjectStatus)).Cast<ProjectStatus>())
+                    {
+                        if (currentStatus == st.ToString())
+                        {
+                            <option value="@st" selected>@st</option>
+                        }
+                        else
+                        {
+                            <option value="@st">@st</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <!-- Search -->
+            <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TÌM KIẾM</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" name="search" value="@currentSearch" placeholder="Mã hoặc tên đề tài..." 
+                           class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 pl-10 text-sm text-slate-700 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors outline-none" />
+                </div>
+            </div>
+            
+            <!-- Hidden submit button for Enter key in Search input -->
+            <input type="submit" class="hidden" />
+        </form>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-white border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ ĐỀ TÀI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">TÊN ĐỀ TÀI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">NGÀY TẠO</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">THAO TÁC</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (!Model.Any())
+                    {
+                            <td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
+                    }
+                    else
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr id="project-row-@item.ProjectID" class="hover:bg-slate-50/50 transition-colors">
+                                <td class="px-6 py-5 font-bold text-slate-800">@item.ProjectCode</td>
+                                <td class="px-6 py-5">
+                                    <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">@item.ProjectName</span>
+                                    @if (!string.IsNullOrEmpty(item.SupervisorName))
+                                    {
+                                        <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                                            <span class="material-symbols-outlined text-[13px]">person</span> HD: @item.SupervisorName
+                                        </div>
+                                    }
+                                </td>
+                                <td class="px-6 py-5">
+                                    <span class="text-slate-600 font-medium whitespace-nowrap">@(item.MajorName ?? "-")</span>
+                                </td>
+                                <td class="px-6 py-5">
+                                    @{
+                                        var badgeClass = item.Status switch {
+                                            ProjectStatus.Active => "text-emerald-700 bg-emerald-50 border-emerald-100",
+                                            ProjectStatus.Draft => "text-amber-700 bg-amber-50 border-amber-100",
+                                            ProjectStatus.Completed => "text-blue-700 bg-blue-50 border-blue-100",
+                                            _ => "text-slate-700 bg-slate-50 border-slate-200"
+                                        };
+                                    }
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-bold border @badgeClass">@item.Status</span>
+                                </td>
+                                <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                <td class="px-6 py-5 text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="Xem chi tiết">
+                                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                                        </a>
+                                        <a href="/HOD/EditProject/@item.ProjectID?returnUrl=@(Context.Request.Path + Context.Request.QueryString)" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Chỉnh sửa">
+                                            <span class="material-symbols-outlined text-[20px]">edit</span>
+                                        </a>
+                                        <button onclick="showDeleteModal(@item.ProjectID)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
+                                            <span class="material-symbols-outlined text-[20px]">delete</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        @await Html.PartialAsync("_Pagination", Model)
+    </div>
+</div>
+
+<!-- Import Excel Modal -->
+<div id="importExcelModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-lg font-bold text-slate-800">Import Dự Án từ Excel</h3>
+            <button type="button" onclick="toggleImportModal()" class="text-slate-400 hover:text-slate-600 transition p-1 hover:bg-slate-100 rounded-full">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+
+        <form asp-action="PreviewProjectImport" asp-controller="HOD" method="post" enctype="multipart/form-data">
+            <!-- Modal Body -->
+            <div class="p-6 space-y-6">
+                <!-- Step 1: Download Template -->
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+                    <span class="material-symbols-outlined text-blue-600">info</span>
+                    <div>
+                        <p class="text-sm font-semibold text-blue-900 mb-1">Bước 1: Tải file mẫu</p>
+                        <p class="text-xs text-blue-700 mb-3">Sử dụng file mẫu có sẵn các danh sách thả xuống để đảm bảo dữ liệu chính xác nhất.</p>
+                        <a asp-action="DownloadProjectTemplate" asp-controller="HOD" hx-boost="false" data-no-load class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-800 transition bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-sm no-underline">
+                            <span class="material-symbols-outlined text-[18px]">download</span>
+                            Tải file mẫu thông minh (.xlsx)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Step 2: Upload File -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-3">Bước 2: Chọn file đã điền thông tin</label>
+                    <div class="relative group">
+                        <input type="file" name="file" id="excelFile" accept=".xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="updateFileName()">
+                        <div class="border-2 border-dashed border-slate-200 group-hover:border-[#1E3A5F] rounded-xl p-8 text-center transition-all bg-slate-50 group-hover:bg-slate-100/50">
+                            <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform border border-slate-100">
+                                <span class="material-symbols-outlined text-[28px] text-slate-400 group-hover:text-[#1E3A5F]">upload_file</span>
+                            </div>
+                            <p id="fileNameDisplay" class="text-sm text-slate-500 group-hover:text-slate-800 font-medium tracking-tight">Kéo thả hoặc nhấp để chọn file Excel</p>
+                            <p class="text-[11px] text-slate-400 mt-2 font-medium uppercase tracking-wider">Hỗ trợ: .XLSX, .XLS (Max 5MB)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button type="button" onclick="toggleImportModal()" class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">Hủy bỏ</button>
+                <button type="submit" class="bg-[#1E3A5F] hover:bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md transition transform active:scale-95 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[20px]">preview</span>
+                    Tiếp tục xem trước
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="deleteConfirmModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[200] hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
+        <div class="p-6 text-center">
+            <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
+                <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Xác nhận xóa đề tài?</h3>
+            <p class="text-sm text-slate-500 leading-relaxed mb-6">
+                Hành động này <span class="text-red-600 font-bold">không thể hoàn tác</span>. Toàn bộ dữ liệu liên quan đến đề tài này sẽ bị xóa khỏi hệ thống.
+            </p>
+            <div class="flex gap-3">
+                <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Hủy bỏ</button>
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition transform active:scale-95">Xóa vĩnh viễn</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function toggleImportModal() {
+            const modal = document.getElementById('importExcelModal');
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            } else {
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('importExcelModal');
+            if (e.target === modal) {
+                toggleImportModal();
+            }
+        });
+
+        function updateFileName() {
+            const input = document.getElementById('excelFile');
+            const display = document.getElementById('fileNameDisplay');
+            if (input.files && input.files[0]) {
+                display.innerText = input.files[0].name;
+                display.classList.remove('text-slate-500');
+                display.classList.add('text-slate-800', 'font-bold');
+            }
+        }
+
+        // Project Deletion
+
+        function showDeleteModal(id) {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) {
+                modal.dataset.projectId = id;
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+
+                // Reset button state in case it was left in loading state from a previous attempt
+                const btn = document.getElementById('confirmDeleteBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Xóa vĩnh viễn';
+                }
+            }
+        }
+
+        function hideDeleteModal() {
+            const modal = document.getElementById('deleteConfirmModal');
+            if (modal) {
+                delete modal.dataset.projectId;
+                modal.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        }
+
+        // Use standard delegation or a more stable check to avoid multiple listeners
+        // Check if listener is already added to avoid duplicates if script re-runs
+        if (!window.deleteProjectListenerAdded) {
+            document.addEventListener('click', async (e) => {
+                const confirmBtn = e.target.closest('#confirmDeleteBtn');
+                const modal = document.getElementById('deleteConfirmModal');
+                const idToRemove = modal?.dataset.projectId;
+                
+                if (!confirmBtn || !idToRemove) return;
+                
+                const btn = confirmBtn;
+                const originalText = btn.innerText;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ri-loader-4-line animate-spin text-lg"></i>';
+
+                try {
+                    const response = await fetch(`/HOD/DeleteProject?id=${idToRemove}`, { method: 'POST' });
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        showToast(data.message, 'success');
+                        
+                        // Capture ID before hiding modal
+                        const actualId = idToRemove;
+                        hideDeleteModal();
+                        
+                        // Remove row dynamically with animation
+                        const row = document.getElementById(`project-row-${actualId}`);
+                        if (row) {
+                            row.style.transition = 'all 0.5s ease';
+                            row.style.opacity = '0';
+                            row.style.transform = 'translateX(20px)';
+                            
+                            setTimeout(() => {
+                                row.remove();
+                                // Check if table is empty
+                                const tbody = document.querySelector('tbody');
+                                if (tbody && tbody.querySelectorAll('tr[id^="project-row-"]').length === 0) {
+                                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td></tr>';
+                                }
+                            }, 500);
+                        }
+                    } else {
+                        showToast(data.message, 'error');
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                    }
+                } catch (error) {
+                    showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                }
+            });
+            window.deleteProjectListenerAdded = true;
+        }
+    </script>
+}

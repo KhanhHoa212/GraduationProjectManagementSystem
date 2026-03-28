@@ -1,0 +1,95 @@
+﻿@model List<GPMS.Web.ViewModels.SystemLogEntry>
+@{
+    ViewData["Title"] = "System Logs";
+    ViewData["BreadcrumbTitle"] = "System Logs";
+    Layout = "_Layout";
+}
+
+<div class="max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-wrap justify-between items-start gap-6 mb-8">
+        <div>
+            <h1 class="text-2xl font-extrabold text-slate-900 tracking-tight">System Logs</h1>
+            <p class="text-slate-500 text-sm mt-1">Audit trail of administrative actions performed in the system.</p>
+        </div>
+        <div class="bg-white px-4 py-2 rounded-xl border border-slate-200 shadow-sm text-xs font-medium text-slate-400">
+            Current Session Memory: <span class="text-primary font-bold">@Model.Count</span> entries
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/30">
+            <h3 class="font-bold text-lg text-slate-800">Recent Action History</h3>
+            <span class="text-slate-400 text-xs font-medium">In-memory only (clears on application restart)</span>
+        </div>
+        <div class="overflow-x-auto">
+            @if (!Model.Any())
+            {
+                <div class="py-16 text-center text-slate-400">
+                    <span class="material-symbols-outlined text-4xl block mb-2">history</span>
+                    <p class="text-sm font-medium">No system logs found.</p>
+                    <p class="text-xs mt-1">Actions like creating or updating users/semesters will appear here.</p>
+                </div>
+            }
+            else
+            {
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4">Action Type</th>
+                            <th class="px-6 py-4">Entity Target</th>
+                            <th class="px-6 py-4">Timestamp</th>
+                            <th class="px-6 py-4 text-right">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        @foreach (var log in Model)
+                        {
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @{
+                                            var icon = log.Action.Contains("Created") ? "person_add"
+                                                     : log.Action.Contains("Updated") ? "update"
+                                                     : log.Action.Contains("Semester") ? "calendar_month"
+                                                     : "info";
+                                            var clr = log.Action.Contains("Created") ? "text-blue-500 bg-blue-50"
+                                                    : log.Action.Contains("Updated") ? "text-orange-500 bg-orange-50"
+                                                    : "text-green-500 bg-green-50";
+                                        }
+                                        <span class="material-symbols-outlined @clr p-1.5 rounded-lg text-sm">@icon</span>
+                                        <span class="text-sm font-medium text-slate-700">@log.Action</span>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm font-bold text-slate-900">@log.Target</span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="text-sm text-slate-500">@log.Timestamp.ToString("dd/MM/yyyy HH:mm:ss")</span>
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    @{
+                                        var badgeClass = log.Status == "Success"
+                                            ? "bg-green-100 text-green-700"
+                                            : "bg-red-100 text-red-700";
+                                    }
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold @badgeClass uppercase">@log.Status</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </div>
+        <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Audit Trail Portal</span>
+            <div class="flex gap-2">
+                <button onclick="window.print()" class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors flex items-center gap-2 no-underline">
+                    <span class="material-symbols-outlined text-sm">print</span>
+                    Print Log
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

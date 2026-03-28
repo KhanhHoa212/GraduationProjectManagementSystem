@@ -1,0 +1,9 @@
+/* 
+   Lecturer Portal Design System 
+   Framework: Tailwind CSS
+   
+   Note: All legacy Bootstrap classes and custom utilities have been 
+   migrated directly to Tailwind utility classes within the Razor views.
+   This file is kept for future custom extensions that cannot be handled
+   by Tailwind utility classes.
+*/
