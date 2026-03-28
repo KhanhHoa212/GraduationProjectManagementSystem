@@ -33,11 +33,11 @@
 
             <!-- Tabs -->
             <div class="flex gap-8 border-b border-slate-200 dark:border-slate-800 mb-8" id="tab-container">
-                <button type="button" onclick="switchTab('general')" id="tab-general" class="pb-4 px-1 border-b-2 border-[#F37021] text-slate-900 dark:text-white font-medium flex items-center gap-2">
+                <button type="button" onclick="switchReviewRoundTab('general')" id="tab-general" class="pb-4 px-1 border-b-2 border-[#F37021] text-slate-900 dark:text-white font-medium flex items-center gap-2">
                     <span class="material-symbols-outlined text-5" style="font-size: 20px;">info</span>
                     General Info
                 </button>
-                <button type="button" onclick="switchTab('submission')" id="tab-submission" class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent font-medium flex items-center gap-2">
+                <button type="button" onclick="switchReviewRoundTab('submission')" id="tab-submission" class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent font-medium flex items-center gap-2">
                     <span class="material-symbols-outlined text-5" style="font-size: 20px;">description</span>
                     Submission Requirements
                 </button>
@@ -285,7 +285,7 @@
 
 @section Scripts {
 <script>
-    function switchTab(tabId) {
+    function switchReviewRoundTab(tabId) {
         const generalTab = document.getElementById('tab-general');
         const submissionTab = document.getElementById('tab-submission');
         const generalContent = document.getElementById('content-general');
