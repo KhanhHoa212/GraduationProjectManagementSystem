@@ -721,6 +721,7 @@ public class HODController : Controller
         var (success, message) = await _projectService.RemoveReviewerAsync(request);
         return Json(new { success, message });
     }
+
     [HttpGet("Reports")]
     public async Task<IActionResult> Reports(int? semesterId, int page = 1)
     {
@@ -783,7 +784,7 @@ public class HODController : Controller
         return View(vm);
     }
 
-    [HttpGet("ExportReportExcel")]
+    [HttpGet]
     public async Task<IActionResult> ExportReportExcel(int? semesterId)
     {
         var targetSemesterId = semesterId == -1 ? null : semesterId;
