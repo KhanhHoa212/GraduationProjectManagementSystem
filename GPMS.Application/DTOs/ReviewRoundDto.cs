@@ -12,6 +12,7 @@ public class ReviewRoundDto
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public DateTime SubmissionDeadline { get; set; }
+    public DateTime ReviewDeadline => EndDate.AddDays(-3);
     public string? Description { get; set; }
     public RoundStatus Status { get; set; }
     public List<SubmissionRequirementDto> SubmissionRequirements { get; set; } = new();

@@ -148,3 +148,10 @@ public enum MentorDecision
     Rejected,
     Stopped
 }
+
+public enum CommitteeRole
+{
+    Chairperson,
+    Secretary,
+    Reviewer
+}

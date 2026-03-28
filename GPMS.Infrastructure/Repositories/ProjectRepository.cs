@@ -30,6 +30,12 @@ public class ProjectRepository : IProjectRepository
                 .ThenInclude(ps => ps.Lecturer)
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.GroupMembers)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Evaluations)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.MentorRoundReviews)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Submissions)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
@@ -42,6 +48,12 @@ public class ProjectRepository : IProjectRepository
                 .ThenInclude(ps => ps.Lecturer)
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.GroupMembers)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Evaluations)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.MentorRoundReviews)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Submissions)
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
 
@@ -54,6 +66,10 @@ public class ProjectRepository : IProjectRepository
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.GroupMembers)
                     .ThenInclude(m => m.User)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.Evaluations)
+            .Include(p => p.ProjectGroups)
+                .ThenInclude(g => g.MentorRoundReviews)
             .Include(p => p.ProjectGroups)
                 .ThenInclude(g => g.Submissions)
                     .ThenInclude(s => s.Requirement)

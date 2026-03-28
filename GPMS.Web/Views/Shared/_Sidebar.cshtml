@@ -166,17 +166,17 @@
                     class="material-symbols-outlined @GetIconClasses("HOD", "Checklists") group-hover:scale-110 transition-transform duration-300">task_alt</span>
                 <span class="text-[14px]">Checklists</span>
             </a>
-            <a asp-controller="HOD" asp-action="AssignReviewer"
-                class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "AssignReviewer")">
-                <span
-                    class="material-symbols-outlined @GetIconClasses("HOD", "AssignReviewer") group-hover:scale-110 transition-transform duration-300">assignment_ind</span>
+            <a asp-controller="HOD" asp-action="AssignReviewer" hx-boost="false" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "AssignReviewer")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "AssignReviewer") group-hover:scale-110 transition-transform duration-300">assignment_ind</span>
                 <span class="text-[14px]">Reviewer Assign</span>
             </a>
-            <a asp-controller="HOD" asp-action="DefenseSchedule"
-                class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "DefenseSchedule")">
-                <span
-                    class="material-symbols-outlined @GetIconClasses("HOD", "DefenseSchedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
+            <a asp-controller="HOD" asp-action="DefenseSchedule" hx-boost="false" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "DefenseSchedule")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "DefenseSchedule") group-hover:scale-110 transition-transform duration-300">calendar_month</span>
                 <span class="text-[14px]">Defense Schedule</span>
+            </a>
+            <a asp-controller="HOD" asp-action="ManageCommittee" hx-boost="false" class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "ManageCommittee")">
+                <span class="material-symbols-outlined @GetIconClasses("HOD", "ManageCommittee") group-hover:scale-110 transition-transform duration-300">groups</span>
+                <span class="text-[14px]">Committee Management</span>
             </a>
 
             <div class="px-6 mt-6 mb-4">
@@ -186,7 +186,13 @@
                 class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Progress")">
                 <span
                     class="material-symbols-outlined @GetIconClasses("HOD", "Progress") group-hover:scale-110 transition-transform duration-300">trending_up</span>
-                <span class="text-[14px]">Progress</span>
+                <span class="text-[14px]">Progress Monitoring</span>
+            </a>
+            <a asp-controller="HOD" asp-action="Reports"
+                class="flex items-center gap-3 px-6 py-3 transition-all duration-300 group border-l-4 @GetActiveClasses("HOD", "Reports")">
+                <span
+                    class="material-symbols-outlined @GetIconClasses("HOD", "Reports") group-hover:scale-110 transition-transform duration-300">monitoring</span>
+                <span class="text-[14px]">Statistics & Reports</span>
             </a>
         }
         else if (User.IsInRole("Lecturer"))
