@@ -24,24 +24,41 @@ public class DeadlineReminderHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("DeadlineReminderHostedService is starting.");
+        Console.WriteLine("[Service] DeadlineReminderHostedService is Starting.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try 
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                await ProcessRemindersAsync(stoppingToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred executing DeadlineReminderHostedService.");
-            }
+                try
+                {
+                    await ProcessRemindersAsync(stoppingToken);
+                }
+                catch (Exception ex)
+                {
+                    var errMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                    Console.WriteLine($"[Service] DeadlineReminderHostedService Internal ERROR: {errMsg}");
+                    _logger.LogError(ex, "Error occurred executing DeadlineReminderHostedService.");
+                }
 
-            // Check every 6 hours
-            await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
+                // Wait 6 hours, catching cancellation
+                try 
+                {
+                    await Task.Delay(TimeSpan.FromHours(6), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Normal stop
+                    break;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Service] DeadlineReminderHostedService CRITICAL CRASH: {ex.Message}");
         }
 
-        _logger.LogInformation("DeadlineReminderHostedService is stopping.");
+        Console.WriteLine("[Service] DeadlineReminderHostedService is Stopped.");
     }
 
     private async Task ProcessRemindersAsync(CancellationToken stoppingToken)

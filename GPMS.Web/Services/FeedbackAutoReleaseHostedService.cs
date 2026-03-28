@@ -19,29 +19,45 @@ public class FeedbackAutoReleaseHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _logger.LogInformation("FeedbackAutoReleaseHostedService is starting.");
+        Console.WriteLine("[Service] FeedbackAutoReleaseHostedService is Starting.");
 
-        while (!stoppingToken.IsCancellationRequested)
+        try
         {
-            try
+            while (!stoppingToken.IsCancellationRequested)
             {
-                using var scope = _serviceProvider.CreateScope();
-                var autoReleaseService = scope.ServiceProvider.GetRequiredService<IFeedbackAutoReleaseService>();
-                var releasedCount = await autoReleaseService.AutoReleasePendingFeedbacksAsync(stoppingToken);
-
-                if (releasedCount > 0)
+                try
                 {
-                    _logger.LogInformation("Auto-released {ReleasedCount} feedback approval(s).", releasedCount);
+                    using var scope = _serviceProvider.CreateScope();
+                    var autoReleaseService = scope.ServiceProvider.GetRequiredService<IFeedbackAutoReleaseService>();
+                    var releasedCount = await autoReleaseService.AutoReleasePendingFeedbacksAsync(stoppingToken);
+
+                    if (releasedCount > 0)
+                    {
+                        Console.WriteLine($"[Service] Auto-released {releasedCount} feedback approval(s).");
+                        _logger.LogInformation("Auto-released {ReleasedCount} feedback approval(s).", releasedCount);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Service] FeedbackAutoReleaseHostedService Internal ERROR: {ex.Message}");
+                    _logger.LogError(ex, "Error occurred executing FeedbackAutoReleaseHostedService.");
+                }
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred executing FeedbackAutoReleaseHostedService.");
-            }
-
-            await Task.Delay(TimeSpan.FromHours(24), stoppingToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[Service] FeedbackAutoReleaseHostedService CRITICAL: {ex.Message}");
         }
 
-        _logger.LogInformation("FeedbackAutoReleaseHostedService is stopping.");
+        Console.WriteLine("[Service] FeedbackAutoReleaseHostedService is Stopped.");
     }
 }

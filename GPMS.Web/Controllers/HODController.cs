@@ -9,6 +9,10 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
 using GPMS.Web.ViewModels;
+using Microsoft.AspNetCore.Identity;
+using GPMS.Domain.Entities;
+using GPMS.Application.Services;
+
 namespace GPMS.Web.Controllers;
 
 [Authorize(Roles = "HeadOfDept")]
@@ -22,6 +26,7 @@ public class HODController : Controller
     private readonly IReportService _reportService;
     private readonly IMajorService _majorService;
     private readonly IUserService _userService;
+    private readonly ICommitteeService _committeeService; // Added
 
     public HODController(
         IProjectService projectService, 
@@ -31,7 +36,8 @@ public class HODController : Controller
         IExcelService excelService,
         IReportService reportService,
         IMajorService majorService,
-        IUserService userService)
+        IUserService userService,
+        ICommitteeService committeeService) // Added
     {
         _projectService = projectService;
         _semesterService = semesterService;
@@ -41,6 +47,43 @@ public class HODController : Controller
         _reportService = reportService;
         _majorService = majorService;
         _userService = userService;
+        _committeeService = committeeService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ManageCommittee()
+    {
+        var data = await _committeeService.GetManageCommitteeDataAsync();
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateCommittee([FromBody] CreateCommitteeRequest request)
+    {
+        var success = await _committeeService.CreateCommitteeAsync(request);
+        return Json(new { success = success });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteCommittee(int id)
+    {
+        var success = await _committeeService.DeleteCommitteeAsync(id);
+        return Json(new { success = success });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCommittee(int id)
+    {
+        var data = await _committeeService.GetCommitteeByIdAsync(id);
+        if (data == null) return NotFound();
+        return Json(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateCommittee(int id, [FromBody] CreateCommitteeRequest request)
+    {
+        var success = await _committeeService.UpdateCommitteeAsync(id, request);
+        return Json(new { success = success });
     }
 
 
@@ -561,7 +604,97 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public IActionResult AssignReviewer() => View();
+    public async Task<IActionResult> DefenseSchedule(int? roundId, string? date)
+    {
+        DateTime selectedDate;
+        if (!DateTime.TryParse(date, out selectedDate))
+            selectedDate = DateTime.Today;
+
+        var data = await _projectService.GetDefenseScheduleDataAsync(roundId, selectedDate);
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveDefenseSession([FromBody] CreateDefenseSessionRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.SaveDefenseSessionAsync(request);
+        return Json(new { success, message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteDefenseSession(int id)
+    {
+        var (success, message) = await _projectService.DeleteDefenseSessionAsync(id);
+        return Json(new { success, message });
+    }
+
+    public async Task<IActionResult> AssignReviewer(int? roundId)
+    {
+        var data = await _projectService.GetReviewerAssignmentDataAsync(roundId);
+        ViewBag.ActiveSemester = await _semesterService.GetCurrentSemesterAsync();
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ReassignReviewer([FromBody] UpdateReviewerAssignmentRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.SaveReviewerAssignmentsAsync(request);
+        return Json(new { success, message });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Progress(int? semesterId, string? majorName)
+    {
+        var semesters = (await _semesterService.GetAllSemestersAsync()).ToList();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        int? targetSemesterId = semesterId == -1 ? null : (semesterId ?? activeSemester?.SemesterID);
+        var majors = await _majorService.GetAllMajorsAsync();
+        
+        // Fetch groups and rounds
+        var groups = targetSemesterId.HasValue 
+            ? await _projectService.GetProjectsBySemesterAsync(targetSemesterId.Value)
+            : await _projectService.GetAllProjectsAsync();
+            
+        if (!string.IsNullOrEmpty(majorName))
+            groups = groups.Where(g => g.MajorName == majorName);
+            
+        var rounds = targetSemesterId.HasValue
+            ? await _reviewRoundService.GetReviewRoundsBySemesterAsync(targetSemesterId.Value)
+            : new List<ReviewRoundDto>();
+
+        var vm = new HODProgressViewModel
+        {
+            SemesterID = targetSemesterId,
+            Semesters = semesters,
+            Majors = majors.ToList(),
+            Rounds = rounds.OrderBy(r => r.RoundNumber).ToList(),
+            Groups = groups.Select(g => new GroupProgressItemDto
+            {
+                GroupID = g.ProjectID, 
+                ProjectCode = g.ProjectCode,
+                ProjectName = g.ProjectName,
+                GroupName = g.Members.FirstOrDefault()?.GroupName ?? ("Group " + g.ProjectCode),
+                MajorName = g.MajorName ?? "N/A",
+                SupervisorName = g.SupervisorName ?? "Unassigned"
+            }).ToList()
+        };
+
+        ViewBag.SelectedSemesterId = semesterId ?? activeSemester?.SemesterID;
+        ViewBag.CurrentMajor = majorName;
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveReviewer([FromBody] RemoveReviewerRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.RemoveReviewerAsync(request);
+        return Json(new { success, message });
+    }
     [HttpGet("Reports")]
     public async Task<IActionResult> Reports(int? semesterId, int page = 1)
     {

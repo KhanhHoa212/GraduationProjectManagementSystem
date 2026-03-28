@@ -4,6 +4,7 @@ using GPMS.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GPMS.Infrastructure.Migrations
 {
     [DbContext(typeof(GpmsDbContext))]
-    partial class GpmsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260327125613_AddCommitteeRole")]
+    partial class AddCommitteeRole
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -532,7 +535,7 @@ namespace GPMS.Infrastructure.Migrations
 
                     b.HasIndex("SupervisorID");
 
-                    b.ToTable("MentorRoundReviews", (string)null);
+                    b.ToTable("MentorRoundReviews");
                 });
 
             modelBuilder.Entity("GPMS.Domain.Entities.Notification", b =>
