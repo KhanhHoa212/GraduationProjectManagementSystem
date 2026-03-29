@@ -59,6 +59,7 @@ builder.Services.AddScoped<ISubmissionAccessService, SubmissionAccessService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
 builder.Services.AddScoped<IMajorService, MajorService>();
@@ -115,7 +116,7 @@ builder.Services.Configure<HostOptions>(options =>
 
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
-builder.Services.AddHostedService<GPMS.Web.Services.ReminderHostedService>();
+builder.Services.AddHostedService<GPMS.Application.Services.ReminderHostedService>();
 
 var app = builder.Build();
 

@@ -13,14 +13,14 @@
                     <nav class="flex items-center gap-2 text-sm mb-4">
                         <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">GPMS</a>
                         <span class="text-slate-400 dark:text-slate-600">/</span>
-                        <span class="text-slate-900 dark:text-slate-100 font-medium">Vòng Review</span>
+                        <span class="text-slate-900 dark:text-slate-100 font-medium">Review Rounds</span>
                     </nav>
-                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Vòng Review</h1>
-                    <p class="text-slate-600 dark:text-slate-400 mt-2">Thiết lập và theo dõi các giai đoạn đánh giá đề án trong học kỳ.</p>
+                    <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Manage Review Rounds</h1>
+                    <p class="text-slate-600 dark:text-slate-400 mt-2">Set up and track project evaluation stages throughout the semester.</p>
                 </div>
-                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition @(Model != null && Model.Count() >= 3 ? "hidden" : "")">
+                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition shadow-sm hover:shadow-md">
                     <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
-                    Tạo vòng review mới
+                    Create New Review Round
                 </a>
             </div>
 
@@ -75,8 +75,8 @@
                                     <div class="mt-4 text-center">
                                         <h3 class="font-semibold text-slate-900 dark:text-white">Review @r.RoundNumber</h3>
                                         <span class="inline-block mt-2 px-3 py-1 @statusColorBg @statusTextColor text-xs font-semibold rounded-full">
-                                            @(r.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
-                                              r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                            @(r.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Upcoming" : 
+                                              r.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "In Progress" : "Completed")
                                         </span>
                                         <p class="text-sm text-slate-600 dark:text-slate-400 mt-3 whitespace-nowrap">@r.StartDate.ToString("dd/MM") - @r.EndDate.ToString("dd/MM")</p>
                                     </div>
@@ -86,7 +86,7 @@
                         else
                         {
                             <div class="py-4 text-center text-slate-500 w-full">
-                                Chưa có vòng review nào được thiết lập.
+                                No review rounds have been set up yet.
                             </div>
                         }
                     </div>
@@ -96,13 +96,13 @@
             <!-- Review Rounds Table -->
             <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden">
                 <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
-                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Danh sách các Vòng Review</h2>
+                    <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Review Rounds List</h2>
                     <div class="flex items-center gap-3">
                         <div class="relative">
                             <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" style="font-size: 20px;">search</span>
                             <input
                                 type="text"
-                                placeholder="Tìm kiếm vòng..."
+                                placeholder="Search rounds..."
                                 class="pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021] focus:border-transparent"
                             />
                         </div>
@@ -113,12 +113,12 @@
                     <table class="w-full text-sm">
                         <thead class="bg-slate-50 dark:bg-slate-800">
                             <tr class="border-b border-slate-200 dark:border-slate-700">
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TÊN VÒNG</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">HỌC KỲ</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THỜI GIAN (BĐ - KT)</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TÀI LIỆU YÊU CẦU</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TRẠNG THÁI</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THAO TÁC</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">ROUND NAME</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">SEMESTER</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TIMELINE (START - END)</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">SUBMISSION REQUIREMENTS</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">STATUS</th>
+                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
@@ -146,11 +146,11 @@
                                             <div class="flex flex-col gap-1">
                                                 <span>@item.StartDate.ToString("dd/MM/yyyy") - @item.EndDate.ToString("dd/MM/yyyy")</span>
                                                 <div class="flex flex-col mt-1">
-                                                    <span class="text-[10px] uppercase font-bold text-slate-400">Deadline SV:</span>
+                                                    <span class="text-[10px] uppercase font-bold text-slate-400">Student Deadline:</span>
                                                     <span class="px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs font-semibold rounded w-fit">@item.SubmissionDeadline.ToString("dd/MM/yyyy HH:mm")</span>
                                                 </div>
                                                 <div class="flex flex-col mt-1">
-                                                    <span class="text-[10px] uppercase font-bold text-slate-400">Hạn chót chấm bài:</span>
+                                                    <span class="text-[10px] uppercase font-bold text-slate-400">Evaluation Deadline:</span>
                                                     <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200 text-xs font-semibold rounded w-fit">@item.ReviewDeadline.ToString("dd/MM/yyyy HH:mm")</span>
                                                 </div>
                                             </div>
@@ -175,11 +175,11 @@
                                                                 <div class="text-[11px] font-bold text-slate-900 dark:text-white mb-2">@req.DocumentName</div>
                                                                 <div class="space-y-1.5">
                                                                     <div class="flex justify-between text-[10px]">
-                                                                        <span class="text-slate-400">Định dạng:</span>
-                                                                        <span class="text-slate-700 dark:text-slate-300 font-bold">@(req.AllowedFormats ?? "Mọi định dạng")</span>
+                                                                        <span class="text-slate-400">Formats:</span>
+                                                                        <span class="text-slate-700 dark:text-slate-300 font-bold">@(req.AllowedFormats ?? "Any format")</span>
                                                                     </div>
                                                                     <div class="flex justify-between text-[10px]">
-                                                                        <span class="text-slate-400">Dung lượng:</span>
+                                                                        <span class="text-slate-400">Max Size:</span>
                                                                         <span class="text-slate-700 dark:text-slate-300 font-bold">@req.MaxFileSizeMB MB</span>
                                                                     </div>
                                                                     @if (!string.IsNullOrEmpty(req.Description))
@@ -197,21 +197,26 @@
                                             }
                                             else
                                             {
-                                                <span class="text-slate-400 italic text-xs">Không có yêu cầu</span>
+                                                <span class="text-slate-400 italic text-xs">No requirements</span>
                                             }
                                         </td>
                                         <td class="py-4 px-6">
                                             <span class="px-3 py-1 @rowStatusColorBg @rowStatusTextColor text-xs font-semibold rounded-full">
-                                                @(item.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Sắp diễn ra" : 
-                                                  item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Đang diễn ra" : "Đã hoàn thành")
+                                                @(item.Status == GPMS.Domain.Enums.RoundStatus.Planned ? "Upcoming" : 
+                                                  item.Status == GPMS.Domain.Enums.RoundStatus.Ongoing ? "Ongoing" : "Completed")
                                             </span>
                                         </td>
                                         <td class="py-4 px-6">
                                             <div class="flex items-center gap-2">
-
-                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-slate-600 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Cấu hình vòng">
-                                                    <span class="material-symbols-outlined" style="font-size: 20px;">settings</span>
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Configure Round">
+                                                    <span class="material-symbols-outlined" style="font-size: 20px;">edit_calendar</span>
                                                 </a>
+                                                
+                                                <form asp-action="DeleteReviewRound" asp-route-id="@item.ReviewRoundID" method="post" onsubmit="return confirm('Are you sure you want to delete this review round? This action cannot be undone.');" class="inline">
+                                                    <button type="submit" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all" title="Delete Round">
+                                                        <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>
@@ -220,7 +225,7 @@
                             else
                             {
                                 <tr>
-                                    <td colspan="6" class="py-10 text-center text-slate-500 font-medium">Bạn chưa tạo vòng review nào trong học kỳ này</td>
+                                    <td colspan="6" class="py-10 text-center text-slate-500 font-medium">No review rounds created in this semester yet.</td>
                                 </tr>
                             }
                         </tbody>
@@ -229,11 +234,11 @@
 
                 <!-- Pagination -->
                 <div class="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Hiển thị @(Model?.Count() ?? 0) vòng review</p>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Showing @(Model?.Count() ?? 0) review rounds</p>
                     <div class="flex gap-2">
-                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition" disabled>Trước</button>
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50 transition" disabled>Prev</button>
                         <button class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white rounded font-medium">1</button>
-                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">Sau</button>
+                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">Next</button>
                     </div>
                 </div>
             </div>

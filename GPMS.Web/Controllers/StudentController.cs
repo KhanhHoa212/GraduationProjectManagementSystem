@@ -232,6 +232,7 @@ public class StudentController : Controller
             AllNotifications = notifications,
             DeadlineNotifications = notifications.Where(n => n.Type == GPMS.Domain.Enums.NotificationType.Deadline),
             FeedbackNotifications = notifications.Where(n => n.Type == GPMS.Domain.Enums.NotificationType.Feedback),
+            ScheduleNotifications = notifications.Where(n => n.Type == GPMS.Domain.Enums.NotificationType.Schedule),
             UnreadCount = unreadCount,
             ActiveTab = type
         };
@@ -241,6 +242,7 @@ public class StudentController : Controller
             "Unread" => viewModel.AllNotifications.Where(n => !n.IsRead),
             "Deadline" => viewModel.DeadlineNotifications,
             "Feedback" => viewModel.FeedbackNotifications,
+            "Schedule" => viewModel.ScheduleNotifications,
             _ => viewModel.AllNotifications
         };
 

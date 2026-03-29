@@ -70,12 +70,6 @@ public class ReviewRoundService : IReviewRoundService
 
     public async Task CreateReviewRoundAsync(CreateReviewRoundDto dto)
     {
-        var existingRounds = await _repository.GetBySemesterAsync(dto.SemesterID);
-        if (existingRounds.Count() >= 3)
-        {
-            throw new System.InvalidOperationException("Mỗi học kỳ chỉ được phép có tối đa 3 vòng review.");
-        }
-
         var entity = _mapper.Map<ReviewRound>(dto);
         
         var now = System.DateTime.Now;
@@ -163,7 +157,11 @@ public class ReviewRoundService : IReviewRoundService
 
     public async Task DeleteReviewRoundAsync(int id)
     {
-        throw new System.InvalidOperationException("Không thể xóa các vòng review mặc định của học kỳ.");
+        var existing = await _repository.GetByIdAsync(id);
+        if (existing == null) throw new KeyNotFoundException("Review round not found.");
+
+        _repository.Delete(existing);
+        await _repository.SaveChangesAsync();
     }
 
     public async Task<bool> InitializeDefaultRoundsAsync(int semesterId)

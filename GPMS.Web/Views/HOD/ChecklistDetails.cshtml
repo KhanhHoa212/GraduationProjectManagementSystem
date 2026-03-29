@@ -1,7 +1,7 @@
-﻿@using GPMS.Application.DTOs
+@using GPMS.Application.DTOs
 @model ChecklistDto
 @{
-    ViewData["Title"] = "Chi tiết Checklist";
+    ViewData["Title"] = "Checklist Details";
     Layout = "_Layout";
     var isRubric = Model.Items.Any(i => i.ItemType == "Rubric");
     var sections = Model.Items.GroupBy(i => i.Section ?? "General").OrderBy(g => g.Key);
@@ -13,7 +13,7 @@
         <nav class="flex mb-4 text-sm text-gray-500">
             <a href="/HOD/Checklists" class="hover:text-orange-500 flex items-center gap-1">
                 <i class="ri-arrow-left-line"></i>
-                Quay lại danh sách
+                Back to list
             </a>
         </nav>
         <div class="flex justify-between items-end">
@@ -31,7 +31,7 @@
             </div>
             <a href="/HOD/EditChecklist/@Model.ReviewRoundID" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <i class="ri-edit-line"></i>
-                Chỉnh sửa
+                Edit
             </a>
         </div>
     </div>
@@ -42,7 +42,7 @@
         <div class="bg-indigo-900 text-white rounded-xl p-6 mb-8 shadow-lg">
             <h3 class="font-bold mb-4 flex items-center gap-2 text-indigo-200 uppercase tracking-wider text-sm">
                 <i class="ri-bar-chart-2-line"></i>
-                Thang đánh giá định tính (Grade Scale)
+                Qualitative Grading (Grade Scale)
             </h3>
             <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <div class="flex items-center gap-3">
@@ -82,7 +82,7 @@
                 </div>
             </div>
             <p class="mt-4 text-xs text-indigo-300 italic border-t border-indigo-800 pt-3">
-                <i class="ri-information-line"></i> Đây là đánh giá định tính để phản hồi cho sinh viên – điểm số cuối cùng được Hội đồng chấm độc lập.
+                <i class="ri-information-line"></i> This is a qualitative evaluation for student feedback – the final score is determined independently by the Committee.
             </p>
         </div>
 
@@ -92,7 +92,7 @@
             <div class="mb-8">
                 <h2 class="text-sm font-bold text-indigo-600 uppercase tracking-widest mb-4 flex items-center gap-2">
                     <i class="ri-bookmark-3-line"></i>
-                    Nhóm: @group.Key
+                    Group: @group.Key
                     <span class="h-px bg-indigo-100 flex-grow ml-2"></span>
                 </h2>
                 <div class="grid gap-6">
@@ -106,7 +106,7 @@
                                 </div>
                                 <button onclick="toggleRubric('@item.ItemID')" class="text-indigo-600 text-xs font-bold hover:underline flex items-center gap-1">
                                     <i class="ri-expand-up-down-line"></i>
-                                    Chi tiết Rubric
+                                    Rubric Details
                                 </button>
                             </div>
                             <div class="p-5">
@@ -126,7 +126,7 @@
                                         };
                                         <div class="p-3 rounded-lg border @colorClass text-xs">
                                             <div class="font-bold mb-1 uppercase tracking-tighter">@level</div>
-                                            <p class="leading-normal opacity-90">@(rubric?.Description ?? "Chưa cấu hình nội dung.")</p>
+                                            <p class="leading-normal opacity-90">@(rubric?.Description ?? "Content not configured.")</p>
                                         </div>
                                     }
                                 </div>
@@ -181,10 +181,10 @@
     <div class="mt-8 p-6 bg-gray-100 rounded-xl border-2 border-dashed border-gray-200">
         <h4 class="font-bold text-gray-500 mb-2 flex items-center gap-2">
             <i class="ri-chat-smile-2-line"></i>
-            Comments (Tùy chọn)
+            Comments (Optional)
         </h4>
         <p class="text-sm text-gray-400 italic">
-            Reviewer có thể bổ sung nhận xét tổng quát tại đây khi thực hiện đánh giá. Field này sẽ tự động hiển thị cho reviewer.
+            The reviewer can add general comments here during the evaluation. This field will be automatically displayed to the reviewer.
         </p>
     </div>
 </div>

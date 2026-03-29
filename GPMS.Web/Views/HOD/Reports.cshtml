@@ -1,6 +1,6 @@
 @model GPMS.Web.ViewModels.HODReportViewModel
 @{
-    ViewData["Title"] = "Thống kê & Báo cáo";
+    ViewData["Title"] = "Statistics & Reports";
     Layout = "_Layout";
     
     // Helper values
@@ -24,8 +24,10 @@
         @@media print {
             aside, header, nav, .print\:hidden { display: none !important; }
             html, body { height: auto !important; overflow: visible !important; background: white !important; }
-            main { margin: 0 !important; padding: 1cm !important; }
-            .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+            main { margin: 0 !important; padding: 10mm !important; }
+            .shadow-sm, .shadow-md, .shadow-lg, .shadow-2xl { box-shadow: none !important; border: 1px solid #f1f5f9 !important; }
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @@page { size: landscape; margin: 10mm; }
         }
     </style>
 }
@@ -39,9 +41,9 @@
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
                 <span class="text-slate-900 font-bold uppercase tracking-widest text-[10px]">Reports</span>
             </nav>
-            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Thống kê Tổng quát</h1>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">General Statistics</h1>
             <p class="text-slate-500 mt-1 uppercase tracking-widest text-[11px] font-bold">
-                Kỳ: <span class="text-[#F37021]">@Model.SemesterCode — @Model.AcademicYear</span>
+                Semester: <span class="text-[#F37021]">@Model.SemesterCode — @Model.AcademicYear</span>
             </p>
         </div>
 
@@ -49,7 +51,7 @@
             <form method="get" asp-action="Reports" id="filterForm" class="flex gap-2">
                 <div class="relative">
                     <select name="semesterId" class="appearance-none bg-white border border-slate-200 rounded-2xl px-5 py-2.5 pr-10 text-sm font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all cursor-pointer" onchange="this.form.submit()">
-                        <option value="-1">Tất cả kỳ</option>
+                        <option value="-1">All Semesters</option>
                         @foreach (var sem in ViewBag.Semesters)
                         {
                             <option value="@sem.SemesterID" selected="@(ViewBag.SelectedSemesterId == sem.SemesterID)">@sem.SemesterCode</option>
@@ -59,23 +61,55 @@
                 </div>
             </form>
 
-            </button>
+            <div class="relative group inline-block">
+                <button type="button" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-slate-800 text-white px-5 py-2 rounded-xl hover:bg-slate-900 transition-colors shadow-sm focus:ring-4 focus:ring-slate-900/10">
+                    <span class="material-symbols-outlined text-sm">print</span>
+                    <span class="font-semibold text-sm">Export PDF</span>
+                    <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-right group-hover:scale-100 scale-95">
+                    <div class="p-1">
+                        <button type="button" onclick="exportPDF('vi')" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#F37021] rounded-lg transition-colors font-medium">
+                            <img src="https://flagicons.lipis.dev/flags/4x3/vn.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
+                            Vietnamese
+                        </button>
+                        <button type="button" onclick="exportPDF('en')" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#F37021] rounded-lg transition-colors font-medium mt-1">
+                            <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
+                            English
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-            <a asp-action="ExportReportExcel" asp-route-semesterId='@ViewBag.SelectedSemesterId' hx-boost="false"
-               class="no-spinner w-full sm:w-auto flex justify-center items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm no-underline">
-                <span class="material-symbols-outlined text-sm">description</span>
-                <span class="font-semibold text-sm">Xuất Excel</span>
-            </a>
+            <div class="relative group inline-block">
+                <button type="button" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm focus:ring-4 focus:ring-emerald-700/10">
+                    <span class="material-symbols-outlined text-sm">description</span>
+                    <span class="font-semibold text-sm">Export Excel</span>
+                    <span class="material-symbols-outlined text-[16px]">expand_more</span>
+                </button>
+                <div class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden transform origin-top-right group-hover:scale-100 scale-95">
+                    <div class="p-1">
+                        <a href="/HOD/ExportReportExcel?semesterId=@ViewBag.SelectedSemesterId&lang=vi" hx-boost="false" class="no-spinner w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 rounded-lg transition-colors font-medium no-underline">
+                            <img src="https://flagicons.lipis.dev/flags/4x3/vn.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
+                            Vietnamese
+                        </a>
+                        <a href="/HOD/ExportReportExcel?semesterId=@ViewBag.SelectedSemesterId&lang=en" hx-boost="false" class="no-spinner w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 rounded-lg transition-colors font-medium mt-1 no-underline">
+                            <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
+                            English
+                        </a>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- KPI Dashboard -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @foreach (var kpi in new[] { 
-            new { Label = "Đề tài", Value = Model.TotalProjects, Icon = "account_tree", Color = "orange", Pct = "+12%" },
-            new { Label = "Nhóm", Value = Model.TotalGroups, Icon = "groups", Color = "blue", Pct = "+5%" },
-            new { Label = "Sinh viên", Value = Model.TotalStudents, Icon = "school", Color = "emerald", Pct = "+8%" },
-            new { Label = "Giảng viên", Value = Model.TotalSupervisors, Icon = "person_check", Color = "violet", Pct = "Stable" }
+            new { Label = "Projects", Value = Model.TotalProjects, Icon = "account_tree", Color = "orange", Pct = "+12%" },
+            new { Label = "Groups", Value = Model.TotalGroups, Icon = "groups", Color = "blue", Pct = "+5%" },
+            new { Label = "Students", Value = Model.TotalStudents, Icon = "school", Color = "emerald", Pct = "+8%" },
+            new { Label = "Lecturers", Value = Model.TotalSupervisors, Icon = "person_check", Color = "violet", Pct = "Stable" }
         }) {
             <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:border-@(kpi.Color)-100 transition-all group relative overflow-hidden">
                 <div class="absolute -right-4 -top-4 w-24 h-24 bg-@(kpi.Color)-50/50 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
@@ -101,7 +135,7 @@
         <div class="lg:col-span-5 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-[#F37021]"></span>
-                Trạng thái đồ án
+                Project Status
             </h3>
             
             <div class="flex flex-col items-center gap-10">
@@ -115,7 +149,7 @@
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center">
                         <span class="text-4xl font-black text-slate-900">@activePct%</span>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Đang chạy</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Running</span>
                     </div>
                 </div>
 
@@ -156,7 +190,7 @@
         <div class="lg:col-span-7 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col">
             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                Chuyên ngành
+                Major Distribution
             </h3>
 
             <div class="space-y-6 flex-1 flex flex-col justify-center">
@@ -165,7 +199,7 @@
                     <div>
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-sm font-bold text-slate-700">@major.MajorName</span>
-                            <span class="text-xs font-black text-slate-400">@major.ProjectCount ĐỀ TÀI</span>
+                            <span class="text-xs font-black text-slate-400">@major.ProjectCount PROJECTS</span>
                         </div>
                         <div class="h-4 bg-slate-50 rounded-full overflow-hidden flex">
                             <div class="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-1000" style="width: @pct%"></div>
@@ -184,7 +218,7 @@
             
             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
                 <span class="w-2 h-2 rounded-full bg-orange-500"></span>
-                Tiến độ nộp bài theo Giai đoạn
+                Submission Progress by Round
             </h3>
             
             <div class="space-y-8 relative z-10">
@@ -197,34 +231,34 @@
                     <div class="group">
                         <div class="flex justify-between items-end mb-3">
                             <div>
-                                <h4 class="text-xs font-black text-slate-900 group-hover:text-orange-600 transition-colors uppercase tracking-tight">Giai đoạn @round.RoundNumber</h4>
+                                <h4 class="text-xs font-black text-slate-900 group-hover:text-orange-600 transition-colors uppercase tracking-tight">Round @round.RoundNumber</h4>
                                 <p class="text-[10px] text-slate-400 font-bold">@round.RoundDescription</p>
                             </div>
                             <div class="text-right">
                                 <span class="text-sm font-black text-slate-900">@onTimePct%</span>
-                                <span class="text-[10px] text-slate-400 font-bold ml-1 uppercase">Hoàn thành</span>
+                                <span class="text-[10px] text-slate-400 font-bold ml-1 uppercase">Completed</span>
                             </div>
                         </div>
                         
                         <div class="h-5 bg-slate-50 rounded-xl overflow-hidden flex p-1 border border-slate-100 shadow-inner">
                             <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-lg shadow-sm transition-all duration-1000" 
-                                 style="width: @onTimePct%" title="Đúng hạn: @round.OnTimeCount"></div>
+                                 style="width: @onTimePct%" title="On Time: @round.OnTimeCount"></div>
                             <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg shadow-sm transition-all duration-1000 mx-0.5" 
-                                 style="width: @latePct%" title="Trễ hạn: @round.LateCount"></div>
+                                 style="width: @latePct%" title="Late: @round.LateCount"></div>
                         </div>
                         
                         <div class="flex items-center gap-4 mt-3">
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase">Đúng hạn: @round.OnTimeCount</span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">On Time: @round.OnTimeCount</span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase">Trễ: @round.LateCount</span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Late: @round.LateCount</span>
                             </div>
                             <div class="flex items-center gap-1.5">
                                 <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
-                                <span class="text-[10px] font-bold text-slate-500 uppercase">Chưa nộp: @round.NotSubmittedCount</span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Not Submitted: @round.NotSubmittedCount</span>
                             </div>
                         </div>
                     </div>
@@ -238,7 +272,7 @@
             
             <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                Quyết định của Mentor
+                Mentor Decisions
             </h3>
             
             <div class="grid grid-cols-1 gap-4 relative z-10">
@@ -278,52 +312,52 @@
     </div>
 
     <!-- Submission & Workload Table -->
-    <div class="bg-[#1a2236] rounded-3xl shadow-2xl overflow-hidden border border-white/5">
-        <div class="p-8 border-b border-white/5 flex items-center justify-between">
+    <div class="bg-white rounded-3xl shadow-sm overflow-hidden border border-slate-100">
+        <div class="p-8 border-b border-slate-100 flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-black text-white tracking-tight">Tải trọng Giảng viên</h2>
-                <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest font-medium">Bảng phân bổ chi tiết kỳ @Model.SemesterCode</p>
+                <h2 class="text-xl font-black text-slate-900 tracking-tight">Lecturer Workload</h2>
+                <p class="text-slate-500 text-xs mt-1 uppercase tracking-widest font-bold">Detailed distribution for semester @Model.SemesterCode</p>
             </div>
-            <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
-                <span class="text-sm font-black text-orange-400">@Model.AllSupervisorWorkloads.Count</span>
-                <span class="text-[10px] text-slate-300 font-bold ml-1 uppercase">Giảng viên</span>
+            <div class="px-4 py-2 bg-orange-50/50 border border-orange-100 rounded-xl flex items-center gap-1.5">
+                <span class="text-sm font-black text-orange-600">@Model.AllSupervisorWorkloads.Count</span>
+                <span class="text-[10px] text-orange-500 font-bold uppercase">Lecturers</span>
             </div>
         </div>
 
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
-                <thead class="bg-white/5">
+                <thead class="bg-slate-50 border-b border-slate-100">
                     <tr>
-                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Giảng viên</th>
-                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Đề tài</th>
-                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Sinh viên</th>
-                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Cường độ làm việc</th>
+                        <th class="p-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Lecturer</th>
+                        <th class="p-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap text-center">Projects</th>
+                        <th class="p-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap text-center">Students</th>
+                        <th class="p-6 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] whitespace-nowrap">Workload Intensity</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/5">
+                <tbody class="divide-y divide-slate-100">
                     @foreach (var sup in Model.SupervisorWorkloads) {
                         var loadPct = Math.Min(100, (sup.ProjectCount * 20)); // Mock logic: 5 projects = 100%
-                        var loadColor = loadPct >= 100 ? "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]" : loadPct >= 60 ? "bg-orange-400 shadow-[0_0_12px_rgba(251,146,60,0.3)]" : "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]";
+                        var loadColor = loadPct >= 100 ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]" : loadPct >= 60 ? "bg-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.3)]" : "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]";
                         
-                        <tr class="hover:bg-white/[0.02] transition-colors">
+                        <tr class="hover:bg-slate-50/50 transition-colors">
                             <td class="p-6">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-black shadow-lg">
+                                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-black">
                                         @sup.LecturerName.Substring(0, 1)
                                     </div>
-                                    <span class="font-bold text-slate-200">@sup.LecturerName</span>
+                                    <span class="font-bold text-slate-800">@sup.LecturerName</span>
                                 </div>
                             </td>
                             <td class="p-6 text-center">
-                                <span class="px-3 py-1 bg-white/5 rounded-lg font-black text-white">@sup.ProjectCount</span>
+                                <span class="px-3 py-1 bg-slate-100 rounded-lg font-black text-slate-700">@sup.ProjectCount</span>
                             </td>
-                            <td class="p-6 text-center text-slate-300 font-bold">@sup.StudentCount</td>
+                            <td class="p-6 text-center text-slate-600 font-bold">@sup.StudentCount</td>
                             <td class="p-6">
                                 <div class="flex items-center gap-4 max-w-xs">
-                                    <div class="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div class="h-2 flex-1 bg-slate-100 rounded-full overflow-hidden">
                                         <div class="h-full @loadColor rounded-full transition-all duration-1000" style="width: @loadPct%"></div>
                                     </div>
-                                    <span class="text-[10px] font-black text-slate-400 w-8">@loadPct%</span>
+                                    <span class="text-[10px] font-black text-slate-500 w-8">@loadPct%</span>
                                 </div>
                             </td>
                         </tr>
@@ -332,8 +366,119 @@
             </table>
         </div>
         
-        <div class="p-6 border-t border-white/5 bg-white/[0.01] print:hidden">
+        <div class="p-6 bg-slate-50/50 border-t border-slate-100 print:hidden">
             @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
         </div>
     </div>
 </div>
+
+<!-- Hidden Formal Report Template for PDF Export -->
+<div id="formalReportContainer" class="hidden font-sans bg-white text-black p-8" style="font-family: Arial, sans-serif;">
+    <div class="text-center mb-10 border-b-2 border-[#F37021] pb-6">
+        <h2 class="text-2xl font-black uppercase text-[#F37021]">FPT University</h2>
+        <h3 class="text-lg font-bold text-slate-800">Graduation Project Management System (GPMS)</h3>
+        <h1 class="text-3xl font-black mt-6 text-slate-900" data-vn="BÁO CÁO TỔNG QUÁT HỌC KỲ: @(Model.SemesterCode ?? "TẤT CẢ")" data-en="GENERAL SEMESTER REPORT: @(Model.SemesterCode ?? "ALL")">GENERAL SEMESTER REPORT: @(Model.SemesterCode ?? "ALL")</h1>
+        <p class="text-sm italic mt-2 text-slate-600" id="pdfDate" data-vn="Ngày xuất báo cáo: " data-en="Exported at: ">Exported at: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+    </div>
+
+    <div class="mb-10">
+        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="1. TÓM TẮT SỐ LIỆU VÀ TÌNH TRẠNG" data-en="1. OVERVIEW & STATUS SUMMARY">1. OVERVIEW & STATUS SUMMARY</h3>
+        <div class="flex gap-8">
+            <table class="w-1/2 border-collapse border border-slate-300 text-sm">
+                <thead>
+                    <tr class="bg-[#F37021] text-white">
+                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Tổng quan" data-en="Overview">Overview</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Tổng số Giảng viên" data-en="Total Lecturers">Total Lecturers</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalSupervisors</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Sinh viên" data-en="Total Students">Total Students</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalStudents</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Nhóm" data-en="Total Groups">Total Groups</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalGroups</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Đề tài" data-en="Total Projects">Total Projects</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalProjects</td></tr>
+                </tbody>
+            </table>
+            
+            <table class="w-1/2 border-collapse border border-slate-300 text-sm">
+                <thead>
+                    <tr class="bg-[#F37021] text-white">
+                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Trạng thái Đề tài" data-en="Project Status">Project Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Chờ duyệt (Draft)" data-en="Pending Draft">Pending Draft</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.DraftProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đang thực hiện" data-en="Active">Active</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-orange-600">@Model.ActiveProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hoàn thành" data-en="Completed">Completed</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-emerald-600">@Model.CompletedProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hủy" data-en="Cancelled">Cancelled</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-red-600">@Model.CancelledProjects</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div>
+        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="2. BẢNG PHÂN BỔ TẢI TRỌNG GIẢNG VIÊN" data-en="2. LECTURER WORKLOAD DISTRIBUTION">2. LECTURER WORKLOAD DISTRIBUTION</h3>
+        <table class="w-full border-collapse border border-slate-300 text-sm">
+            <thead>
+                <tr class="bg-[#F37021] text-white uppercase text-xs">
+                    <th class="border border-slate-300 p-3 text-center w-12" data-vn="STT" data-en="No.">No.</th>
+                    <th class="border border-slate-300 p-3 text-left" data-vn="Tên Giảng Viên" data-en="Lecturer Name">Lecturer Name</th>
+                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Số Đề Tài" data-en="Project Count">Project Count</th>
+                    <th class="border border-slate-300 p-3 text-center w-24" data-vn="Số Nhóm" data-en="Group Count">Group Count</th>
+                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Tổng Sinh Viên" data-en="Total Students">Total Students</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{ int stt = 1; }
+                @foreach(var sup in Model.AllSupervisorWorkloads.OrderByDescending(x => x.ProjectCount))
+                {
+                    <tr class="hover:bg-slate-50">
+                        <td class="border border-slate-300 p-3 text-center font-medium">@(stt++)</td>
+                        <td class="border border-slate-300 p-3 font-medium">@sup.LecturerName</td>
+                        <td class="border border-slate-300 p-3 text-center font-black text-slate-700">@sup.ProjectCount</td>
+                        <td class="border border-slate-300 p-3 text-center font-bold text-slate-600">@sup.GroupCount</td>
+                        <td class="border border-slate-300 p-3 text-center text-slate-600">@sup.StudentCount</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script>
+        function exportPDF(lang) {
+            const dashboard = document.getElementById('reportContent');
+            const template = document.getElementById('formalReportContainer');
+            
+            if (!dashboard || !template) return;
+
+            // Apply selected language translations
+            const dateStr = '@DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")';
+            template.querySelectorAll('[data-vn]').forEach(el => {
+                if (el.id === 'pdfDate') {
+                    el.innerText = el.getAttribute('data-' + lang) + dateStr;
+                } else {
+                    el.innerText = el.getAttribute('data-' + lang);
+                }
+            });
+
+            // Temporarily hide dashboard and show report template for high-quality capture
+            dashboard.style.display = 'none';
+            template.classList.remove('hidden');
+
+            const opt = {
+                margin:       15,
+                filename:     'GPMS_Report_@(Model.SemesterCode).pdf',
+                image:        { type: 'jpeg', quality: 1.0 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Execute PDF export and restore original UI state afterwards
+            html2pdf().set(opt).from(template).save().then(() => {
+                template.classList.add('hidden');
+                dashboard.style.display = '';
+            });
+        }
+    </script>
+}
