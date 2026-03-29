@@ -9,6 +9,9 @@ public class ReviewSessionInfo
     public DateTime ScheduledAt { get; set; }
     public int? RoomID { get; set; }
     public string? Notes { get; set; }
+    public int? CommitteeID { get; set; }
+    public bool IsOnline { get; set; }
+    public virtual Committee? Committee { get; set; }
 
     // Navigation
     public virtual ReviewRound ReviewRound { get; set; } = null!;

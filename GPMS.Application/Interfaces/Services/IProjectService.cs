@@ -8,11 +8,14 @@ public interface IProjectService
 {
     Task<IEnumerable<ProjectDto>> GetAllProjectsAsync();
     Task<IEnumerable<ProjectDto>> GetProjectsBySemesterAsync(int semesterId);
+    Task<IEnumerable<ProjectDto>> GetRecentProjectsForDashboardAsync(int semesterId, int count);
+    Task<IEnumerable<ProjectDto>> GetFilteredProjectsAsync(int? semesterId, string? status, string? search, string? majorName);
     Task<ProjectDetailDto?> GetProjectDetailAsync(int projectId);
     Task CreateProjectAsync(CreateProjectDto dto);
     Task UpdateProjectAsync(UpdateProjectDto dto);
     Task<bool> DeleteProjectAsync(int projectId);
-    Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null);
+    Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsAsync(int? semesterId = null);
+    Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsBySemesterAsync(int semesterId);
     
     // Student Dashboard
     Task<ProjectDto?> GetProjectByStudentAsync(string studentId);
@@ -43,5 +46,15 @@ public interface IProjectService
     // Download Proxy
     Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
     Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
+
+    // Defense Scheduling
+    Task<DefenseScheduleViewModel> GetDefenseScheduleDataAsync(int? roundId, DateTime date);
+    Task<(bool success, string message)> SaveDefenseSessionAsync(CreateDefenseSessionRequest request);
+    Task<(bool success, string message)> DeleteDefenseSessionAsync(int sessionId);
+    
+    // Reviewer Assignment
+    Task<ReviewerAssignmentDto> GetReviewerAssignmentDataAsync(int? roundId);
+    Task<(bool success, string message)> SaveReviewerAssignmentsAsync(UpdateReviewerAssignmentRequest request);
+    Task<(bool success, string message)> RemoveReviewerAsync(RemoveReviewerRequest request);
 }
 

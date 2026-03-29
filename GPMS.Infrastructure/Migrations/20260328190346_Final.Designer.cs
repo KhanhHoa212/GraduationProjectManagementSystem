@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GPMS.Infrastructure.Migrations
 {
     [DbContext(typeof(GpmsDbContext))]
-    [Migration("20260325004242_Student")]
-    partial class Student
+    [Migration("20260328190346_Final")]
+    partial class Final
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -72,6 +72,57 @@ namespace GPMS.Infrastructure.Migrations
                     b.HasIndex("ChecklistID");
 
                     b.ToTable("ChecklistItems", (string)null);
+                });
+
+            modelBuilder.Entity("GPMS.Domain.Entities.Committee", b =>
+                {
+                    b.Property<int>("CommitteeID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CommitteeID"));
+
+                    b.Property<string>("ChairpersonID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("CommitteeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Reviewer2ID")
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Reviewer3ID")
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ReviewerID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SecretaryID")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("SemesterID")
+                        .HasColumnType("int");
+
+                    b.HasKey("CommitteeID");
+
+                    b.HasIndex("ChairpersonID");
+
+                    b.HasIndex("Reviewer2ID");
+
+                    b.HasIndex("Reviewer3ID");
+
+                    b.HasIndex("ReviewerID");
+
+                    b.HasIndex("SecretaryID");
+
+                    b.HasIndex("SemesterID");
+
+                    b.ToTable("Committees", (string)null);
                 });
 
             modelBuilder.Entity("GPMS.Domain.Entities.Evaluation", b =>
@@ -198,9 +249,9 @@ namespace GPMS.Infrastructure.Migrations
 
                     b.Property<string>("FacultyCode")
                         .IsRequired()
-                        .HasMaxLength(10)
+                        .HasMaxLength(3)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("varchar(3)");
 
                     b.Property<string>("FacultyName")
                         .IsRequired()
@@ -218,8 +269,26 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             FacultyID = 1,
-                            FacultyCode = "SE",
-                            FacultyName = "Software Engineering Faculty"
+                            FacultyCode = "IT",
+                            FacultyName = "Information Technology Faculty"
+                        },
+                        new
+                        {
+                            FacultyID = 2,
+                            FacultyCode = "EC",
+                            FacultyName = "Economy Faculty"
+                        },
+                        new
+                        {
+                            FacultyID = 3,
+                            FacultyCode = "DA",
+                            FacultyName = "Digital Arts Faculty"
+                        },
+                        new
+                        {
+                            FacultyID = 4,
+                            FacultyCode = "LA",
+                            FacultyName = "Language Faculty"
                         });
                 });
 
@@ -305,6 +374,13 @@ namespace GPMS.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("InProgress");
+
                     b.HasKey("GroupID", "UserID");
 
                     b.HasIndex("UserID");
@@ -381,9 +457,9 @@ namespace GPMS.Infrastructure.Migrations
 
                     b.Property<string>("MajorCode")
                         .IsRequired()
-                        .HasMaxLength(10)
+                        .HasMaxLength(3)
                         .IsUnicode(false)
-                        .HasColumnType("varchar(10)");
+                        .HasColumnType("varchar(3)");
 
                     b.Property<string>("MajorName")
                         .IsRequired()
@@ -410,9 +486,72 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             MajorID = 2,
+                            FacultyID = 2,
+                            MajorCode = "DM",
+                            MajorName = "Digital Marketing"
+                        },
+                        new
+                        {
+                            MajorID = 3,
+                            FacultyID = 3,
+                            MajorCode = "GD",
+                            MajorName = "Graphic Design"
+                        },
+                        new
+                        {
+                            MajorID = 4,
+                            FacultyID = 4,
+                            MajorCode = "EN",
+                            MajorName = "English"
+                        },
+                        new
+                        {
+                            MajorID = 5,
+                            FacultyID = 4,
+                            MajorCode = "JP",
+                            MajorName = "Japanese"
+                        },
+                        new
+                        {
+                            MajorID = 6,
+                            FacultyID = 4,
+                            MajorCode = "KR",
+                            MajorName = "Korean"
+                        },
+                        new
+                        {
+                            MajorID = 7,
+                            FacultyID = 4,
+                            MajorCode = "CN",
+                            MajorName = "Chinese"
+                        },
+                        new
+                        {
+                            MajorID = 8,
                             FacultyID = 1,
-                            MajorCode = "SS",
-                            MajorName = "Software Testing"
+                            MajorCode = "IA",
+                            MajorName = "Information Assurance"
+                        },
+                        new
+                        {
+                            MajorID = 9,
+                            FacultyID = 1,
+                            MajorCode = "IC",
+                            MajorName = "Integrated Circuit Design"
+                        },
+                        new
+                        {
+                            MajorID = 10,
+                            FacultyID = 2,
+                            MajorCode = "FI",
+                            MajorName = "Finance"
+                        },
+                        new
+                        {
+                            MajorID = 11,
+                            FacultyID = 2,
+                            MajorCode = "MK",
+                            MajorName = "Marketing"
                         });
                 });
 
@@ -718,8 +857,14 @@ namespace GPMS.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SessionID"));
 
+                    b.Property<int?>("CommitteeID")
+                        .HasColumnType("int");
+
                     b.Property<int>("GroupID")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsOnline")
+                        .HasColumnType("bit");
 
                     b.Property<string>("MeetLink")
                         .HasMaxLength(500)
@@ -740,6 +885,8 @@ namespace GPMS.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("SessionID");
+
+                    b.HasIndex("CommitteeID");
 
                     b.HasIndex("GroupID");
 
@@ -767,6 +914,12 @@ namespace GPMS.Infrastructure.Migrations
                     b.Property<string>("AssignedBy")
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("CommitteeID")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CommitteeRole")
+                        .HasColumnType("int");
+
                     b.Property<int>("GroupID")
                         .HasColumnType("int");
 
@@ -785,6 +938,8 @@ namespace GPMS.Infrastructure.Migrations
                     b.HasKey("AssignmentID");
 
                     b.HasIndex("AssignedBy");
+
+                    b.HasIndex("CommitteeID");
 
                     b.HasIndex("GroupID");
 
@@ -1185,7 +1340,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "ADMIN001",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4942),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4238),
                             Email = "admin@fpt.edu.vn",
                             FullName = "System Admin",
                             Status = "Active",
@@ -1194,7 +1349,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV001",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4951),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4248),
                             Email = "giao-vien1@fpt.edu.vn",
                             FullName = "Lecturer One",
                             Status = "Active"
@@ -1202,7 +1357,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV002",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4953),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4250),
                             Email = "giao-vien2@fpt.edu.vn",
                             FullName = "Lecturer Two",
                             Status = "Active"
@@ -1210,7 +1365,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "GV003",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4956),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4252),
                             Email = "giao-vien3@fpt.edu.vn",
                             FullName = "Lecturer Three",
                             Status = "Active"
@@ -1218,7 +1373,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "HOD001",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4957),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4254),
                             Email = "hod@fpt.edu.vn",
                             FullName = "Head of Department",
                             Status = "Active"
@@ -1226,7 +1381,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180001",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4959),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4256),
                             Email = "student1@fpt.edu.vn",
                             FullName = "Student One",
                             Status = "Active"
@@ -1234,7 +1389,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180002",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4961),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4258),
                             Email = "student2@fpt.edu.vn",
                             FullName = "Student Two",
                             Status = "Active"
@@ -1242,7 +1397,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180003",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4963),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4259),
                             Email = "student3@fpt.edu.vn",
                             FullName = "Student Three",
                             Status = "Active"
@@ -1250,7 +1405,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180004",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4964),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4268),
                             Email = "student4@fpt.edu.vn",
                             FullName = "Student Four",
                             Status = "Active"
@@ -1258,7 +1413,7 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserID = "SE180005",
-                            CreatedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4966),
+                            CreatedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4270),
                             Email = "student5@fpt.edu.vn",
                             FullName = "Student Five",
                             Status = "Active"
@@ -1339,70 +1494,70 @@ namespace GPMS.Infrastructure.Migrations
                         new
                         {
                             UserRoleID = 1,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4988),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4293),
                             RoleName = "Admin",
                             UserID = "ADMIN001"
                         },
                         new
                         {
                             UserRoleID = 2,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4989),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4294),
                             RoleName = "Lecturer",
                             UserID = "GV001"
                         },
                         new
                         {
                             UserRoleID = 3,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4990),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4295),
                             RoleName = "Lecturer",
                             UserID = "GV002"
                         },
                         new
                         {
                             UserRoleID = 4,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4296),
                             RoleName = "Lecturer",
                             UserID = "GV003"
                         },
                         new
                         {
                             UserRoleID = 10,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4297),
                             RoleName = "HeadOfDept",
                             UserID = "HOD001"
                         },
                         new
                         {
                             UserRoleID = 5,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4992),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4297),
                             RoleName = "Student",
                             UserID = "SE180001"
                         },
                         new
                         {
                             UserRoleID = 6,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4298),
                             RoleName = "Student",
                             UserID = "SE180002"
                         },
                         new
                         {
                             UserRoleID = 7,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4299),
                             RoleName = "Student",
                             UserID = "SE180003"
                         },
                         new
                         {
                             UserRoleID = 8,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4299),
                             RoleName = "Student",
                             UserID = "SE180004"
                         },
                         new
                         {
                             UserRoleID = 9,
-                            AssignedAt = new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994),
+                            AssignedAt = new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4300),
                             RoleName = "Student",
                             UserID = "SE180005"
                         });
@@ -1419,12 +1574,59 @@ namespace GPMS.Infrastructure.Migrations
                     b.Navigation("Checklist");
                 });
 
+            modelBuilder.Entity("GPMS.Domain.Entities.Committee", b =>
+                {
+                    b.HasOne("GPMS.Domain.Entities.User", "Chairperson")
+                        .WithMany()
+                        .HasForeignKey("ChairpersonID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GPMS.Domain.Entities.User", "Reviewer2")
+                        .WithMany()
+                        .HasForeignKey("Reviewer2ID");
+
+                    b.HasOne("GPMS.Domain.Entities.User", "Reviewer3")
+                        .WithMany()
+                        .HasForeignKey("Reviewer3ID");
+
+                    b.HasOne("GPMS.Domain.Entities.User", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GPMS.Domain.Entities.User", "Secretary")
+                        .WithMany()
+                        .HasForeignKey("SecretaryID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("GPMS.Domain.Entities.Semester", "Semester")
+                        .WithMany()
+                        .HasForeignKey("SemesterID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Chairperson");
+
+                    b.Navigation("Reviewer");
+
+                    b.Navigation("Reviewer2");
+
+                    b.Navigation("Reviewer3");
+
+                    b.Navigation("Secretary");
+
+                    b.Navigation("Semester");
+                });
+
             modelBuilder.Entity("GPMS.Domain.Entities.Evaluation", b =>
                 {
                     b.HasOne("GPMS.Domain.Entities.ProjectGroup", "Group")
                         .WithMany("Evaluations")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GPMS.Domain.Entities.ReviewRound", "ReviewRound")
@@ -1634,7 +1836,7 @@ namespace GPMS.Infrastructure.Migrations
                     b.HasOne("GPMS.Domain.Entities.Project", "Project")
                         .WithMany("ProjectGroups")
                         .HasForeignKey("ProjectID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Project");
@@ -1697,10 +1899,14 @@ namespace GPMS.Infrastructure.Migrations
 
             modelBuilder.Entity("GPMS.Domain.Entities.ReviewSessionInfo", b =>
                 {
+                    b.HasOne("GPMS.Domain.Entities.Committee", "Committee")
+                        .WithMany()
+                        .HasForeignKey("CommitteeID");
+
                     b.HasOne("GPMS.Domain.Entities.ProjectGroup", "Group")
                         .WithMany("ReviewSessions")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GPMS.Domain.Entities.ReviewRound", "ReviewRound")
@@ -1713,6 +1919,8 @@ namespace GPMS.Infrastructure.Migrations
                         .WithMany("ReviewSessions")
                         .HasForeignKey("RoomID")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Committee");
 
                     b.Navigation("Group");
 
@@ -1728,10 +1936,15 @@ namespace GPMS.Infrastructure.Migrations
                         .HasForeignKey("AssignedBy")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("GPMS.Domain.Entities.Committee", "Committee")
+                        .WithMany("ReviewerAssignments")
+                        .HasForeignKey("CommitteeID")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("GPMS.Domain.Entities.ProjectGroup", "Group")
                         .WithMany("ReviewerAssignments")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GPMS.Domain.Entities.ReviewRound", "ReviewRound")
@@ -1747,6 +1960,8 @@ namespace GPMS.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AdminWhoAssigned");
+
+                    b.Navigation("Committee");
 
                     b.Navigation("Group");
 
@@ -1771,7 +1986,7 @@ namespace GPMS.Infrastructure.Migrations
                     b.HasOne("GPMS.Domain.Entities.ProjectGroup", "Group")
                         .WithMany("Submissions")
                         .HasForeignKey("GroupID")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.HasOne("GPMS.Domain.Entities.SubmissionRequirement", "Requirement")
@@ -1831,6 +2046,11 @@ namespace GPMS.Infrastructure.Migrations
                     b.Navigation("EvaluationDetails");
 
                     b.Navigation("RubricDescriptions");
+                });
+
+            modelBuilder.Entity("GPMS.Domain.Entities.Committee", b =>
+                {
+                    b.Navigation("ReviewerAssignments");
                 });
 
             modelBuilder.Entity("GPMS.Domain.Entities.Evaluation", b =>

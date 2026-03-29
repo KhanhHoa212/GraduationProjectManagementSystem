@@ -18,10 +18,13 @@ public interface IProjectGroupRepository
     Task RemoveMemberAsync(GroupMember member);
     Task UpdateMemberAsync(GroupMember member);
     Task<IEnumerable<ProjectGroup>> GetAllWithDetailsAsync();
+    Task<IEnumerable<ProjectGroup>> GetBySemesterWithDetailsAsync(int semesterId);
+    Task<IEnumerable<ProjectGroup>> GetReviewerAssignmentGroupsAsync(int semesterId);
     Task<bool> IsUserInAnyGroupAsync(string userId);
     Task<bool> HasUserGraduatedAsync(string userId);
     Task<ReviewSessionInfo?> GetGroupDefenseSessionAsync(int groupId);
     Task<IEnumerable<ReviewSessionInfo>> GetGroupSchedulesAsync(int groupId);
+    Task<List<User>> GetUsersMissingRequirementAsync(int semesterId, int requirementId, CancellationToken cancellationToken = default);
     Task SaveChangesAsync();
 
     // DTO Projection methods (read-only — no entity tracking)

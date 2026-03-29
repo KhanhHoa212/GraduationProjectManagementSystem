@@ -23,6 +23,7 @@ public class GpmsDbContext : DbContext
     public DbSet<ReviewRound> ReviewRounds { get; set; }
     public DbSet<ReviewSessionInfo> ReviewSessions { get; set; }
     public DbSet<ReviewerAssignment> ReviewerAssignments { get; set; }
+    public DbSet<Committee> Committees { get; set; }
     public DbSet<SubmissionRequirement> SubmissionRequirements { get; set; }
     public DbSet<Submission> Submissions { get; set; }
     public DbSet<ReviewChecklist> ReviewChecklists { get; set; }

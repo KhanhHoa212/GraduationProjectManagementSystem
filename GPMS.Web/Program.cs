@@ -15,8 +15,14 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using GPMS.Infrastructure;
 using GPMS.Infrastructure.Data.Seeding;
+using Microsoft.Extensions.Logging;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Logging - Clear all default providers (including EventLog) to prevent permission errors on Windows
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -39,6 +45,8 @@ builder.Services.AddScoped<IChecklistRepository, ChecklistRepository>();
 builder.Services.AddScoped<IMajorRepository, MajorRepository>();
 builder.Services.AddScoped<IFacultyRepository, FacultyRepository>();
 builder.Services.AddScoped<IGroupRoundProgressRepository, GroupRoundProgressRepository>();
+builder.Services.AddScoped<IRoomRepository, RoomRepository>();
+builder.Services.AddScoped<IReviewSessionRepository, ReviewSessionRepository>();
 // Register Services
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISemesterService, SemesterService>();
@@ -48,6 +56,7 @@ builder.Services.AddScoped<ILecturerService, LecturerService>();
 builder.Services.AddScoped<IReviewRoundService, ReviewRoundService>();
 builder.Services.AddScoped<IChecklistService, ChecklistService>();
 builder.Services.AddScoped<IFeedbackAutoReleaseService, FeedbackAutoReleaseService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
 builder.Services.AddScoped<IMajorService, MajorService>();
@@ -61,6 +70,10 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddAutoMapper(cfg => { }, typeof(MappingProfile).Assembly);
 
 builder.Services.AddControllersWithViews()
+    .AddJsonOptions(options => {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    })
     .AddRazorRuntimeCompilation();
 
 builder.Services.AddRazorPages();
@@ -93,9 +106,13 @@ builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
 builder.Services.AddScoped<IFileService, CloudinaryService>();
 
+// CRITICAL: Prevent BackgroundService exceptions from killing the whole app (default .NET 6+ behavior)
+builder.Services.Configure<HostOptions>(options =>
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore);
+
 // Register Background Services
 builder.Services.AddHostedService<GPMS.Web.Services.FeedbackAutoReleaseHostedService>();
-builder.Services.AddHostedService<GPMS.Web.Services.ReminderHostedService>();
+builder.Services.AddHostedService<GPMS.Application.Services.ReminderHostedService>();
 
 var app = builder.Build();
 
@@ -103,16 +120,22 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     // Seed Data
-    using (var scope = app.Services.CreateScope())
+    try 
     {
-        var runner = scope.ServiceProvider.GetRequiredService<DataSeederRunner>();
-        await runner.RunAsync();
+        using (var scope = app.Services.CreateScope())
+        {
+            var runner = scope.ServiceProvider.GetRequiredService<DataSeederRunner>();
+            await runner.RunAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[CRITICAL] Data seeding FAILED: {ex.Message}");
     }
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -131,3 +154,4 @@ app.MapControllerRoute(
 app.MapRazorPages();
 
 app.Run();
+

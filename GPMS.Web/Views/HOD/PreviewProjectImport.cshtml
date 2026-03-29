@@ -1,7 +1,7 @@
 @using GPMS.Application.DTOs
 @model IEnumerable<ProjectImportPreviewDto>
 @{
-    ViewData["Title"] = "Xem trước Import Đề tài";
+    ViewData["Title"] = "Preview Project Import";
     Layout = "_Layout";
     var validCount = Model.Count(m => m.IsValid);
     var invalidCount = Model.Count(m => !m.IsValid);
@@ -11,16 +11,16 @@
     <!-- Header with Stats -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">Kiểm tra dữ liệu Import</h1>
-            <p class="text-slate-500 text-sm mt-1">Vui lòng rà soát kỹ các thông tin trước khi xác nhận lưu vào hệ thống.</p>
+            <h1 class="text-2xl font-bold text-slate-800">Project Import Validation</h1>
+            <p class="text-slate-500 text-sm mt-1">Please review all information carefully before confirming and saving to the system.</p>
         </div>
         <div class="flex items-center gap-4">
             <div class="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-lg shadow-sm">
-                <span class="block text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-tight">HỢP LỆ</span>
+                <span class="block text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-tight">VALID</span>
                 <span class="text-xl font-black text-emerald-700">@validCount</span>
             </div>
             <div class="px-4 py-2 bg-red-50 border border-red-100 rounded-lg shadow-sm">
-                <span class="block text-[10px] font-bold text-red-600 uppercase tracking-widest leading-tight">LỖI</span>
+                <span class="block text-[10px] font-bold text-red-600 uppercase tracking-widest leading-tight">ERROR</span>
                 <span class="text-xl font-black text-red-700">@invalidCount</span>
             </div>
         </div>
@@ -32,12 +32,12 @@
             <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                 <span class="material-symbols-outlined text-5xl text-slate-200">folder_off</span>
             </div>
-            <h3 class="text-xl font-bold text-slate-800">Không tìm thấy dữ liệu hợp lệ</h3>
-            <p class="text-slate-500 text-sm max-w-sm mx-auto mt-2 leading-relaxed">File Excel của bạn có vẻ trống hoặc không đúng định dạng mẫu của hệ thống.</p>
+            <h3 class="text-xl font-bold text-slate-800">No Valid Data Found</h3>
+            <p class="text-slate-500 text-sm max-w-sm mx-auto mt-2 leading-relaxed">Your Excel file seems to be empty or does not match the required system template.</p>
             <div class="mt-8 flex justify-center gap-3">
                 <a href="/HOD/Projects" class="px-8 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition no-underline flex items-center gap-2">
                     <span class="material-symbols-outlined text-[20px]">arrow_back</span>
-                    Quay lại danh sách
+                    Back to list
                 </a>
             </div>
         </div>
@@ -50,11 +50,11 @@
                 <table class="w-full text-sm text-left border-collapse">
                     <thead>
                         <tr class="bg-slate-50/50 border-b border-slate-200">
-                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-12 text-center">Dòng</th>
-                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Thông tin đề tài</th>
-                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-1/4">Mentor & Chuyên ngành</th>
-                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-1/4">Thành viên (MSSV)</th>
-                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Trạng thái</th>
+                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-12 text-center">Row</th>
+                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Project Information</th>
+                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-1/4">Mentor & Major</th>
+                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest w-1/4">Members (Student ID)</th>
+                            <th class="px-6 py-4 font-bold text-slate-500 text-[10px] uppercase tracking-widest">Status</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
@@ -102,7 +102,7 @@
                                     {
                                         <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100/50 text-emerald-700 rounded-full text-[10px] font-black uppercase tracking-wider">
                                             <span class="material-symbols-outlined text-[16px]">check_circle</span>
-                                            Sẵn sàng
+                                            Ready
                                         </div>
                                     }
                                     else
@@ -128,10 +128,10 @@
             <div class="px-8 py-6 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-2 text-slate-500 text-xs font-semibold">
                     <span class="material-symbols-outlined text-[18px]">info</span>
-                    <span>Hệ thống chỉ xử lý những dòng có trạng thái <span class="text-emerald-700 font-black tracking-tighter uppercase px-1.5 py-0.5 bg-emerald-100 rounded">Sẵn sàng</span></span>
+                    <span>The system only processes rows with a <span class="text-emerald-700 font-black tracking-tighter uppercase px-1.5 py-0.5 bg-emerald-100 rounded">Ready</span> status.</span>
                 </div>
                 <div class="flex items-center gap-4">
-                    <a href="/HOD/Projects" class="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 transition no-underline">Quay lại sửa file</a>
+                    <a href="/HOD/Projects" class="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-slate-900 transition no-underline">Back to edit file</a>
                     
                     @if (validCount > 0)
                     {
@@ -140,7 +140,7 @@
                             <input type="hidden" name="importDataJson" id="importDataJson" value='@System.Text.Json.JsonSerializer.Serialize(Model.Where(m => m.IsValid).Select(m => m.Data))' />
                             <button type="submit" class="px-10 py-3 bg-[#F37021] hover:bg-orange-600 text-white rounded-xl text-sm font-black shadow-lg shadow-orange-500/20 transition-all transform active:scale-95 flex items-center gap-3">
                                 <span class="material-symbols-outlined">save</span>
-                                XÁC NHẬN LƯU @validCount ĐỀ TÀI
+                                CONFIRM SAVING @validCount PROJECTS
                             </button>
                         </form>
                     }
@@ -148,7 +148,7 @@
                     {
                         <button disabled class="px-10 py-3 bg-slate-200 text-slate-400 rounded-xl text-sm font-black cursor-not-allowed flex items-center gap-3 border border-slate-300">
                              <span class="material-symbols-outlined">block</span>
-                             CHƯA CÓ DỮ LIỆU HỢP LỆ
+                             NO VALID DATA TO IMPORT
                         </button>
                     }
                 </div>
@@ -171,7 +171,7 @@
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                ĐANG XỬ LÝ DỮ LIỆU...
+                PROCESSING DATA...
             `;
         });
     </script>

@@ -13,7 +13,7 @@
                 <div class="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                     <span>GPMS</span>
                     <span class="text-slate-400 dark:text-slate-600">&gt;</span>
-                    <span>Vòng Review</span>
+                    <span>Review Rounds</span>
                     <span class="text-slate-400 dark:text-slate-600">&gt;</span>
                     <span class="text-slate-900 dark:text-white font-medium">@(ViewBag.ReviewRoundID != null ? "Edit Review Round" : "Create Review Round")</span>
                 </div>
@@ -33,11 +33,11 @@
 
             <!-- Tabs -->
             <div class="flex gap-8 border-b border-slate-200 dark:border-slate-800 mb-8" id="tab-container">
-                <button type="button" onclick="switchTab('general')" id="tab-general" class="pb-4 px-1 border-b-2 border-[#F37021] text-slate-900 dark:text-white font-medium flex items-center gap-2">
+                <button type="button" onclick="switchReviewRoundTab('general')" id="tab-general" class="pb-4 px-1 border-b-2 border-[#F37021] text-slate-900 dark:text-white font-medium flex items-center gap-2">
                     <span class="material-symbols-outlined text-5" style="font-size: 20px;">info</span>
                     General Info
                 </button>
-                <button type="button" onclick="switchTab('submission')" id="tab-submission" class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent font-medium flex items-center gap-2">
+                <button type="button" onclick="switchReviewRoundTab('submission')" id="tab-submission" class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border-b-2 border-transparent font-medium flex items-center gap-2">
                     <span class="material-symbols-outlined text-5" style="font-size: 20px;">description</span>
                     Submission Requirements
                 </button>
@@ -283,9 +283,8 @@
     </div>
 </div>
 
-@section Scripts {
 <script>
-    function switchTab(tabId) {
+    function switchReviewRoundTab(tabId) {
         const generalTab = document.getElementById('tab-general');
         const submissionTab = document.getElementById('tab-submission');
         const generalContent = document.getElementById('content-general');
@@ -295,30 +294,47 @@
         const inactiveClasses = ['border-transparent', 'text-slate-600', 'dark:text-slate-400'];
 
         if (tabId === 'general') {
-            generalTab.classList.remove(...inactiveClasses);
-            generalTab.classList.add(...activeClasses);
-            submissionTab.classList.remove(...activeClasses);
-            submissionTab.classList.add(...inactiveClasses);
+            if (generalTab) {
+                generalTab.classList.remove(...inactiveClasses);
+                generalTab.classList.add(...activeClasses);
+            }
+            if (submissionTab) {
+                submissionTab.classList.remove(...activeClasses);
+                submissionTab.classList.add(...inactiveClasses);
+            }
 
-            generalContent.classList.remove('hidden');
-            generalContent.classList.add('block');
-            submissionContent.classList.remove('block');
-            submissionContent.classList.add('hidden');
+            if (generalContent) {
+                generalContent.classList.remove('hidden');
+                generalContent.classList.add('block');
+            }
+            if (submissionContent) {
+                submissionContent.classList.remove('block');
+                submissionContent.classList.add('hidden');
+            }
         } else {
-            submissionTab.classList.remove(...inactiveClasses);
-            submissionTab.classList.add(...activeClasses);
-            generalTab.classList.remove(...activeClasses);
-            generalTab.classList.add(...inactiveClasses);
+            if (submissionTab) {
+                submissionTab.classList.remove(...inactiveClasses);
+                submissionTab.classList.add(...activeClasses);
+            }
+            if (generalTab) {
+                generalTab.classList.remove(...activeClasses);
+                generalTab.classList.add(...inactiveClasses);
+            }
 
-            submissionContent.classList.remove('hidden');
-            submissionContent.classList.add('block');
-            generalContent.classList.remove('block');
-            generalContent.classList.add('hidden');
+            if (submissionContent) {
+                submissionContent.classList.remove('hidden');
+                submissionContent.classList.add('block');
+            }
+            if (generalContent) {
+                generalContent.classList.remove('block');
+                generalContent.classList.add('hidden');
+            }
         }
     }
 
     function addRequirement() {
         const tbody = document.getElementById('requirements-table-body');
+        if (!tbody) return;
         const rows = tbody.querySelectorAll('tr.requirement-row');
         const i = rows.length;
 
@@ -360,7 +376,7 @@
 
     function removeRequirement(btn) {
         const tr = btn.closest('tr');
-        tr.remove();
+        if (tr) tr.remove();
         reindexRequirements();
         updateSummary();
     }
@@ -387,7 +403,8 @@
                 requiredCount++;
             }
         });
-        document.getElementById('summary-required-files').innerText = requiredCount + ' Files';
+        const reqFilesEl = document.getElementById('summary-required-files');
+        if (reqFilesEl) reqFilesEl.innerText = requiredCount + ' Files';
 
         // 2. Total Max Size
         let totalSize = 0;
@@ -397,7 +414,8 @@
                 totalSize += parseInt(sizeInput.value) || 0;
             }
         });
-        document.getElementById('summary-total-size').innerText = totalSize + ' MB';
+        const totalSizeEl = document.getElementById('summary-total-size');
+        if (totalSizeEl) totalSizeEl.innerText = totalSize + ' MB';
 
         // 3. Duration (Days)
         const startInput = document.getElementById('StartDate');
@@ -407,14 +425,13 @@
             const end = new Date(endInput.value);
             const diffTime = Math.abs(end - start);
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-            document.getElementById('summary-duration').innerText = (isNaN(diffDays) ? 0 : diffDays) + ' Days';
+            const durationEl = document.getElementById('summary-duration');
+            if (durationEl) durationEl.innerText = (isNaN(diffDays) ? 0 : diffDays) + ' Days';
         }
     }
 
     // Initial calculation on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        updateSummary();
-    });
+    console.log('Tab script loaded for Review Round');
+    updateSummary();
 
 </script>
-}

@@ -16,6 +16,7 @@ public interface ISubmissionRepository
     
     // For Reporting
     Task<IEnumerable<Submission>> GetByGroupIdsAsync(IEnumerable<int> groupIds);
+    Task<List<SubmissionRequirement>> GetActiveRequirementsAsync(CancellationToken cancellationToken = default);
 
     Task AddAsync(Submission submission);
     Task SaveChangesAsync();

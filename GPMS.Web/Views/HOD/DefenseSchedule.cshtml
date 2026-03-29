@@ -1,0 +1,579 @@
+@using GPMS.Application.DTOs
+@using GPMS.Domain.Enums
+@model DefenseScheduleViewModel
+@{
+    ViewData["Title"] = "Defense Schedule Coordination";
+    Layout = "_Layout"; 
+
+    var timeSlots = new[] {
+        new { Start = "08:00", End = "09:30" },
+        new { Start = "09:45", End = "11:15" },
+        new { Start = "13:30", End = "15:00" },
+        new { Start = "15:15", End = "16:45" }
+    };
+}
+
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div>
+            <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
+                <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline">Portal</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span class="text-slate-800">Defense Schedule</span>
+            </nav>
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-black text-slate-900 tracking-tight">Defense Schedule Coordination</h1>
+                @if (Model.IsFinalRound) {
+                    <span class="px-3 py-1 bg-red-100 text-red-600 text-[10px] font-black rounded-full uppercase tracking-widest animate-pulse border border-red-200">
+                        Graduation Round
+                    </span>
+                }
+            </div>
+            <p class="text-slate-600 mt-1 font-medium">@Model.RoundDescription — @Model.SelectedDate.ToString("MMMM dd, yyyy")</p>
+        </div>
+        
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="bg-slate-100/50 rounded-2xl p-1.5 flex gap-1 border border-slate-200 shadow-inner">
+                @foreach(var round in Model.Rounds) {
+                    <a href="/HOD/DefenseSchedule?roundId=@round.ReviewRoundID" 
+                       class="px-5 py-2.5 rounded-xl text-xs font-black transition-all no-underline @(Model.ReviewRoundID == round.ReviewRoundID ? "bg-white text-[#F37021] shadow-lg shadow-orange-500/10" : "text-slate-400 hover:text-slate-600")">
+                        ROUND @round.RoundNumber
+                    </a>
+                }
+            </div>
+            
+            <input type="date" id="scheduleDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")" 
+                   class="bg-white border border-slate-200 rounded-2xl px-5 py-2.5 text-sm font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all cursor-pointer"
+                   onchange="window.location.href='/HOD/DefenseSchedule?roundId=@Model.ReviewRoundID&date=' + this.value">
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-12 gap-8">
+        
+        <!-- Sidebar: Unscheduled Groups -->
+        <div class="col-span-12 lg:col-span-3 space-y-6">
+            <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm flex flex-col h-[calc(100vh-280px)]">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h2 class="text-xs font-black text-slate-400 uppercase tracking-widest">Unscheduled Queue</h2>
+                        <p class="text-[10px] text-slate-500 font-bold mt-0.5">@Model.UnscheduledGroups.Count pending groups</p>
+                    </div>
+                </div>
+                
+                <div class="p-6 overflow-y-auto custom-scrollbar space-y-4" id="unscheduledPanel">
+                    @if (!Model.UnscheduledGroups.Any()) {
+                        <div class="text-center py-12">
+                            <div class="w-16 h-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-100">
+                                <span class="material-symbols-outlined text-emerald-500 text-3xl">task_alt</span>
+                            </div>
+                            <p class="text-slate-400 text-xs font-bold uppercase tracking-wider">All groups scheduled</p>
+                        </div>
+                    }
+                    
+                    @foreach (UnscheduledGroupDto group in Model.UnscheduledGroups) {
+                        var isReady = group.IsReady && group.IsApprovedBySupervisor;
+                        <div draggable="true" 
+                             data-group-id="@group.GroupID"
+                             data-group-name="@group.GroupName"
+                             data-project-name="@group.ProjectName"
+                             class="group group-card p-5 bg-white border border-slate-100 rounded-3xl cursor-grab active:cursor-grabbing hover:border-orange-500 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 relative overflow-hidden @(!isReady && Model.IsFinalRound ? "opacity-60 grayscale-[50%]" : "")">
+                            
+                            @if(Model.IsFinalRound) {
+                                <div class="absolute top-0 right-0 p-2">
+                                    <div class="flex gap-1">
+                                        <span class="w-2 h-2 rounded-full @(group.IsApprovedBySupervisor ? "bg-emerald-400" : "bg-red-400")" title="Supervisor Approved"></span>
+                                        <span class="w-2 h-2 rounded-full @(group.PlagiarismScore < 20 ? "bg-emerald-400" : "bg-red-400")" title="Plagiarism @group.PlagiarismScore%"></span>
+                                    </div>
+                                </div>
+                            }
+
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="px-2 py-0.5 bg-orange-50 text-[#F37021] text-[9px] font-black rounded-lg uppercase">@group.ProjectCode</span>
+                            </div>
+                            <h3 class="text-sm font-black text-slate-800 mb-1 leading-tight">@group.GroupName</h3>
+                            <p class="text-[10px] text-slate-400 font-medium line-clamp-2">@group.ProjectName</p>
+                            
+                            <div class="mt-4 pt-3 border-t border-slate-50 space-y-2">
+                                <div class="flex items-center gap-2 text-[9px] font-bold text-slate-500">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                    Mentor: @group.SupervisorName
+                                </div>
+                                @if (group.Reviewers.Any())
+                                {
+                                    <div class="flex flex-wrap gap-1">
+                                        @foreach (var rev in group.Reviewers)
+                                        {
+                                            <span class="px-1.5 py-0.5 bg-slate-50 text-slate-400 text-[8px] font-black rounded-md border border-slate-100 uppercase">@rev.ReviewerName</span>
+                                        }
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="text-[8px] font-bold text-slate-300 italic uppercase">No reviewers assigned</div>
+                                }
+                            </div>
+                            <div class="mt-4 flex items-center justify-between">
+                                <span class="text-[10px] font-black text-slate-400 uppercase">@group.MajorName</span>
+                                <span class="material-symbols-outlined text-slate-200 text-sm group-hover:text-orange-500 transition-colors">drag_indicator</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Schedule Grid -->
+        <div class="col-span-12 lg:col-span-9 h-[calc(100vh-280px)] overflow-y-auto custom-scrollbar pr-4">
+            <div class="bg-white rounded-[2rem] border border-slate-200 overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100">
+                                <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center border-r border-slate-100 w-40">Time Slot</th>
+                                @foreach (var room in Model.Rooms) {
+                                    <th class="p-6 text-center min-w-[280px]">
+                                        <div class="flex flex-col items-center">
+                                            <span class="text-sm font-black text-slate-800">ROOM @room.RoomCode</span>
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">@room.Building — Cap: @room.Capacity</span>
+                                        </div>
+                                    </th>
+                                }            </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach (var slot in timeSlots) {
+                                <tr>
+                                    <td class="p-8 bg-slate-50/20 border-r border-slate-100 sticky left-0 z-10 backdrop-blur-md">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="text-lg font-black text-slate-900 leading-none">@slot.Start</span>
+                                            <div class="h-4 w-0.5 bg-orange-200 rounded-full"></div>
+                                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">End: @slot.End</span>
+                                        </div>
+                                    </td>
+                                    
+                                    @foreach (var room in Model.Rooms) {
+                                        var session = Model.ScheduledSessions.FirstOrDefault(s => 
+                                            s.RoomID == room.RoomID && 
+                                            s.ScheduledAt.ToString("HH:mm") == slot.Start);
+
+                                        <td class="p-4 align-top slot-cell min-h-[160px]" 
+                                            data-time="@slot.Start" 
+                                            data-room-id="@room.RoomID"
+                                            data-room-code="@room.RoomCode">
+                                            
+                                            @if (session != null) {
+                                                var isPast = session.ScheduledAt < DateTime.UtcNow;
+                                                <div class="relative group p-6 bg-white border border-slate-100 rounded-3xl shadow-sm transition-all h-full @(isPast ? "opacity-75 cursor-default" : "hover:border-orange-500 hover:shadow-2xl hover:shadow-orange-500/10 cursor-pointer")"
+                                                     @(isPast ? "" : Html.Raw($"onclick=\"openEditModal({Json.Serialize(session)})\""))>
+                                                    
+                                                    @if (Model.IsFinalRound && !session.IsCommitteeFull) {
+                                                       <div class="absolute -top-1 -right-1">
+                                                           <span class="flex h-3 w-3">
+                                                               <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                               <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                                                           </span>
+                                                       </div>
+                                                    }
+
+                                                    <div class="flex items-center justify-between mb-3">
+                                                        <span class="px-2 py-0.5 bg-slate-900 text-white text-[9px] font-black rounded-lg uppercase">@session.ProjectCode</span>
+                                                        
+                                                        <div class="relative dropdown-container">
+                                                            <button onclick="toggleCardMenu(event, @session.SessionID)" class="p-1 hover:bg-slate-100 rounded-full transition-colors">
+                                                                <span class="material-symbols-outlined text-slate-400 text-sm">more_horiz</span>
+                                                            </button>
+                                                            <div id="menu-@session.SessionID" class="hidden absolute right-0 mt-2 w-32 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-50 overflow-hidden">
+                                                                @if (!isPast) {
+                                                                    <button onclick="event.stopPropagation(); openEditModal(@Json.Serialize(session))" 
+                                                                            class="w-full px-4 py-2 text-left text-[10px] font-black text-slate-600 hover:bg-orange-50 hover:text-orange-600 flex items-center gap-2">
+                                                                        <span class="material-symbols-outlined text-sm">edit</span> EDIT
+                                                                    </button>
+                                                                    <button onclick="deleteSession(event, @session.SessionID)" 
+                                                                            class="w-full px-4 py-2 text-left text-[10px] font-black text-red-500 hover:bg-red-50 flex items-center gap-2">
+                                                                        <span class="material-symbols-outlined text-sm">delete</span> DELETE
+                                                                    </button>
+                                                                } else {
+                                                                    <div class="px-4 py-2 text-[8px] font-bold text-slate-400 italic text-center">Session ended</div>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <h4 class="text-sm font-black text-slate-800 line-clamp-1 mb-1">@session.GroupName</h4>
+                                                    <p class="text-[10px] font-medium text-slate-400 mb-4 truncate">@session.ProjectName</p>
+                                                    
+                                                    <div class="flex flex-col gap-2">
+                                                        <div class="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                                                            <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                                                            Mentor: @session.SupervisorName
+                                                        </div>
+                                                        <div class="flex items-center gap-2 text-[10px] font-bold @(session.IsOnline ? "text-blue-500" : "text-slate-500")">
+                                                            <span class="material-symbols-outlined text-[14px]">@(session.IsOnline ? "videocam" : "location_on")</span>
+                                                            @(session.IsOnline ? "Online" : "On-site")
+                                                        </div>
+                                                        @if (session.IsOnline && !string.IsNullOrEmpty(session.MeetLink))
+                                                        {
+                                                            <div class="mt-1 flex items-center gap-1">
+                                                                <a href="@session.MeetLink" target="_blank" 
+                                                                   onclick="event.stopPropagation()"
+                                                                   data-scheduled-at="@session.ScheduledAt.ToString("o")"
+                                                                   class="meet-link text-[9px] font-black underline decoration-2 underline-offset-2 transition-all">
+                                                                    JOIN MEET
+                                                                </a>
+                                                            </div>
+                                                        }
+                                                    </div>
+                                                    
+                                                    @if (session.Reviewers.Any()) {
+                                                        <div class="mt-4 pt-4 border-t border-slate-50 flex flex-col gap-1.5">
+                                                            @foreach (var rev in session.Reviewers.OrderBy(r => r.Role)) {
+                                                                <div class="flex items-center gap-2">
+                                                                    <div class="w-5 h-5 rounded-md bg-slate-100 flex items-center justify-center text-[8px] font-black text-slate-500 shrink-0">
+                                                                        @(rev.Role == CommitteeRole.Chairperson ? "C" : rev.Role == CommitteeRole.Secretary ? "S" : "R")
+                                                                    </div>
+                                                                    <span class="text-[9px] font-bold text-slate-600 truncate" title="@rev.ReviewerName">@rev.ReviewerName</span>
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                            } else {
+                                                 <div class="h-32 w-full rounded-3xl border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-200 hover:border-orange-200 hover:bg-orange-50/30 transition-all drop-zone cursor-pointer"
+                                                      onclick="openNewModal(0, 'Select Group', 'Assignment required', @room.RoomID, '@room.RoomCode', '@slot.Start')"
+                                                      data-room-id="@room.RoomID" data-room-code="@room.RoomCode" data-time="@slot.Start">
+                                                     <span class="material-symbols-outlined text-3xl mb-2">add_circle</span>
+                                                     <span class="text-[10px] font-black uppercase tracking-widest">Available</span>
+                                                 </div>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Defense Schedule Modal -->
+<div id="scheduleModal" class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-xl" onclick="closeModal()"></div>
+    <div class="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl overflow-hidden scale-95 opacity-0 transition-all duration-300 transform" id="modalContainer">
+        <form id="scheduleForm">
+            <input type="hidden" id="modalGroupId" name="GroupID">
+            <input type="hidden" id="modalRoomId" name="RoomID">
+            <input type="hidden" id="modalReviewRoundId" name="ReviewRoundID" value="@Model.ReviewRoundID">
+            <input type="hidden" id="modalDate" name="ScheduledDate" value="@Model.SelectedDate.ToString("yyyy-MM-dd")">
+            <input type="hidden" id="modalStartTime" name="StartTime">
+
+            <div class="p-8 pb-0">
+                <div class="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight" id="modalTitle">Setup Defense Session</h2>
+                        <p class="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Graduation Project Management</p>
+                    </div>
+                </div>
+
+                <div class="bg-orange-50/50 rounded-3xl p-6 border border-orange-100/50 mb-8">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm text-slate-400">
+                             <span class="material-symbols-outlined text-3xl">meeting_room</span>
+                        </div>
+                        <div>
+                             <p class="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-0.5" id="modalRoomDisplay">ROOM</p>
+                             <p class="text-sm font-black text-slate-800" id="modalTimeDisplay">TIME</p>
+                        </div>
+                    </div>
+                    <div id="groupDisplayArea">
+                         <h4 id="displayGroupName" class="text-base font-black text-slate-900">Group Name</h4>
+                         <p id="displayProjectName" class="text-xs font-medium text-slate-500 mt-1 line-clamp-1">Project Name</p>
+                    </div>
+                    <div id="groupSelectArea" class="hidden">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Choose Group to Schedule</label>
+                        <select id="modalGroupSelect" onchange="updateGroupDisplay()"
+                                class="w-full bg-slate-50 border-transparent rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all">
+                            <option value="">-- Select Unscheduled Group --</option>
+                            @foreach (var g in Model.UnscheduledGroups)
+                            {
+                                <option value="@g.GroupID" data-project="@g.ProjectName">@g.GroupName (@g.ProjectCode)</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    @if (Model.IsFinalRound)
+                    {
+                        <div class="relative">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Committee Template</label>
+                            <select name="CommitteeID" id="modalCommitteeId"
+                                    class="w-full bg-slate-50 border-transparent rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all">
+                                <option value="">-- Select Committee --</option>
+                                @foreach (var comm in Model.AvailableCommittees)
+                                {
+                                    <option value="@comm.CommitteeID">@comm.CommitteeName (@comm.ChairpersonName, @comm.SecretaryName...)</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="relative">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Delivery Mode</label>
+                            <select name="IsOnline" id="modalIsOnline" onchange="toggleMeetInput()"
+                                    class="w-full bg-slate-50 border-transparent rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all">
+                                <option value="false">🏠 On-site</option>
+                                <option value="true">🌐 Online</option>
+                            </select>
+                        </div>
+                        <div class="relative" id="meetLinkWrapper">
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Google Meet Link</label>
+                            <input type="url" id="modalMeetLink" name="MeetLink" placeholder="Auto-gen if empty" 
+                                   class="w-full bg-slate-50 border-transparent rounded-2xl px-6 py-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all">
+                        </div>
+                    </div>
+
+                    <div class="relative">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Internal Notes & Instructions</label>
+                        <textarea id="modalNotes" name="Notes" rows="3" placeholder="Enter special requirements or instructions..." 
+                                  class="w-full bg-slate-50 border-transparent rounded-2xl px-6 py-4 text-sm font-medium text-slate-700 focus:bg-white focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all resize-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pt-6 flex gap-3">
+                <button type="button" onclick="closeModal()" class="flex-1 px-8 py-4 rounded-2xl text-sm font-black text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all">CANCEL</button>
+                <button type="submit" class="flex-[1.5] px-8 py-4 rounded-2xl bg-[#F37021] text-white text-sm font-black shadow-xl shadow-orange-500/20 hover:shadow-orange-500/40 hover:-translate-y-1 transition-all">SAVE SESSION</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var selectedRoundNumber = @Model.RoundNumber;
+
+    function openEditModal(session) {
+        document.getElementById('modalTitle').innerText = 'Edit Session';
+        document.getElementById('modalGroupId').value = session.groupID;
+        document.getElementById('modalRoomId').value = session.roomID;
+        document.getElementById('modalIsOnline').value = session.isOnline.toString();
+        document.getElementById('groupDisplayArea').classList.remove('hidden');
+        document.getElementById('groupSelectArea').classList.add('hidden');
+        toggleMeetInput();
+        
+        document.getElementById('modalStartTime').value = session.scheduledAt.split('T')[1].substring(0, 5);
+        document.getElementById('modalRoomDisplay').innerText = 'Room ' + session.roomCode;
+        document.getElementById('modalTimeDisplay').innerText = session.scheduledAt.split('T')[1].substring(0, 5);
+        document.getElementById('displayGroupName').innerText = session.groupName;
+        document.getElementById('displayProjectName').innerText = session.projectName;
+        
+        const commSelect = document.getElementById('modalCommitteeId');
+        if(commSelect) commSelect.value = session.committeeID || '';
+
+        document.getElementById('modalMeetLink').value = session.meetLink || '';
+        document.getElementById('modalNotes').value = session.notes || '';
+        showModal();
+    }
+
+    function openNewModal(groupId, groupName, projectName, roomId, roomCode, startTime) {
+        document.getElementById('modalTitle').innerText = 'Schedule Session';
+        document.getElementById('modalGroupId').value = groupId;
+        document.getElementById('modalRoomId').value = roomId;
+        document.getElementById('modalIsOnline').value = 'false';
+        toggleMeetInput();
+        
+        document.getElementById('modalStartTime').value = startTime;
+        document.getElementById('modalRoomDisplay').innerText = 'Room ' + roomCode;
+        document.getElementById('modalTimeDisplay').innerText = startTime;
+        
+        if (groupId === 0) {
+            document.getElementById('groupDisplayArea').classList.add('hidden');
+            document.getElementById('groupSelectArea').classList.remove('hidden');
+            document.getElementById('modalGroupSelect').value = '';
+        } else {
+            document.getElementById('groupDisplayArea').classList.remove('hidden');
+            document.getElementById('groupSelectArea').classList.add('hidden');
+            document.getElementById('displayGroupName').innerText = groupName;
+            document.getElementById('displayProjectName').innerText = projectName;
+        }
+        
+        const commSelect = document.getElementById('modalCommitteeId');
+        if(commSelect) commSelect.value = '';
+
+        document.getElementById('modalMeetLink').value = '';
+        document.getElementById('modalNotes').value = '';
+        showModal();
+    }
+
+    function updateGroupDisplay() {
+        const sel = document.getElementById('modalGroupSelect');
+        const opt = sel.options[sel.selectedIndex];
+        document.getElementById('modalGroupId').value = sel.value;
+    }
+
+    function toggleMeetInput() {
+        const isOnline = document.getElementById('modalIsOnline').value === 'true';
+        const wrapper = document.getElementById('meetLinkWrapper');
+        if (isOnline) {
+            wrapper.style.opacity = '1';
+            wrapper.style.pointerEvents = 'auto';
+        } else {
+            wrapper.style.opacity = '0.5';
+            // wrapper.style.pointerEvents = 'none'; // Keep enabled for manual override if needed
+        }
+    }
+
+    function showModal() {
+        const modal = document.getElementById('scheduleModal');
+        const container = document.getElementById('modalContainer');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            container.classList.remove('scale-95', 'opacity-0');
+            container.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closeModal() {
+        const container = document.getElementById('modalContainer');
+        container.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            document.getElementById('scheduleModal').classList.add('hidden');
+        }, 300);
+    }
+
+    // Drag & Drop
+    document.querySelectorAll('.group-card').forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('session', JSON.stringify({
+                id: card.dataset.groupId,
+                name: card.dataset.groupName,
+                project: card.dataset.projectName
+            }));
+            card.classList.add('scale-90', 'opacity-50');
+        });
+        card.addEventListener('dragend', () => card.classList.remove('scale-90', 'opacity-50'));
+    });
+
+    document.querySelectorAll('.slot-cell').forEach(zone => {
+        zone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            zone.querySelector('.drop-zone')?.classList.add('border-orange-500', 'bg-orange-50/50');
+        });
+        zone.addEventListener('dragleave', () => {
+            zone.querySelector('.drop-zone')?.classList.remove('border-orange-500', 'bg-orange-50/50');
+        });
+        zone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const data = JSON.parse(e.dataTransfer.getData('session'));
+            openNewModal(data.id, data.name, data.project, zone.dataset.roomId, zone.dataset.roomCode, zone.dataset.time);
+        });
+    });
+
+    document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = Object.fromEntries(formData.entries());
+        
+        data.GroupID = parseInt(data.GroupID);
+        if (isNaN(data.GroupID) || data.GroupID <= 0) {
+            alert('Please select a Group to schedule.');
+            return;
+        }
+
+        data.RoomID = parseInt(data.RoomID) || null;
+        data.ReviewRoundID = parseInt(data.ReviewRoundID);
+        data.IsOnline = (data.IsOnline === 'true');
+        data.CommitteeID = parseInt(data.CommitteeID) || null;
+
+        if (selectedRoundNumber === 3 && !data.CommitteeID) {
+            alert('Please select a Committee for Round 3.');
+            return;
+        }
+
+        // Calculate EndTime as StartTime + 60 mins if missing
+        if (!data.EndTime && data.StartTime) {
+            const [h, m] = data.StartTime.split(':').map(Number);
+            const end = new Date();
+            end.setHours(h + 1, m, 0);
+            data.EndTime = end.getHours().toString().padStart(2, '0') + ':' + end.getMinutes().toString().padStart(2, '0');
+        }
+
+        try {
+            const resp = await fetch('/HOD/SaveDefenseSession', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await resp.json();
+            if (result.success) window.location.reload();
+            else alert('Failed to save: ' + (result.message || 'Scheduling conflict.'));
+        } catch (err) { alert('System error occurred!'); }
+    });
+    // Live Meet Link Updates
+    function updateMeetLinks() {
+        const now = new Date();
+        document.querySelectorAll('.meet-link').forEach(link => {
+            const scheduledAt = new Date(link.dataset.scheduledAt);
+            const diffMinutes = (scheduledAt - now) / 1000 / 60;
+            const diffEndMinutes = (now - scheduledAt) / 1000 / 60;
+
+            // Active if: 15 mins before start AND up to 90 mins after start
+            const isActive = diffMinutes <= 15 && diffEndMinutes <= 90;
+
+            if (isActive) {
+                link.classList.remove('text-slate-300');
+                link.classList.add('text-orange-500');
+                if (!link.innerText.includes('LIVE')) link.innerText = 'JOIN MEET (LIVE)';
+            } else {
+                link.classList.add('text-slate-300');
+                link.classList.remove('text-orange-500');
+                link.innerText = 'JOIN MEET (INACTIVE)';
+            }
+        });
+    }
+
+    setInterval(updateMeetLinks, 60000); // Update every minute
+    updateMeetLinks(); // Initial check
+
+    // New JS for Card Menus
+    function toggleCardMenu(e, sessionId) {
+        e.stopPropagation();
+        const menu = document.getElementById('menu-' + sessionId);
+        const isOpen = !menu.classList.contains('hidden');
+        
+        // Close all other menus
+        document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add('hidden'));
+        
+        if (!isOpen) {
+            menu.classList.remove('hidden');
+        }
+    }
+
+    // Close menus on outside click
+    window.addEventListener('click', () => {
+        document.querySelectorAll('[id^="menu-"]').forEach(m => m.classList.add('hidden'));
+    });
+
+    async function deleteSession(e, sessionId) {
+        e.stopPropagation();
+        if (!confirm('Are you sure you want to delete this defense session?')) return;
+
+        try {
+            const resp = await fetch(`/HOD/DeleteDefenseSession/${sessionId}`, {
+                method: 'POST'
+            });
+            const result = await resp.json();
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert('Delete failed: ' + result.message);
+            }
+        } catch (err) {
+            alert('Error deleting session.');
+        }
+    }
+</script>

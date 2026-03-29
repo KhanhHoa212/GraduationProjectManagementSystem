@@ -125,6 +125,36 @@ public class ProjectGroupRepository : IProjectGroupRepository
                 .ThenInclude(m => m.User)
             .ToListAsync();
 
+    public async Task<IEnumerable<ProjectGroup>> GetBySemesterWithDetailsAsync(int semesterId) =>
+        await _context.ProjectGroups
+            .Include(g => g.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(g => g.ReviewerAssignments)
+                .ThenInclude(ra => ra.Reviewer)
+            .Include(g => g.ReviewSessions)
+                .ThenInclude(rs => rs.Room)
+            .Where(g => g.Project.SemesterID == semesterId)
+            .ToListAsync();
+
+    public async Task<IEnumerable<ProjectGroup>> GetReviewerAssignmentGroupsAsync(int semesterId)
+    {
+        return await _context.ProjectGroups
+            .Where(g => g.Project.SemesterID == semesterId)
+            .Include(g => g.Project)
+                .ThenInclude(p => p.Major)
+            .Include(g => g.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(g => g.ReviewerAssignments)
+                .ThenInclude(ra => ra.Reviewer)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
         await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
 
@@ -164,6 +194,18 @@ public class ProjectGroupRepository : IProjectGroupRepository
 
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
+
+    public async Task<List<User>> GetUsersMissingRequirementAsync(int semesterId, int requirementId, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return await _context.ProjectGroups
+            .Include(g => g.Project)
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Where(g => g.Project.SemesterID == semesterId)
+            .Where(g => !_context.Submissions.Any(s => s.GroupID == g.GroupID && s.RequirementID == requirementId))
+            .SelectMany(g => g.GroupMembers.Select(m => m.User))
+            .ToListAsync(cancellationToken);
+    }
 
     // ─── DTO Projection methods (read-only) ────────────────────────────────────
 
