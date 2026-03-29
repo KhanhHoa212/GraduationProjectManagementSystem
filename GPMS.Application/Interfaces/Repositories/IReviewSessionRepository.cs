@@ -11,6 +11,7 @@ public interface IReviewSessionRepository
     Task<IEnumerable<ReviewSessionInfo>> GetByRoundAsync(int roundId);
     Task<ReviewSessionInfo?> GetByRoundAndGroupAsync(int roundId, int groupId);
     Task<ReviewSessionInfo?> GetByIdAsync(int sessionId);
+    Task<List<ReviewSessionInfo>> GetUpcomingSessionsAsync(int withinDays, System.Threading.CancellationToken cancellationToken = default);
     Task AddAsync(ReviewSessionInfo session);
     Task UpdateAsync(ReviewSessionInfo session);
     Task RemoveAsync(ReviewSessionInfo session);

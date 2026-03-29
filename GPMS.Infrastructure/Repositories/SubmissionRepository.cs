@@ -30,6 +30,14 @@ public class SubmissionRepository : ISubmissionRepository
     public async Task<IEnumerable<Submission>> GetByGroupIdsAsync(IEnumerable<int> groupIds) =>
         await _context.Submissions.Where(s => groupIds.Contains(s.GroupID)).ToListAsync();
 
+    public async Task<List<SubmissionRequirement>> GetActiveRequirementsAsync(System.Threading.CancellationToken cancellationToken = default)
+    {
+        return await _context.SubmissionRequirements
+            .Include(r => r.ReviewRound)
+            .Where(r => r.ReviewRound.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task AddAsync(Submission submission) => await _context.Submissions.AddAsync(submission);
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
