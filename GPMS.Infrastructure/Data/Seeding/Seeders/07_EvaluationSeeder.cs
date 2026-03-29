@@ -144,7 +144,6 @@ public class EvaluationSeeder : IDataSeeder
             var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             Console.WriteLine($"[Seeding] EvaluationSeeder FAILED: {msg}");
         }
-        }
     }
 }
 
