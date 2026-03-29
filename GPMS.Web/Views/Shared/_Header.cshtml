@@ -36,7 +36,7 @@
                             id="semester-btn"
                             class="flex items-center gap-3 bg-white border border-slate-200 rounded-xl px-4 py-2.5 hover:border-primary-400 hover:shadow-md transition-all duration-200 group">
                         <div class="flex items-center gap-3 h-full">
-                            <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 pr-3">Học Kỳ</span>
+                            <span class="text-[11px] font-black text-slate-400 uppercase tracking-widest border-r border-slate-200 pr-3">Semester</span>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-sm font-bold text-primary-600">
                                     @(activeSemester?.SemesterCode ?? "N/A") - @(activeSemester?.AcademicYear ?? "N/A")
@@ -51,7 +51,7 @@
                          class="absolute top-[calc(100%+8px)] right-0 w-72 bg-white rounded-2xl shadow-2xl border border-slate-100 py-3 hidden z-50 origin-top-right transform transition-all duration-200">
                         
                         <div class="px-5 py-2 mb-2 border-b border-slate-50">
-                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Chọn học kỳ làm việc</span>
+                            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-widest">Select Working Semester</span>
                         </div>
 
                         <div class="max-h-[240px] overflow-y-auto px-2 custom-scrollbar">
@@ -80,8 +80,8 @@
                         </div>
 
                         <div class="mt-3 px-4 pt-3 border-t border-slate-50 flex items-center justify-center">
-                            <a href="#" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1.5 group/manage">
-                                Quản lý học kỳ
+                            <a href="/Admin/SemesterIndex" class="text-[11px] font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1.5 group/manage">
+                                Semester Management
                                 <span class="material-symbols-outlined text-sm group-hover/manage:translate-x-0.5 transition-transform">arrow_forward</span>
                             </a>
                         </div>
@@ -143,13 +143,13 @@
                         {
                             <a asp-controller="Profile" asp-action="Index" hx-boost="false" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-primary-600 transition-colors no-underline">
                                 <span class="material-symbols-outlined text-[20px]">person</span>
-                                <span class="text-sm font-medium">Hồ sơ cá nhân</span>
+                                <span class="text-sm font-medium">My Profile</span>
                             </a>
                             <div class="h-px bg-slate-100 my-1 mx-4"></div>
                         }
                     <a asp-controller="Auth" asp-action="Logout" hx-boost="false" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors group/logout">
                         <span class="material-symbols-outlined text-[20px] group-hover/logout:translate-x-1 transition-transform">logout</span>
-                        <span class="text-sm font-medium">Đăng xuất</span>
+                        <span class="text-sm font-medium">Logout</span>
                     </a>
                 </div>
             </div>

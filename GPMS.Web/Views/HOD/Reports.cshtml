@@ -71,7 +71,7 @@
                     <div class="p-1">
                         <button type="button" onclick="exportPDF('vi')" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#F37021] rounded-lg transition-colors font-medium">
                             <img src="https://flagicons.lipis.dev/flags/4x3/vn.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
-                            Tiếng Việt
+                            Vietnamese
                         </button>
                         <button type="button" onclick="exportPDF('en')" class="w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-[#F37021] rounded-lg transition-colors font-medium mt-1">
                             <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
@@ -91,7 +91,7 @@
                     <div class="p-1">
                         <a href="/HOD/ExportReportExcel?semesterId=@ViewBag.SelectedSemesterId&lang=vi" hx-boost="false" class="no-spinner w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 rounded-lg transition-colors font-medium no-underline">
                             <img src="https://flagicons.lipis.dev/flags/4x3/vn.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
-                            Tiếng Việt
+                            Vietnamese
                         </a>
                         <a href="/HOD/ExportReportExcel?semesterId=@ViewBag.SelectedSemesterId&lang=en" hx-boost="false" class="no-spinner w-full text-left flex items-center gap-2 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 hover:text-emerald-600 rounded-lg transition-colors font-medium mt-1 no-underline">
                             <img src="https://flagicons.lipis.dev/flags/4x3/gb.svg" class="w-4 h-3 rounded-sm object-cover border border-slate-200" />
@@ -377,53 +377,53 @@
     <div class="text-center mb-10 border-b-2 border-[#F37021] pb-6">
         <h2 class="text-2xl font-black uppercase text-[#F37021]">FPT University</h2>
         <h3 class="text-lg font-bold text-slate-800">Graduation Project Management System (GPMS)</h3>
-        <h1 class="text-3xl font-black mt-6 text-slate-900" data-vn="BÁO CÁO TỔNG QUÁT HỌC KỲ: @(Model.SemesterCode ?? "TẤT CẢ")" data-en="GENERAL REPORT PORTFOLIO: @(Model.SemesterCode ?? "ALL")">BÁO CÁO TỔNG QUÁT HỌC KỲ: @(Model.SemesterCode ?? "TẤT CẢ")</h1>
-        <p class="text-sm italic mt-2 text-slate-600" id="pdfDate" data-vn="Ngày xuất báo cáo: " data-en="Exported at: ">Ngày xuất báo cáo: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
+        <h1 class="text-3xl font-black mt-6 text-slate-900" data-vn="BÁO CÁO TỔNG QUÁT HỌC KỲ: @(Model.SemesterCode ?? "TẤT CẢ")" data-en="GENERAL SEMESTER REPORT: @(Model.SemesterCode ?? "ALL")">GENERAL SEMESTER REPORT: @(Model.SemesterCode ?? "ALL")</h1>
+        <p class="text-sm italic mt-2 text-slate-600" id="pdfDate" data-vn="Ngày xuất báo cáo: " data-en="Exported at: ">Exported at: @DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss")</p>
     </div>
 
     <div class="mb-10">
-        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="1. TÓM TẮT SỐ LIỆU VÀ TÌNH TRẠNG" data-en="1. OVERVIEW & STATUS SUMMARY">1. TÓM TẮT SỐ LIỆU VÀ TÌNH TRẠNG</h3>
+        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="1. TÓM TẮT SỐ LIỆU VÀ TÌNH TRẠNG" data-en="1. OVERVIEW & STATUS SUMMARY">1. OVERVIEW & STATUS SUMMARY</h3>
         <div class="flex gap-8">
             <table class="w-1/2 border-collapse border border-slate-300 text-sm">
                 <thead>
                     <tr class="bg-[#F37021] text-white">
-                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Tổng quan" data-en="Overview">Tổng quan</th>
+                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Tổng quan" data-en="Overview">Overview</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Tổng số Giảng viên" data-en="Total Lecturers">Tổng số Giảng viên</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalSupervisors</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Sinh viên" data-en="Total Students">Tổng số Sinh viên</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalStudents</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Nhóm" data-en="Total Groups">Tổng số Nhóm</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalGroups</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Đề tài" data-en="Total Projects">Tổng số Đề tài</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Tổng số Giảng viên" data-en="Total Lecturers">Total Lecturers</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalSupervisors</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Sinh viên" data-en="Total Students">Total Students</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalStudents</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Nhóm" data-en="Total Groups">Total Groups</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalGroups</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Tổng số Đề tài" data-en="Total Projects">Total Projects</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.TotalProjects</td></tr>
                 </tbody>
             </table>
             
             <table class="w-1/2 border-collapse border border-slate-300 text-sm">
                 <thead>
                     <tr class="bg-[#F37021] text-white">
-                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Trạng thái Đề tài" data-en="Project Status">Trạng thái Đề tài</th>
+                        <th class="border border-slate-300 p-3 text-left text-base uppercase" colspan="2" data-vn="Trạng thái Đề tài" data-en="Project Status">Project Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Chờ duyệt (Draft)" data-en="Pending Draft">Chờ duyệt (Draft)</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.DraftProjects</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Đang thực hiện" data-en="Active">Đang thực hiện</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-orange-600">@Model.ActiveProjects</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hoàn thành" data-en="Completed">Đã hoàn thành</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-emerald-600">@Model.CompletedProjects</td></tr>
-                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hủy" data-en="Cancelled">Đã hủy</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-red-600">@Model.CancelledProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3 w-2/3" data-vn="Chờ duyệt (Draft)" data-en="Pending Draft">Pending Draft</td><td class="border border-slate-300 p-3 text-center font-bold text-lg">@Model.DraftProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đang thực hiện" data-en="Active">Active</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-orange-600">@Model.ActiveProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hoàn thành" data-en="Completed">Completed</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-emerald-600">@Model.CompletedProjects</td></tr>
+                    <tr><td class="border border-slate-300 p-3" data-vn="Đã hủy" data-en="Cancelled">Cancelled</td><td class="border border-slate-300 p-3 text-center font-bold text-lg text-red-600">@Model.CancelledProjects</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
     <div>
-        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="2. BẢNG PHÂN BỔ TẢI TRỌNG GIẢNG VIÊN" data-en="2. LECTURER WORKLOAD DISTRIBUTION">2. BẢNG PHÂN BỔ TẢI TRỌNG GIẢNG VIÊN</h3>
+        <h3 class="font-bold text-xl mb-4 text-[#F37021]" data-vn="2. BẢNG PHÂN BỔ TẢI TRỌNG GIẢNG VIÊN" data-en="2. LECTURER WORKLOAD DISTRIBUTION">2. LECTURER WORKLOAD DISTRIBUTION</h3>
         <table class="w-full border-collapse border border-slate-300 text-sm">
             <thead>
                 <tr class="bg-[#F37021] text-white uppercase text-xs">
-                    <th class="border border-slate-300 p-3 text-center w-12" data-vn="STT" data-en="No.">STT</th>
-                    <th class="border border-slate-300 p-3 text-left" data-vn="Tên Giảng Viên" data-en="Lecturer Name">Tên Giảng Viên</th>
-                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Số Đề Tài" data-en="Project Count">Số Đề Tài</th>
-                    <th class="border border-slate-300 p-3 text-center w-24" data-vn="Số Nhóm" data-en="Group Count">Số Nhóm</th>
-                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Tổng Sinh Viên" data-en="Total Students">Tổng Sinh Viên</th>
+                    <th class="border border-slate-300 p-3 text-center w-12" data-vn="STT" data-en="No.">No.</th>
+                    <th class="border border-slate-300 p-3 text-left" data-vn="Tên Giảng Viên" data-en="Lecturer Name">Lecturer Name</th>
+                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Số Đề Tài" data-en="Project Count">Project Count</th>
+                    <th class="border border-slate-300 p-3 text-center w-24" data-vn="Số Nhóm" data-en="Group Count">Group Count</th>
+                    <th class="border border-slate-300 p-3 text-center w-32" data-vn="Tổng Sinh Viên" data-en="Total Students">Total Students</th>
                 </tr>
             </thead>
             <tbody>
@@ -462,7 +462,7 @@
                 }
             });
 
-            // Tạm thời ẩn giao diện dashboard và hiển thị form báo cáo (để có thể chụp ảnh chuẩn)
+            // Temporarily hide dashboard and show report template for high-quality capture
             dashboard.style.display = 'none';
             template.classList.remove('hidden');
 
@@ -474,7 +474,7 @@
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Tiến hành xuất PDF và sau đó trả lại giao diện ban đầu
+            // Execute PDF export and restore original UI state afterwards
             html2pdf().set(opt).from(template).save().then(() => {
                 template.classList.add('hidden');
                 dashboard.style.display = '';

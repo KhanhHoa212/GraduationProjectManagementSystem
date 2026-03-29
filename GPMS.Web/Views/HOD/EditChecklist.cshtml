@@ -1,7 +1,7 @@
-﻿@using GPMS.Application.DTOs
+@using GPMS.Application.DTOs
 @model ChecklistDto
 @{
-    ViewData["Title"] = "Chỉnh sửa Checklist";
+    ViewData["Title"] = "Edit Checklist";
     Layout = "_Layout";
     var isRubric = Model.ReviewRoundTitle.Contains("3") || Model.Items.Any(i => i.ItemType == "Rubric");
     var defaultType = isRubric ? "Rubric" : "YesNo";
@@ -14,15 +14,15 @@
             <nav class="flex mb-2 text-sm text-gray-500">
                 <a href="/HOD/ChecklistDetails/@Model.ReviewRoundID" class="hover:text-orange-500 flex items-center gap-1">
                     <i class="ri-arrow-left-line"></i>
-                    Quay lại chi tiết
+                    Back to details
                 </a>
             </nav>
-            <h1 class="text-2xl font-bold text-gray-800">Chỉnh sửa Checklist</h1>
-            <p class="text-gray-500">@Model.ReviewRoundTitle · Cấu hình tiêu chí đánh giá</p>
+            <h1 class="text-2xl font-bold text-gray-800">Edit Checklist</h1>
+            <p class="text-gray-500">@Model.ReviewRoundTitle · Configure evaluation criteria</p>
         </div>
         <button onclick="saveChecklist()" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md font-bold flex items-center gap-2">
             <i class="ri-save-line"></i>
-            Lưu thay đổi
+            Save Changes
         </button>
     </div>
 
@@ -33,12 +33,12 @@
 
     <!-- Add Section Button -->
     <div class="mt-8 border-2 border-dashed border-gray-200 rounded-xl p-6 bg-gray-50 flex flex-col items-center">
-        <h4 class="font-bold text-gray-400 mb-4">Thêm Section mới</h4>
+        <h4 class="font-bold text-gray-400 mb-4">Add New Section</h4>
         <div class="flex gap-4 w-full max-w-lg">
-            <input type="text" id="newSectionCode" placeholder="Mã (vd: P1)" class="w-24 border-gray-300 rounded-lg">
-            <input type="text" id="newSectionName" placeholder="Tên Section" class="flex-grow border-gray-300 rounded-lg">
+            <input type="text" id="newSectionCode" placeholder="Code (e.g., P1)" class="w-24 border-gray-300 rounded-lg">
+            <input type="text" id="newSectionName" placeholder="Section Name" class="flex-grow border-gray-300 rounded-lg">
             <button onclick="addSection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1">
-                <i class="ri-add-line"></i> Thêm
+                <i class="ri-add-line"></i> Add
             </button>
         </div>
     </div>
@@ -51,7 +51,7 @@
             <i class="ri-grid-fill"></i>
         </div>
         <input type="text" class="item-code w-20 border-gray-200 rounded bg-gray-50 text-xs font-mono" placeholder="Code">
-        <input type="text" class="item-content flex-grow border-gray-300 rounded-lg" placeholder="Nội dung câu hỏi...">
+        <input type="text" class="item-content flex-grow border-gray-300 rounded-lg" placeholder="Question content...">
         <button onclick="removeItem(this)" class="text-gray-300 hover:text-red-500 transition-colors p-2">
             <i class="ri-delete-bin-line"></i>
         </button>
@@ -66,16 +66,16 @@
                 <div class="cursor-move text-gray-300 hover:text-gray-600 pt-2"><i class="ri-grid-fill"></i></div>
                 <div class="flex-grow grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div class="md:col-span-1">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Mã tiêu chí</label>
-                        <input type="text" class="item-code w-full border-gray-300 rounded-lg text-sm" placeholder="Mã (vd: P1)">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Criteria Code</label>
+                        <input type="text" class="item-code w-full border-gray-300 rounded-lg text-sm" placeholder="Code (e.g., P1)">
                     </div>
                     <div class="md:col-span-3">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Tên tiêu chí</label>
-                        <input type="text" class="item-name w-full border-gray-300 rounded-lg text-sm font-bold" placeholder="Tên tiêu chí">
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Criteria Name</label>
+                        <input type="text" class="item-name w-full border-gray-300 rounded-lg text-sm font-bold" placeholder="Criteria Name">
                     </div>
                     <div class="md:col-span-4">
-                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Nội dung chi tiết (Evaluation Criteria)</label>
-                        <textarea class="item-content w-full border-gray-300 rounded-lg text-sm" rows="3" placeholder="Các tiêu chí con, ví dụ: &#10;• Tiêu chí 1 &#10;• Tiêu chí 2"></textarea>
+                        <label class="block text-[10px] font-bold text-gray-400 uppercase mb-1">Evaluation Criteria Details</label>
+                        <textarea class="item-content w-full border-gray-300 rounded-lg text-sm" rows="3" placeholder="Sub-criteria, e.g.: &#10;• Criteria 1 &#10;• Criteria 2"></textarea>
                     </div>
                 </div>
             </div>
@@ -86,21 +86,21 @@
             <div class="space-y-3">
                 <div class="flex gap-2 items-start">
                     <span class="w-2 h-2 rounded-full bg-green-500 mt-2"></span>
-                    <textarea class="rubric-excellent w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔵 EXCELLENT (8-10): Mô tả tiêu chí này khi đạt mức xuất sắc..."></textarea>
+                    <textarea class="rubric-excellent w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🟢 EXCELLENT (8-10): Describe this criteria when reaching excellent level..."></textarea>
                 </div>
                 <div class="flex gap-2 items-start">
                     <span class="w-2 h-2 rounded-full bg-blue-500 mt-2"></span>
-                    <textarea class="rubric-good w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔵 GOOD (6-8): Mô tả mức tốt..."></textarea>
+                    <textarea class="rubric-good w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔵 GOOD (6-8): Describe good level..."></textarea>
                 </div>
             </div>
             <div class="space-y-3">
                 <div class="flex gap-2 items-start">
                     <span class="w-2 h-2 rounded-full bg-yellow-500 mt-2"></span>
-                    <textarea class="rubric-acceptable w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🟡 ACCEPTABLE (4-6): Mô tả mức đạt..."></textarea>
+                    <textarea class="rubric-acceptable w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🟡 ACCEPTABLE (4-6): Describe acceptable level..."></textarea>
                 </div>
                 <div class="flex gap-2 items-start">
                     <span class="w-2 h-2 rounded-full bg-red-500 mt-2"></span>
-                    <textarea class="rubric-fail w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔴 FAIL (0-4): Mô tả mức không đạt..."></textarea>
+                    <textarea class="rubric-fail w-full border-gray-200 rounded-lg text-xs" rows="3" placeholder="🔴 FAIL (0-4): Describe failing level..."></textarea>
                 </div>
             </div>
         </div>
@@ -141,7 +141,7 @@
                     </h3>
                     <div class="flex gap-2">
                         <button onclick="addItemToSection('${secName}')" class="text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-1 rounded transition-colors">
-                            + Thêm item vào section này
+                            + Add item to this section
                         </button>
                         <button onclick="removeSection('${secName}')" class="text-gray-400 hover:text-red-500 p-1"><i class="ri-delete-bin-line"></i></button>
                     </div>
@@ -210,7 +210,7 @@
     }
 
     function removeSection(secName) {
-        if (!confirm(`Xóa toàn bộ section "${secName}" và các câu hỏi bên trong?`)) return;
+        if (!confirm(`Delete entire section "${secName}" and all questions inside?`)) return;
         const listContainer = document.querySelector(`.items-list[data-section="${secName}"]`);
         listContainer.closest('.section-group').remove();
     }
@@ -259,7 +259,7 @@
         });
 
         if (data.items.length === 0) {
-            alert('Vui lòng thêm ít nhất một câu hỏi/tiêu chí.');
+            alert('Please add at least one question/criteria.');
             return;
         }
 
@@ -271,13 +271,13 @@
             });
             const result = await response.json();
             if (result.success) {
-                alert('Đã lưu thành công!');
+                alert('Saved successfully!');
                 location.href = '/HOD/ChecklistDetails/' + data.reviewRoundID;
             } else {
                 alert(result.message);
             }
         } catch (err) {
-            alert('Lỗi khi lưu dữ liệu.');
+            alert('Error saving data.');
         }
     }
 </script>

@@ -25,8 +25,8 @@
     <!-- Page Header -->
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-800">Danh sách Đề tài</h1>
-            <p class="text-slate-500 text-sm mt-1">Quản lý toàn bộ đề tài trong hệ thống</p>
+            <h1 class="text-2xl font-bold text-slate-800">Project List</h1>
+            <p class="text-slate-500 text-sm mt-1">Manage all projects in the system</p>
         </div>
         <div class="flex gap-3">
             <button onclick="toggleImportModal()" class="bg-[#F37021] hover:bg-orange-600 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm border border-orange-600">
@@ -35,7 +35,7 @@
             </button>
             <a href="/HOD/CreateProject" class="bg-[#1E3A5F] hover:bg-slate-800 text-white flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition shadow-sm no-underline">
                 <span class="material-symbols-outlined text-[20px]">add</span>
-                <span>Tạo đề tài mới</span>
+                <span>Create New Project</span>
             </a>
         </div>
     </div>
@@ -51,9 +51,9 @@
               class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Semester Filter -->
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HỌC KỲ</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SEMESTER</label>
                 <select name="semesterId" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">Tất cả học kỳ</option>
+                    <option value="-1" selected="@(selectedSemesterId == -1 ? "selected" : null)">All Semesters</option>
                     @foreach (var sem in semesters)
                     {
                         if (selectedSemesterId.HasValue && sem.SemesterID == selectedSemesterId.Value)
@@ -70,9 +70,9 @@
 
             <!-- Specialization Filter -->
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">CHUYÊN NGÀNH</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">MAJOR</label>
                 <select name="majorName" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option value="">Tất cả chuyên ngành</option>
+                    <option value="">All Majors</option>
                     @foreach (var major in (ViewBag.Majors as IEnumerable<GPMS.Application.DTOs.MajorDto> ?? Enumerable.Empty<GPMS.Application.DTOs.MajorDto>()))
                     {
                         <option value="@major.MajorName" selected="@(ViewBag.CurrentMajor == major.MajorName ? "selected" : null)">@major.MajorName</option>
@@ -82,9 +82,9 @@
 
             <!-- Status Filter -->
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TRẠNG THÁI</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">STATUS</label>
                 <select name="status" onchange="this.form.submit()" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-700 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors appearance-none outline-none">
-                    <option value="">Tất cả trạng thái</option>
+                    <option value="">All Statuses</option>
                     @foreach (var st in Enum.GetValues(typeof(ProjectStatus)).Cast<ProjectStatus>())
                     {
                         if (currentStatus == st.ToString())
@@ -101,10 +101,10 @@
 
             <!-- Search -->
             <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">TÌM KIẾM</label>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">SEARCH</label>
                 <div class="relative">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" name="search" value="@currentSearch" placeholder="Mã hoặc tên đề tài..." 
+                    <input type="text" name="search" value="@currentSearch" placeholder="Project code or name..." 
                            class="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5 pl-10 text-sm text-slate-700 font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white transition-colors outline-none" />
                 </div>
             </div>
@@ -120,31 +120,34 @@
             <table class="w-full text-sm text-left">
                 <thead class="bg-white border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ ĐỀ TÀI</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">TÊN ĐỀ TÀI</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">NGÀY TẠO</th>
-                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">THAO TÁC</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">PROJECT CODE</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/3">PROJECT TITLE</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">MAJOR</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">STATUS</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">CREATED AT</th>
+                        <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                     @if (!Model.Any())
                     {
-                            <td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td>
+                            <td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">No projects found matching the filters.</td>
                     }
                     else
                     {
                         foreach (var item in Model)
                         {
                             <tr id="project-row-@item.ProjectID" class="hover:bg-slate-50/50 transition-colors">
-                                <td class="px-6 py-5 font-bold text-slate-800">@item.ProjectCode</td>
+                                <td class="px-6 py-5">
+                                    <div class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter">@item.ProjectCode</div>
+                                    <div class="text-[10px] text-slate-400 mt-1">Semester: @item.SemesterCode</div>
+                                </td>
                                 <td class="px-6 py-5">
                                     <span class="font-semibold text-slate-700 line-clamp-2 leading-relaxed">@item.ProjectName</span>
                                     @if (!string.IsNullOrEmpty(item.SupervisorName))
                                     {
                                         <div class="text-[11px] text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
-                                            <span class="material-symbols-outlined text-[13px]">person</span> HD: @item.SupervisorName
+                                            <span class="material-symbols-outlined text-[13px]">person</span> Sup: @item.SupervisorName
                                         </div>
                                     }
                                 </td>
@@ -165,13 +168,13 @@
                                 <td class="px-6 py-5 text-slate-500 font-medium">@item.CreatedAt.ToString("dd/MM/yyyy")</td>
                                 <td class="px-6 py-5 text-center">
                                     <div class="flex items-center justify-center gap-2">
-                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="Xem chi tiết">
+                                        <a href="/HOD/ProjectDetails/@item.ProjectID" class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition no-underline" title="View Details">
                                             <span class="material-symbols-outlined text-[20px]">visibility</span>
                                         </a>
-                                        <a href="/HOD/EditProject/@item.ProjectID?returnUrl=@(Context.Request.Path + Context.Request.QueryString)" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Chỉnh sửa">
+                                        <a href="/HOD/EditProject/@item.ProjectID?returnUrl=@(Context.Request.Path + Context.Request.QueryString)" class="p-1.5 text-slate-400 hover:text-orange-600 hover:bg-orange-50 rounded-md transition no-underline" title="Edit">
                                             <span class="material-symbols-outlined text-[20px]">edit</span>
                                         </a>
-                                        <button onclick="showDeleteModal(@item.ProjectID)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Xóa">
+                                        <button onclick="showDeleteModal(@item.ProjectID)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition" title="Delete">
                                             <span class="material-symbols-outlined text-[20px]">delete</span>
                                         </button>
                                     </div>
@@ -193,7 +196,7 @@
     <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all animate-in fade-in zoom-in duration-200">
         <!-- Modal Header -->
         <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-            <h3 class="text-lg font-bold text-slate-800">Import Dự Án từ Excel</h3>
+            <h3 class="text-lg font-bold text-slate-800">Import Projects from Excel</h3>
             <button type="button" onclick="toggleImportModal()" class="text-slate-400 hover:text-slate-600 transition p-1 hover:bg-slate-100 rounded-full">
                 <span class="material-symbols-outlined">close</span>
             </button>
@@ -206,26 +209,26 @@
                 <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
                     <span class="material-symbols-outlined text-blue-600">info</span>
                     <div>
-                        <p class="text-sm font-semibold text-blue-900 mb-1">Bước 1: Tải file mẫu</p>
-                        <p class="text-xs text-blue-700 mb-3">Sử dụng file mẫu có sẵn các danh sách thả xuống để đảm bảo dữ liệu chính xác nhất.</p>
+                        <p class="text-sm font-semibold text-blue-900 mb-1">Step 1: Download Template</p>
+                        <p class="text-xs text-blue-700 mb-3">Use the smart template with predefined dropdowns to ensure data accuracy.</p>
                         <a asp-action="DownloadProjectTemplate" asp-controller="HOD" hx-boost="false" data-no-load class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 hover:text-blue-800 transition bg-white px-3 py-1.5 rounded-lg border border-blue-200 shadow-sm no-underline">
                             <span class="material-symbols-outlined text-[18px]">download</span>
-                            Tải file mẫu thông minh (.xlsx)
+                            Download Smart Template (.xlsx)
                         </a>
                     </div>
                 </div>
 
                 <!-- Step 2: Upload File -->
                 <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-3">Bước 2: Chọn file đã điền thông tin</label>
+                    <label class="block text-sm font-bold text-slate-700 mb-3">Step 2: Upload Completed File</label>
                     <div class="relative group">
                         <input type="file" name="file" id="excelFile" accept=".xlsx, .xls" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="updateFileName()">
                         <div class="border-2 border-dashed border-slate-200 group-hover:border-[#1E3A5F] rounded-xl p-8 text-center transition-all bg-slate-50 group-hover:bg-slate-100/50">
                             <div class="w-12 h-12 bg-white rounded-full shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform border border-slate-100">
                                 <span class="material-symbols-outlined text-[28px] text-slate-400 group-hover:text-[#1E3A5F]">upload_file</span>
                             </div>
-                            <p id="fileNameDisplay" class="text-sm text-slate-500 group-hover:text-slate-800 font-medium tracking-tight">Kéo thả hoặc nhấp để chọn file Excel</p>
-                            <p class="text-[11px] text-slate-400 mt-2 font-medium uppercase tracking-wider">Hỗ trợ: .XLSX, .XLS (Max 5MB)</p>
+                            <p id="fileNameDisplay" class="text-sm text-slate-500 group-hover:text-slate-800 font-medium tracking-tight">Drag and drop or click to select Excel file</p>
+                            <p class="text-[11px] text-slate-400 mt-2 font-medium uppercase tracking-wider">Supports: .XLSX, .XLS (Max 5MB)</p>
                         </div>
                     </div>
                 </div>
@@ -233,10 +236,10 @@
 
             <!-- Modal Footer -->
             <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-end gap-3">
-                <button type="button" onclick="toggleImportModal()" class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">Hủy bỏ</button>
+                <button type="button" onclick="toggleImportModal()" class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-lg transition">Cancel</button>
                 <button type="submit" class="bg-[#1E3A5F] hover:bg-slate-800 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md transition transform active:scale-95 flex items-center gap-2">
                     <span class="material-symbols-outlined text-[20px]">preview</span>
-                    Tiếp tục xem trước
+                    Continue to Preview
                 </button>
             </div>
         </form>
@@ -250,13 +253,13 @@
             <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-100">
                 <span class="material-symbols-outlined text-red-500 text-3xl">delete_forever</span>
             </div>
-            <h3 class="text-lg font-bold text-slate-800 mb-2">Xác nhận xóa đề tài?</h3>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">Confirm Delete Project?</h3>
             <p class="text-sm text-slate-500 leading-relaxed mb-6">
-                Hành động này <span class="text-red-600 font-bold">không thể hoàn tác</span>. Toàn bộ dữ liệu liên quan đến đề tài này sẽ bị xóa khỏi hệ thống.
+                This action <span class="text-red-600 font-bold">cannot be undone</span>. All data related to this project will be permanently removed.
             </p>
             <div class="flex gap-3">
-                <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Hủy bỏ</button>
-                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition transform active:scale-95">Xóa vĩnh viễn</button>
+                <button onclick="hideDeleteModal()" class="flex-1 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
+                <button id="confirmDeleteBtn" class="flex-1 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-red-500/30 transition transform active:scale-95">Delete Permanently</button>
             </div>
         </div>
     </div>
@@ -306,7 +309,7 @@
                 const btn = document.getElementById('confirmDeleteBtn');
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = 'Xóa vĩnh viễn';
+                    btn.innerHTML = 'Delete Permanently';
                 }
             }
         }
@@ -358,7 +361,7 @@
                                 // Check if table is empty
                                 const tbody = document.querySelector('tbody');
                                 if (tbody && tbody.querySelectorAll('tr[id^="project-row-"]').length === 0) {
-                                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">Không tìm thấy đề tài nào theo điều kiện lọc.</td></tr>';
+                                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-slate-500 font-medium">No projects found matching the filters.</td></tr>';
                                 }
                             }, 500);
                         }
@@ -368,7 +371,7 @@
                         btn.innerText = originalText;
                     }
                 } catch (error) {
-                    showToast('Có lỗi xảy ra khi kết nối máy chủ.', 'error');
+                    showToast('An error occurred while connecting to the server.', 'error');
                     btn.disabled = false;
                     btn.innerText = originalText;
                 }

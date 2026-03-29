@@ -4,7 +4,7 @@
 @{
     ViewBag.Title = "Supervisor Assignment";
     ViewBag.CurrentPage = "AssignSupervisor";
-    ViewBag.BreadcrumbSection = "Phân công Giảng viên";
+    ViewBag.BreadcrumbSection = "Supervisor Assignment";
     Layout = "_Layout";
     var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
 }
@@ -16,11 +16,11 @@
             <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
                 <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline">GPMS</a>
                 <span class="material-symbols-outlined text-[16px]">chevron_right</span>
-                <span class="text-slate-800 font-bold">Phân công Giảng viên</span>
+                <span class="text-slate-800 font-bold">Supervisor Assignment</span>
             </nav>
-            <h1 class="text-2xl font-bold text-slate-800">Phân công Giảng viên Hướng dẫn</h1>
+            <h1 class="text-2xl font-bold text-slate-800">Assign Supervisors</h1>
             <p class="text-slate-500 text-sm mt-1 font-medium">
-                Kết nối nhóm sinh viên với giảng viên hướng dẫn phù hợp.
+                Connect student groups with appropriate supervisors.
                 @if (activeSemester != null)
                 {
                     <span class="text-[#F37021] font-bold">(@activeSemester.SemesterCode)</span>
@@ -40,20 +40,20 @@
                     <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                     <span class="w-2 h-2 rounded-full bg-orange-500"></span>
                 </div>
-                <h2 class="text-[15px] font-bold text-slate-800">Nhóm chưa phân công (@Model.UnassignedProjects.Count)</h2>
+                <h2 class="text-[15px] font-bold text-slate-800">Unassigned Groups (@Model.UnassignedProjects.Count)</h2>
             </div>
 
             <!-- Project Filters -->
             <div class="flex flex-col sm:flex-row gap-3 mb-6">
                 <div class="relative flex-grow">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" id="projectSearch" placeholder="Tìm tên hoặc mã nhóm..." 
+                    <input type="text" id="projectSearch" placeholder="Search group name or code..." 
                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
                            onkeyup="filterProjects()">
                 </div>
                 <div class="sm:w-48">
                     <select id="majorFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all" onchange="filterProjects()">
-                        <option value="">Tất cả chuyên ngành</option>
+                        <option value="">All Majors</option>
                         @foreach (var major in Model.UnassignedProjects.Select(p => p.MajorName).Distinct().OrderBy(m => m))
                         {
                             <option value="@major">@major</option>
@@ -79,10 +79,10 @@
                             <p class="font-bold text-slate-800 text-lg mb-2 group-hover:text-[#F37021] transition-colors">@project.ProjectName</p>
                             <p class="text-sm font-medium text-slate-500 mb-4">
                                 <span class="material-symbols-outlined text-sm align-middle">groups</span>
-                                Nhóm: @project.StudentName
+                                Group: @project.StudentName
                             </p>
                             <div class="flex items-center gap-2">
-                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Mới</span>
+                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">New</span>
                             </div>
                         </div>
                     }
@@ -91,7 +91,7 @@
                 {
                     <div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
                         <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">check_circle</span>
-                        <p class="text-slate-500 font-medium">Tất cả các nhóm đã được phân công!</p>
+                        <p class="text-slate-500 font-medium">All groups have been assigned!</p>
                     </div>
                 }
             </div>
@@ -102,7 +102,7 @@
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-2">
                     <span class="material-symbols-outlined text-[#1E3A5F]">person_search</span>
-                    <h2 class="text-[15px] font-bold text-slate-800">Giảng viên khả dụng</h2>
+                    <h2 class="text-[15px] font-bold text-slate-800">Available Lecturers</h2>
                 </div>
             </div>
 
@@ -110,13 +110,13 @@
             <div class="flex flex-col sm:flex-row gap-3 mb-6">
                 <div class="relative flex-grow">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" id="lecturerSearch" placeholder="Tìm tên giảng viên..." 
+                    <input type="text" id="lecturerSearch" placeholder="Search for lecturers..." 
                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none transition-all"
                            onkeyup="filterLecturers()">
                 </div>
                 <div class="sm:w-48">
                     <select id="specialtyFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] outline-none transition-all" onchange="filterLecturers()">
-                        <option value="">Tất cả chuyên môn</option>
+                        <option value="">All Specialties</option>
                         @foreach (var specialty in Model.Lecturers.Select(l => l.Specialty).Where(s => !string.IsNullOrEmpty(s)).Distinct().OrderBy(s => s))
                         {
                             <option value="@specialty">@specialty</option>
@@ -144,14 +144,14 @@
                             <div>
                                 <p class="font-bold text-slate-800 text-sm leading-tight">@lecturer.FullName</p>
                                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">@lecturer.Level</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Chuyên môn: @lecturer.Specialty</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Specialty: @lecturer.Specialty</p>
                             </div>
                         </div>
                         
                         <div class="mb-5 mt-auto">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">TẢI CÔNG VIỆC</span>
-                                <span class="text-[10px] font-bold @textColor">@lecturer.CurrentWorkload / @lecturer.MaxWorkload NHÓM</span>
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">WORKLOAD</span>
+                                <span class="text-[10px] font-bold @textColor">@lecturer.CurrentWorkload / @lecturer.MaxWorkload GROUPS</span>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                                 <div class="@workloadColor h-full rounded-full transition-all duration-500" style="width: @workloadPercent%"></div>
@@ -161,13 +161,13 @@
                         @if (isFull)
                         {
                             <button disabled class="w-full py-2.5 border border-slate-200 bg-slate-100 text-slate-400 rounded-lg font-bold text-xs cursor-not-allowed">
-                                Đã đầy tải
+                                Fully Loaded
                             </button>
                         }
                         else
                         {
                             <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm" onclick="openProjectModal('@lecturer.LecturerID', '@lecturer.FullName')">
-                                Phân công nhóm
+                                Assign Group
                             </button>
                         }
                     </div>
@@ -184,9 +184,9 @@
          hx-push-url="true">
         <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden mt-6">
         <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
-            <h2 class="text-lg font-bold text-slate-800">Bảng tổng hợp phân công</h2>
+            <h2 class="text-lg font-bold text-slate-800">Assignment Summary Table</h2>
             <div class="px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full shadow-sm">
-                <span class="text-xs font-bold uppercase tracking-wider">@Model.AssignedProjects.TotalItems Nhóm đã phân công</span>
+                <span class="text-xs font-bold uppercase tracking-wider">@Model.AssignedProjects.TotalItems Groups Assigned</span>
             </div>
         </div>
 
@@ -201,13 +201,13 @@
                 
                 <div class="relative flex-grow">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" name="search" value="@Model.CurrentSearch" placeholder="Tìm theo tên đề tài, mã nhóm hoặc giảng viên..." 
+                    <input type="text" name="search" value="@Model.CurrentSearch" placeholder="Search by project title, group code, or lecturer..." 
                            hx-trigger="keyup changed delay:500ms"
                            class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all">
                 </div>
                 <div class="sm:w-64">
                     <select id="summaryLecturerFilter" name="lecturerFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 outline-none transition-all">
-                        <option value="">Tất cả giảng viên hướng dẫn</option>
+                        <option value="">All Supervisors</option>
                         @foreach (var lecturerName in Model.Lecturers.Select(l => l.FullName).OrderBy(s => s))
                         {
                             <option value="@lecturerName" selected="@(Model.CurrentLecturerFilter == lecturerName ? "selected" : null)">@lecturerName</option>
@@ -221,12 +221,12 @@
             <table class="w-full text-sm text-left">
                 <thead>
                     <tr class="bg-slate-50 border-b border-slate-100">
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">MÃ NHÓM</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">TÊN ĐỀ TÀI</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">CHUYÊN NGÀNH</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">GIẢNG VIÊN HƯỚNG DẪN</th>
-                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">TRẠNG THÁI</th>
-                        <th class="py-4 px-6 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">THAO TÁC</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">GROUP CODE</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">PROJECT TITLE</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">MAJOR</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">SUPERVISOR</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">STATUS</th>
+                        <th class="py-4 px-6 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">ACTIONS</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -249,13 +249,13 @@
                                     </div>
                                 </td>
                                 <td class="py-5 px-6">
-                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Đã xác nhận</span>
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Confirmed</span>
                                 </td>
                                 <td class="py-5 px-6 text-center">
-                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-[#F37021] hover:bg-orange-50 rounded-lg transition" title="Thay đổi" 
+                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-500 hover:text-[#F37021] hover:bg-orange-50 rounded-lg transition" title="Change" 
                                             onclick="openLecturerModal('@project.ProjectID', '@project.ProjectCode', '@project.MajorName')">
                                         <span class="material-symbols-outlined text-[16px]">swap_horiz</span>
-                                        Đổi GV
+                                        Change Sup
                                     </button>
                                 </td>
                             </tr>
@@ -264,7 +264,7 @@
                     else
                     {
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-slate-400 italic">Chưa có nhóm nào được phân công giảng viên.</td>
+                            <td colspan="6" class="py-12 text-center text-slate-400 italic">No groups have been assigned a supervisor yet.</td>
                         </tr>
                     }
                 </tbody>
@@ -282,8 +282,8 @@
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800">Chọn giảng viên hướng dẫn</h3>
-                    <p class="text-xs text-slate-500 font-medium mt-1">Phân công cho nhóm: <span id="modalProjectCode" class="text-[#F37021] font-bold"></span></p>
+                    <h3 class="text-xl font-bold text-slate-800">Select Supervisor</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Assign to group: <span id="modalProjectCode" class="text-[#F37021] font-bold"></span></p>
                 </div>
                 <button onclick="closeLecturerModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:shadow-md text-slate-400 hover:text-slate-600 transition-all">
                     <span class="material-symbols-outlined">close</span>
@@ -295,13 +295,13 @@
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
                     <div class="relative flex-grow">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                        <input type="text" id="modalLecturerSearch" placeholder="Tìm giảng viên..." 
+                        <input type="text" id="modalLecturerSearch" placeholder="Search for lecturers..." 
                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
                                onkeyup="filterModalLecturers()">
                     </div>
                     <div class="flex items-center gap-2 px-3 py-2 bg-blue-50/50 rounded-xl border border-blue-100">
                         <input type="checkbox" id="smartMatchToggle" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" onchange="filterModalLecturers()">
-                        <label for="smartMatchToggle" class="text-xs font-bold text-blue-700 cursor-pointer whitespace-nowrap">Khớp chuyên ngành</label>
+                        <label for="smartMatchToggle" class="text-xs font-bold text-blue-700 cursor-pointer whitespace-nowrap">Smart Match (Major)</label>
                     </div>
                 </div>
 
@@ -321,7 +321,7 @@
                                     <div class="flex items-center gap-2 mt-0.5">
                                         <span class="text-[10px] text-slate-500 font-medium">@lecturer.Specialty</span>
                                         <span class="w-1 h-1 rounded-full bg-slate-300"></span>
-                                        <span class="text-[10px] text-emerald-600 font-bold">@lecturer.CurrentWorkload/@lecturer.MaxWorkload Nhóm</span>
+                                        <span class="text-[10px] text-emerald-600 font-bold">@lecturer.CurrentWorkload/@lecturer.MaxWorkload Groups</span>
                                     </div>
                                 </div>
                             </div>
@@ -331,7 +331,7 @@
             </div>
             
             <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end">
-                <button onclick="closeLecturerModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Hủy</button>
+                <button onclick="closeLecturerModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
             </div>
         </div>
     </div>
@@ -342,8 +342,8 @@
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
             <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800">Chọn nhóm nhận hướng dẫn</h3>
-                    <p class="text-xs text-slate-500 font-medium mt-1">Giảng viên: <span id="modalLecturerName" class="text-[#F37021] font-bold"></span></p>
+                    <h3 class="text-xl font-bold text-slate-800">Select Group for Supervision</h3>
+                    <p class="text-xs text-slate-500 font-medium mt-1">Lecturer: <span id="modalLecturerName" class="text-[#F37021] font-bold"></span></p>
                 </div>
                 <button onclick="closeProjectModal()" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white hover:shadow-md text-slate-400 hover:text-slate-600 transition-all">
                     <span class="material-symbols-outlined">close</span>
@@ -354,9 +354,9 @@
                 <!-- Search for Projects -->
                 <div class="relative mb-6">
                     <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
-                    <input type="text" id="modalProjectSearch" placeholder="Tìm mã nhóm hoặc tên đề tài..." 
-                           class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
-                           onkeyup="filterModalProjects()">
+                    <input type="text" id="modalProjectSearch" placeholder="Search group code or project title..." 
+                               class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
+                               onkeyup="filterModalProjects()">
                 </div>
 
                 <div class="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-main-scroll">
@@ -384,12 +384,12 @@
                     }
                     else
                     {
-                        <p class="text-center py-8 text-slate-400 italic">Không có nhóm nào chưa phân công.</p>
+                        <p class="text-center py-8 text-slate-400 italic">No unassigned groups available.</p>
                     }
                 </div>
             </div>
             <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end">
-                <button onclick="closeProjectModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Hủy</button>
+                <button onclick="closeProjectModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
             </div>
         </div>
     </div>
@@ -443,11 +443,11 @@
                 if (result.success) {
                     location.reload();
                 } else {
-                    alert(result.message || 'Có lỗi xảy ra khi phân công.');
+                    alert(result.message || 'An error occurred during assignment.');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Có lỗi xảy ra kết nối với hệ thống.');
+                alert('An error occurred while connecting to the system.');
             }
         }
 
