@@ -42,7 +42,13 @@
 
     <!-- Filters Card -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] p-6">
-        <form method="get" action="/HOD/Projects" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <form method="get" action="/HOD/Projects"
+              hx-get="/HOD/Projects"
+              hx-target="#content-column"
+              hx-select="#content-column"
+              hx-swap="innerHTML transition:true"
+              hx-push-url="true"
+              class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <!-- Semester Filter -->
             <div>
                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">HỌC KỲ</label>

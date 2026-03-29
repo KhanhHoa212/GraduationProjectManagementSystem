@@ -18,7 +18,7 @@
                     <h1 class="text-3xl font-bold text-slate-900 dark:text-white">Quản lý Vòng Review</h1>
                     <p class="text-slate-600 dark:text-slate-400 mt-2">Thiết lập và theo dõi các giai đoạn đánh giá đề án trong học kỳ.</p>
                 </div>
-                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition @(Model != null && Model.Count() >= 3 ? "hidden" : "")">
+                <a href="/HOD/CreateReviewRound" class="px-6 py-2 bg-[#F37021] text-white rounded-lg hover:bg-[#E55D0D] font-medium flex items-center gap-2 transition shadow-sm hover:shadow-md">
                     <span class="material-symbols-outlined" style="font-size: 20px;">add</span>
                     Tạo vòng review mới
                 </a>
@@ -208,10 +208,15 @@
                                         </td>
                                         <td class="py-4 px-6">
                                             <div class="flex items-center gap-2">
-                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Edit Schedule & Settings">
+                                                <a href="/HOD/EditReviewRound/@item.ReviewRoundID" class="p-2 text-primary hover:bg-orange-50 dark:hover:bg-slate-800 rounded-lg transition-all" title="Thiết lập vòng">
                                                     <span class="material-symbols-outlined" style="font-size: 20px;">edit_calendar</span>
-                                                    <span class="ml-1 font-medium">Configure</span>
                                                 </a>
+                                                
+                                                <form asp-action="DeleteReviewRound" asp-route-id="@item.ReviewRoundID" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vòng review này? Thao tác này không thể hoàn tác.');" class="inline">
+                                                    <button type="submit" class="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all" title="Xóa vòng">
+                                                        <span class="material-symbols-outlined" style="font-size: 20px;">delete</span>
+                                                    </button>
+                                                </form>
                                             </div>
                                         </td>
                                     </tr>

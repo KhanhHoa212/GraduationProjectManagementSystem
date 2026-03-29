@@ -8,11 +8,14 @@ public interface IProjectService
 {
     Task<IEnumerable<ProjectDto>> GetAllProjectsAsync();
     Task<IEnumerable<ProjectDto>> GetProjectsBySemesterAsync(int semesterId);
+    Task<IEnumerable<ProjectDto>> GetRecentProjectsForDashboardAsync(int semesterId, int count);
+    Task<IEnumerable<ProjectDto>> GetFilteredProjectsAsync(int? semesterId, string? status, string? search, string? majorName);
     Task<ProjectDetailDto?> GetProjectDetailAsync(int projectId);
     Task CreateProjectAsync(CreateProjectDto dto);
     Task UpdateProjectAsync(UpdateProjectDto dto);
     Task<bool> DeleteProjectAsync(int projectId);
-    Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null);
+    Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsAsync(int? semesterId = null);
+    Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsBySemesterAsync(int semesterId);
     
     // Student Dashboard
     Task<ProjectDto?> GetProjectByStudentAsync(string studentId);

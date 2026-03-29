@@ -139,6 +139,22 @@ public class ProjectGroupRepository : IProjectGroupRepository
             .Where(g => g.Project.SemesterID == semesterId)
             .ToListAsync();
 
+    public async Task<IEnumerable<ProjectGroup>> GetReviewerAssignmentGroupsAsync(int semesterId)
+    {
+        return await _context.ProjectGroups
+            .Where(g => g.Project.SemesterID == semesterId)
+            .Include(g => g.Project)
+                .ThenInclude(p => p.Major)
+            .Include(g => g.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(g => g.ReviewerAssignments)
+                .ThenInclude(ra => ra.Reviewer)
+            .AsSplitQuery()
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
     public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
         await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
 
