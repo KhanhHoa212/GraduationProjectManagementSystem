@@ -95,11 +95,6 @@ public class ReviewSessionRepository : IReviewSessionRepository
         return Task.CompletedTask;
     }
 
-<<<<<<< HEAD
-    public async Task SaveChangesAsync()
-    {
-        await _context.SaveChangesAsync();
-=======
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
 
     public async Task<List<ReviewSessionInfo>> GetUpcomingSessionsAsync(int withinDays, System.Threading.CancellationToken cancellationToken = default)
@@ -112,6 +107,5 @@ public class ReviewSessionRepository : IReviewSessionRepository
                     .ThenInclude(m => m.User)
             .Where(s => s.ScheduledAt.Date >= today && s.ScheduledAt.Date <= today.AddDays(withinDays))
             .ToListAsync(cancellationToken);
->>>>>>> d8f6ae032d950c7c5ac9eb8a9c9c9131baab0cbf
     }
 }

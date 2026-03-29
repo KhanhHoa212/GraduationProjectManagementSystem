@@ -94,6 +94,12 @@
                                                 <div class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
                                                     @(string.IsNullOrEmpty(schedule.RoomName) ? "Not Assigned" : $"Room {schedule.RoomName}, {schedule.Building}")
                                                 </div>
+                                                @if (!string.IsNullOrEmpty(schedule.LocationDetails))
+                                                {
+                                                    <div class="text-sm font-medium text-slate-400 dark:text-dark-400 italic">
+                                                        @schedule.LocationDetails
+                                                    </div>
+                                                }
                                             </div>
                                         </div>
                                     </div>
@@ -102,9 +108,28 @@
                                     <div class="space-y-8">
                                         <div>
                                             <span class="block text-[10px] font-bold text-slate-400 dark:text-dark-500 uppercase tracking-widest mb-3">Format</span>
-                                            <span class="inline-flex px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black rounded-xl border border-emerald-100 dark:border-emerald-500/20 uppercase tracking-widest">
-                                                Offline
-                                            </span>
+                                            @if (schedule.LocationDetails == "Online Meeting")
+                                            {
+                                                <div class="flex items-center gap-3">
+                                                    <span class="inline-flex px-4 py-2 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs font-black rounded-xl border border-blue-100 dark:border-blue-500/20 uppercase tracking-widest">
+                                                        Online
+                                                    </span>
+                                                    @if (!string.IsNullOrEmpty(schedule.MeetLink))
+                                                    {
+                                                        <a href="@schedule.MeetLink" target="_blank"
+                                                           class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold rounded-lg shadow-sm transition-colors text-xs">
+                                                            <span class="material-symbols-outlined text-[16px]">videocam</span>
+                                                            Join Meet
+                                                        </a>
+                                                    }
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex px-4 py-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black rounded-xl border border-emerald-100 dark:border-emerald-500/20 uppercase tracking-widest">
+                                                    Offline
+                                                </span>
+                                            }
                                         </div>
 
                                         <div>

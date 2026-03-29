@@ -11,6 +11,8 @@ public class ProjectDefenseScheduleDto
     public string? RoomName { get; set; }
     public string? Building { get; set; }
     public string? Notes { get; set; }
+    public string? MeetLink { get; set; }
+    public string? LocationDetails { get; set; }
     public List<CommitteeMemberDto> CommitteeMembers { get; set; } = new();
 }
 

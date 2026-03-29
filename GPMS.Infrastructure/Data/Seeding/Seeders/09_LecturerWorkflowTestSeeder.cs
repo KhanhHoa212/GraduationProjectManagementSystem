@@ -24,11 +24,13 @@ public class LecturerWorkflowTestSeeder : IDataSeeder
         await EnsureLecturerCredentialAsync("GV002", "gv002");
         await EnsureLecturerCredentialAsync("GV003", "gv003");
 
+        var targetGroupNames = new[] { "Team 01", "Team 02", "Team 03" };
         var groups = await _context.ProjectGroups
             .Include(g => g.Project)
-            .Where(g => g.Project.SemesterID == 5)
-            .OrderBy(g => g.GroupID)
+            .Where(g => g.Project.SemesterID == 5 && targetGroupNames.Contains(g.GroupName))
+            .OrderBy(g => g.GroupName)
             .ToListAsync();
+
         if (groups.Count < 3) return;
 
 

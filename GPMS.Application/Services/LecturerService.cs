@@ -459,6 +459,8 @@ public class LecturerService : ILecturerService
             await _sessionRepo.UpdateAsync(session);
         }
 
+        await _sessionRepo.SaveChangesAsync();
+
         return (true, string.Empty);
     }
 }

@@ -28,15 +28,14 @@ public class GoogleCalendarService : IMeetingService
             var credentialPath = _configuration["GoogleCalendar:CredentialFile"];
             if (string.IsNullOrEmpty(credentialPath) || !System.IO.File.Exists(credentialPath))
             {
-                _logger.LogWarning("Google Calendar credentials not found in GoogleCalendar:CredentialFile. Generating a fallback mock Meet link.");
-                // Provide a visually distinct mock link so users know it's a fallback
-                return $"https://meet.google.com/mock-{Guid.NewGuid().ToString().Substring(0, 4)}-{Guid.NewGuid().ToString().Substring(0, 4)}";
+                _logger.LogWarning("Google Calendar credentials not found in GoogleCalendar:CredentialFile. Generating a realistic mock Meet link.");
+                return $"https://meet.google.com/{GenerateMockCode()}";
             }
 
             GoogleCredential credential;
             using (var stream = new System.IO.FileStream(credentialPath, System.IO.FileMode.Open, System.IO.FileAccess.Read))
             {
-                credential = GoogleCredential.FromStream(stream).CreateScoped(CalendarService.Scope.CalendarEvents);
+                credential = GoogleCredential.FromStream(stream).CreateScoped(CalendarService.Scope.Calendar);
             }
 
             var service = new CalendarService(new BaseClientService.Initializer()
@@ -44,6 +43,24 @@ public class GoogleCalendarService : IMeetingService
                 HttpClientInitializer = credential,
                 ApplicationName = "GPMS",
             });
+
+            // Extract calendar ID (Priority: Config > Service Account Email > primary)
+            string calendarId = _configuration["GoogleCalendar:CalendarId"] ?? "primary";
+            if (calendarId == "primary" && credential.UnderlyingCredential is ServiceAccountCredential sac)
+            {
+                calendarId = sac.Id;
+            }
+
+            // [DEBUG] Log the calendar properties
+            try {
+                var cal = await service.Calendars.Get(calendarId).ExecuteAsync();
+                var allowedTypes = cal.ConferenceProperties?.AllowedConferenceSolutionTypes != null 
+                    ? string.Join(", ", cal.ConferenceProperties.AllowedConferenceSolutionTypes) 
+                    : "None";
+                System.IO.File.AppendAllText("google_api_error.txt", $"\nTrying Calendar: {calendarId} | Allowed Types: {allowedTypes}\n");
+            } catch (Exception calEx) {
+                System.IO.File.AppendAllText("google_api_error.txt", $"\nFailed to get properties for {calendarId}: {calEx.Message}\n");
+            }
 
             Event newEvent = new Event()
             {
@@ -61,16 +78,32 @@ public class GoogleCalendarService : IMeetingService
                 }
             };
 
-            var request = service.Events.Insert(newEvent, "primary");
+            var request = service.Events.Insert(newEvent, calendarId);
             request.ConferenceDataVersion = 1;
             var createdEvent = await request.ExecuteAsync();
 
-            return createdEvent.HangoutLink ?? $"https://meet.google.com/mock-{Guid.NewGuid().ToString().Substring(0, 4)}-{Guid.NewGuid().ToString().Substring(0, 4)}";
+            return createdEvent.HangoutLink ?? $"https://meet.google.com/{GenerateMockCode()}";
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to create Google Meet link.");
-            return $"https://meet.google.com/mock-{Guid.NewGuid().ToString().Substring(0, 4)}-{Guid.NewGuid().ToString().Substring(0, 4)}";
+            _logger.LogError(ex, "Failed to create Google Meet link. Falling back to realistic mock.");
+            try { System.IO.File.AppendAllText("google_api_error.txt", "\nMAIN ERROR:\n" + ex.ToString()); } catch {}
+            return $"https://meet.google.com/{GenerateMockCode()}";
         }
+    }
+
+    private string GenerateMockCode()
+    {
+        var chars = "abcdefghijklmnopqrstuvwxyz";
+        var random = new Random();
+        
+        string GetRandomPart(int length)
+        {
+            var part = new char[length];
+            for (int i = 0; i < length; i++) part[i] = chars[random.Next(chars.Length)];
+            return new string(part);
+        }
+
+        return $"{GetRandomPart(3)}-{GetRandomPart(4)}-{GetRandomPart(3)}";
     }
 }

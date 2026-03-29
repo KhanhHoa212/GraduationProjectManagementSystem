@@ -1,0 +1,33 @@
+
+Allowed Conference Types for gpms-scheduler@gpms-meeting-service.iam.gserviceaccount.com: None
+
+MAIN ERROR:
+The service calendar has thrown an exception.
+HttpStatusCode is BadRequest.
+Google.Apis.Requests.RequestError
+Invalid conference type value. [400]
+Errors [
+	Message[Invalid conference type value.] Location[ - ] Reason[invalid] Domain[global]
+]
+
+Google.GoogleApiException: The service calendar has thrown an exception. HttpStatusCode is BadRequest. Invalid conference type value.
+   at Google.Apis.Requests.ClientServiceRequest`1.ParseResponse(HttpResponseMessage response)
+   at Google.Apis.Requests.ClientServiceRequest`1.ExecuteAsync(CancellationToken cancellationToken)
+   at Google.Apis.Requests.ClientServiceRequest`1.ExecuteAsync()
+   at GPMS.Infrastructure.Services.GoogleCalendarService.CreateOnlineMeetingAsync(String summary, String description, DateTime startTime, DateTime endTime)
+Trying Calendar: 25930c1173481e22239fb55491e65e6e1a9b7b260cd573f7147a6863ea90a5dc@group.calendar.google.com | Allowed Types: None
+
+MAIN ERROR:
+The service calendar has thrown an exception.
+HttpStatusCode is BadRequest.
+Google.Apis.Requests.RequestError
+Invalid conference type value. [400]
+Errors [
+	Message[Invalid conference type value.] Location[ - ] Reason[invalid] Domain[global]
+]
+
+Google.GoogleApiException: The service calendar has thrown an exception. HttpStatusCode is BadRequest. Invalid conference type value.
+   at Google.Apis.Requests.ClientServiceRequest`1.ParseResponse(HttpResponseMessage response)
+   at Google.Apis.Requests.ClientServiceRequest`1.ExecuteAsync(CancellationToken cancellationToken)
+   at Google.Apis.Requests.ClientServiceRequest`1.ExecuteAsync()
+   at GPMS.Infrastructure.Services.GoogleCalendarService.CreateOnlineMeetingAsync(String summary, String description, DateTime startTime, DateTime endTime) in C:\Users\ACER\Documents\Study\FPT\PRN222\Project\GraduationProjectManagementSystem\GPMS.Infrastructure\Services\GoogleCalendarService.cs:line 83

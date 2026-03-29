@@ -13,11 +13,7 @@ public interface IReviewSessionRepository
     Task<IEnumerable<ReviewSessionInfo>> GetByDateAsync(DateTime date);
     Task<IEnumerable<ReviewSessionInfo>> GetByRoundAsync(int roundId);
     Task<ReviewSessionInfo?> GetByRoundAndGroupAsync(int roundId, int groupId);
-<<<<<<< HEAD
-=======
-    Task<ReviewSessionInfo?> GetByIdAsync(int sessionId);
     Task<List<ReviewSessionInfo>> GetUpcomingSessionsAsync(int withinDays, System.Threading.CancellationToken cancellationToken = default);
->>>>>>> d8f6ae032d950c7c5ac9eb8a9c9c9131baab0cbf
     Task AddAsync(ReviewSessionInfo session);
     Task UpdateAsync(ReviewSessionInfo session);
     Task RemoveAsync(ReviewSessionInfo session);
