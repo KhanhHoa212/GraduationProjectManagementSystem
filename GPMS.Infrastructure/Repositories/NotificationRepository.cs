@@ -55,4 +55,23 @@ public class NotificationRepository : INotificationRepository
     }
 
     public async Task SaveChangesAsync() => await _context.SaveChangesAsync();
+
+    public async Task<bool> HasNotificationAsync(string recipientId, GPMS.Domain.Enums.NotificationType type, int relatedEntityId, string titleKeyword, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return await _context.Notifications
+            .AnyAsync(n => n.RecipientID == recipientId
+                        && n.Type == type
+                        && n.RelatedEntityID == relatedEntityId
+                        && n.Title.Contains(titleKeyword), cancellationToken);
+    }
+
+    public async Task<bool> HasSessionNotificationAsync(string recipientId, int sessionId, string titleKeyword, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return await _context.Notifications
+            .AnyAsync(n => n.RecipientID == recipientId
+                        && n.Type == GPMS.Domain.Enums.NotificationType.Schedule
+                        && n.RelatedEntityType == "ReviewSession"
+                        && n.RelatedEntityID == sessionId
+                        && n.Title.Contains(titleKeyword), cancellationToken);
+    }
 }

@@ -179,6 +179,18 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public async Task SaveChangesAsync() =>
         await _context.SaveChangesAsync();
 
+    public async Task<List<User>> GetUsersMissingRequirementAsync(int semesterId, int requirementId, System.Threading.CancellationToken cancellationToken = default)
+    {
+        return await _context.ProjectGroups
+            .Include(g => g.Project)
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Where(g => g.Project.SemesterID == semesterId)
+            .Where(g => !_context.Submissions.Any(s => s.GroupID == g.GroupID && s.RequirementID == requirementId))
+            .SelectMany(g => g.GroupMembers.Select(m => m.User))
+            .ToListAsync(cancellationToken);
+    }
+
     // ─── DTO Projection methods (read-only) ────────────────────────────────────
 
     public async Task<IEnumerable<ProjectGroupSummaryDto>> GetSummariesBySupervisorAsync(string supervisorId) =>

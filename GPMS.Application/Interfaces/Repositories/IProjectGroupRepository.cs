@@ -23,6 +23,7 @@ public interface IProjectGroupRepository
     Task<bool> HasUserGraduatedAsync(string userId);
     Task<ReviewSessionInfo?> GetGroupDefenseSessionAsync(int groupId);
     Task<IEnumerable<ReviewSessionInfo>> GetGroupSchedulesAsync(int groupId);
+    Task<List<User>> GetUsersMissingRequirementAsync(int semesterId, int requirementId, CancellationToken cancellationToken = default);
     Task SaveChangesAsync();
 
     // DTO Projection methods (read-only — no entity tracking)

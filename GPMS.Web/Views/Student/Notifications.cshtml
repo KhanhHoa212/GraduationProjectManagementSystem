@@ -1,4 +1,4 @@
-﻿@model GPMS.Web.ViewModels.NotificationsViewModel
+@model GPMS.Web.ViewModels.NotificationsViewModel
 @{
     ViewData["Title"] = "Notifications";
     Layout = "_Layout";
@@ -38,6 +38,10 @@
         <a asp-action="Notifications" asp-route-type="Feedback" 
            class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "Feedback" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
             Feedback
+        </a>
+        <a asp-action="Notifications" asp-route-type="Schedule" 
+           class="pb-4 px-1 text-sm font-bold transition-all relative @(Model.ActiveTab == "Schedule" ? "text-[#1e3a5f] after:absolute after:bottom-0 after:left-0 after:w-full after:h-0.5 after:bg-[#1e3a5f]" : "text-dark-400 hover:text-dark-600")">
+            Schedule
         </a>
     </div>
 

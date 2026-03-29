@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace GPMS.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class Student : Migration
+    public partial class Final : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -19,7 +19,7 @@ namespace GPMS.Infrastructure.Migrations
                 {
                     FacultyID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    FacultyCode = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
+                    FacultyCode = table.Column<string>(type: "varchar(3)", unicode: false, maxLength: 3, nullable: false),
                     FacultyName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
@@ -87,7 +87,7 @@ namespace GPMS.Infrastructure.Migrations
                 {
                     MajorID = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    MajorCode = table.Column<string>(type: "varchar(10)", unicode: false, maxLength: 10, nullable: false),
+                    MajorCode = table.Column<string>(type: "varchar(3)", unicode: false, maxLength: 3, nullable: false),
                     MajorName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     FacultyID = table.Column<int>(type: "int", nullable: false)
                 },
@@ -125,6 +125,59 @@ namespace GPMS.Infrastructure.Migrations
                         column: x => x.SemesterID,
                         principalTable: "Semesters",
                         principalColumn: "SemesterID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Committees",
+                columns: table => new
+                {
+                    CommitteeID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CommitteeName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    SemesterID = table.Column<int>(type: "int", nullable: false),
+                    ChairpersonID = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    SecretaryID = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    ReviewerID = table.Column<string>(type: "nvarchar(20)", nullable: false),
+                    Reviewer2ID = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    Reviewer3ID = table.Column<string>(type: "nvarchar(20)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Committees", x => x.CommitteeID);
+                    table.ForeignKey(
+                        name: "FK_Committees_Semesters_SemesterID",
+                        column: x => x.SemesterID,
+                        principalTable: "Semesters",
+                        principalColumn: "SemesterID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Committees_Users_ChairpersonID",
+                        column: x => x.ChairpersonID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Committees_Users_Reviewer2ID",
+                        column: x => x.Reviewer2ID,
+                        principalTable: "Users",
+                        principalColumn: "UserID");
+                    table.ForeignKey(
+                        name: "FK_Committees_Users_Reviewer3ID",
+                        column: x => x.Reviewer3ID,
+                        principalTable: "Users",
+                        principalColumn: "UserID");
+                    table.ForeignKey(
+                        name: "FK_Committees_Users_ReviewerID",
+                        column: x => x.ReviewerID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Committees_Users_SecretaryID",
+                        column: x => x.SecretaryID,
+                        principalTable: "Users",
+                        principalColumn: "UserID",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -352,7 +405,7 @@ namespace GPMS.Infrastructure.Migrations
                         column: x => x.ProjectID,
                         principalTable: "Projects",
                         principalColumn: "ProjectID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -434,7 +487,7 @@ namespace GPMS.Infrastructure.Migrations
                         column: x => x.GroupID,
                         principalTable: "ProjectGroups",
                         principalColumn: "GroupID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Evaluations_ReviewRounds_ReviewRoundID",
                         column: x => x.ReviewRoundID,
@@ -456,6 +509,7 @@ namespace GPMS.Infrastructure.Migrations
                     GroupID = table.Column<int>(type: "int", nullable: false),
                     UserID = table.Column<string>(type: "nvarchar(20)", nullable: false),
                     RoleInGroup = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false, defaultValue: "InProgress"),
                     JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()")
                 },
                 constraints: table =>
@@ -548,17 +602,25 @@ namespace GPMS.Infrastructure.Migrations
                     ReviewerID = table.Column<string>(type: "nvarchar(20)", nullable: false),
                     AssignedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETDATE()"),
                     IsRandom = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
-                    AssignedBy = table.Column<string>(type: "nvarchar(20)", nullable: true)
+                    AssignedBy = table.Column<string>(type: "nvarchar(20)", nullable: true),
+                    CommitteeRole = table.Column<int>(type: "int", nullable: true),
+                    CommitteeID = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ReviewerAssignments", x => x.AssignmentID);
                     table.ForeignKey(
+                        name: "FK_ReviewerAssignments_Committees_CommitteeID",
+                        column: x => x.CommitteeID,
+                        principalTable: "Committees",
+                        principalColumn: "CommitteeID",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "FK_ReviewerAssignments_ProjectGroups_GroupID",
                         column: x => x.GroupID,
                         principalTable: "ProjectGroups",
                         principalColumn: "GroupID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ReviewerAssignments_ReviewRounds_ReviewRoundID",
                         column: x => x.ReviewRoundID,
@@ -590,17 +652,24 @@ namespace GPMS.Infrastructure.Migrations
                     MeetLink = table.Column<string>(type: "varchar(500)", unicode: false, maxLength: 500, nullable: true),
                     ScheduledAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     RoomID = table.Column<int>(type: "int", nullable: true),
-                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CommitteeID = table.Column<int>(type: "int", nullable: true),
+                    IsOnline = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ReviewSessionInfo", x => x.SessionID);
                     table.ForeignKey(
+                        name: "FK_ReviewSessionInfo_Committees_CommitteeID",
+                        column: x => x.CommitteeID,
+                        principalTable: "Committees",
+                        principalColumn: "CommitteeID");
+                    table.ForeignKey(
                         name: "FK_ReviewSessionInfo_ProjectGroups_GroupID",
                         column: x => x.GroupID,
                         principalTable: "ProjectGroups",
                         principalColumn: "GroupID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_ReviewSessionInfo_ReviewRounds_ReviewRoundID",
                         column: x => x.ReviewRoundID,
@@ -639,7 +708,7 @@ namespace GPMS.Infrastructure.Migrations
                         column: x => x.GroupID,
                         principalTable: "ProjectGroups",
                         principalColumn: "GroupID",
-                        onDelete: ReferentialAction.Restrict);
+                        onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_Submissions_SubmissionRequirements_RequirementID",
                         column: x => x.RequirementID,
@@ -756,7 +825,13 @@ namespace GPMS.Infrastructure.Migrations
             migrationBuilder.InsertData(
                 table: "Faculties",
                 columns: new[] { "FacultyID", "FacultyCode", "FacultyName" },
-                values: new object[] { 1, "SE", "Software Engineering Faculty" });
+                values: new object[,]
+                {
+                    { 1, "IT", "Information Technology Faculty" },
+                    { 2, "EC", "Economy Faculty" },
+                    { 3, "DA", "Digital Arts Faculty" },
+                    { 4, "LA", "Language Faculty" }
+                });
 
             migrationBuilder.InsertData(
                 table: "Rooms",
@@ -800,16 +875,16 @@ namespace GPMS.Infrastructure.Migrations
                 columns: new[] { "UserID", "AvatarUrl", "CreatedAt", "Email", "FullName", "Phone", "Username" },
                 values: new object[,]
                 {
-                    { "ADMIN001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4942), "admin@fpt.edu.vn", "System Admin", null, "admin" },
-                    { "GV001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4951), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
-                    { "GV002", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4953), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
-                    { "GV003", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4956), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
-                    { "HOD001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4957), "hod@fpt.edu.vn", "Head of Department", null, null },
-                    { "SE180001", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4959), "student1@fpt.edu.vn", "Student One", null, null },
-                    { "SE180002", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4961), "student2@fpt.edu.vn", "Student Two", null, null },
-                    { "SE180003", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4963), "student3@fpt.edu.vn", "Student Three", null, null },
-                    { "SE180004", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4964), "student4@fpt.edu.vn", "Student Four", null, null },
-                    { "SE180005", null, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4966), "student5@fpt.edu.vn", "Student Five", null, null }
+                    { "ADMIN001", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4238), "admin@fpt.edu.vn", "System Admin", null, "admin" },
+                    { "GV001", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4248), "giao-vien1@fpt.edu.vn", "Lecturer One", null, null },
+                    { "GV002", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4250), "giao-vien2@fpt.edu.vn", "Lecturer Two", null, null },
+                    { "GV003", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4252), "giao-vien3@fpt.edu.vn", "Lecturer Three", null, null },
+                    { "HOD001", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4254), "hod@fpt.edu.vn", "Head of Department", null, null },
+                    { "SE180001", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4256), "student1@fpt.edu.vn", "Student One", null, null },
+                    { "SE180002", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4258), "student2@fpt.edu.vn", "Student Two", null, null },
+                    { "SE180003", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4259), "student3@fpt.edu.vn", "Student Three", null, null },
+                    { "SE180004", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4268), "student4@fpt.edu.vn", "Student Four", null, null },
+                    { "SE180005", null, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4270), "student5@fpt.edu.vn", "Student Five", null, null }
                 });
 
             migrationBuilder.InsertData(
@@ -818,7 +893,16 @@ namespace GPMS.Infrastructure.Migrations
                 values: new object[,]
                 {
                     { 1, 1, "SE", "Software Engineering" },
-                    { 2, 1, "SS", "Software Testing" }
+                    { 2, 2, "DM", "Digital Marketing" },
+                    { 3, 3, "GD", "Graphic Design" },
+                    { 4, 4, "EN", "English" },
+                    { 5, 4, "JP", "Japanese" },
+                    { 6, 4, "KR", "Korean" },
+                    { 7, 4, "CN", "Chinese" },
+                    { 8, 1, "IA", "Information Assurance" },
+                    { 9, 1, "IC", "Integrated Circuit Design" },
+                    { 10, 2, "FI", "Finance" },
+                    { 11, 2, "MK", "Marketing" }
                 });
 
             migrationBuilder.InsertData(
@@ -826,16 +910,16 @@ namespace GPMS.Infrastructure.Migrations
                 columns: new[] { "UserRoleID", "AssignedAt", "RoleName", "UserID" },
                 values: new object[,]
                 {
-                    { 1, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4988), "Admin", "ADMIN001" },
-                    { 2, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4989), "Lecturer", "GV001" },
-                    { 3, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4990), "Lecturer", "GV002" },
-                    { 4, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991), "Lecturer", "GV003" },
-                    { 5, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4992), "Student", "SE180001" },
-                    { 6, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993), "Student", "SE180002" },
-                    { 7, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4993), "Student", "SE180003" },
-                    { 8, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994), "Student", "SE180004" },
-                    { 9, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4994), "Student", "SE180005" },
-                    { 10, new DateTime(2026, 3, 25, 0, 42, 41, 858, DateTimeKind.Utc).AddTicks(4991), "HeadOfDept", "HOD001" }
+                    { 1, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4293), "Admin", "ADMIN001" },
+                    { 2, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4294), "Lecturer", "GV001" },
+                    { 3, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4295), "Lecturer", "GV002" },
+                    { 4, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4296), "Lecturer", "GV003" },
+                    { 5, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4297), "Student", "SE180001" },
+                    { 6, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4298), "Student", "SE180002" },
+                    { 7, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4299), "Student", "SE180003" },
+                    { 8, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4299), "Student", "SE180004" },
+                    { 9, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4300), "Student", "SE180005" },
+                    { 10, new DateTime(2026, 3, 28, 19, 3, 46, 596, DateTimeKind.Utc).AddTicks(4297), "HeadOfDept", "HOD001" }
                 });
 
             migrationBuilder.InsertData(
@@ -852,6 +936,36 @@ namespace GPMS.Infrastructure.Migrations
                 name: "IX_ChecklistItems_ChecklistID",
                 table: "ChecklistItems",
                 column: "ChecklistID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_ChairpersonID",
+                table: "Committees",
+                column: "ChairpersonID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_Reviewer2ID",
+                table: "Committees",
+                column: "Reviewer2ID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_Reviewer3ID",
+                table: "Committees",
+                column: "Reviewer3ID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_ReviewerID",
+                table: "Committees",
+                column: "ReviewerID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_SecretaryID",
+                table: "Committees",
+                column: "SecretaryID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Committees_SemesterID",
+                table: "Committees",
+                column: "SemesterID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EvaluationDetails_ItemID",
@@ -985,6 +1099,11 @@ namespace GPMS.Infrastructure.Migrations
                 column: "AssignedBy");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ReviewerAssignments_CommitteeID",
+                table: "ReviewerAssignments",
+                column: "CommitteeID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ReviewerAssignments_GroupID",
                 table: "ReviewerAssignments",
                 column: "GroupID");
@@ -1005,6 +1124,11 @@ namespace GPMS.Infrastructure.Migrations
                 table: "ReviewRounds",
                 columns: new[] { "SemesterID", "RoundNumber" },
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReviewSessionInfo_CommitteeID",
+                table: "ReviewSessionInfo",
+                column: "CommitteeID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ReviewSessionInfo_GroupID",
@@ -1136,6 +1260,9 @@ namespace GPMS.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "ExpertiseAreas");
+
+            migrationBuilder.DropTable(
+                name: "Committees");
 
             migrationBuilder.DropTable(
                 name: "Rooms");

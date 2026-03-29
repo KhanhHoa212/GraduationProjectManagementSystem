@@ -12,5 +12,7 @@ public interface INotificationRepository
     Task MarkAsReadAsync(int notificationId);
     Task MarkAllAsReadAsync(string userId);
     Task ToggleReadStatusAsync(int notificationId);
+    Task<bool> HasNotificationAsync(string recipientId, GPMS.Domain.Enums.NotificationType type, int relatedEntityId, string titleKeyword, System.Threading.CancellationToken cancellationToken = default);
+    Task<bool> HasSessionNotificationAsync(string recipientId, int sessionId, string titleKeyword, System.Threading.CancellationToken cancellationToken = default);
     Task SaveChangesAsync();
 }
