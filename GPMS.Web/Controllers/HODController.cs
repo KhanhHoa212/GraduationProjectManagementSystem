@@ -790,7 +790,7 @@ public class HODController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> ExportReportExcel(int? semesterId)
+    public async Task<IActionResult> ExportReportExcel(int? semesterId, string lang = "vi")
     {
         var targetSemesterId = semesterId == -1 ? null : semesterId;
         var dto = await _reportService.GetHODReportAsync(targetSemesterId);
@@ -798,64 +798,131 @@ public class HODController : Controller
         var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
 
         using var workbook = new XLWorkbook();
-        var ws = workbook.Worksheets.Add("HOD Report");
+        var ws = workbook.Worksheets.Add(lang == "en" ? "GPMS Report" : "Báo cáo GPMS");
+        ws.Style.Font.FontName = "Segoe UI";
 
-        // Title
-        ws.Cell(1, 1).Value = $"GPMS Report – {targetSemObj?.SemesterCode ?? "All Semesters"}";
-        ws.Cell(1, 1).Style.Font.Bold = true;
-        ws.Cell(1, 1).Style.Font.FontSize = 14;
-        ws.Range(1, 1, 1, 3).Merge();
+        // HEADER
+        ws.Cell("A1").Value = "FPT UNIVERSITY";
+        ws.Cell("A1").Style.Font.Bold = true;
+        ws.Cell("A1").Style.Font.FontSize = 16;
+        ws.Cell("A1").Style.Font.FontColor = XLColor.FromHtml("#F37021"); // FPT Orange
+        ws.Range("A1:E1").Merge();
 
-        ws.Cell(2, 1).Value = "Generated at:";
-        ws.Cell(2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+        ws.Cell("A2").Value = "GRADUATION PROJECT MANAGEMENT SYSTEM (GPMS)";
+        ws.Cell("A2").Style.Font.Bold = true;
+        ws.Cell("A2").Style.Font.FontSize = 12;
+        ws.Range("A2:E2").Merge();
 
-        // KPI Section
-        ws.Cell(4, 1).Value = "KPI Summary";
-        ws.Cell(4, 1).Style.Font.Bold = true;
+        string semesterName = targetSemObj?.SemesterCode ?? (lang == "en" ? "ALL" : "TẤT CẢ");
+        ws.Cell("A4").Value = lang == "en" ? $"GENERAL REPORT PORTFOLIO: {semesterName}" : $"TỔNG HỢP BÁO CÁO HỌC KỲ: {semesterName}";
+        ws.Cell("A4").Style.Font.Bold = true;
+        ws.Cell("A4").Style.Font.FontSize = 14;
+        ws.Cell("A4").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        ws.Range("A4:E4").Merge();
+
+        ws.Cell("A5").Value = (lang == "en" ? "Exported at: " : "Ngày xuất báo cáo: ") + DateTime.Now.ToString("dd/MM/yyyy HH:mm");
+        ws.Cell("A5").Style.Font.Italic = true;
+        ws.Cell("A5").Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        ws.Range("A5:E5").Merge();
+
+        // 1. TÓM TẮT SỐ LIỆU (KPI SUMMARY)
+        ws.Cell("A7").Value = lang == "en" ? "1. OVERVIEW & STATUS SUMMARY" : "1. TÓM TẮT SỐ LIỆU VÀ TÌNH TRẠNG";
+        ws.Cell("A7").Style.Font.Bold = true;
+        ws.Cell("A7").Style.Font.FontSize = 12;
+
+        // KPI Table
+        var kpiHeader = ws.Range("A8:B8");
+        kpiHeader.Merge().Value = lang == "en" ? "Overview" : "Tổng quan";
+        kpiHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#F37021");
+        kpiHeader.Style.Font.FontColor = XLColor.White;
+        kpiHeader.Style.Font.Bold = true;
+        kpiHeader.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         
-        ws.Cell(5, 1).Value = "Total Projects"; ws.Cell(5, 2).Value = dto.TotalProjects;
-        ws.Cell(6, 1).Value = "Total Groups";   ws.Cell(6, 2).Value = dto.TotalGroups;
-        ws.Cell(7, 1).Value = "Total Students"; ws.Cell(7, 2).Value = dto.TotalStudents;
-        ws.Cell(8, 1).Value = "Total Supervisors"; ws.Cell(8, 2).Value = dto.TotalSupervisors;
+        ws.Cell("A9").Value = lang == "en" ? "Total Lecturers" : "Tổng số Giảng viên"; ws.Cell("B9").Value = dto.TotalSupervisors;
+        ws.Cell("A10").Value = lang == "en" ? "Total Students" : "Tổng số Sinh viên";  ws.Cell("B10").Value = dto.TotalStudents;
+        ws.Cell("A11").Value = lang == "en" ? "Total Groups" : "Tổng số Nhóm";          ws.Cell("B11").Value = dto.TotalGroups;
+        ws.Cell("A12").Value = lang == "en" ? "Total Projects" : "Tổng số Đề tài";      ws.Cell("B12").Value = dto.TotalProjects;
 
-        // Status Section
-        int row = 10;
-        ws.Cell(row, 1).Value = "Project Status Distribution";
-        ws.Cell(row, 1).Style.Font.Bold = true;
-        row++;
-        ws.Cell(row, 1).Value = "Draft";     ws.Cell(row, 2).Value = dto.DraftProjects; row++;
-        ws.Cell(row, 1).Value = "Active";    ws.Cell(row, 2).Value = dto.ActiveProjects; row++;
-        ws.Cell(row, 1).Value = "Completed"; ws.Cell(row, 2).Value = dto.CompletedProjects; row++;
-        ws.Cell(row, 1).Value = "Cancelled"; ws.Cell(row, 2).Value = dto.CancelledProjects; row++;
+        var kpiRange = ws.Range("A9:B12");
+        kpiRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        kpiRange.Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
 
-        // Workload Section
-        row += 2;
-        ws.Cell(row, 1).Value = "Supervisor Workload";
-        ws.Cell(row, 1).Style.Font.Bold = true;
-        row++;
-        ws.Cell(row, 1).Value = "Lecturer Name";
-        ws.Cell(row, 2).Value = "Project Count";
-        ws.Cell(row, 3).Value = "Student Count";
-        ws.Range(row, 1, row, 3).Style.Font.Bold = true;
-        ws.Range(row, 1, row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#F27123");
-        ws.Range(row, 1, row, 3).Style.Font.FontColor = XLColor.White;
-        row++;
+        // Status Table next to KPI
+        var statusHeader = ws.Range("D8:E8");
+        statusHeader.Merge().Value = lang == "en" ? "Project Status" : "Trạng thái Đề tài";
+        statusHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#F37021");
+        statusHeader.Style.Font.FontColor = XLColor.White;
+        statusHeader.Style.Font.Bold = true;
+        statusHeader.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-        foreach (var sup in dto.SupervisorWorkloads)
+        ws.Cell("D9").Value = lang == "en" ? "Pending Draft" : "Chờ duyệt (Draft)"; ws.Cell("E9").Value = dto.DraftProjects;
+        ws.Cell("D10").Value = lang == "en" ? "Active" : "Đang thực hiện";           ws.Cell("E10").Value = dto.ActiveProjects;
+        ws.Cell("D11").Value = lang == "en" ? "Completed" : "Đã hoàn thành";         ws.Cell("E11").Value = dto.CompletedProjects;
+        ws.Cell("D12").Value = lang == "en" ? "Cancelled" : "Đã hủy";                ws.Cell("E12").Value = dto.CancelledProjects;
+
+        var statusRange = ws.Range("D9:E12");
+        statusRange.Style.Border.SetOutsideBorder(XLBorderStyleValues.Thin);
+        statusRange.Style.Border.SetInsideBorder(XLBorderStyleValues.Thin);
+
+        // 2. CHI TIẾT TẢI TRỌNG GIẢNG VIÊN
+        ws.Cell("A15").Value = lang == "en" ? "2. LECTURER WORKLOAD DISTRIBUTION" : "2. BẢNG PHÂN BỔ TẢI TRỌNG HƯỚNG DẪN";
+        ws.Cell("A15").Style.Font.Bold = true;
+        ws.Cell("A15").Style.Font.FontSize = 12;
+
+        int row = 16;
+        ws.Cell(row, 1).Value = lang == "en" ? "No." : "STT";
+        ws.Cell(row, 2).Value = lang == "en" ? "Lecturer Name" : "Tên Giảng Viên";
+        ws.Cell(row, 3).Value = lang == "en" ? "Project Count" : "Mức độ tải trọng"; // ProjectCount
+        ws.Cell(row, 4).Value = lang == "en" ? "Group Count" : "Số Nhóm";
+        ws.Cell(row, 5).Value = lang == "en" ? "Total Students" : "Tổng Sinh Viên";
+
+        var tableHeader = ws.Range(row, 1, row, 5);
+        tableHeader.Style.Font.Bold = true;
+        tableHeader.Style.Fill.BackgroundColor = XLColor.FromHtml("#F37021");
+        tableHeader.Style.Font.FontColor = XLColor.White;
+        tableHeader.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        
+        int startRow = row + 1;
+        int stt = 1;
+        foreach (var sup in dto.SupervisorWorkloads.OrderByDescending(x => x.ProjectCount))
         {
-            ws.Cell(row, 1).Value = sup.LecturerName;
-            ws.Cell(row, 2).Value = sup.ProjectCount;
-            ws.Cell(row, 3).Value = sup.StudentCount;
             row++;
+            ws.Cell(row, 1).Value = stt++;
+            ws.Cell(row, 2).Value = sup.LecturerName;
+            ws.Cell(row, 3).Value = sup.ProjectCount;
+            ws.Cell(row, 4).Value = sup.GroupCount;
+            ws.Cell(row, 5).Value = sup.StudentCount;
+            
+            ws.Cell(row, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 4).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Cell(row, 5).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
         }
 
-        ws.Columns(1, 3).AdjustToContents();
+        // Add borders to the workload table
+        var tableRange = ws.Range(startRow - 1, 1, row, 5);
+        tableRange.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+        tableRange.Style.Border.TopBorder = XLBorderStyleValues.Thin;
+        tableRange.Style.Border.LeftBorder = XLBorderStyleValues.Thin;
+        tableRange.Style.Border.RightBorder = XLBorderStyleValues.Thin;
+        tableRange.Style.Border.InsideBorder = XLBorderStyleValues.Thin;
+        
+        // Add Autofilter
+        ws.Range(startRow - 1, 1, startRow - 1, 5).SetAutoFilter();
+
+        // Fit columns
+        ws.Column(1).Width = 8;
+        ws.Column(2).Width = 35;
+        ws.Column(3).Width = 25;
+        ws.Column(4).Width = 15;
+        ws.Column(5).Width = 20;
 
         using var stream = new MemoryStream();
         workbook.SaveAs(stream);
         stream.Seek(0, SeekOrigin.Begin);
 
-        var fileName = $"GPMS_HOD_Report_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+        var semLabel = targetSemObj?.SemesterCode ?? "ALL";
+        var fileName = $"GPMS_Report_{semLabel}_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
         return File(stream.ToArray(), 
             "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
             fileName);
