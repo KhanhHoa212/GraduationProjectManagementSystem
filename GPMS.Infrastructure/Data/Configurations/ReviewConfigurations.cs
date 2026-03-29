@@ -89,5 +89,40 @@ public class ReviewerAssignmentConfiguration : IEntityTypeConfiguration<Reviewer
             .WithMany(u => u.ReviewersAssignedByMe)
             .HasForeignKey(ra => ra.AssignedBy)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(ra => ra.Committee)
+            .WithMany(c => c.ReviewerAssignments)
+            .HasForeignKey(ra => ra.CommitteeID)
+            .OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+public class CommitteeConfiguration : IEntityTypeConfiguration<Committee>
+{
+    public void Configure(EntityTypeBuilder<Committee> builder)
+    {
+        builder.ToTable("Committees");
+        builder.HasKey(c => c.CommitteeID);
+        builder.Property(c => c.CommitteeName).IsRequired().HasMaxLength(100);
+
+        builder.HasOne(c => c.Semester)
+            .WithMany()
+            .HasForeignKey(c => c.SemesterID)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.Chairperson)
+            .WithMany()
+            .HasForeignKey(c => c.ChairpersonID)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.Secretary)
+            .WithMany()
+            .HasForeignKey(c => c.SecretaryID)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne(c => c.Reviewer)
+            .WithMany()
+            .HasForeignKey(c => c.ReviewerID)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

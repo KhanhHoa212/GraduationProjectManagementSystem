@@ -41,22 +41,22 @@ public class EvaluationSeeder : IDataSeeder
 
         var supervisors = await _context.ProjectSupervisors.ToListAsync();
 
+        var existingEvalKeys = new HashSet<(int, int, string)>(
+            await _context.Evaluations.Select(e => new ValueTuple<int, int, string>(e.GroupID, e.ReviewRoundID, e.ReviewerID)).ToListAsync()
+        );
+
         int count = 0;
         foreach (var ra in assignments)
         {
             var checklist = ra.ReviewRound.ReviewChecklist;
             if (checklist == null) continue;
             
-            // Check if evaluation already exists
-            var exists = await _context.Evaluations.AnyAsync(e => 
-                e.ReviewRoundID == ra.ReviewRoundID && 
-                e.ReviewerID == ra.ReviewerID && 
-                e.GroupID == ra.GroupID);
-
-            if (exists) continue;
-
             // Randomly skipping some evaluations to mock incomplete data
             if (ra.ReviewRound.Status == RoundStatus.Ongoing && faker.Random.Double() > 0.7) continue;
+
+            // Check if evaluation already exists - Using HashSet
+            if (existingEvalKeys.Contains((ra.GroupID, ra.ReviewRoundID, ra.ReviewerID))) 
+                continue;
 
             var evaluation = new Evaluation
             {
@@ -97,7 +97,7 @@ public class EvaluationSeeder : IDataSeeder
             {
                 Evaluation = evaluation,
                 Content = faker.Lorem.Sentences(2),
-                CreatedAt = evaluation.SubmittedAt.Value.AddHours(faker.Random.Int(1, 24))
+                CreatedAt = (evaluation.SubmittedAt ?? DateTime.UtcNow).AddHours(faker.Random.Int(1, 24))
             };
             feedbacks.Add(feedback);
 
@@ -129,13 +129,21 @@ public class EvaluationSeeder : IDataSeeder
             count++;
         }
 
-        if (evaluations.Any())
+        try 
         {
-            await _context.Evaluations.AddRangeAsync(evaluations);
-            await _context.EvaluationDetails.AddRangeAsync(details);
-            await _context.Feedbacks.AddRangeAsync(feedbacks);
-            await _context.FeedbackApprovals.AddRangeAsync(approvals);
-            await _context.SaveChangesAsync();
+            if (evaluations.Any()) await _context.Evaluations.AddRangeAsync(evaluations);
+            if (details.Any()) await _context.EvaluationDetails.AddRangeAsync(details);
+            if (feedbacks.Any()) await _context.Feedbacks.AddRangeAsync(feedbacks);
+            if (approvals.Any()) await _context.FeedbackApprovals.AddRangeAsync(approvals);
+            
+            if (evaluations.Any() || details.Any() || feedbacks.Any() || approvals.Any())
+                await _context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            Console.WriteLine($"[Seeding] EvaluationSeeder FAILED: {msg}");
+        }
         }
     }
 }

@@ -40,7 +40,8 @@ public class AuthController : Controller
         {
             new Claim(ClaimTypes.NameIdentifier, user.UserID),
             new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-            new Claim(ClaimTypes.Name, user.FullName)
+            new Claim(ClaimTypes.Name, user.FullName),
+            new Claim("AvatarUrl", user.AvatarUrl ?? string.Empty)
         };
 
         foreach (var role in user.Roles)

@@ -4,56 +4,52 @@
     Layout = "_Layout";
 }
 
-<div class="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+<div class="p-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
     <!-- Header Section -->
-    <div class="flex flex-col gap-2">
-        <h1 class="text-[32px] font-bold text-[#0f172a] tracking-tight">Documentation Submission</h1>
-        <p class="text-[#64748b] text-[16px]">Upload project documents for each review round.</p>
+    <div class="flex flex-col gap-1">
+        <div class="flex items-center gap-2 text-[#64748b] text-[13px] font-medium mb-1">
+            <span>Student Portal</span>
+            <span class="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span class="text-[#2563eb]">Submissions</span>
+        </div>
+        <h1 class="text-[36px] font-black text-[#0f172a] tracking-tight leading-tight">Documentation Submission</h1>
+        <p class="text-[#64748b] text-[16px] max-w-2xl">Manage and upload your project deliverables for each review stage. Ensure all documents meet the required format before submission.</p>
     </div>
-
-    @if (TempData["Success"] != null)
+    
+    @if (TempData["SuccessMessage"] != null)
     {
-        <div class="flex items-center gap-3 p-4 px-6 bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl text-[#166534] animate-in fade-in slide-in-from-top-4 duration-500">
-            <span class="material-symbols-outlined">check_circle</span>
-            <span class="text-[14px] font-semibold">@TempData["Success"]</span>
-        </div>
+        <div id="htmx-notification-trigger" class="hidden" data-message="@TempData["SuccessMessage"]" data-type="success"></div>
     }
-    @if (TempData["Error"] != null)                                                                                                                     
+    @if (TempData["ErrorMessage"] != null)
     {
-        <div class="flex items-center gap-3 p-4 px-6 bg-[#fef2f2] border border-[#fecaca] rounded-xl text-[#991b1b] animate-in fade-in slide-in-from-top-4 duration-500">
-            <span class="material-symbols-outlined">error</span>
-            <span class="text-[14px] font-semibold">@TempData["Error"]</span>
-        </div>
+        <div id="htmx-notification-trigger" class="hidden" data-message="@TempData["ErrorMessage"]" data-type="error"></div>
     }
 
-    <!-- Tabs Navigation -->
-    <div class="flex items-center gap-1 border-b border-[#e2e8f0]">
+
+    <!-- Tabs Navigation (Segmented Control Style) -->
+    <div class="inline-flex p-1.5 bg-[#f1f5f9] rounded-2xl border border-[#e2e8f0]">
         @foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
         {
             var isActive = round.RoundNumber == Model.ActiveRoundNumber;
             <button onclick="switchRound(@round.RoundNumber)" 
-                    class="group relative px-6 py-4 text-[14px] font-semibold transition-all
-                           @(isActive ? "text-[#2563eb]" : "text-[#64748b] hover:text-[#0f172a]")"
-                    id="tab-round-@round.RoundNumber">
-                <div class="flex items-center gap-2">
+                    id="tab-round-@round.RoundNumber"
+                    class="group relative px-8 py-3 text-[14px] font-bold rounded-xl transition-all duration-300
+                           @(isActive ? "bg-white text-[#2563eb] shadow-sm ring-1 ring-[#e2e8f0]" : "text-[#64748b] hover:text-[#0f172a] hover:bg-white/50")">
+                <div class="flex items-center gap-2.5">
                     @if (round.Status == GPMS.Domain.Enums.RoundStatus.Completed)
                     {
-                        <span class="material-symbols-outlined text-[18px] text-[#16a34a]">check_box</span>
+                        <span class="material-symbols-outlined text-[20px] text-[#16a34a]">check_circle</span>
                     }
                     else if (round.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
                     {
-                        <span class="material-symbols-outlined text-[18px] text-[#2563eb]">sync</span>
+                        <span class="material-symbols-outlined text-[20px] text-[#2563eb] animate-spin-slow">sync</span>
                     }
                     else
                     {
-                        <span class="material-symbols-outlined text-[18px] text-[#94a3b8]">hourglass_empty</span>
+                        <span class="material-symbols-outlined text-[20px] text-[#94a3b8]">lock</span>
                     }
                     Round @round.RoundNumber
                 </div>
-                @if (isActive)
-                {
-                    <div class="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb] rounded-full"></div>
-                }
             </button>
         }
     </div>
@@ -71,18 +67,31 @@
             @if (round.Status == GPMS.Domain.Enums.RoundStatus.Ongoing)
             {
                 var daysLeft = (round.EndDate - DateTime.Now).Days;
-                <div class="flex items-center justify-between p-4 px-6 bg-[#eff6ff] border border-[#dbeafe] rounded-xl">
-                    <div class="flex items-center gap-3">
-                        <div class="size-10 rounded-full bg-white flex items-center justify-center text-[#2563eb] shadow-sm">
-                            <span class="material-symbols-outlined">alarm</span>
-                        </div>
-                        <div>
-                            <p class="text-[14px] font-bold text-[#1e40af]">Round @round.RoundNumber ends: @round.EndDate.ToString("dd/MM/yyyy") @(daysLeft > 0 ? $"· {daysLeft} days left" : "· Ending today")</p>
-                            <p class="text-[13px] text-[#3b82f6]">Please complete the required documents below.</p>
-                        </div>
+                <div class="relative overflow-hidden p-6 bg-gradient-to-r from-[#eff6ff] to-[#f8faff] border border-[#dbeafe] rounded-2xl shadow-sm group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-110 transition-transform">
+                        <span class="material-symbols-outlined text-[80px]">auto_awesome</span>
                     </div>
-                    <div class="px-3 py-1 bg-[#dbeafe] text-[#1e40af] text-[12px] font-bold rounded-full">
-                        Submitted: @submittedCount / @totalCount
+                    <div class="flex items-center justify-between gap-6 relative z-10">
+                        <div class="flex items-center gap-5">
+                            <div class="size-14 rounded-2xl bg-white flex items-center justify-center text-[#2563eb] shadow-md border border-[#dbeafe]">
+                                <span class="material-symbols-outlined text-[28px]">event_upcoming</span>
+                            </div>
+                            <div>
+                                <h4 class="text-[15px] font-black text-[#1e40af] uppercase tracking-wider mb-0.5">Deadline approaching</h4>
+                                <p class="text-[14px] text-[#3b82f6] font-medium">Round @round.RoundNumber ends on <span class="text-[#1e40af] font-bold">@round.EndDate.ToString("MMMM dd, yyyy")</span> · @(daysLeft > 0 ? $" {daysLeft} days remaining" : "Ending today")</p>
+                            </div>
+                        </div>
+                        <div class="flex flex-col items-end gap-2">
+                            <div class="px-4 py-1.5 bg-[#2563eb] text-white text-[13px] font-bold rounded-full shadow-lg shadow-blue-500/20">
+                                @submittedCount / @totalCount Completed
+                            </div>
+                            @{
+                                var progress = (double)submittedCount / totalCount * 100;
+                            }
+                            <div class="w-32 h-1.5 bg-[#dbeafe] rounded-full overflow-hidden">
+                                <div class="h-full bg-[#2563eb] rounded-full transition-all duration-1000" style="width: @(progress)%"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             }
@@ -101,107 +110,131 @@
                     {
                         var isOverdue = !sub.IsSubmitted && sub.IsLate;
                         
-                        <div class="bg-white border @(isOverdue ? "border-red-100 bg-red-50/10" : "border-[#e2e8f0]") rounded-2xl p-6 transition-all hover:shadow-md">
-                            <div class="flex items-start justify-between gap-6">
-                                <div class="flex items-start gap-4 flex-1">
-                                    <div class="size-12 rounded-full flex items-center justify-center flex-shrink-0 mt-1
-                                                @(sub.IsSubmitted ? "bg-green-50 text-green-600" : (isOverdue ? "bg-red-50 text-red-600" : "bg-orange-50 text-orange-600"))">
-                                        <span class="material-symbols-outlined text-[24px]">
-                                            @(sub.IsSubmitted ? "check_circle" : (isOverdue ? "cancel" : "pending"))
-                                        </span>
-                                    </div>
-                                    <div class="space-y-1">
-                                        <h3 class="text-[18px] font-bold text-[#0f172a]">@sub.DocumentName</h3>
-                                        @if (isOverdue)
-                                        {
-                                            <p class="text-[13px] font-semibold text-red-600 flex items-center gap-2">
-                                                <span class="material-symbols-outlined text-[16px]">warning</span>
-                                                Overdue — You can still submit, but it will be marked as late.
-                                            </p>
-                                        }
-                                        else if (!sub.IsSubmitted)
-                                        {
-                                            <p class="text-[13px] text-[#64748b]">FORMAT: @(string.IsNullOrEmpty(sub.AllowedFormats) ? "ANY" : sub.AllowedFormats.ToUpper()) · MAX: @(sub.MaxFileSizeMB ?? 50)MB · <span class="text-orange-600 font-medium">@( (sub.Deadline - DateTime.Now).Days > 0 ? $"{(sub.Deadline - DateTime.Now).Days} days left!" : "Due today!" )</span></p>
-                                        }
-                                        else
-                                        {
-                                            <p class="text-[13px] text-[#64748b]">Requirement completed successfully.</p>
-                                        }
-
-                                        @if (sub.IsSubmitted)
-                                        {
-                                            <div class="mt-4 p-3 bg-white border border-[#e2e8f0] rounded-xl flex items-center justify-between group/file">
-                                                <div class="flex items-center gap-3">
-                                                    <div class="size-10 rounded bg-[#f8fafc] flex items-center justify-center text-[#64748b]">
-                                                        <span class="material-symbols-outlined">description</span>
-                                                    </div>
-                                                    <div>
-                                                        <p class="text-[13px] font-bold text-[#0f172a]">@sub.FileName</p>
-                                                        <p class="text-[11px] text-[#94a3b8]">Submitted: @sub.SubmittedAt?.ToString("HH:mm · dd/MM/yyyy")</p>
-                                                    </div>
-                                                </div>
-                                                <div class="flex items-center gap-2">
-                                                    @{
-                                                        var extension = System.IO.Path.GetExtension(sub.FileName)?.ToLower();
-                                                        var canView = extension != ".zip" && extension != ".rar" && extension != ".7z";
-                                                    }
-                                                    @if (canView)
-                                                    {
-                                                        <a href="@sub.FileUrl" target="_blank" class="px-4 py-2 text-[13px] font-semibold text-[#475569] hover:bg-[#f8fafc] rounded-lg transition-colors flex items-center gap-2">
-                                                            View
-                                                            <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-                                                        </a>
-                                                    }
-                                                    <a asp-action="DownloadSubmission" asp-route-id="@sub.SubmissionID" class="no-spinner px-4 py-2 text-[13px] font-semibold text-[#2563eb] hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-2">
-                                                        Download
-                                                        <span class="material-symbols-outlined text-[16px]">download</span>
-                                                    </a>
-                                                    <button onclick="toggleResubmit(@sub.RequirementID)" class="px-4 py-2 text-[13px] font-semibold bg-[#1e293b] text-white hover:bg-[#0f172a] rounded-lg transition-colors shadow-sm">Re-submit</button>
-                                                </div>
+                        <div class="group relative bg-white border @(isOverdue ? "border-red-200" : "border-[#e2e8f0]") rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-0.5">
+                            <!-- Status Accent Bar -->
+                            <div class="absolute left-0 top-0 bottom-0 w-1.5 
+                                        @(sub.IsSubmitted ? "bg-[#22c55e]" : (isOverdue ? "bg-[#ef4444]" : "bg-[#f59e0b]"))"></div>
+                            
+                            <div class="p-7">
+                                <div class="flex items-start justify-between gap-6">
+                                    <div class="flex items-start gap-5 flex-1">
+                                        <div class="size-14 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 shadow-sm
+                                                    @(sub.IsSubmitted ? "bg-[#f0fdf4] text-[#16a34a] border border-[#dcfce7]" : (isOverdue ? "bg-[#fef2f2] text-[#dc2626] border border-[#fee2e2]" : "bg-[#fffbeb] text-[#d97706] border border-[#fef3c7]"))">
+                                            <span class="material-symbols-outlined text-[30px]">
+                                                @(sub.IsSubmitted ? "verified" : (isOverdue ? "emergency_home" : "pending_actions"))
+                                            </span>
+                                        </div>
+                                        <div class="space-y-2 flex-1">
+                                            <div class="flex items-center gap-3">
+                                                <h3 class="text-[19px] font-black text-[#0f172a] tracking-tight">@sub.DocumentName</h3>
+                                                @if (sub.IsSubmitted) {
+                                                    <span class="px-2.5 py-0.5 bg-[#f0fdf4] text-[#16a34a] text-[11px] font-bold rounded-md uppercase tracking-wider border border-[#dcfce7]">Submitted</span>
+                                                } else if (isOverdue) {
+                                                    <span class="px-2.5 py-0.5 bg-[#fef2f2] text-[#dc2626] text-[11px] font-bold rounded-md uppercase tracking-wider border border-[#fee2e2]">Overdue</span>
+                                                }
                                             </div>
-                                            
-                                            <!-- Hidden Resubmit Form -->
-                                            <div id="resubmit-form-@sub.RequirementID" class="hidden mt-6">
-                                                <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="space-y-4">
-                                                    <input type="hidden" name="requirementId" value="@sub.RequirementID" />
-                                                    <div class="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 bg-white/5 flex flex-col items-center justify-center gap-4 hover:border-[#2563eb] hover:bg-blue-50/10 transition-all cursor-pointer relative">
-                                                        <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" accept="@sub.AllowedFormats" />
-                                                        <div class="size-12 rounded-full bg-white flex items-center justify-center text-[#94a3b8] shadow-sm">
-                                                            <span class="material-symbols-outlined text-[32px]">upload_file</span>
+
+                                            @if (isOverdue)
+                                            {
+                                                <p class="text-[14px] font-medium text-[#ef4444] flex items-center gap-2">
+                                                    <span class="material-symbols-outlined text-[18px]">info</span>
+                                                    Deadline passed — A late submission will be recorded.
+                                                </p>
+                                            }
+                                            else if (!sub.IsSubmitted)
+                                            {
+                                                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-[#64748b]">
+                                                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">file_present</span> @(string.IsNullOrEmpty(sub.AllowedFormats) ? "Any format" : sub.AllowedFormats.ToUpper())</span>
+                                                    <span class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">database</span> Max @(sub.MaxFileSizeMB ?? 50)MB</span>
+                                                    <span class="flex items-center gap-1.5 text-[#d97706] font-bold bg-[#fffbeb] px-2 py-0.5 rounded">
+                                                        <span class="material-symbols-outlined text-[16px]">timer</span>
+                                                        @( (sub.Deadline - DateTime.Now).Days > 0 ? $"{(sub.Deadline - DateTime.Now).Days} days left" : "Due today" )
+                                                    </span>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <p class="text-[14px] text-[#64748b] font-medium">Verified deliverable received by the system.</p>
+                                            }
+
+                                            @if (sub.IsSubmitted)
+                                            {
+                                                <div class="mt-6 p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-2xl flex items-center justify-between group/file hover:border-[#ccd5e0] transition-colors">
+                                                    <div class="flex items-center gap-4">
+                                                        <div class="size-12 rounded-xl bg-white flex items-center justify-center text-[#2563eb] shadow-sm border border-[#e2e8f0]">
+                                                            <span class="material-symbols-outlined text-[24px]">description</span>
                                                         </div>
-                                                        <div class="text-center">
-                                                            <p class="text-[14px] font-bold text-[#0f172a]" id="fileName-@sub.RequirementID">Click to select new file</p>
-                                                            <p class="text-[12px] text-[#94a3b8]" id="formatInfo-@sub.RequirementID">This will update your submission to Version @((sub.Version ?? 0) + 1)</p>
-                                                            <p class="hidden text-[12px] font-bold text-red-500 mt-1" id="error-@sub.RequirementID"></p>
+                                                        <div>
+                                                            <p class="text-[14px] font-bold text-[#0f172a]">@sub.FileName</p>
+                                                            <p class="text-[12px] text-[#94a3b8] font-medium">@sub.SubmittedAt?.ToString("MMM dd, yyyy · HH:mm")</p>
                                                         </div>
                                                     </div>
-                                                    <div class="flex justify-end gap-3">
-                                                        <button type="button" onclick="toggleResubmit(@sub.RequirementID)" class="px-6 py-2 text-[14px] font-semibold text-[#64748b] hover:bg-[#f8fafc] rounded-xl transition-all">Cancel</button>
-                                                        <button type="submit" id="resubmitBtn-@sub.RequirementID" class="hidden px-8 py-2 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Confirm Re-submit</button>
+                                                    <div class="flex items-center gap-2">
+                                                        @{
+                                                            var extension = System.IO.Path.GetExtension(sub.FileName)?.ToLower();
+                                                            var canView = extension != ".zip" && extension != ".rar" && extension != ".7z";
+                                                        }
+                                                        @if (canView)
+                                                        {
+                                                            <a href="@sub.FileUrl" target="_blank" hx-boost="false" data-no-load class="px-4 py-2 text-[13px] font-bold text-[#475569] hover:bg-white rounded-xl transition-all flex items-center gap-2 border border-transparent hover:border-[#e2e8f0]">
+                                                                Preview
+                                                                <span class="material-symbols-outlined text-[18px]">visibility</span>
+                                                            </a>
+                                                        }
+                                                        <a asp-action="DownloadSubmission" asp-route-id="@sub.SubmissionID" hx-boost="false" data-no-load class="no-spinner px-4 py-2 text-[13px] font-bold text-[#2563eb] hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2 border border-transparent hover:border-blue-100">
+                                                            Download
+                                                            <span class="material-symbols-outlined text-[18px]">cloud_download</span>
+                                                        </a>
+                                                        <button onclick="toggleResubmit(@sub.RequirementID)" class="ml-2 px-5 py-2 text-[13px] font-bold bg-[#0f172a] text-white hover:bg-[#1e293b] rounded-xl transition-all shadow-md active:scale-95">Re-submit</button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Hidden Resubmit Form -->
+                                                <div id="resubmit-form-@sub.RequirementID" class="hidden mt-6 animate-in fade-in slide-in-from-top-4 duration-300">
+                                                    <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="space-y-4">
+                                                        <input type="hidden" name="requirementId" value="@sub.RequirementID" />
+                                                        <input type="hidden" name="roundNumber" value="@round.RoundNumber" />
+                                                        <div class="group/dropzone border-2 border-dashed border-[#e2e8f0] rounded-2xl p-10 bg-[#f8fafc]/50 flex flex-col items-center justify-center gap-4 hover:border-[#2563eb] hover:bg-[#eff6ff] transition-all cursor-pointer relative">
+                                                            <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" accept="@sub.AllowedFormats" />
+                                                            <div class="size-16 rounded-full bg-white flex items-center justify-center text-[#94a3b8] group-hover/dropzone:text-[#2563eb] group-hover/dropzone:scale-110 transition-all shadow-md">
+                                                                <span class="material-symbols-outlined text-[36px]">upload</span>
+                                                            </div>
+                                                            <div class="text-center">
+                                                                <p class="text-[15px] font-bold text-[#0f172a]" id="fileName-@sub.RequirementID">Upload a newer version</p>
+                                                                <p class="text-[13px] text-[#64748b] font-medium mt-1" id="formatInfo-@sub.RequirementID">This will increment submission to <span class="text-[#2563eb]">Version @((sub.Version ?? 0) + 1)</span></p>
+                                                                <p class="hidden text-[13px] font-bold text-red-500 mt-2" id="error-@sub.RequirementID"></p>
+                                                            </div>
+                                                        </div>
+                                                        <div class="flex justify-end gap-3">
+                                                            <button type="button" onclick="toggleResubmit(@sub.RequirementID)" class="px-6 py-2.5 text-[14px] font-bold text-[#64748b] hover:bg-[#f1f5f9] rounded-xl transition-all">Discard</button>
+                                                            <button type="submit" id="resubmitBtn-@sub.RequirementID" class="hidden px-10 py-2.5 bg-[#2563eb] text-white text-[14px] font-black rounded-xl hover:bg-[#1d4ed8] transition-all shadow-lg shadow-blue-500/25 active:scale-[0.98]">Push New Version</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="mt-6">
+                                                    <input type="hidden" name="requirementId" value="@sub.RequirementID" />
+                                                    <input type="hidden" name="roundNumber" value="@round.RoundNumber" />
+                                                    <div class="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-10 bg-[#f8fafc] flex flex-col items-center justify-center gap-4 group/dropzone hover:border-[#2563eb] hover:bg-[#eff6ff] transition-all cursor-pointer relative overflow-hidden">
+                                                        <div class="absolute inset-0 bg-blue-50 opacity-0 group-hover/dropzone:opacity-30 transition-opacity"></div>
+                                                        <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" required accept="@sub.AllowedFormats" />
+                                                        <div class="size-16 rounded-full bg-white flex items-center justify-center text-[#94a3b8] group-hover/dropzone:text-[#2563eb] group-hover/dropzone:scale-110 transition-all shadow-md z-10">
+                                                            <span class="material-symbols-outlined text-[36px]">cloud_upload</span>
+                                                        </div>
+                                                        <div class="text-center z-10">
+                                                            <p class="text-[16px] font-black text-[#0f172a]" id="fileName-@sub.RequirementID">Drag and drop file or click to browse</p>
+                                                            <p class="text-[13px] text-[#64748b] font-medium mt-1" id="formatInfo-@sub.RequirementID">Allowed: @(string.IsNullOrEmpty(sub.AllowedFormats) ? "All files" : sub.AllowedFormats.Replace(".", "").Replace(",", ", ").ToUpper())</p>
+                                                            <p class="hidden text-[13px] font-bold text-[#dc2626] mt-2 bg-red-50 px-3 py-1 rounded-lg" id="error-@sub.RequirementID"></p>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-5 flex justify-end">
+                                                        <button type="submit" id="submitBtn-@sub.RequirementID" class="hidden px-12 py-3 bg-[#2563eb] text-white text-[15px] font-black rounded-xl hover:bg-[#1d4ed8] hover:shadow-xl hover:shadow-blue-500/25 transition-all active:scale-[0.98]">Complete Submission</button>
                                                     </div>
                                                 </form>
-                                            </div>
-                                        }
-                                        else
-                                        {
-                                            <form asp-action="SubmitWork" method="post" enctype="multipart/form-data" class="mt-4">
-                                                <input type="hidden" name="requirementId" value="@sub.RequirementID" />
-                                                <div class="border-2 border-dashed border-[#e2e8f0] rounded-2xl p-8 bg-white/50 flex flex-col items-center justify-center gap-4 group/dropzone hover:border-[#2563eb] hover:bg-blue-50/30 transition-all cursor-pointer relative">
-                                                    <input type="file" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" onchange="updateFileName(this, @sub.RequirementID, '@sub.AllowedFormats')" required accept="@sub.AllowedFormats" />
-                                                    <div class="size-12 rounded-full bg-white flex items-center justify-center text-[#94a3b8] group-hover/dropzone:scale-110 group-hover/dropzone:text-[#2563eb] transition-all shadow-sm">
-                                                        <span class="material-symbols-outlined text-[32px]">upload_file</span>
-                                                    </div>
-                                                    <div class="text-center">
-                                                        <p class="text-[14px] font-bold text-[#0f172a]" id="fileName-@sub.RequirementID">Drag and drop file or click to select</p>
-                                                        <p class="text-[12px] text-[#94a3b8]" id="formatInfo-@sub.RequirementID">Supports @(string.IsNullOrEmpty(sub.AllowedFormats) ? "all file types" : sub.AllowedFormats.Replace(".", "").Replace(",", ", ").ToUpper() + " files")</p>
-                                                        <p class="hidden text-[12px] font-bold text-red-500 mt-1" id="error-@sub.RequirementID"></p>
-                                                    </div>
-                                                </div>
-                                                <div class="mt-4 flex justify-end">
-                                                    <button type="submit" id="submitBtn-@sub.RequirementID" class="hidden px-8 py-2.5 bg-[#2563eb] text-white text-[14px] font-bold rounded-xl hover:bg-[#1d4ed8] transition-all shadow-md active:scale-[0.98]">Upload & Submit</button>
-                                                </div>
-                                            </form>
-                                        }
+                                            }
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -225,22 +258,13 @@
 
         // Update tab styles
         document.querySelectorAll('[id^="tab-round-"]').forEach(tab => {
-            tab.classList.remove('text-[#2563eb]');
-            tab.classList.add('text-[#64748b]');
-            tab.classList.add('hover:text-[#0f172a]');
-            
-            const underline = tab.querySelector('.absolute');
-            if (underline) underline.remove();
+            tab.classList.remove('bg-white', 'text-[#2563eb]', 'shadow-sm', 'ring-1', 'ring-[#e2e8f0]');
+            tab.classList.add('text-[#64748b]', 'hover:text-[#0f172a]', 'hover:bg-white/50');
         });
 
         const activeTab = document.getElementById('tab-round-' + roundNumber);
-        activeTab.classList.remove('text-[#64748b]');
-        activeTab.classList.remove('hover:text-[#0f172a]');
-        activeTab.classList.add('text-[#2563eb]');
-        
-        const underline = document.createElement('div');
-        underline.className = 'absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb] rounded-full';
-        activeTab.appendChild(underline);
+        activeTab.classList.remove('text-[#64748b]', 'hover:text-[#0f172a]', 'hover:bg-white/50');
+        activeTab.classList.add('bg-white', 'text-[#2563eb]', 'shadow-sm', 'ring-1', 'ring-[#e2e8f0]');
     }
 
     function updateFileName(input, requirementId, allowedFormats) {

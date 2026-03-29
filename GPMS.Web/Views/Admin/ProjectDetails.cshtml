@@ -1,0 +1,175 @@
+@model GPMS.Application.DTOs.ProjectDetailDto
+@using GPMS.Domain.Enums
+@{
+    ViewData["Title"] = "Project Detail";
+    Layout = "_Layout";
+    
+    var statusBadgeClass = Model.Status switch {
+        ProjectStatus.Active => "bg-emerald-500/10 text-emerald-600 border-emerald-100",
+        ProjectStatus.Draft => "bg-amber-500/10 text-amber-600 border-amber-100",
+        ProjectStatus.Completed => "bg-blue-500/10 text-blue-600 border-blue-100",
+        ProjectStatus.Cancelled => "bg-red-500/10 text-red-600 border-red-100",
+        _ => "bg-slate-100 text-slate-500 border-slate-200"
+    };
+}
+
+<div class="space-y-6 px-4 py-6">
+    <!-- Breadcrumb -->
+    <nav class="flex items-center gap-2 text-sm text-slate-400 font-medium">
+        <a href="/Admin/Dashboard" class="hover:text-primary-500 transition-colors no-underline">Admin</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <a href="/Admin/Projects" class="hover:text-primary-500 transition-colors no-underline">Projects</a>
+        <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+        <span class="text-slate-900 font-bold">@Model.ProjectCode</span>
+    </nav>
+
+    <!-- Header Card -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-8 opacity-5">
+            <span class="material-symbols-outlined text-9xl">account_tree</span>
+        </div>
+        
+        <div class="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="flex items-center gap-5">
+                <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-2xl font-black shadow-lg shadow-primary-500/20">
+                    @Model.ProjectCode.Substring(0, Math.Min(2, Model.ProjectCode.Length))
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight">@Model.ProjectName</h1>
+                    <div class="flex items-center gap-3 mt-1.5">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black border uppercase tracking-wider @statusBadgeClass">@Model.Status</span>
+                        <span class="text-slate-300">•</span>
+                        <span class="text-xs font-bold text-slate-500">Mã: @Model.ProjectCode</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 mt-10 pt-8 border-t border-slate-100">
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Chuyên ngành</p>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-[18px]">school</span>
+                    <span class="text-sm font-bold text-slate-700">@Model.MajorName</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Học kỳ áp dụng</p>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-[18px]">calendar_today</span>
+                    <span class="text-sm font-bold text-slate-700">@Model.SemesterCode - @Model.AcademicYear</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Giảng viên hướng dẫn</p>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-500 text-[18px]">person</span>
+                    <span class="text-sm font-bold text-slate-700">@(Model.SupervisorName ?? "Chưa phân công")</span>
+                </div>
+            </div>
+            <div>
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Ngày khởi tạo</p>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-slate-400 text-[18px]">event_note</span>
+                    <span class="text-sm font-bold text-slate-700">@Model.CreatedAt.ToString("dd/MM/yyyy")</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Description -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-primary-500 rounded-full"></span>
+                    Mô tả đồ án
+                </h2>
+                <div class="text-slate-600 leading-relaxed text-sm bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                    @(string.IsNullOrEmpty(Model.Description) ? "Không có mô tả chi tiết." : Model.Description)
+                </div>
+            </div>
+
+            <!-- Team Members -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                        <span class="w-1.5 h-6 bg-blue-500 rounded-full"></span>
+                        Thành viên thực hiện
+                    </h2>
+                    <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg border border-blue-100">
+                        @Model.Members.Count Sinh viên
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @if (Model.Members.Any())
+                    {
+                        foreach (var member in Model.Members)
+                        {
+                            <div class="flex items-center justify-between p-4 bg-slate-50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-md hover:border-blue-200 transition-all group">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-sm group-hover:scale-105 transition-transform">
+                                        @string.Concat(member.FullName.Split(' ').Take(2).Select(w => w[0].ToString().ToUpper()))
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-slate-800 text-sm">@member.FullName</p>
+                                        <p class="text-[10px] text-slate-400 font-medium">MSSV: @member.UserID</p>
+                                    </div>
+                                </div>
+                                <span class="px-2 py-1 @(member.RoleInGroup == GroupRole.Leader ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-slate-200 text-slate-500 border-slate-300") text-[9px] font-black uppercase rounded border tracking-wider">
+                                    @member.RoleInGroup
+                                </span>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="col-span-full py-10 flex flex-col items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                            <span class="material-symbols-outlined text-4xl mb-2">person_off</span>
+                            <p class="text-xs font-bold uppercase tracking-widest">Chưa có thành viên đăng ký</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Sidebar info -->
+        <div class="space-y-6">
+            <!-- Review Rounds Status -->
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+                <h2 class="text-sm font-black text-slate-900 uppercase tracking-widest mb-6 flex items-center gap-2">
+                    <span class="w-1.5 h-6 bg-emerald-500 rounded-full"></span>
+                    Trạng thái các giai đoạn
+                </h2>
+                <div class="space-y-4">
+                    @foreach (var round in Model.ReviewRounds.OrderBy(r => r.RoundNumber))
+                    {
+                        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-slate-700 font-black text-xs">
+                                    @round.RoundNumber
+                                </div>
+                                <span class="text-xs font-bold text-slate-600 truncate max-w-[120px]">@round.Description</span>
+                            </div>
+                            <span class="px-2 py-0.5 bg-slate-200 text-slate-500 text-[8px] font-black uppercase rounded tracking-wider border border-slate-300">
+                                @round.Status
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Helpful notice -->
+            <div class="p-6 bg-primary-500 rounded-2xl text-white shadow-lg shadow-primary-500/20 relative overflow-hidden">
+                <span class="material-symbols-outlined absolute -right-4 -bottom-4 text-7xl opacity-20">info</span>
+                <p class="text-xs font-black uppercase tracking-widest mb-2 opacity-80">Quyền Admin</p>
+                <p class="text-sm font-medium leading-relaxed">
+                    Bạn đang xem đề tài với tư cách Quản trị viên. Bạn có thể xem toàn bộ thông tin tiến độ nhưng không thể can thiệp trực tiếp vào nội dung chuyên môn.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

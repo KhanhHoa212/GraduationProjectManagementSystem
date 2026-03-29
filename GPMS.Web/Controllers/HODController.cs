@@ -5,11 +5,22 @@ using GPMS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
+using System;
+using System.IO;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using ClosedXML.Excel;
 using GPMS.Web.ViewModels;
+using Microsoft.AspNetCore.Identity;
+using GPMS.Domain.Entities;
+using GPMS.Application.Services;
+using GPMS.Application.Interfaces.Repositories;
+using AutoMapper;
+using GPMS.Web.Helpers;
+using GPMS.Web.Models;
+
 namespace GPMS.Web.Controllers;
 
 [Authorize(Roles = "HeadOfDept")]
@@ -23,6 +34,11 @@ public class HODController : Controller
     private readonly IReportService _reportService;
     private readonly IMajorService _majorService;
     private readonly IUserService _userService;
+    private readonly ICommitteeService _committeeService;
+    private readonly ISemesterRepository _semesterRepository;
+    private readonly IProjectRepository _projectRepository;
+    private readonly IMajorRepository _majorRepository;
+    private readonly IMapper _mapper;
 
     public HODController(
         IProjectService projectService, 
@@ -32,7 +48,12 @@ public class HODController : Controller
         IExcelService excelService,
         IReportService reportService,
         IMajorService majorService,
-        IUserService userService)
+        IUserService userService,
+        ICommitteeService committeeService,
+        ISemesterRepository semesterRepository,
+        IProjectRepository projectRepository,
+        IMajorRepository majorRepository,
+        IMapper mapper)
     {
         _projectService = projectService;
         _semesterService = semesterService;
@@ -42,6 +63,47 @@ public class HODController : Controller
         _reportService = reportService;
         _majorService = majorService;
         _userService = userService;
+        _committeeService = committeeService;
+        _semesterRepository = semesterRepository;
+        _projectRepository = projectRepository;
+        _majorRepository = majorRepository;
+        _mapper = mapper;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ManageCommittee()
+    {
+        var data = await _committeeService.GetManageCommitteeDataAsync();
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateCommittee([FromBody] CreateCommitteeRequest request)
+    {
+        var success = await _committeeService.CreateCommitteeAsync(request);
+        return Json(new { success = success });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteCommittee(int id)
+    {
+        var success = await _committeeService.DeleteCommitteeAsync(id);
+        return Json(new { success = success });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCommittee(int id)
+    {
+        var data = await _committeeService.GetCommitteeByIdAsync(id);
+        if (data == null) return NotFound();
+        return Json(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateCommittee(int id, [FromBody] CreateCommitteeRequest request)
+    {
+        var success = await _committeeService.UpdateCommitteeAsync(id, request);
+        return Json(new { success = success });
     }
 
 
@@ -125,7 +187,7 @@ public class HODController : Controller
         ViewBag.CurrentMajor = majorName;
 
         // Use PaginatedList (Assuming pageSize = 10 for HOD Projects)
-        var paginatedProjects = Models.PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
+        var paginatedProjects = PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
         return View(paginatedProjects);
     }
 
@@ -562,7 +624,105 @@ public class HODController : Controller
         return Json(new { success, message });
     }
 
-    public IActionResult AssignReviewer() => View();
+    public async Task<IActionResult> DefenseSchedule(int? roundId, string? date)
+    {
+        DateTime selectedDate;
+        if (!DateTime.TryParse(date, out selectedDate))
+            selectedDate = DateTime.Today;
+
+        var data = await _projectService.GetDefenseScheduleDataAsync(roundId, selectedDate);
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SaveDefenseSession([FromBody] CreateDefenseSessionRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.SaveDefenseSessionAsync(request);
+        return Json(new { success, message });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DeleteDefenseSession(int id)
+    {
+        var (success, message) = await _projectService.DeleteDefenseSessionAsync(id);
+        return Json(new { success, message });
+    }
+
+    public async Task<IActionResult> AssignReviewer(int? roundId)
+    {
+        var data = await _projectService.GetReviewerAssignmentDataAsync(roundId);
+        ViewBag.ActiveSemester = await _semesterService.GetCurrentSemesterAsync();
+        return View(data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> ReassignReviewer([FromBody] UpdateReviewerAssignmentRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.SaveReviewerAssignmentsAsync(request);
+        return Json(new { success, message });
+    }
+
+    [HttpGet("Progress")]
+    public async Task<IActionResult> Progress(int? semesterId, string? majorName)
+    {
+        var semesters = (await _semesterRepository.GetAllAsync()).OrderByDescending(s => s.StartDate).ToList();
+        var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
+        
+        int? targetSemesterId = semesterId == -1 ? null : (semesterId ?? activeSemester?.SemesterID);
+        var majors = await _majorRepository.GetAllAsync();
+        
+        // Fetch projects with all necessary details (Submissions, Evaluations, etc.)
+        IEnumerable<Project> projects = targetSemesterId.HasValue 
+            ? await _projectRepository.GetBySemesterWithDetailsAsync(targetSemesterId.Value)
+            : await _projectRepository.GetAllWithDetailsAsync();
+
+        if (!string.IsNullOrEmpty(majorName))
+            projects = projects.Where(p => p.Major?.MajorName == majorName);
+
+        var rounds = targetSemesterId.HasValue
+            ? await _reviewRoundService.GetReviewRoundsBySemesterAsync(targetSemesterId.Value)
+            : new List<ReviewRoundDto>();
+
+        var vm = new HODProgressViewModel
+        {
+            SemesterID = targetSemesterId,
+            Semesters = _mapper.Map<List<SemesterDto>>(semesters),
+            Majors = _mapper.Map<List<MajorDto>>(majors.ToList()),
+            Rounds = rounds.OrderBy(r => r.RoundNumber).ToList(),
+            Groups = projects.SelectMany(p => p.ProjectGroups.Select(g => new GroupProgressItemDto
+            {
+                GroupID = g.GroupID, 
+                ProjectCode = p.ProjectCode,
+                ProjectName = p.ProjectName,
+                GroupName = g.GroupName,
+                MajorName = p.Major?.MajorName ?? "N/A",
+                SupervisorName = p.ProjectSupervisors?.FirstOrDefault(ps => ps.Role == ProjectRole.Main)?.Lecturer?.FullName ?? "Unassigned",
+                RoundStatuses = rounds.Select(r => new RoundProgressStatusDto
+                {
+                    RoundNumber = r.RoundNumber,
+                    IsSubmitted = g.Submissions?.Any(s => s.Requirement?.ReviewRoundID == r.ReviewRoundID) ?? false,
+                    IsApproved = g.MentorRoundReviews?.Any(m => m.ReviewRoundID == r.ReviewRoundID && m.DecisionStatus == MentorGateStatus.Approved) ?? false,
+                    IsEvaluated = g.Evaluations?.Any(e => e.ReviewRoundID == r.ReviewRoundID && e.Status == EvaluationStatus.Submitted) ?? false
+                }).ToList()
+            })).ToList()
+        };
+
+        ViewBag.SelectedSemesterId = targetSemesterId;
+        ViewBag.CurrentMajor = majorName;
+
+        return View(vm);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RemoveReviewer([FromBody] RemoveReviewerRequest request)
+    {
+        if (request == null) return Json(new { success = false, message = "Invalid request." });
+        var (success, message) = await _projectService.RemoveReviewerAsync(request);
+        return Json(new { success, message });
+    }
+
     [HttpGet("Reports")]
     public async Task<IActionResult> Reports(int? semesterId, int page = 1)
     {
@@ -616,13 +776,85 @@ public class HODController : Controller
             CancelledProjects = dto.CancelledProjects,
             MajorDistribution = dto.MajorDistribution.Select(m => new MajorDistributionItem { MajorName = m.MajorName, ProjectCount = m.ProjectCount }).ToList(),
             RoundSubmissionStats = dto.RoundSubmissionStats.Select(r => new RoundSubmissionStat { RoundNumber = r.RoundNumber, RoundDescription = r.RoundDescription, TotalRequired = r.TotalRequired, OnTimeCount = r.OnTimeCount, LateCount = r.LateCount, NotSubmittedCount = r.NotSubmittedCount }).ToList(),
-            SupervisorWorkloads = Models.PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
+            SupervisorWorkloads = PaginatedList<SupervisorWorkloadItem>.Create(workloadItems, page, 10),
             AllSupervisorWorkloads = workloadItems.ToList(),
             RoundMentorStats = dto.RoundMentorStats.Select(m => new RoundMentorDecisionStat { RoundNumber = m.RoundNumber, AcceptedCount = m.AcceptedCount, RejectedCount = m.RejectedCount, PendingCount = m.PendingCount, StoppedCount = m.StoppedCount }).ToList()
         };
 
 
         return View(vm);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportReportExcel(int? semesterId)
+    {
+        var targetSemesterId = semesterId == -1 ? null : semesterId;
+        var dto = await _reportService.GetHODReportAsync(targetSemesterId);
+        var semesters = await _semesterService.GetAllSemestersAsync();
+        var targetSemObj = targetSemesterId.HasValue ? semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId.Value) : null;
+
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("HOD Report");
+
+        // Title
+        ws.Cell(1, 1).Value = $"GPMS Report – {targetSemObj?.SemesterCode ?? "All Semesters"}";
+        ws.Cell(1, 1).Style.Font.Bold = true;
+        ws.Cell(1, 1).Style.Font.FontSize = 14;
+        ws.Range(1, 1, 1, 3).Merge();
+
+        ws.Cell(2, 1).Value = "Generated at:";
+        ws.Cell(2, 2).Value = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+
+        // KPI Section
+        ws.Cell(4, 1).Value = "KPI Summary";
+        ws.Cell(4, 1).Style.Font.Bold = true;
+        
+        ws.Cell(5, 1).Value = "Total Projects"; ws.Cell(5, 2).Value = dto.TotalProjects;
+        ws.Cell(6, 1).Value = "Total Groups";   ws.Cell(6, 2).Value = dto.TotalGroups;
+        ws.Cell(7, 1).Value = "Total Students"; ws.Cell(7, 2).Value = dto.TotalStudents;
+        ws.Cell(8, 1).Value = "Total Supervisors"; ws.Cell(8, 2).Value = dto.TotalSupervisors;
+
+        // Status Section
+        int row = 10;
+        ws.Cell(row, 1).Value = "Project Status Distribution";
+        ws.Cell(row, 1).Style.Font.Bold = true;
+        row++;
+        ws.Cell(row, 1).Value = "Draft";     ws.Cell(row, 2).Value = dto.DraftProjects; row++;
+        ws.Cell(row, 1).Value = "Active";    ws.Cell(row, 2).Value = dto.ActiveProjects; row++;
+        ws.Cell(row, 1).Value = "Completed"; ws.Cell(row, 2).Value = dto.CompletedProjects; row++;
+        ws.Cell(row, 1).Value = "Cancelled"; ws.Cell(row, 2).Value = dto.CancelledProjects; row++;
+
+        // Workload Section
+        row += 2;
+        ws.Cell(row, 1).Value = "Supervisor Workload";
+        ws.Cell(row, 1).Style.Font.Bold = true;
+        row++;
+        ws.Cell(row, 1).Value = "Lecturer Name";
+        ws.Cell(row, 2).Value = "Project Count";
+        ws.Cell(row, 3).Value = "Student Count";
+        ws.Range(row, 1, row, 3).Style.Font.Bold = true;
+        ws.Range(row, 1, row, 3).Style.Fill.BackgroundColor = XLColor.FromHtml("#F27123");
+        ws.Range(row, 1, row, 3).Style.Font.FontColor = XLColor.White;
+        row++;
+
+        foreach (var sup in dto.SupervisorWorkloads)
+        {
+            ws.Cell(row, 1).Value = sup.LecturerName;
+            ws.Cell(row, 2).Value = sup.ProjectCount;
+            ws.Cell(row, 3).Value = sup.StudentCount;
+            row++;
+        }
+
+        ws.Columns(1, 3).AdjustToContents();
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Seek(0, SeekOrigin.Begin);
+
+        var fileName = $"GPMS_HOD_Report_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
+        return File(stream.ToArray(), 
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+            fileName);
     }
 
     

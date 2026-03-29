@@ -11,7 +11,6 @@ namespace GPMS.Infrastructure.Repositories;
 public class ReviewSessionRepository : IReviewSessionRepository
 {
     private readonly GpmsDbContext _context;
-
     public ReviewSessionRepository(GpmsDbContext context)
     {
         _context = context;
@@ -20,6 +19,9 @@ public class ReviewSessionRepository : IReviewSessionRepository
     public async Task<ReviewSessionInfo?> GetByIdAsync(int sessionId)
     {
         return await _context.ReviewSessions
+            .Include(s => s.Committee)
+            .Include(s => s.Room)
+            .Include(s => s.ReviewRound)
             .Include(s => s.Group)
                 .ThenInclude(g => g.GroupMembers)
                     .ThenInclude(m => m.User)
@@ -27,7 +29,6 @@ public class ReviewSessionRepository : IReviewSessionRepository
                 .ThenInclude(g => g.Project)
                     .ThenInclude(p => p.ProjectSupervisors)
                         .ThenInclude(ps => ps.Lecturer)
-            .Include(s => s.ReviewRound)
             .FirstOrDefaultAsync(s => s.SessionID == sessionId);
     }
 
@@ -49,19 +50,49 @@ public class ReviewSessionRepository : IReviewSessionRepository
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<ReviewSessionInfo>> GetByRoundAndDateAsync(int roundId, DateTime date) =>
+        await _context.ReviewSessions
+            .Include(s => s.Room)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+                        .ThenInclude(ps => ps.Lecturer)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.ReviewerAssignments)
+                    .ThenInclude(ra => ra.Reviewer)
+            .Where(s => s.ReviewRoundID == roundId && s.ScheduledAt.Date == date.Date)
+            .ToListAsync();
+
+    public async Task<IEnumerable<ReviewSessionInfo>> GetByDateAsync(DateTime date) =>
+        await _context.ReviewSessions
+            .Include(s => s.Committee)
+            .Where(s => s.ScheduledAt.Date == date.Date)
+            .ToListAsync();
+
+    public async Task<IEnumerable<ReviewSessionInfo>> GetByRoundAsync(int roundId) =>
+        await _context.ReviewSessions
+            .Where(s => s.ReviewRoundID == roundId)
+            .ToListAsync();
+
+    public async Task<ReviewSessionInfo?> GetByRoundAndGroupAsync(int roundId, int groupId) =>
+        await _context.ReviewSessions
+            .FirstOrDefaultAsync(s => s.ReviewRoundID == roundId && s.GroupID == groupId);
+
     public async Task AddAsync(ReviewSessionInfo session)
     {
         await _context.ReviewSessions.AddAsync(session);
     }
 
-    public void Update(ReviewSessionInfo session)
+    public Task UpdateAsync(ReviewSessionInfo session)
     {
         _context.ReviewSessions.Update(session);
+        return Task.CompletedTask;
     }
 
-    public void Delete(ReviewSessionInfo session)
+    public Task RemoveAsync(ReviewSessionInfo session)
     {
         _context.ReviewSessions.Remove(session);
+        return Task.CompletedTask;
     }
 
     public async Task SaveChangesAsync()

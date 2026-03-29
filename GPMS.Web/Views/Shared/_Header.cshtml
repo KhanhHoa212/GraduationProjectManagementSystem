@@ -3,6 +3,7 @@
 @{
     var semesters = await SemesterService.GetAllSemestersAsync();
     var activeSemester = semesters.FirstOrDefault(s => s.Status == GPMS.Domain.Enums.SemesterStatus.Active);
+    var avatarUrl = User.FindFirst("AvatarUrl")?.Value;
 }
 <!-- Header Navigation -->
 <header class="bg-white border-b border-slate-200 h-[72px] shrink-0 flex items-center shadow-sm z-30 transition-colors duration-300">
@@ -123,19 +124,29 @@
                             else { <text>Student</text> }
                         </div>
                     </div>
-                    <div class="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-dark-700 group-hover:shadow-primary-500/30 group-hover:scale-105 transition-all duration-300">
-                        <span class="text-white font-bold text-base">@(string.IsNullOrEmpty(User.Identity?.Name) ? "A" : User.Identity.Name.Substring(0, 1).ToUpper())</span>
+                    <div class="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center shadow-md border-2 border-white dark:border-dark-700 group-hover:shadow-primary-500/30 group-hover:scale-105 transition-all duration-300 overflow-hidden">
+                        @if (!string.IsNullOrEmpty(avatarUrl))
+                        {
+                            <img src="@avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+                        }
+                        else
+                        {
+                            <span class="text-white font-bold text-base">@(string.IsNullOrEmpty(User.Identity?.Name) ? "A" : User.Identity.Name.Substring(0, 1).ToUpper())</span>
+                        }
                     </div>
                     <span class="material-symbols-outlined text-dark-400 text-sm transition-transform duration-300 group-hover:rotate-180">expand_more</span>
                 </button>
 
                 <!-- Profile Menu -->
                 <div id="profile-menu" class="absolute top-[calc(100%+8px)] right-0 w-48 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 hidden z-50 origin-top-right transform transition-all duration-200">
-                    <a href="#" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-primary-600 transition-colors">
-                        <span class="material-symbols-outlined text-[20px]">person</span>
-                        <span class="text-sm font-medium">Hồ sơ cá nhân</span>
-                    </a>
-                    <div class="h-px bg-slate-100 my-1 mx-4"></div>
+                        @if (!User.IsInRole("Admin") && !User.IsInRole("HeadOfDept"))
+                        {
+                            <a asp-controller="Profile" asp-action="Index" hx-boost="false" class="flex items-center gap-3 px-4 py-2.5 hover:bg-slate-50 text-slate-700 hover:text-primary-600 transition-colors no-underline">
+                                <span class="material-symbols-outlined text-[20px]">person</span>
+                                <span class="text-sm font-medium">Hồ sơ cá nhân</span>
+                            </a>
+                            <div class="h-px bg-slate-100 my-1 mx-4"></div>
+                        }
                     <a asp-controller="Auth" asp-action="Logout" hx-boost="false" class="flex items-center gap-3 px-4 py-2.5 hover:bg-red-50 text-red-600 transition-colors group/logout">
                         <span class="material-symbols-outlined text-[20px] group-hover/logout:translate-x-1 transition-transform">logout</span>
                         <span class="text-sm font-medium">Đăng xuất</span>

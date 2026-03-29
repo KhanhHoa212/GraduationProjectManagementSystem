@@ -1,542 +1,339 @@
 @model GPMS.Web.ViewModels.HODReportViewModel
 @{
-    ViewData["Title"] = "Reports";
+    ViewData["Title"] = "Thống kê & Báo cáo";
     Layout = "_Layout";
     
     // Helper values
-    var totalProjects = Model.TotalProjects > 0 ? Model.TotalProjects : 1; // avoid division by zero
+    var totalProjects = Model.TotalProjects > 0 ? Model.TotalProjects : 1;
     var draftPct = (int)Math.Round((double)Model.DraftProjects / totalProjects * 100);
     var activePct = (int)Math.Round((double)Model.ActiveProjects / totalProjects * 100);
     var completedPct = (int)Math.Round((double)Model.CompletedProjects / totalProjects * 100);
     var cancelledPct = (int)Math.Round((double)Model.CancelledProjects / totalProjects * 100);
-    var maxMajor = Model.MajorDistribution.Any() ? Model.MajorDistribution.Max(m => m.ProjectCount) : 1;
 }
 
 @section Styles {
     <style>
-        @@media print {
-            /* Ẩn hoàn toàn các thành phần UI không liên quan */
-            aside, header, nav, .print\:hidden, #chatbot-container, #toastContainer, #sidebar-overlay { 
-                display: none !important; 
-            }
-            
-            /* RESET LAYOUT SHELL: Đây là phần quan trọng nhất */
-            /* Phải ép tất cả các container bọc ngoài về overflow visible và height auto */
-            html, body {
-                height: auto !important;
-                overflow: visible !important;
-                background: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 0 !important;
-            }
-
-            /* Target các div layout trong _Layout.cshtml */
-            .flex.h-screen.overflow-hidden,
-            .flex-1.flex.flex-col.h-full.overflow-hidden,
-            main.flex-1.overflow-y-auto {
-                display: block !important;
-                height: auto !important;
-                overflow: visible !important;
-                position: static !important;
-                width: 100% !important;
-            }
-
-            main {
-                margin: 0 !important;
-                padding: 1cm !important; /* Lề trang in */
-            }
-
-            /* Reset container nội dung */
-            #reportContent, .space-y-8 {
-                display: block !important;
-                height: auto !important;
-                overflow: visible !important;
-            }
-
-            /* Giữ nguyên màu sắc khi in */
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-
-            /* Tránh ngắt trang giữa chừng bên trong các card/bảng */
-            .bg-white, tr, .grid > div, .rounded-2xl {
-                page-break-inside: avoid !important;
-                break-inside: avoid-page !important;
-                float: none !important;
-            }
-
-            /* Gap giữa các section */
-            .space-y-8 > div {
-                margin-bottom: 3rem !important;
-                page-break-after: auto !important;
-            }
-
-            /* Fix table layout khi in */
-            table {
-                page-break-inside: auto;
-                width: 100% !important;
-            }
-            thead { display: table-header-group; }
-            tfoot { display: table-footer-group; }
-
-            /* Giảm bớt shadow và format lại charts */
-            .shadow-sm, .shadow-md, .shadow-lg { 
-                box-shadow: none !important; 
-                border: 1px solid #e2e8f0 !important; 
-            }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-
+        .fpt-orange { color: #F37021; }
+        .bg-fpt-orange { background-color: #F37021; }
+        
+        @@media print {
+            aside, header, nav, .print\:hidden { display: none !important; }
+            html, body { height: auto !important; overflow: visible !important; background: white !important; }
+            main { margin: 0 !important; padding: 1cm !important; }
+            .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; border: 1px solid #e2e8f0 !important; }
+        }
     </style>
 }
 
-
 <div class="space-y-8" id="reportContent">
-    <!-- ===== HEADER ===== -->
+    <!-- Header Section -->
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Báo cáo tổng quan</h1>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary-500 text-base">calendar_today</span>
-                Kỳ hiển thị: <span class="font-bold text-primary-600">@Model.SemesterCode — @Model.AcademicYear</span>
+            <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
+                <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline uppercase tracking-widest text-[10px]">Portal</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span class="text-slate-900 font-bold uppercase tracking-widest text-[10px]">Reports</span>
+            </nav>
+            <h1 class="text-4xl font-black text-slate-900 tracking-tight">Thống kê Tổng quát</h1>
+            <p class="text-slate-500 mt-1 uppercase tracking-widest text-[11px] font-bold">
+                Kỳ: <span class="text-[#F37021]">@Model.SemesterCode — @Model.AcademicYear</span>
             </p>
         </div>
 
-        <!-- Tiện ích (Filter + Print) -->
-        <div class="flex flex-col sm:flex-row items-center gap-3 print:hidden">
-            <form method="get" asp-action="Reports" id="filterForm" class="w-full sm:w-auto">
-                <select name="semesterId" class="w-full sm:w-48 px-4 py-2 border border-slate-200 dark:border-dark-700 bg-white dark:bg-dark-800 rounded-xl focus:ring-2 focus:ring-primary-500" onchange="document.getElementById('filterForm').submit()">
-                    <option value="-1">✅ Tất cả các kỳ</option>
-                    @if (ViewBag.Semesters != null)
-                    {
-                        foreach (var sem in ViewBag.Semesters)
+        <div class="flex flex-wrap items-center gap-3 print:hidden">
+            <form method="get" asp-action="Reports" id="filterForm" class="flex gap-2">
+                <div class="relative">
+                    <select name="semesterId" class="appearance-none bg-white border border-slate-200 rounded-2xl px-5 py-2.5 pr-10 text-sm font-bold text-slate-700 shadow-sm focus:ring-4 focus:ring-orange-500/10 focus:border-[#F37021] outline-none transition-all cursor-pointer" onchange="this.form.submit()">
+                        <option value="-1">Tất cả kỳ</option>
+                        @foreach (var sem in ViewBag.Semesters)
                         {
-                            var isSelected = ViewBag.SelectedSemesterId == sem.SemesterID;
-                            if (isSelected)
-                            {
-                                <option value="@sem.SemesterID" selected>@sem.SemesterCode (@sem.AcademicYear)</option>
-                            }
-                            else
-                            {
-                                <option value="@sem.SemesterID">@sem.SemesterCode (@sem.AcademicYear)</option>
-                            }
+                            <option value="@sem.SemesterID" selected="@(ViewBag.SelectedSemesterId == sem.SemesterID)">@sem.SemesterCode</option>
                         }
-                    }
-                </select>
+                    </select>
+                    <span class="absolute right-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-slate-400 pointer-events-none">expand_more</span>
+                </div>
             </form>
 
-            <button type="button" onclick="window.print()" class="w-full sm:w-auto flex justify-center items-center gap-2 bg-slate-900 dark:bg-primary-600 text-white px-5 py-2 rounded-xl hover:bg-slate-800 dark:hover:bg-primary-700 transition-colors shadow-sm">
-                <span class="material-symbols-outlined text-sm">print</span>
-                <span class="font-semibold text-sm">Xuất PDF</span>
             </button>
+
+            <a asp-action="ExportReportExcel" asp-route-semesterId='@ViewBag.SelectedSemesterId' hx-boost="false"
+               class="no-spinner w-full sm:w-auto flex justify-center items-center gap-2 bg-emerald-600 text-white px-5 py-2 rounded-xl hover:bg-emerald-700 transition-colors shadow-sm no-underline">
+                <span class="material-symbols-outlined text-sm">description</span>
+                <span class="font-semibold text-sm">Xuất Excel</span>
+            </a>
         </div>
     </div>
 
-    <!-- ===== KPI CARDS ===== -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-        <!-- Total Projects -->
-        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-primary-200 transition-all duration-300">
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-primary-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-primary-500/10 rounded-xl flex items-center justify-center">
-                    <span class="material-symbols-outlined text-primary-500 text-[22px]">account_tree</span>
+    <!-- KPI Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        @foreach (var kpi in new[] { 
+            new { Label = "Đề tài", Value = Model.TotalProjects, Icon = "account_tree", Color = "orange", Pct = "+12%" },
+            new { Label = "Nhóm", Value = Model.TotalGroups, Icon = "groups", Color = "blue", Pct = "+5%" },
+            new { Label = "Sinh viên", Value = Model.TotalStudents, Icon = "school", Color = "emerald", Pct = "+8%" },
+            new { Label = "Giảng viên", Value = Model.TotalSupervisors, Icon = "person_check", Color = "violet", Pct = "Stable" }
+        }) {
+            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:border-@(kpi.Color)-100 transition-all group relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-@(kpi.Color)-50/50 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+                <div class="relative z-10">
+                    <div class="w-12 h-12 bg-@(kpi.Color)-50 rounded-2xl flex items-center justify-center mb-4 group-hover:rotate-6 transition-transform">
+                        <span class="material-symbols-outlined text-@(kpi.Color)-600 text-[28px]">@kpi.Icon</span>
+                    </div>
+                    <div class="flex items-end justify-between">
+                        <div>
+                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">@kpi.Label</p>
+                            <h3 class="text-3xl font-black text-slate-900 mt-1">@kpi.Value</h3>
+                        </div>
+                        <span class="text-[10px] font-bold py-1 px-2 bg-@(kpi.Color)-50 text-@(kpi.Color)-600 rounded-lg">@kpi.Pct</span>
+                    </div>
                 </div>
             </div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Đề tài</p>
-            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalProjects</p>
-        </div>
-
-        <!-- Total Groups -->
-        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-blue-200 transition-all duration-300">
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-blue-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-blue-500/10 rounded-xl flex items-center justify-center">
-                    <span class="material-symbols-outlined text-blue-500 text-[22px]">groups</span>
-                </div>
-            </div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Nhóm</p>
-            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalGroups</p>
-        </div>
-
-        <!-- Total Students -->
-        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-emerald-200 transition-all duration-300">
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-emerald-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center">
-                    <span class="material-symbols-outlined text-emerald-500 text-[22px]">school</span>
-                </div>
-            </div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Sinh viên</p>
-            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalStudents</p>
-        </div>
-
-        <!-- Total Supervisors -->
-        <div class="relative overflow-hidden bg-white dark:bg-dark-800 rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-dark-700 group hover:shadow-lg hover:border-violet-200 transition-all duration-300">
-            <div class="absolute -top-4 -right-4 w-20 h-20 bg-violet-500/5 rounded-full group-hover:scale-150 transition-transform duration-500"></div>
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center">
-                    <span class="material-symbols-outlined text-violet-500 text-[22px]">person_search</span>
-                </div>
-            </div>
-            <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">GVHD</p>
-            <p class="text-3xl font-black text-slate-900 dark:text-white mt-1">@Model.TotalSupervisors</p>
-        </div>
+        }
     </div>
 
-    <!-- ===== ROW 2: PROJECT STATUS + MAJOR DISTRIBUTION ===== -->
-    <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <!-- Project Status Distribution (3/5) -->
-        <div class="lg:col-span-3 bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary-500 text-lg">donut_small</span>
-                Trạng thái Đề tài
-            </h2>
-
-            <div class="flex flex-col md:flex-row items-center gap-8">
-                <!-- Donut Chart -->
-                <div class="relative w-48 h-48 shrink-0">
-                    @{
-                        // SVG donut chart calculations
-                        double circumference = 2 * Math.PI * 45;
-                        double draftArc = circumference * draftPct / 100;
-                        double activeArc = circumference * activePct / 100;
-                        double completedArc = circumference * completedPct / 100;
-                        double cancelledArc = circumference * cancelledPct / 100;
-                        double offset1 = 0;
-                        double offset2 = -draftArc;
-                        double offset3 = -(draftArc + activeArc);
-                        double offset4 = -(draftArc + activeArc + completedArc);
-                    }
-                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
-                        @if(draftPct > 0)
-                        {
-                            <circle cx="60" cy="60" r="45" fill="none" stroke="#94A3B8" stroke-width="14"
-                                    stroke-dasharray="@draftArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-dashoffset="@offset1.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-linecap="round" class="transition-all duration-700"></circle>
-                        }
-                        @if(activePct > 0)
-                        {
-                            <circle cx="60" cy="60" r="45" fill="none" stroke="#F37021" stroke-width="14"
-                                    stroke-dasharray="@activeArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-dashoffset="@offset2.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-linecap="round" class="transition-all duration-700"></circle>
-                        }
-                        @if(completedPct > 0)
-                        {
-                            <circle cx="60" cy="60" r="45" fill="none" stroke="#10B981" stroke-width="14"
-                                    stroke-dasharray="@completedArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-dashoffset="@offset3.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-linecap="round" class="transition-all duration-700"></circle>
-                        }
-                        @if(cancelledPct > 0)
-                        {
-                            <circle cx="60" cy="60" r="45" fill="none" stroke="#EF4444" stroke-width="14"
-                                    stroke-dasharray="@cancelledArc.ToString("F1", System.Globalization.CultureInfo.InvariantCulture) @circumference.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-dashoffset="@offset4.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)"
-                                    stroke-linecap="round" class="transition-all duration-700"></circle>
-                        }
+    <!-- Charts Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Status Chart (5 columns) -->
+        <div class="lg:col-span-5 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-[#F37021]"></span>
+                Trạng thái đồ án
+            </h3>
+            
+            <div class="flex flex-col items-center gap-10">
+                <div class="relative w-56 h-56">
+                    <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#f1f5f9" stroke-width="12"></circle>
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#F37021" stroke-width="12" 
+                                stroke-dasharray="@(activePct * 2.51) 251" stroke-linecap="round"></circle>
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#10b981" stroke-width="12" 
+                                stroke-dasharray="@(completedPct * 2.51) 251" stroke-dashoffset="@(-(activePct) * 2.51)" stroke-linecap="round"></circle>
                     </svg>
-                    <div class="absolute inset-0 flex items-center justify-center">
-                        <div class="text-center">
-                            <p class="text-3xl font-black text-slate-900 dark:text-white">@Model.TotalProjects</p>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tổng</p>
-                        </div>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-4xl font-black text-slate-900">@activePct%</span>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Đang chạy</span>
                     </div>
                 </div>
 
-                <!-- Legend -->
-                <div class="grid grid-cols-2 gap-x-8 gap-y-4 flex-1">
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-slate-400 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Draft</p>
-                            <p class="text-xs text-slate-400">@Model.DraftProjects đề tài (@draftPct%)</p>
+                <div class="grid grid-cols-2 gap-x-12 gap-y-6 w-full">
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-[#F37021]"></span>
+                            <span class="text-xs font-bold text-slate-600">Active</span>
                         </div>
+                        <p class="text-lg font-black text-slate-900 ml-5">@Model.ActiveProjects</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-[#F37021] shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Active</p>
-                            <p class="text-xs text-slate-400">@Model.ActiveProjects đề tài (@activePct%)</p>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                            <span class="text-xs font-bold text-slate-600">Completed</span>
                         </div>
+                        <p class="text-lg font-black text-slate-900 ml-5">@Model.CompletedProjects</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-emerald-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Completed</p>
-                            <p class="text-xs text-slate-400">@Model.CompletedProjects đề tài (@completedPct%)</p>
+                    <div class="flex flex-col gap-1 opacity-50">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-slate-300"></span>
+                            <span class="text-xs font-bold text-slate-600">Draft</span>
                         </div>
+                        <p class="text-lg font-black text-slate-900 ml-5">@Model.DraftProjects</p>
                     </div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full bg-red-500 shrink-0"></div>
-                        <div>
-                            <p class="text-sm font-semibold text-slate-700 dark:text-white">Cancelled</p>
-                            <p class="text-xs text-slate-400">@Model.CancelledProjects đề tài (@cancelledPct%)</p>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center gap-2">
+                            <span class="w-3 h-3 rounded-full bg-red-400"></span>
+                            <span class="text-xs font-bold text-slate-600">Cancelled</span>
                         </div>
+                        <p class="text-lg font-black text-slate-900 ml-5">@Model.CancelledProjects</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Major Distribution (2/5) -->
-        <div class="lg:col-span-2 bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <span class="material-symbols-outlined text-blue-500 text-lg">domain</span>
-                Phân bố Chuyên ngành
-            </h2>
+        <!-- Major Distribution (7 columns) -->
+        <div class="lg:col-span-7 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col">
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                Chuyên ngành
+            </h3>
 
-            @if (Model.MajorDistribution.Any())
-            {
-                <div class="space-y-4">
-                    @{ var majorColors = new[] { "bg-primary-500", "bg-blue-500", "bg-emerald-500", "bg-violet-500", "bg-amber-500" }; var i = 0; }
-                    @foreach (var major in Model.MajorDistribution)
-                    {
-                        var pct = (int)Math.Round((double)major.ProjectCount / totalProjects * 100);
-                        var color = majorColors[i % majorColors.Length];
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-semibold text-slate-700 dark:text-white">@major.MajorName</span>
-                                <span class="text-xs font-bold text-slate-500">@major.ProjectCount đề tài · @pct%</span>
-                            </div>
-                            <div class="h-3 bg-slate-100 dark:bg-dark-700 rounded-full overflow-hidden">
-                                <div class="h-full @color rounded-full transition-all duration-700" style="width: @pct%"></div>
-                            </div>
+            <div class="space-y-6 flex-1 flex flex-col justify-center">
+                @foreach (var major in Model.MajorDistribution) {
+                    var pct = (int)Math.Round((double)major.ProjectCount / totalProjects * 100);
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-bold text-slate-700">@major.MajorName</span>
+                            <span class="text-xs font-black text-slate-400">@major.ProjectCount ĐỀ TÀI</span>
                         </div>
-                        i++;
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
-                    <span class="material-symbols-outlined text-3xl mb-2">info</span>
-                    <p class="text-sm">Chưa có dữ liệu</p>
-                </div>
-            }
+                        <div class="h-4 bg-slate-50 rounded-full overflow-hidden flex">
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-600 rounded-full transition-all duration-1000" style="width: @pct%"></div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
-
-    <!-- ===== ROW 3: SUBMISSION STATS + MENTOR DECISIONS ===== -->
+    
+    <!-- Round-based Statistics Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Submission Stats per Round -->
-        <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <span class="material-symbols-outlined text-emerald-500 text-lg">upload_file</span>
-                Tình hình nộp bài theo vòng Review
-            </h2>
+        <!-- Submission Progress by Round -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm overflow-hidden relative">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-orange-50/30 rounded-full -mr-16 -mt-16"></div>
+            
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
+                <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                Tiến độ nộp bài theo Giai đoạn
+            </h3>
+            
+            <div class="space-y-8 relative z-10">
+                @foreach (var round in Model.RoundSubmissionStats) {
+                    var total = round.TotalRequired > 0 ? round.TotalRequired : 1;
+                    var onTimePct = (int)Math.Round((double)round.OnTimeCount / total * 100);
+                    var latePct = (int)Math.Round((double)round.LateCount / total * 100);
+                    var pendingPct = 100 - onTimePct - latePct;
 
-            @if (Model.RoundSubmissionStats.Any())
-            {
-                <div class="space-y-5">
-                    @foreach (var round in Model.RoundSubmissionStats)
-                    {
-                        var total = round.OnTimeCount + round.LateCount + round.NotSubmittedCount;
-                        total = total > 0 ? total : 1;
-                        var onTimePct = (int)Math.Round((double)round.OnTimeCount / total * 100);
-                        var latePct = (int)Math.Round((double)round.LateCount / total * 100);
-                        var notSubPct = (int)Math.Round((double)round.NotSubmittedCount / total * 100);
-
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-bold text-slate-700 dark:text-white">Review @round.RoundNumber</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">@total bài</span>
+                    <div class="group">
+                        <div class="flex justify-between items-end mb-3">
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 group-hover:text-orange-600 transition-colors uppercase tracking-tight">Giai đoạn @round.RoundNumber</h4>
+                                <p class="text-[10px] text-slate-400 font-bold">@round.RoundDescription</p>
                             </div>
-                            <!-- Stacked bar -->
-                            <div class="flex h-4 rounded-full overflow-hidden bg-slate-100 dark:bg-dark-700 gap-px">
-                                @if (onTimePct > 0)
-                                {
-                                    <div class="bg-emerald-500 transition-all duration-500" style="width: @onTimePct%" title="Đúng hạn: @round.OnTimeCount"></div>
-                                }
-                                @if (latePct > 0)
-                                {
-                                    <div class="bg-amber-500 transition-all duration-500" style="width: @latePct%" title="Trễ hạn: @round.LateCount"></div>
-                                }
-                                @if (notSubPct > 0)
-                                {
-                                    <div class="bg-slate-300 dark:bg-dark-600 transition-all duration-500" style="width: @notSubPct%" title="Chưa nộp: @round.NotSubmittedCount"></div>
-                                }
-                            </div>
-                            <div class="flex items-center gap-4 mt-1.5">
-                                <span class="text-[10px] text-emerald-600 font-bold">✓ @round.OnTimeCount đúng hạn</span>
-                                <span class="text-[10px] text-amber-600 font-bold">⏱ @round.LateCount trễ</span>
-                                <span class="text-[10px] text-slate-400 font-bold">○ @round.NotSubmittedCount chưa nộp</span>
+                            <div class="text-right">
+                                <span class="text-sm font-black text-slate-900">@onTimePct%</span>
+                                <span class="text-[10px] text-slate-400 font-bold ml-1 uppercase">Hoàn thành</span>
                             </div>
                         </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
-                    <span class="material-symbols-outlined text-3xl mb-2">event_busy</span>
-                    <p class="text-sm">Chưa có vòng review nào</p>
-                </div>
-            }
+                        
+                        <div class="h-5 bg-slate-50 rounded-xl overflow-hidden flex p-1 border border-slate-100 shadow-inner">
+                            <div class="h-full bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-lg shadow-sm transition-all duration-1000" 
+                                 style="width: @onTimePct%" title="Đúng hạn: @round.OnTimeCount"></div>
+                            <div class="h-full bg-gradient-to-r from-orange-400 to-orange-500 rounded-lg shadow-sm transition-all duration-1000 mx-0.5" 
+                                 style="width: @latePct%" title="Trễ hạn: @round.LateCount"></div>
+                        </div>
+                        
+                        <div class="flex items-center gap-4 mt-3">
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Đúng hạn: @round.OnTimeCount</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-orange-500"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Trễ: @round.LateCount</span>
+                            </div>
+                            <div class="flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-slate-200"></span>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase">Chưa nộp: @round.NotSubmittedCount</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
 
-        <!-- Mentor Decision Progress per Round -->
-        <div class="bg-white dark:bg-dark-800 rounded-2xl p-6 shadow-sm border border-slate-100 dark:border-dark-700">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <span class="material-symbols-outlined text-violet-500 text-lg">how_to_reg</span>
-                Quyết định GVHD (Mentor Gate)
-            </h2>
-
-            @if (Model.RoundMentorStats.Any())
-            {
-                <div class="space-y-5">
-                    @foreach (var round in Model.RoundMentorStats)
-                    {
-                        var totalDecisions = round.AcceptedCount + round.RejectedCount + round.PendingCount + round.StoppedCount;
-                        totalDecisions = totalDecisions > 0 ? totalDecisions : 1;
-
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-sm font-bold text-slate-700 dark:text-white">Review @round.RoundNumber</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">@totalDecisions nhóm</span>
-                            </div>
-                            <div class="grid grid-cols-4 gap-2">
-                                <div class="text-center bg-emerald-50 dark:bg-emerald-500/10 rounded-xl py-2.5 px-1">
-                                    <p class="text-lg font-black text-emerald-600">@round.AcceptedCount</p>
-                                    <p class="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Accepted</p>
+        <!-- Mentor Decision Stats -->
+        <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm overflow-hidden relative">
+            <div class="absolute bottom-0 right-0 w-32 h-32 bg-blue-50/30 rounded-full -mr-16 -mb-16"></div>
+            
+            <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-8 flex items-center gap-2 relative z-10">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                Quyết định của Mentor
+            </h3>
+            
+            <div class="grid grid-cols-1 gap-4 relative z-10">
+                @foreach (var round in Model.RoundMentorStats) {
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-100 hover:border-blue-200 transition-all hover:bg-white group">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center font-black text-blue-600 shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                    @round.RoundNumber
                                 </div>
-                                <div class="text-center bg-red-50 dark:bg-red-500/10 rounded-xl py-2.5 px-1">
-                                    <p class="text-lg font-black text-red-600">@round.RejectedCount</p>
-                                    <p class="text-[9px] font-bold text-red-500 uppercase tracking-wider">Rejected</p>
-                                </div>
-                                <div class="text-center bg-amber-50 dark:bg-amber-500/10 rounded-xl py-2.5 px-1">
-                                    <p class="text-lg font-black text-amber-600">@round.PendingCount</p>
-                                    <p class="text-[9px] font-bold text-amber-500 uppercase tracking-wider">Pending</p>
-                                </div>
-                                <div class="text-center bg-slate-50 dark:bg-dark-700 rounded-xl py-2.5 px-1">
-                                    <p class="text-lg font-black text-slate-500">@round.StoppedCount</p>
-                                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Stopped</p>
-                                </div>
+                                <span class="text-xs font-black text-slate-900 uppercase tracking-tight">Round @round.RoundNumber</span>
                             </div>
                         </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="flex flex-col items-center justify-center h-32 text-slate-400">
-                    <span class="material-symbols-outlined text-3xl mb-2">pending_actions</span>
-                    <p class="text-sm">Chưa có dữ liệu đánh giá</p>
-                </div>
-            }
+                        
+                        <div class="grid grid-cols-4 gap-2">
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-emerald-600 font-black text-lg">@round.AcceptedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Approved</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-red-500 font-black text-lg">@round.RejectedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Rejected</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-orange-400 font-black text-lg">@round.PendingCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Pending</p>
+                            </div>
+                            <div class="text-center p-2 rounded-xl bg-white/80 border border-slate-100 group-hover:shadow-sm transition-all">
+                                <p class="text-slate-400 font-black text-lg">@round.StoppedCount</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase tracking-tighter">Stopped</p>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
         </div>
     </div>
 
-    <!-- ===== ROW 4: SUPERVISOR WORKLOAD TABLE ===== -->
-    <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
-        <div class="p-6 border-b border-slate-100 dark:border-dark-700 flex items-center justify-between">
-            <h2 class="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <span class="material-symbols-outlined text-primary-500 text-lg">supervisor_account</span>
-                Khối lượng Giảng viên Hướng dẫn
-            </h2>
-            <span class="text-xs font-bold text-slate-400 px-3 py-1 bg-slate-50 dark:bg-dark-700 rounded-full">@Model.AllSupervisorWorkloads.Count GVHD</span>
+    <!-- Submission & Workload Table -->
+    <div class="bg-[#1a2236] rounded-3xl shadow-2xl overflow-hidden border border-white/5">
+        <div class="p-8 border-b border-white/5 flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-black text-white tracking-tight">Tải trọng Giảng viên</h2>
+                <p class="text-slate-400 text-xs mt-1 uppercase tracking-widest font-medium">Bảng phân bổ chi tiết kỳ @Model.SemesterCode</p>
+            </div>
+            <div class="px-4 py-2 bg-white/5 border border-white/10 rounded-xl">
+                <span class="text-sm font-black text-orange-400">@Model.AllSupervisorWorkloads.Count</span>
+                <span class="text-[10px] text-slate-300 font-bold ml-1 uppercase">Giảng viên</span>
+            </div>
         </div>
 
-        @if (Model.AllSupervisorWorkloads.Any())
-        {
-            var maxProjects = Model.AllSupervisorWorkloads.Max(s => s.ProjectCount);
-            maxProjects = maxProjects > 0 ? maxProjects : 1;
-
-            <!-- Screen View (Paginated) -->
-            <div class="print:hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-50/80 dark:bg-dark-700/50">
-                            <tr>
-                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">#</th>
-                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Giảng viên</th>
-                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Đề tài</th>
-                                <th class="text-center py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Sinh viên</th>
-                                <th class="text-left py-3 px-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">Tải trọng</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
-                            @{ var sIdx = (Model.SupervisorWorkloads.PageIndex - 1) * Model.SupervisorWorkloads.PageSize; }
-                            @foreach (var sup in Model.SupervisorWorkloads)
-                            {
-                                sIdx++;
-                                var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
-                                var barColor = loadPct >= 80 ? "bg-red-500" : loadPct >= 50 ? "bg-amber-500" : "bg-emerald-500";
-
-                                <tr class="hover:bg-slate-50/80 dark:hover:bg-dark-700/30 transition-colors">
-                                    <td class="py-4 px-6 text-xs font-bold text-slate-300">@sIdx</td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 bg-gradient-to-br from-primary-400 to-primary-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm">
-                                                @sup.LecturerName.Substring(0, 1).ToUpper()
-                                            </div>
-                                            <span class="font-semibold text-slate-700 dark:text-white">@sup.LecturerName</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-4 px-6 text-center">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-50 dark:bg-primary-500/10 text-primary-600 font-bold text-sm">@sup.ProjectCount</span>
-                                    </td>
-                                    <td class="py-4 px-6 text-center">
-                                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 font-bold text-sm">@sup.StudentCount</span>
-                                    </td>
-                                    <td class="py-4 px-6">
-                                        <div class="flex items-center gap-3">
-                                            <div class="h-2 bg-slate-100 dark:bg-dark-700 rounded-full flex-1" style="min-width: 80px;">
-                                                <div class="h-full @barColor rounded-full transition-all duration-500" style="width: @loadPct%"></div>
-                                            </div>
-                                            <span class="text-xs font-bold text-slate-500 w-8 text-right">@loadPct%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination -->
-                <div class="print:hidden">
-                    @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
-                </div>
-            </div>
-
-            <!-- Print View (Full Content) -->
-            <div class="hidden print:block">
-                <table class="w-full text-xs">
-                    <thead>
-                        <tr class="border-b border-slate-200">
-                            <th class="text-left py-2 px-4 font-black uppercase">#</th>
-                            <th class="text-left py-2 px-4 font-black uppercase">Giảng viên</th>
-                            <th class="text-center py-2 px-4 font-black uppercase">Đề tài</th>
-                            <th class="text-center py-2 px-4 font-black uppercase">Sinh viên</th>
-                            <th class="text-center py-2 px-4 font-black uppercase">Tải trọng (%)</th>
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead class="bg-white/5">
+                    <tr>
+                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Giảng viên</th>
+                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Đề tài</th>
+                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Sinh viên</th>
+                        <th class="p-6 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Cường độ làm việc</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/5">
+                    @foreach (var sup in Model.SupervisorWorkloads) {
+                        var loadPct = Math.Min(100, (sup.ProjectCount * 20)); // Mock logic: 5 projects = 100%
+                        var loadColor = loadPct >= 100 ? "bg-red-500 shadow-[0_0_12px_rgba(239,68,68,0.4)]" : loadPct >= 60 ? "bg-orange-400 shadow-[0_0_12px_rgba(251,146,60,0.3)]" : "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.3)]";
+                        
+                        <tr class="hover:bg-white/[0.02] transition-colors">
+                            <td class="p-6">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center text-white font-black shadow-lg">
+                                        @sup.LecturerName.Substring(0, 1)
+                                    </div>
+                                    <span class="font-bold text-slate-200">@sup.LecturerName</span>
+                                </div>
+                            </td>
+                            <td class="p-6 text-center">
+                                <span class="px-3 py-1 bg-white/5 rounded-lg font-black text-white">@sup.ProjectCount</span>
+                            </td>
+                            <td class="p-6 text-center text-slate-300 font-bold">@sup.StudentCount</td>
+                            <td class="p-6">
+                                <div class="flex items-center gap-4 max-w-xs">
+                                    <div class="h-1.5 flex-1 bg-white/5 rounded-full overflow-hidden">
+                                        <div class="h-full @loadColor rounded-full transition-all duration-1000" style="width: @loadPct%"></div>
+                                    </div>
+                                    <span class="text-[10px] font-black text-slate-400 w-8">@loadPct%</span>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        @{ var pIdx = 0; }
-                        @foreach (var sup in Model.AllSupervisorWorkloads)
-                        {
-                            pIdx++;
-                            var loadPct = (int)Math.Round((double)sup.ProjectCount / maxProjects * 100);
-                            <tr>
-                                <td class="py-2 px-4 text-slate-400">@pIdx</td>
-                                <td class="py-2 px-4 font-semibold">@sup.LecturerName</td>
-                                <td class="py-2 px-4 text-center">@sup.ProjectCount</td>
-                                <td class="py-2 px-4 text-center">@sup.StudentCount</td>
-                                <td class="py-2 px-4 text-center font-bold">@loadPct%</td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                <span class="material-symbols-outlined text-4xl mb-3">person_off</span>
-                <p class="text-sm font-medium">Chưa có giảng viên nào được phân công</p>
-            </div>
-        }
+                    }
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="p-6 border-t border-white/5 bg-white/[0.01] print:hidden">
+            @await Html.PartialAsync("_Pagination", Model.SupervisorWorkloads)
+        </div>
     </div>
 </div>

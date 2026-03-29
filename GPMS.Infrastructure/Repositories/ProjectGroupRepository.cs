@@ -125,6 +125,20 @@ public class ProjectGroupRepository : IProjectGroupRepository
                 .ThenInclude(m => m.User)
             .ToListAsync();
 
+    public async Task<IEnumerable<ProjectGroup>> GetBySemesterWithDetailsAsync(int semesterId) =>
+        await _context.ProjectGroups
+            .Include(g => g.Project)
+                .ThenInclude(p => p.ProjectSupervisors)
+                    .ThenInclude(ps => ps.Lecturer)
+            .Include(g => g.GroupMembers)
+                .ThenInclude(m => m.User)
+            .Include(g => g.ReviewerAssignments)
+                .ThenInclude(ra => ra.Reviewer)
+            .Include(g => g.ReviewSessions)
+                .ThenInclude(rs => rs.Room)
+            .Where(g => g.Project.SemesterID == semesterId)
+            .ToListAsync();
+
     public async Task<bool> IsUserInAnyGroupAsync(string userId) =>
         await _context.GroupMembers.AnyAsync(m => m.UserID == userId);
 

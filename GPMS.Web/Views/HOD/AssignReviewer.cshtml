@@ -1,318 +1,576 @@
-﻿@{
-    ViewData["Title"] = "Reviewer Assignment";
+@using GPMS.Application.DTOs
+@using GPMS.Domain.Enums
+@model ReviewerAssignmentDto
+@{
+    ViewBag.Title = "Reviewer Assignment";
+    ViewBag.CurrentPage = "AssignReviewer";
+    ViewBag.BreadcrumbSection = "Reviewer Assignment";
     Layout = "_Layout";
+    var activeSemester = ViewBag.ActiveSemester as GPMS.Application.DTOs.SemesterDto;
 }
 
-<div class="min-h-screen bg-slate-50 dark:bg-slate-950">
-    <div class="p-6">
-        <div class="max-w-7xl mx-auto space-y-6">
-            <!-- Header with User Info -->
-            <div class="flex items-start justify-between mb-8">
-                <div class="flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-xl font-bold">
-                        AN
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div>
+            <nav class="flex items-center gap-2 text-sm text-slate-500 font-medium mb-4">
+                <a href="/HOD/Dashboard" class="hover:text-slate-800 transition-colors no-underline">GPMS</a>
+                <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span class="text-slate-800 font-bold">Reviewer Assignment</span>
+            </nav>
+            <h1 class="text-2xl font-bold text-slate-800">Assign Reviewers to Projects</h1>
+            <p class="text-slate-500 text-sm mt-1 font-medium">
+                Manage and assign reviewers for project groups by review rounds.
+                @if (activeSemester != null)
+                {
+                    <span class="text-[#F37021] font-bold">(@activeSemester.SemesterCode)</span>
+                }
+            </p>
+        </div>
+
+        <!-- Round Selection -->
+        <div class="flex items-center gap-3 bg-white p-1 rounded-xl border border-slate-200 shadow-sm self-start">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-3 mr-1">Select Round:</span>
+            @foreach (var round in Model.AllRounds.Where(r => r.RoundNumber <= 2))
+            {
+                <a href="/HOD/AssignReviewer?roundId=@round.ReviewRoundID" 
+                   class="px-5 py-2 rounded-lg text-sm font-bold transition-all no-underline @(Model.ReviewRoundID == round.ReviewRoundID ? "bg-[#F37021] text-white shadow-lg shadow-orange-500/20" : "text-slate-500 hover:bg-slate-50")">
+                    Round @round.RoundNumber
+                </a>
+            }
+        </div>
+    </div>
+
+    <!-- Main 2-Column Grid for Assignment -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+        
+        <!-- Unassigned Groups Column -->
+        <div class="flex flex-col h-full">
+            <div class="flex items-center gap-2 mb-6">
+                <div class="flex gap-0.5">
+                    <span class="w-2 h-2 rounded-full bg-orange-500"></span>
+                </div>
+                <h2 class="text-[15px] font-bold text-slate-800">Unassigned Groups (@Model.UnassignedGroups.Count)</h2>
+            </div>
+
+            <!-- Project Filters -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <div class="relative flex-grow">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" id="groupSearch" placeholder="Search by name or code..." 
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] focus:ring-1 focus:ring-[#F37021] outline-none transition-all"
+                           onkeyup="filterGroups()">
+                </div>
+                <div class="sm:w-48">
+                    <select id="majorFilter" class="w-full px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all" onchange="filterGroups()">
+                        <option value="">All Specialties</option>
+                        @foreach (var major in Model.UnassignedGroups.Select(p => p.MajorName).Distinct().OrderBy(m => m))
+                        {
+                            <option value="@major">@major</option>
+                        }
+                    </select>
+                </div>
+            </div>
+            
+            <div id="unassignedGroupsContainer" class="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-main-scroll">
+                @if (Model.UnassignedGroups.Any())
+                {
+                    foreach (var group in Model.UnassignedGroups)
+                    {
+                        <div class="group-card p-6 bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] min-h-[140px] hover:border-[#F37021] hover:shadow-md transition-all cursor-pointer group" 
+                             data-name="@group.GroupName.ToLower()" 
+                             data-code="@group.ProjectCode.ToLower()" 
+                             data-major="@group.MajorName"
+                             onclick='openReviewerModal("@group.GroupID", "@group.ProjectCode", "@group.MajorName", "@group.GroupName", @Json.Serialize(group.Reviewers), @Json.Serialize(group.MentorIDs))'>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="font-bold text-slate-500 text-xs tracking-wider">@group.ProjectCode</span>
+                                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">@group.MajorName</span>
+                            </div>
+                            <p class="font-bold text-slate-800 text-lg mb-1 group-hover:text-[#F37021] transition-colors leading-tight">@group.GroupName</p>
+                            <p class="text-xs text-slate-500 font-medium mb-3 italic">@group.ProjectName</p>
+                            <div class="flex items-center justify-between mt-auto">
+                                <div class="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                    <span class="material-symbols-outlined text-[16px]">person</span>
+                                    Mentor: @group.SupervisorName
+                                </div>
+                                <span class="px-2.5 py-1 bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider rounded border border-slate-200/50">Unassigned</span>
+                            </div>
+                        </div>
+                    }
+                }
+                else
+                {
+                    <div class="p-12 text-center bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <span class="material-symbols-outlined text-4xl text-slate-300 mb-2">check_circle</span>
+                        <p class="text-slate-500 font-medium">Tất cả các nhóm đã được phân công phản biện!</p>
                     </div>
-                    <div>
-                        <nav class="flex items-center gap-2 text-sm mb-2">
-                            <a href="/Hod/Dashboard" class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200">GPMS</a>
-                            <span class="text-slate-400 dark:text-slate-600">/</span>
-                            <span class="text-slate-900 dark:text-slate-100 font-medium">Reviewer Assign</span>
-                        </nav>
-                        <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Dr. Alex Nguyen</h1>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Head of Department</p>
-                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Available Lecturers Column -->
+        <div class="flex flex-col h-full">
+            <div class="flex items-center justify-between mb-6">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[#1E3A5F]">person_search</span>
+                    <h2 class="text-[15px] font-bold text-slate-800">Available Lecturers</h2>
                 </div>
             </div>
 
-            <!-- Page Title and Description -->
-            <div class="mb-8">
-                <h2 class="text-3xl font-bold text-slate-900 dark:text-white mb-2">Phân công Reviewer</h2>
-                <p class="text-slate-600 dark:text-slate-400">Tự động hóa thủ tục phân công giảng viên phản biện cho các giai đoạn báo cáo</p>
-            </div>
-
-            <!-- Tabs Navigation -->
-            <div class="border-b border-slate-200 dark:border-slate-800">
-                <div class="flex gap-8">
-                    <button class="pb-4 px-1 border-b-2 border-[#F37021] text-[#F37021] font-semibold">
-                        Tổng quan phân công
-                    </button>
-                    <button class="pb-4 px-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-medium">
-                        Constraint Rules
-                    </button>
+            <!-- Lecturer Filters -->
+            <div class="flex flex-col sm:flex-row gap-3 mb-6">
+                <div class="relative flex-grow">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" id="lecturerSearch" placeholder="Search by name..." 
+                           class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#1E3A5F] focus:ring-1 focus:ring-[#1E3A5F] outline-none transition-all"
+                           onkeyup="filterLecturers()">
                 </div>
             </div>
+            
+            <div id="lecturersContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[500px] overflow-y-auto pr-2 custom-main-scroll">
+                @foreach (var lecturer in Model.Lecturers)
+                {
+                    var isFull = lecturer.CurrentWorkload >= lecturer.MaxWorkload;
+                    var workloadPercent = (lecturer.CurrentWorkload * 100) / lecturer.MaxWorkload;
+                    var workloadColor = lecturer.CurrentWorkload >= lecturer.MaxWorkload ? "bg-red-500" : (lecturer.CurrentWorkload >= 10 ? "bg-amber-500" : "bg-[#1E3A5F]");
+                    var textColor = lecturer.CurrentWorkload >= lecturer.MaxWorkload ? "text-red-500" : (lecturer.CurrentWorkload >= 10 ? "text-amber-500" : "text-emerald-600");
+                    var initials = lecturer.FullName.Contains(" ") ? string.Concat(lecturer.FullName.Split(' ').Select(s => s[0])) : lecturer.FullName.Substring(0, 1);
 
-            <!-- Statistics Cards -->
-            <div class="grid grid-cols-4 gap-6 mt-8">
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Tổng số nhóm</p>
-                            <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2">42</p>
+                    <div class="lecturer-card bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.02)] p-5 flex flex-col hover:shadow-md transition-shadow @(isFull ? "opacity-75" : "")"
+                         data-name="@lecturer.FullName.ToLower()"
+                         data-specialty="@lecturer.Specialty">
+                        <div class="flex items-start gap-4 mb-4">
+                            <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 border border-slate-200 overflow-hidden shadow-sm">
+                                <span class="text-slate-500 font-bold text-sm">@initials</span>
+                            </div>
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm leading-tight">@lecturer.FullName</p>
+                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">@lecturer.Level</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5 leading-snug">Expertise: @lecturer.Specialty</p>
+                            </div>
                         </div>
-                        <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400" style="font-size: 24px;">groups</span>
+                        
+                        <div class="mb-5 mt-auto">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-500">Review Workload</span>
+                                <span class="text-[10px] font-bold @textColor">@lecturer.CurrentWorkload / @lecturer.MaxWorkload GROUPS</span>
+                            </div>
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="@workloadColor h-full rounded-full transition-all duration-500" style="width: @workloadPercent%"></div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Đã phân công</p>
-                            <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">35</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-green-600 dark:text-green-400" style="font-size: 24px;">check_circle</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Chưa phân công</p>
-                            <p class="text-3xl font-bold text-[#F37021] mt-2">07</p>
-                        </div>
-                        <div class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900 flex items-center justify-center">
-                            <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">schedule</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                    <div>
-                        <p class="text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wide">Tiến độ</p>
-                        <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2">83%</p>
-                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2 mt-4">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: 83%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Assignment Table Section -->
-            <div class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden mt-8">
-                <div class="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
-                    <div class="flex-1 flex items-center gap-4">
-                        <div class="flex-1">
-                            <select class="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#F37021]">
-                                <option>Round 1: Proposal Review (Vòng 5)</option>
-                                <option>Round 2: Mid-term Progress</option>
-                                <option>Round 3: Final Defence</option>
-                            </select>
-                        </div>
-                        <div class="flex-1 relative">
-                            <span class="material-symbols-outlined absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" style="font-size: 20px;">search</span>
-                            <input
-                                type="text"
-                                placeholder="Nhập mã nhóm, tên đề tài..."
-                                class="w-full pl-10 pr-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#F37021]"
-                            />
-                        </div>
-                        <button class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                            <span class="material-symbols-outlined" style="font-size: 20px;">tune</span>
+                        
+                        <button class="w-full py-2.5 bg-[#1E3A5F] hover:bg-slate-800 text-white rounded-lg font-bold text-xs transition-colors shadow-sm" onclick="openProjectModal('@lecturer.LecturerID', '@lecturer.FullName')">
+                            View & Assign
                         </button>
-                        <button class="px-4 py-2 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
-                            <span class="material-symbols-outlined" style="font-size: 20px;">download</span>
-                        </button>
                     </div>
-                </div>
+                }
+            </div>
+        </div>
+    </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm">
-                        <thead class="bg-slate-50 dark:bg-slate-800">
-                            <tr class="border-b border-slate-200 dark:border-slate-700">
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">MÃ NHÓM</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">ĐỀ TÀI</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">GVHD</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">REVIEWER ĐƯỢC GIAO</th>
-                                <th class="text-left py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">TRẠNG THÁI</th>
-                                <th class="text-center py-4 px-6 font-semibold text-slate-700 dark:text-slate-300">THAO TÁC</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                            <!-- Row 1 -->
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                <td class="py-4 px-6">
-                                    <span class="font-semibold text-slate-900 dark:text-white">G12_SEP</span>
+    <!-- Assignment Summary Section -->
+    <div class="bg-white border border-slate-200 rounded-2xl shadow-[0_4px_12px_rgba(0,0,0,0.03)] overflow-hidden mt-6">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+            <h2 class="text-lg font-bold text-slate-800">Assignment Summary - Round @(Model.AllRounds.FirstOrDefault(r => r.ReviewRoundID == Model.ReviewRoundID)?.RoundNumber ?? 0)</h2>
+            <div class="px-3 py-1 bg-emerald-50 border border-emerald-100 text-emerald-700 rounded-full shadow-sm">
+                <span class="text-xs font-bold uppercase tracking-wider">@Model.AssignedGroups.Count Groups Assigned</span>
+            </div>
+        </div>
+
+        <!-- Summary Table Filters -->
+        <div class="p-4 bg-slate-50/50 border-b border-slate-100 flex flex-col sm:flex-row gap-4">
+            <div class="relative flex-grow">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                <input type="text" id="summarySearch" placeholder="Search by name, code or reviewer..." 
+                       class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                       onkeyup="filterSummaryTable()">
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-100">
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">GROUP CODE</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">GROUP NAME / TOPIC</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">MENTOR</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">REVIEWER</th>
+                        <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider">STATUS</th>
+                        <th class="py-4 px-6 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @if (Model.AssignedGroups.Any())
+                    {
+                        foreach (var group in Model.AssignedGroups)
+                        {
+                            <tr class="summary-row hover:bg-slate-50/50 transition-colors"
+                                data-name="@group.GroupName.ToLower()"
+                                data-code="@group.ProjectCode.ToLower()">
+                                <td class="py-5 px-6 font-bold text-slate-800">@group.ProjectCode</td>
+                                <td class="py-5 px-6">
+                                    <div class="font-bold text-slate-800 leading-snug">@group.GroupName</div>
+                                    <div class="text-[10px] text-slate-400 mt-1 italic line-clamp-1">@group.ProjectName</div>
                                 </td>
-                                <td class="py-4 px-6 text-slate-600 dark:text-slate-400">Hệ thống quản lý chuỗi ứng nặng sâu</td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">Nguyễn Văn A</span>
+                                <td class="py-5 px-6">
+                                    <span class="text-slate-600 font-medium">@group.SupervisorName</span>
+                                </td>
+                                <td class="py-5 px-6">
+                                    <div class="space-y-1.5">
+                                        @foreach(var rev in group.Reviewers) {
+                                            <div class="flex items-center gap-2">
+                                                <div class="flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 rounded text-[10px] font-bold border border-green-100">
+                                                    @rev.ReviewerName (@rev.Role.ToString())
+                                                    <button onclick="removeReviewerAction(@Model.ReviewRoundID, @group.GroupID, '@rev.ReviewerID')" class="hover:text-red-500 ml-1">
+                                                        <span class="material-symbols-outlined text-[12px]">close</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        }
+                                        @if(!group.Reviewers.Any()){
+                                            <span class="text-slate-400 italic text-[11px]">Unassigned</span>
+                                        }
                                     </div>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-slate-400 to-slate-600"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">TS. Lê Thị B</span>
-                                    </div>
+                                <td class="py-5 px-6">
+                                    <span class="px-2.5 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-wider rounded border border-blue-100">Assigned</span>
                                 </td>
-                                <td class="py-4 px-6">
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded-full">
-                                        <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-                                        Đã gán
-                                    </span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <button class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition">
-                                        <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
+                                <td class="py-5 px-6 text-center">
+                                    <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-[#F37021] hover:bg-orange-50 rounded-lg transition" title="Modify" 
+                                            onclick='openReviewerModal("@group.GroupID", "@group.ProjectCode", "@group.MajorName", "@group.GroupName", @Json.Serialize(group.Reviewers), @Json.Serialize(group.MentorIDs))'>
+                                        <span class="material-symbols-outlined text-[16px]">person_add</span>
+                                        Edit
                                     </button>
                                 </td>
                             </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="6" class="py-12 text-center text-slate-400 italic">No groups have been assigned reviewers yet.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
-                            <!-- Row 2 -->
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                <td class="py-4 px-6">
-                                    <span class="font-semibold text-slate-900 dark:text-white">G08_IOT</span>
-                                </td>
-                                <td class="py-4 px-6 text-slate-600 dark:text-slate-400">Ứng dụng AI trong giám sát an ninh nhà thông minh</td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">TS. Trần Minh C</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-green-400 to-green-600"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">TS. Đỗ Hoàng D</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs font-semibold rounded-full">
-                                        <span class="material-symbols-outlined" style="font-size: 14px;">check_circle</span>
-                                        Đã gán
-                                    </span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <button class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition">
-                                        <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- Row 3 -->
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                <td class="py-4 px-6">
-                                    <span class="font-semibold text-slate-900 dark:text-white">G24_WEB</span>
-                                </td>
-                                <td class="py-4 px-6 text-slate-600 dark:text-slate-400">Nền tảng thương mại điện tử tích hợp Blockchain...</td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">TS. Phạm Xuân E</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <span class="text-sm text-slate-600 dark:text-slate-400">Chưa phân công</span>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 text-xs font-semibold rounded-full">
-                                        <span class="material-symbols-outlined" style="font-size: 14px;">schedule</span>
-                                        Chờ xử lý
-                                    </span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition">
-                                        Gán reviewer
-                                    </button>
-                                </td>
-                            </tr>
-
-                            <!-- Row 4 -->
-                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                                <td class="py-4 px-6">
-                                    <span class="font-semibold text-slate-900 dark:text-white">G15_APP</span>
-                                </td>
-                                <td class="py-4 px-6 text-slate-600 dark:text-slate-400">Giải pháp Booking đa nền tảng cho lịch hẹn...</td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">ThS. Võ Quang F</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-6 h-6 rounded-full bg-gradient-to-br from-orange-400 to-orange-600"></div>
-                                        <span class="text-sm text-slate-900 dark:text-white">TS. Nguyễn Văn A</span>
-                                    </div>
-                                </td>
-                                <td class="py-4 px-6">
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-semibold rounded-full">
-                                        <span class="material-symbols-outlined" style="font-size: 14px;">assignment</span>
-                                        Đang review
-                                    </span>
-                                </td>
-                                <td class="py-4 px-6 text-center">
-                                    <button class="p-1 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition">
-                                        <span class="material-symbols-outlined" style="font-size: 18px;">more_vert</span>
-                                    </button>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="flex items-center justify-between p-6 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
-                    <p class="text-sm text-slate-600 dark:text-slate-400">Hiển thị 1-4 trong số 42 nhóm</p>
-                    <div class="flex gap-2">
-                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition" disabled>Trước</button>
-                        <button class="px-3 py-1 bg-slate-900 dark:bg-slate-700 text-white rounded font-medium">1</button>
-                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">2</button>
-                        <button class="px-3 py-1 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-slate-100 rounded hover:bg-slate-100 dark:hover:bg-slate-700 transition">Sau</button>
-                    </div>
+<!-- Reviewer Selection Modal -->
+<div id="reviewerModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">Assign Reviewers</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Assigning to: <span id="modalGroupName" class="text-[#F37021] font-bold"></span> (<span id="modalProjectCode" class="font-bold"></span>)</p>
+            </div>
+            <button onclick="closeReviewerModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <div class="p-8">
+            <div class="mb-6">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">Selected Reviewers</label>
+                <div id="selectedReviewersList" class="flex flex-wrap gap-2 min-h-[40px] p-3 bg-slate-50 rounded-2xl border border-slate-200 border-dashed">
+                    <!-- Dynamic chips -->
                 </div>
             </div>
 
-            <!-- Constraint Rules Section -->
-            <div class="mt-12 mb-8">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-[#F37021]" style="font-size: 24px;">rule</span>
-                    Constraint Rules (Quy tắc ràng buộc hệ thống)
-                </h3>
-
-                <div class="grid grid-cols-4 gap-6">
-                    <!-- Rule 1: Conflict of Interest -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900 mb-4">
-                            <span class="material-symbols-outlined text-red-600 dark:text-red-400" style="font-size: 24px;">block</span>
-                        </div>
-                        <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Conflict of Interest</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Reviewers cannot evaluate projects of students they teach or have taught recently.</p>
-                    </div>
-
-                    <!-- Rule 2: Consistency -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900 mb-4">
-                            <span class="material-symbols-outlined text-blue-600 dark:text-blue-400" style="font-size: 24px;">sync</span>
-                        </div>
-                        <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Consistency</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">The same reviewer must evaluate a project through all review phases for continuity.</p>
-                    </div>
-
-                    <!-- Rule 3: Expertise Matching -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900 mb-4">
-                            <span class="material-symbols-outlined text-green-600 dark:text-green-400" style="font-size: 24px;">verified</span>
-                        </div>
-                        <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Expertise Matching</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Reviewers are matched with projects matching their areas of expertise and specialization.</p>
-                    </div>
-
-                    <!-- Rule 4: Workload Balance -->
-                    <div class="bg-white dark:bg-slate-900 rounded-xl p-6 shadow-sm border border-slate-200 dark:border-slate-800">
-                        <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900 mb-4">
-                            <span class="material-symbols-outlined text-purple-600 dark:text-purple-400" style="font-size: 24px;">balance</span>
-                        </div>
-                        <h4 class="font-semibold text-slate-900 dark:text-white mb-2">Workload Balance</h4>
-                        <p class="text-sm text-slate-600 dark:text-slate-400">Reviewer workload is balanced by distributing projects as evenly as possible among all qualified reviewers.</p>
-                    </div>
+            <div>
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-3">List of Available Lecturers</label>
+                <div class="relative mb-4">
+                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                    <input type="text" id="modalLecturerSearch" placeholder="Search by name or specialty..." 
+                           class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all"
+                           onkeyup="filterModalLecturers()">
                 </div>
+                
+                <div id="modalLecturerList" class="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-main-scroll pr-2">
+                    @foreach (var lecturer in Model.Lecturers)
+                    {
+                        <div class="modal-lecturer-item p-3 border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-[#F37021] bg-white cursor-pointer transition-all"
+                             data-id="@lecturer.LecturerID"
+                             data-name="@lecturer.FullName"
+                             data-specialty="@lecturer.Specialty"
+                             onclick="toggleReviewerSelection('@lecturer.LecturerID', '@lecturer.FullName')">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-[10px] border border-slate-200">
+                                    @lecturer.FullName.Substring(0, 1)
+                                </div>
+                                <div>
+                                    <p class="font-bold text-slate-800 text-xs">@lecturer.FullName</p>
+                                    <p class="text-[9px] text-slate-500">Load: @lecturer.CurrentWorkload/@lecturer.MaxWorkload</p>
+                                </div>
+                            </div>
+                            <span class="add-icon material-symbols-outlined text-[#F37021] opacity-30 group-hover:opacity-100">add_circle</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                @if (Model.IsFinalRound) {
+                    <select id="reviewerRoleSelect" class="bg-white border border-slate-200 rounded-lg px-3 py-2 text-xs font-bold outline-none focus:ring-2 focus:ring-orange-500/20 transition-all">
+                        @foreach (var role in Enum.GetValues(typeof(CommitteeRole))) {
+                            <option value="@role">Role: @role</option>
+                        }
+                    </select>
+                } else {
+                    <input type="hidden" id="reviewerRoleSelect" value="Reviewer" />
+                    <div class="px-3 py-1.5 bg-slate-100 text-slate-500 rounded-lg text-xs font-bold border border-slate-200">
+                        Vai trò: Phản biện (Cố định)
+                    </div>
+                }
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="closeReviewerModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+                <button onclick="saveAssignmentAction()" class="px-8 py-2.5 bg-[#F37021] text-white font-bold rounded-xl shadow-lg shadow-orange-500/20 hover:scale-[1.02] active:scale-[0.98] transition-all">Save Changes</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Project Modal (For Lecturer -> Projects view) -->
+<div id="projectModal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <div>
+                <h3 class="text-xl font-bold text-slate-800">Select Project Group</h3>
+                <p class="text-xs text-slate-500 font-medium mt-1">Lecturer: <span id="modalLecturerTitle" class="text-[#1E3A5F] font-bold"></span></p>
+            </div>
+            <button onclick="closeProjectModal()" class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-white hover:shadow-md transition-all text-slate-400 hover:text-slate-600">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-8">
+            <div class="relative mb-6">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-[20px]">search</span>
+                <input type="text" id="modalGroupSearch" placeholder="Search by name or project code..." 
+                       class="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:border-[#F37021] outline-none transition-all"
+                       onkeyup="filterModalGroups()">
+            </div>
+            <div id="modalGroupList" class="space-y-3 max-h-[400px] overflow-y-auto custom-main-scroll pr-2">
+                @foreach (var group in Model.UnassignedGroups)
+                {
+                    <div class="modal-group-item p-4 border border-slate-100 rounded-2xl flex items-center justify-between group hover:border-[#F37021] bg-white cursor-pointer transition-all"
+                         data-name="@group.GroupName.ToLower()"
+                         data-code="@group.ProjectCode.ToLower()"
+                         onclick="quickAssignLecturerToGroup('@group.GroupID', '@group.GroupName')">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold text-slate-500 tracking-wider">@group.ProjectCode</span>
+                                <span class="px-1.5 py-0.5 bg-slate-100 text-[9px] font-bold text-slate-400 uppercase rounded">@group.MajorName</span>
+                            </div>
+                            <p class="font-bold text-slate-800 text-sm group-hover:text-[#F37021]">@group.GroupName</p>
+                        </div>
+                        <span class="material-symbols-outlined text-[#F37021] opacity-0 group-hover:opacity-100">add_circle</span>
+                    </div>
+                }
+            </div>
+        </div>
+        <div class="px-8 py-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <button onclick="closeProjectModal()" class="px-6 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors">Cancel</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let currentGroupId = null;
+        let selectedReviewers = [];
+        let currentLecturerId = null;
+        const currentRoundId = @Model.ReviewRoundID;
+
+        // --- Core Assignment Logic ---
+
+        let currentMentorIds = [];
+
+        function openReviewerModal(groupId, code, major, groupName, existingReviewers = [], mentorIds = []) {
+            currentGroupId = groupId;
+            currentMentorIds = mentorIds || [];
+            document.getElementById('modalProjectCode').innerText = code;
+            document.getElementById('modalGroupName').innerText = groupName;
+            
+            // Map existing reviewers if any
+            selectedReviewers = existingReviewers.map(r => ({
+                id: r.ReviewerID || r.reviewerID,
+                name: r.ReviewerName || r.reviewerName
+            }));
+
+            renderSelectedChips();
+            filterModalLecturers(); // Apply mentor filtering
+            document.getElementById('reviewerModal').classList.remove('hidden');
+        }
+
+        function closeReviewerModal() {
+            document.getElementById('reviewerModal').classList.add('hidden');
+            selectedReviewers = [];
+        }
+
+        function toggleReviewerSelection(id, name) {
+            const index = selectedReviewers.findIndex(r => r.id === id);
+            if (index === -1) {
+                selectedReviewers.push({ id, name });
+            } else {
+                selectedReviewers.splice(index, 1);
+            }
+            renderSelectedChips();
+        }
+
+        function renderSelectedChips() {
+            const container = document.getElementById('selectedReviewersList');
+            container.innerHTML = '';
+            
+            if (selectedReviewers.length === 0) {
+                container.innerHTML = '<span class="text-slate-300 text-xs italic">No lecturers selected</span>';
+                return;
+            }
+
+            selectedReviewers.forEach(rev => {
+                const chip = document.createElement('div');
+                chip.className = 'flex items-center gap-1.5 px-3 py-1.5 bg-[#F37021]/10 text-[#F37021] rounded-full text-[11px] font-bold border border-[#F37021]/20';
+                chip.innerHTML = `
+                    ${rev.name}
+                    <button onclick="toggleReviewerSelection('${rev.id}', '${rev.name}')" class="hover:text-red-500 flex items-center">
+                        <span class="material-symbols-outlined text-[14px]">close</span>
+                    </button>
+                `;
+                container.appendChild(chip);
+            });
+        }
+
+        async function saveAssignmentAction() {
+            if (selectedReviewers.length === 0) {
+                alert('Please select at least one reviewer.');
+                return;
+            }
+
+            const role = document.getElementById('reviewerRoleSelect').value;
+            const data = {
+                ReviewRoundID: currentRoundId,
+                GroupID: parseInt(currentGroupId),
+                Assignments: selectedReviewers.map(r => ({
+                    LecturerID: r.id,
+                    Role: role
+                }))
+            };
+
+            try {
+                const response = await fetch('/HOD/ReassignReviewer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const res = await response.json();
+                if (res.success) window.location.reload();
+                else alert(res.message);
+            } catch(err) {
+                console.error(err);
+                alert('Connection error.');
+            }
+        }
+
+        async function removeReviewerAction(roundId, groupId, lecturerId) {
+            if (!confirm('Are you sure you want to remove this reviewer?')) return;
+            try {
+                const res = await fetch('/HOD/RemoveReviewer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ReviewRoundID: roundId, GroupID: groupId, LecturerID: lecturerId })
+                });
+                const data = await res.json();
+                if (data.success) window.location.reload();
+                else alert(data.message);
+            } catch(err) { console.error(err); }
+        }
+
+        // --- UI Modal Handlers ---
+
+        function openProjectModal(lecturerId, lecturerName) {
+            currentLecturerId = lecturerId;
+            document.getElementById('modalLecturerTitle').innerText = lecturerName;
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
+
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+            currentLecturerId = null;
+        }
+
+        async function quickAssignLecturerToGroup(groupId, groupName) {
+            currentGroupId = groupId;
+            selectedReviewers = [{ id: currentLecturerId, name: document.getElementById('modalLecturerTitle').innerText }];
+            await saveAssignmentAction();
+        }
+
+        // --- Filtering Logic ---
+
+        function filterGroups() {
+            const search = document.getElementById('groupSearch').value.toLowerCase();
+            const major = document.getElementById('majorFilter').value;
+            document.querySelectorAll('.group-card').forEach(card => {
+                const name = card.dataset.name;
+                const code = card.dataset.code;
+                const cardMajor = card.dataset.major;
+                const show = (name.includes(search) || code.includes(search)) && (major === "" || cardMajor === major);
+                card.style.display = show ? 'block' : 'none';
+            });
+        }
+
+        function filterLecturers() {
+            const search = document.getElementById('lecturerSearch').value.toLowerCase();
+            document.querySelectorAll('.lecturer-card').forEach(card => {
+                const name = card.dataset.name;
+                card.style.display = name.includes(search) ? 'block' : 'none';
+            });
+        }
+
+        function filterSummaryTable() {
+            const search = document.getElementById('summarySearch').value.toLowerCase();
+            document.querySelectorAll('.summary-row').forEach(row => {
+                const name = row.dataset.name;
+                const code = row.dataset.code;
+                row.style.display = (name.includes(search) || code.includes(search)) ? '' : 'none';
+            });
+        }
+
+        function filterModalLecturers() {
+            const searchTerm = document.getElementById('modalLecturerSearch').value.toLowerCase();
+            const items = document.querySelectorAll('.modal-lecturer-item');
+            
+            items.forEach(item => {
+                const id = item.dataset.id;
+                const name = item.dataset.name.toLowerCase();
+                const specialty = item.dataset.specialty.toLowerCase();
+                
+                // Block if it's a mentor for the current group
+                if (currentMentorIds.includes(id)) {
+                    item.style.display = 'none';
+                    return;
+                }
+
+                if (name.includes(searchTerm) || specialty.includes(searchTerm)) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        }
+
+        function filterModalGroups() {
+            const search = document.getElementById('modalGroupSearch').value.toLowerCase();
+            document.querySelectorAll('.modal-group-item').forEach(item => {
+                const name = item.dataset.name;
+                const code = item.dataset.code;
+                item.style.display = (name.includes(search) || code.includes(search)) ? 'flex' : 'none';
+            });
+        }
+    </script>
+}
