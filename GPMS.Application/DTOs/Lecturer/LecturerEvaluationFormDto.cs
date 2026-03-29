@@ -29,6 +29,7 @@ public class LecturerEvaluationFormDto
     public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
     public string? MentorGateComment { get; set; }
     public bool CanEdit { get; set; } = true;
+    public string? MeetLink { get; set; }
 }
 
 public class ChecklistItemDto

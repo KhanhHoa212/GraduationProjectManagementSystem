@@ -37,7 +37,7 @@ public class ReviewSessionInfoConfiguration : IEntityTypeConfiguration<ReviewSes
     {
         builder.ToTable("ReviewSessionInfo");
         builder.HasKey(rs => rs.SessionID);
-
+        builder.Property(rs => rs.MeetLink).HasMaxLength(500).IsUnicode(false);
         builder.Property(rs => rs.Notes).HasMaxLength(500);
 
         builder.HasIndex(rs => new { rs.ReviewRoundID, rs.GroupID }).IsUnique();

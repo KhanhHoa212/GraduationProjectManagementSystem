@@ -380,6 +380,15 @@
                             </div>
                         </div>
                     }
+                    @if (!string.IsNullOrEmpty(Model.MeetLink))
+                    {
+                        <div class="mt-4">
+                            <a href="@Model.MeetLink" target="_blank" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold rounded-xl shadow-sm transition-all group">
+                                <span class="material-symbols-outlined text-[20px] group-hover:animate-pulse">videocam</span>
+                                Join Online Meeting
+                            </a>
+                        </div>
+                    }
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(Model.SubmissionUrl))

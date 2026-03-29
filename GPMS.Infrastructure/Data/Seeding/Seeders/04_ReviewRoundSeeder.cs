@@ -66,6 +66,18 @@ public class ReviewRoundSeeder : IDataSeeder
                 _context.ReviewRounds.AddRange(rounds);
                 await _context.SaveChangesAsync();
             }
+            else
+            {
+                // FORCE PATCH: ensure user can test it by forcing Round 2 to be Online and Ends next week!
+                var round2 = rounds.FirstOrDefault(r => r.RoundNumber == 2);
+                if (round2 != null)
+                {
+                    round2.RoundType = RoundType.Online;
+                    round2.EndDate = DateTime.Today.AddDays(7);
+                    round2.Status = RoundStatus.Ongoing;
+                    await _context.SaveChangesAsync();
+                }
+            }
 
             foreach (var round in rounds)
             {

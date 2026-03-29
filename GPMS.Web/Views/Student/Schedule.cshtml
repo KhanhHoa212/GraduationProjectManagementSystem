@@ -94,12 +94,6 @@
                                                 <div class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">
                                                     @(string.IsNullOrEmpty(schedule.RoomName) ? "Not Assigned" : $"Room {schedule.RoomName}, {schedule.Building}")
                                                 </div>
-                                                @if (!string.IsNullOrEmpty(schedule.LocationDetails))
-                                                {
-                                                    <div class="text-sm font-medium text-slate-400 dark:text-dark-400 italic">
-                                                        @schedule.LocationDetails
-                                                    </div>
-                                                }
                                             </div>
                                         </div>
                                     </div>

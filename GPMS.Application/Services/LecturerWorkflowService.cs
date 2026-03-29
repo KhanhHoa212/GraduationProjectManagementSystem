@@ -73,6 +73,7 @@ public class LecturerWorkflowService : ILecturerWorkflowService
             ReviewRoundName = assignment.ReviewRound?.RoundType.ToString() ?? "N/A",
             RoundNumber = assignment.ReviewRound?.RoundNumber ?? 0,
             ScheduledAt = session?.ScheduledAt,
+            MeetLink = session?.MeetLink,
             SubmissionFileName = submission?.FileName,
             SubmissionUrl = submission?.FileUrl,
             Members = assignment.Group?.GroupMembers.Select(LecturerPresentationHelper.MapToStudentMemberDto).ToList() ?? new List<StudentMemberDto>(),

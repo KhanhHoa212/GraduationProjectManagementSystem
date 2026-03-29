@@ -84,9 +84,14 @@ public class ReviewerAssignmentRepository : IReviewerAssignmentRepository
                 ReviewRoundName = ra.ReviewRound.RoundNumber.ToString(),
                 RoundNumber = ra.ReviewRound.RoundNumber,
                 RoundType = ra.ReviewRound.RoundType.ToString(),
+                RoundEndDate = ra.ReviewRound.EndDate,
                 ScheduledAt = ra.Group.ReviewSessions
                     .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)
                     .Select(rs => (DateTime?)rs.ScheduledAt)
+                    .FirstOrDefault(),
+                MeetLink = ra.Group.ReviewSessions
+                    .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)
+                    .Select(rs => rs.MeetLink)
                     .FirstOrDefault(),
                 Location = ra.Group.ReviewSessions
                     .Where(rs => rs.ReviewRoundID == ra.ReviewRoundID)

@@ -22,7 +22,11 @@ public class ProjectSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Projects.CountAsync() > 20) return;
+        if (await _context.Projects.CountAsync() > 20) 
+        {
+            Console.WriteLine("[ProjectSeeder] Projects already exist (>20), skipping...");
+            return;
+        }
 
         var faker = new Faker("vi");
         var activeSemester = await _context.Semesters.FirstOrDefaultAsync(s => s.Status == SemesterStatus.Active);
@@ -33,7 +37,12 @@ public class ProjectSeeder : IDataSeeder
             .Select(u => u.UserID)
             .ToListAsync();
             
-        if (!lecturers.Any()) return;
+        if (!lecturers.Any()) 
+        {
+            Console.WriteLine("[ProjectSeeder] No lecturers found! Is UserSeeder working?");
+            return;
+        }
+        Console.WriteLine($"[ProjectSeeder] Seeding projects for {semesters.Count} semesters using {lecturers.Count} lecturers...");
 
         var projects = new List<Project>();
         int projectCount = 0;
@@ -101,6 +110,7 @@ public class ProjectSeeder : IDataSeeder
 
         await _context.ProjectSupervisors.AddRangeAsync(projectSupervisors);
         await _context.SaveChangesAsync();
+        Console.WriteLine($"[ProjectSeeder] Successfully seeded {projects.Count} projects and their supervisors.");
     }
 }
 

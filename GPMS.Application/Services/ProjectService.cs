@@ -601,8 +601,7 @@ public class ProjectService : IProjectService
                 ScheduledAt = session.ScheduledAt,
                 RoomName = session.Room?.RoomCode,
                 Building = session.Room?.Building,
-                Notes = session.Notes,
-                LocationDetails = "Campus Room"
+                Notes = session.Notes
             };
  
             // Get committee members

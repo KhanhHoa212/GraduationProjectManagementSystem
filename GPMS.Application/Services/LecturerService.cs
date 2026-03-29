@@ -19,6 +19,8 @@ public class LecturerService : ILecturerService
     private readonly ILecturerScheduleService _lecturerScheduleService;
     private readonly ILecturerWorkflowService _lecturerWorkflowService;
     private readonly ISubmissionAccessService _submissionAccessService;
+    private readonly IReviewSessionRepository _sessionRepo;
+    private readonly IMeetingService _meetingService;
 
     public LecturerService(
         IProjectGroupRepository groupRepo,
@@ -30,7 +32,9 @@ public class LecturerService : ILecturerService
         INotificationRepository notificationRepo,
         ILecturerScheduleService lecturerScheduleService,
         ILecturerWorkflowService lecturerWorkflowService,
-        ISubmissionAccessService submissionAccessService)
+        ISubmissionAccessService submissionAccessService,
+        IReviewSessionRepository sessionRepo,
+        IMeetingService meetingService)
     {
         _groupRepo = groupRepo;
         _assignmentRepo = assignmentRepo;
@@ -42,6 +46,8 @@ public class LecturerService : ILecturerService
         _lecturerScheduleService = lecturerScheduleService;
         _lecturerWorkflowService = lecturerWorkflowService;
         _submissionAccessService = submissionAccessService;
+        _sessionRepo = sessionRepo;
+        _meetingService = meetingService;
     }
 
     public async Task<LecturerDashboardDto> GetDashboardDataAsync(string lecturerId)
@@ -111,7 +117,8 @@ public class LecturerService : ILecturerService
                     Location = s.Location,
                     DurationMinutes = 60,
                     IsHighlight = s.IsOnline || s.RoleLabel == "Reviewer",
-                    ActionUrl = s.PrimaryActionUrl
+                    ActionUrl = s.PrimaryActionUrl,
+                    MeetLink = s.MeetLink
                 })
                 .ToList(),
             GuidanceMessage = pendingFeedbacks.Any()
@@ -381,5 +388,77 @@ public class LecturerService : ILecturerService
     public async Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role)
     {
         return await _submissionAccessService.CanUserAccessSubmissionAsync(userId, submissionId, role);
+    }
+
+    public async Task<(bool Success, string ErrorMessage)> ScheduleReviewMeetingAsync(string reviewerId, int assignmentId, DateTime scheduledAt)
+    {
+        var assignment = await _assignmentRepo.GetByIdAsync(assignmentId);
+        if (assignment == null)
+        {
+            return (false, "Assignment not found.");
+        }
+
+        if (!string.Equals(assignment.ReviewerID, reviewerId, StringComparison.OrdinalIgnoreCase))
+        {
+            return (false, "You are not authorized to schedule this meeting.");
+        }
+
+        var round = assignment.ReviewRound;
+        if (round == null)
+        {
+            return (false, "Review round details not found.");
+        }
+
+        if (round.RoundType != RoundType.Online)
+        {
+            return (false, "Scheduling meetings through this system is only available for Online rounds.");
+        }
+
+        // Validate constraint: time must be within [Round.EndDate - 3 days, Round.EndDate]
+        var allowedStart = round.EndDate.AddDays(-3);
+        if (scheduledAt < allowedStart || scheduledAt > round.EndDate)
+        {
+            return (false, $"The scheduled time must be between {allowedStart:MMM dd HH:mm} and {round.EndDate:MMM dd HH:mm}.");
+        }
+
+        // Fetch or create the session
+        var session = await _sessionRepo.GetByRoundAndGroupAsync(round.ReviewRoundID, assignment.GroupID);
+        var isNewSession = false;
+        
+        if (session == null)
+        {
+            session = new ReviewSessionInfo
+            {
+                GroupID = assignment.GroupID,
+                ReviewRoundID = round.ReviewRoundID,
+                IsOnline = true
+            };
+            isNewSession = true;
+        }
+
+        // Update time
+        session.ScheduledAt = scheduledAt;
+
+        // Generate Google Meet link only if one doesn't exist
+        if (string.IsNullOrEmpty(session.MeetLink))
+        {
+            var summary = $"Review: {assignment.Group?.Project?.ProjectName ?? "Project"} (Round {round.RoundNumber})";
+            var description = $"Online review session for group {assignment.Group?.GroupName}.";
+            
+            // Assume 1 hour duration
+            var meetLink = await _meetingService.CreateOnlineMeetingAsync(summary, description, scheduledAt, scheduledAt.AddHours(1));
+            session.MeetLink = meetLink;
+        }
+
+        if (isNewSession)
+        {
+            await _sessionRepo.AddAsync(session);
+        }
+        else
+        {
+            await _sessionRepo.UpdateAsync(session);
+        }
+
+        return (true, string.Empty);
     }
 }

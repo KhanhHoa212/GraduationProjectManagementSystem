@@ -24,7 +24,9 @@ public class ReviewAssignmentItemDto
     public string ReviewRoundName { get; set; } = string.Empty;
     public int RoundNumber { get; set; }
     public string RoundType { get; set; } = string.Empty;
+    public DateTime RoundEndDate { get; set; }
     public DateTime? ScheduledAt { get; set; }
+    public string? MeetLink { get; set; }
     public string? Location { get; set; }
     public bool IsOnline { get; set; }
     public bool HasEvaluation { get; set; }

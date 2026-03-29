@@ -63,7 +63,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IExcelService, ExcelService>();
 builder.Services.AddScoped<IMajorService, MajorService>();
 builder.Services.AddScoped<IReportService, ReportService>();
-
+builder.Services.AddScoped<IMeetingService, GoogleCalendarService>();
 
 
 // Register Infrastructure (including Seeders)

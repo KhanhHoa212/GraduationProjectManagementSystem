@@ -20,9 +20,20 @@ public class DataSeederRunner
             var name = seeder.GetType().Name;
             
             // Run all seeders to restore full test data
-            Console.WriteLine($"[Seeding] Starting {name}...");
-            await seeder.SeedAsync();
-            Console.WriteLine($"[Seeding] Finished {name}.");
+            try 
+            {
+                var startTime = DateTime.UtcNow;
+                Console.WriteLine($"[Seeding] Starting {name}...");
+                await seeder.SeedAsync();
+                var duration = DateTime.UtcNow - startTime;
+                Console.WriteLine($"[Seeding] Finished {name} in {duration.TotalSeconds:F2}s.");
+            }
+            catch (Exception ex)
+            {
+                var innerMsg = ex.InnerException != null ? $" -> {ex.InnerException.Message}" : "";
+                Console.WriteLine($"[ERROR] Seeding failed for {name}: {ex.Message}{innerMsg}");
+                // We continue to the next seeder so one failure doesn't block the rest
+            }
         }
     }
 }

@@ -57,7 +57,8 @@ public class LecturerController : Controller
                 StartTime = s.StartTime,
                 DurationMinutes = s.DurationMinutes,
                 IsHighlight = s.IsHighlight,
-                ActionUrl = s.ActionUrl
+                ActionUrl = s.ActionUrl,
+                MeetLink = s.MeetLink
             }).ToList()
         };
         return View(vm);
@@ -313,8 +314,11 @@ public class LecturerController : Controller
                 ProjectName = a.ProjectName,
                 RoundNumber = a.RoundNumber,
                 RoundType = a.RoundType,
+                RoundEndDate = a.RoundEndDate,
                 ScheduledAt = a.ScheduledAt,
+                MeetLink = a.MeetLink,
                 Location = a.Location,
+                IsOnline = a.IsOnline,
                 HasEvaluation = a.HasEvaluation,
                 EvaluationID = a.EvaluationId,
                 StatusNote = a.StatusNote
@@ -323,6 +327,7 @@ public class LecturerController : Controller
             ScheduledTodayCount = dto.ScheduledTodayCount,
             CompletedReviewsCount = dto.CompletedReviewsCount
         };
+        
         return View(vm);
     }
 
@@ -357,7 +362,8 @@ public class LecturerController : Controller
                     ActionText = dto.FocusCard.ActionText,
                     ActionUrl = dto.FocusCard.ActionUrl,
                     SecondaryActionText = dto.FocusCard.SecondaryActionText,
-                    SecondaryActionUrl = dto.FocusCard.SecondaryActionUrl
+                    SecondaryActionUrl = dto.FocusCard.SecondaryActionUrl,
+                    MeetLink = dto.FocusCard.MeetLink
                 },
             Entries = dto.Entries.Select(e => new ScheduleEntryViewModel
             {
@@ -382,7 +388,8 @@ public class LecturerController : Controller
                 PrimaryActionText = e.PrimaryActionText,
                 PrimaryActionUrl = e.PrimaryActionUrl,
                 SecondaryActionText = e.SecondaryActionText,
-                SecondaryActionUrl = e.SecondaryActionUrl
+                SecondaryActionUrl = e.SecondaryActionUrl,
+                MeetLink = e.MeetLink
             }).ToList(),
             DayGroups = dto.DayGroups.Select(g => new ScheduleDayGroupViewModel
             {
@@ -411,7 +418,8 @@ public class LecturerController : Controller
                     PrimaryActionText = e.PrimaryActionText,
                     PrimaryActionUrl = e.PrimaryActionUrl,
                     SecondaryActionText = e.SecondaryActionText,
-                    SecondaryActionUrl = e.SecondaryActionUrl
+                    SecondaryActionUrl = e.SecondaryActionUrl,
+                    MeetLink = e.MeetLink
                 }).ToList()
             }).ToList(),
             WeekDays = dto.WeekDays.Select(day => new ScheduleWeekDayViewModel
@@ -442,7 +450,8 @@ public class LecturerController : Controller
                     PrimaryActionText = e.PrimaryActionText,
                     PrimaryActionUrl = e.PrimaryActionUrl,
                     SecondaryActionText = e.SecondaryActionText,
-                    SecondaryActionUrl = e.SecondaryActionUrl
+                    SecondaryActionUrl = e.SecondaryActionUrl,
+                    MeetLink = e.MeetLink
                 }).ToList()
             }).ToList(),
             Deadlines = dto.Deadlines.Select(d => new DeadlineAlertViewModel
@@ -536,6 +545,7 @@ public class LecturerController : Controller
             MentorGateStatus = dto.MentorGateStatus,
             MentorGateComment = dto.MentorGateComment,
             CanEdit = dto.CanEdit,
+            MeetLink = dto.MeetLink,
             ExistingScores = dto.ExistingScores.Select(s => new ExistingScoreRow
             {
                 ItemID = s.ItemId,
@@ -678,5 +688,27 @@ public class LecturerController : Controller
         }
 
         return File(fileInfo.Value.content, fileInfo.Value.contentType, fileInfo.Value.fileName);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ScheduleReviewMeeting(int assignmentId, DateTime scheduledAt)
+    {
+        var userId = GetUserId();
+        if (string.IsNullOrWhiteSpace(userId))
+            return Challenge();
+
+        var (success, errorMessage) = await _lecturerService.ScheduleReviewMeetingAsync(userId, assignmentId, scheduledAt);
+
+        if (success)
+        {
+            TempData["SuccessMessage"] = "Meeting scheduled and Google Meet link generated successfully.";
+        }
+        else
+        {
+            TempData["ErrorMessage"] = errorMessage;
+        }
+
+        return RedirectToAction(nameof(ReviewAssignments));
     }
 }

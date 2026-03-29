@@ -39,7 +39,8 @@ public class LecturerScheduleService : ILecturerScheduleService
                 IsPast = session.ScheduledAt < now,
                 TimeHint = BuildTimeHint(session.ScheduledAt, now),
                 PrimaryActionText = "Open group",
-                PrimaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}"
+                PrimaryActionUrl = $"/Lecturer/ProjectGroupDetail/{group.GroupId}",
+                MeetLink = session.MeetLink
             };
 
             var pendingEvaluation = group.Evaluations
@@ -182,7 +183,8 @@ public class LecturerScheduleService : ILecturerScheduleService
                         : needsRevision
                             ? "Revise evaluation"
                             : "Open evaluation",
-                    PrimaryActionUrl = $"/Lecturer/EvaluationForm/{assignment.AssignmentId}"
+                    PrimaryActionUrl = $"/Lecturer/EvaluationForm/{assignment.AssignmentId}",
+                    MeetLink = assignment.MeetLink
                 };
             })
             .Where(entry => entry != null)!
@@ -424,7 +426,8 @@ public class LecturerScheduleService : ILecturerScheduleService
                 ActionText = priorityEntry.PrimaryActionText,
                 ActionUrl = priorityEntry.PrimaryActionUrl,
                 SecondaryActionText = priorityEntry.SecondaryActionText,
-                SecondaryActionUrl = priorityEntry.SecondaryActionUrl
+                SecondaryActionUrl = priorityEntry.SecondaryActionUrl,
+                MeetLink = priorityEntry.MeetLink
             };
         }
 

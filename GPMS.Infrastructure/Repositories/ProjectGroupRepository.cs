@@ -212,6 +212,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
                         RoundType = rs.ReviewRound.RoundType.ToString(),
                         IsOnline = rs.ReviewRound.RoundType == RoundType.Online,
                         ScheduledAt = rs.ScheduledAt,
+                        MeetLink = rs.MeetLink,
 
                         RoomCode = rs.Room != null ? rs.Room.RoomCode : null,
                         Building = rs.Room != null ? rs.Room.Building : null

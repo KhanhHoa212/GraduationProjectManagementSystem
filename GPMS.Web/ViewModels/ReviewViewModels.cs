@@ -14,6 +14,7 @@ namespace GPMS.Web.ViewModels
         public int RoundNumber { get; set; }
         public DateTime StartDate { get; set; }
         public string? RoomCode { get; set; }
+        public string? MeetLink { get; set; }
         public DateTime? ScheduledAt { get; set; }
     }
 

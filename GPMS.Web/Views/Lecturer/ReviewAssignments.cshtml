@@ -10,6 +10,7 @@
         if(label.Contains("Complete") || label.Contains("Approve")) return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400";
         return "bg-slate-100 text-slate-700 dark:bg-dark-700 dark:text-slate-300";
     }
+
 }
 
 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
@@ -18,6 +19,22 @@
         <p class="text-sm text-slate-500 dark:text-slate-400 font-medium">Groups you have been assigned to evaluate, including Meet links or offline room details.</p>
     </div>
 </div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="mb-6 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span class="text-sm font-bold">@TempData["SuccessMessage"]</span>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="mb-6 p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+        <span class="material-symbols-outlined">error</span>
+        <span class="text-sm font-bold">@TempData["ErrorMessage"]</span>
+    </div>
+}
 
 <!-- Stats Bar -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -62,7 +79,13 @@
                             <span class="text-slate-600 dark:text-slate-400 font-medium">@a.ProjectName</span>
                         </div>
                         <div class="flex flex-wrap gap-4 text-sm text-slate-500 dark:text-slate-400">
-                            <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">layers</span> Round @a.RoundNumber (@a.RoundType)</span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <span class="material-symbols-outlined text-[16px]">layers</span> 
+                                Round @a.RoundNumber 
+                                <span class="ml-1 px-2 py-0.5 rounded text-[10px] font-bold @(a.IsOnline ? "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400" : "bg-slate-100 text-slate-600 dark:bg-dark-700 dark:text-slate-400") uppercase tracking-wider">
+                                    @a.RoundType
+                                </span>
+                            </span>
                             @if (a.ScheduledAt.HasValue)
                             {
                                 <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">calendar_today</span> @a.ScheduledAt.Value.ToString("MMM dd, HH:mm")</span>
@@ -71,24 +94,52 @@
                             {
                                 <span class="inline-flex items-center gap-1.5"><span class="material-symbols-outlined text-[16px]">location_on</span> @a.Location</span>
                             }
-
+                            @if (!string.IsNullOrEmpty(a.MeetLink))
+                            {
+                                <span class="inline-flex items-center gap-1.5 font-bold text-blue-600 dark:text-blue-400">
+                                    <span class="material-symbols-outlined text-[18px]">videocam</span> 
+                                    Online Session Scheduled
+                                </span>
+                            }
                         </div>
                     </div>
                     <div class="flex items-center gap-4 shrink-0">
                         <span class="px-3 py-1.5 text-xs font-semibold rounded-lg @GetTailwindBadge(a.StatusLabel)">@a.StatusLabel</span>
                         
+                        @if (a.IsOnline && string.IsNullOrEmpty(a.MeetLink) && !isCompleted)
+                        {
+                            var allowStart = a.RoundEndDate.AddDays(-3).ToString("yyyy-MM-ddTHH:mm");
+                            var allowEnd = a.RoundEndDate.ToString("yyyy-MM-ddTHH:mm");
+
+                            <button type="button" 
+                                    onclick="openScheduleModal(@a.AssignmentID, '@a.GroupName', '@allowStart', '@allowEnd')"
+                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-primary-500 hover:bg-primary-50 text-primary-600 dark:text-primary-400 dark:hover:bg-primary-900/20 font-bold rounded-xl shadow-sm transition-colors text-sm">
+                                <span class="material-symbols-outlined text-[18px]">calendar_add_on</span>
+                                Xếp lịch
+                            </button>
+                        }
+                        else if (!string.IsNullOrEmpty(a.MeetLink))
+                        {
+                            <a href="@a.MeetLink" target="_blank"
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold rounded-xl shadow-sm transition-colors text-sm">
+                                <span class="material-symbols-outlined text-[18px]">videocam</span>
+                                Join Meet
+                            </a>
+                        }
+
                         @if (!isCompleted)
                         {
                             <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
                                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white font-bold rounded-xl shadow-sm transition-colors text-sm">
                                 <span class="material-symbols-outlined text-[18px]">edit</span>
-                                @a.PrimaryActionLabel
+                                Evaluate
                             </a>
                         }
                         else if (a.EvaluationID.HasValue)
                         {
                             <a href="@Url.Action("EvaluationForm", "Lecturer", new { id = a.AssignmentID })"
-                               class="inline-flex items-center justify-center px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-dark-800 hover:bg-slate-50 dark:hover:bg-dark-700 font-bold rounded-xl shadow-sm transition-colors text-sm">
+                               class="inline-flex items-center justify-center gap-2 px-4 py-2 border border-slate-200 dark:border-dark-600 text-slate-700 dark:text-slate-300 bg-white dark:bg-dark-800 hover:bg-slate-50 dark:hover:bg-dark-700 font-bold rounded-xl shadow-sm transition-colors text-sm">
+                                <span class="material-symbols-outlined text-[18px]">visibility</span>
                                 View
                             </a>
                         }
@@ -98,3 +149,76 @@
         </div>
     }
 </div>
+
+<!-- Schedule Modal -->
+<div id="scheduleModal" class="fixed inset-0 z-[100] hidden items-center justify-center" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onclick="closeScheduleModal()"></div>
+    
+    <div class="relative w-full max-w-md bg-white dark:bg-dark-800 rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 m-4">
+        <div class="px-6 py-4 border-b border-slate-100 dark:border-dark-700 flex justify-between items-center bg-slate-50 dark:bg-dark-900/50">
+            <h3 class="text-lg font-bold text-dark-900 dark:text-white flex items-center gap-2" id="modal-title">
+                <span class="material-symbols-outlined text-primary-500">event</span>
+                Schedule Review Meeting
+            </h3>
+            <button type="button" onclick="closeScheduleModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="scheduleForm" method="post" action="@Url.Action("ScheduleReviewMeeting", "Lecturer")">
+            @Html.AntiForgeryToken()
+            <input type="hidden" id="modalAssignmentId" name="assignmentId" value="" />
+            
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-slate-600 dark:text-slate-400">
+                    Schedule an online review meeting for <strong id="modalGroupName" class="text-dark-900 dark:text-white"></strong>. A Google Meet link will be generated automatically.
+                </p>
+                
+                <div>
+                    <label for="scheduledAt" class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Date & Time</label>
+                    <input type="datetime-local" id="scheduledAt" name="scheduledAt" required
+                           class="w-full px-4 py-2.5 bg-white dark:bg-dark-900 border border-slate-200 dark:border-dark-600 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm font-medium text-dark-900 dark:text-white" />
+                    <p class="text-[11px] text-slate-500 mt-1.5 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-[14px]">info</span>
+                        Must be within the last 3 days of the round deadline.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 bg-slate-50 dark:bg-dark-900/50 border-t border-slate-100 dark:border-dark-700 flex justify-end gap-3">
+                <button type="button" onclick="closeScheduleModal()" class="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 hover:text-dark-900 dark:hover:text-white transition-colors">
+                    Cancel
+                </button>
+                <button type="submit" class="px-5 py-2 inline-flex items-center gap-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-bold rounded-xl shadow-sm transition-colors">
+                    <span class="material-symbols-outlined text-[18px]">check</span>
+                    Confirm & Generate Link
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function openScheduleModal(assignmentId, groupName, minDate, maxDate) {
+            console.log("Opening modal for:", assignmentId, groupName);
+            document.getElementById('modalAssignmentId').value = assignmentId;
+            document.getElementById('modalGroupName').textContent = groupName;
+            
+            var dateInput = document.getElementById('scheduledAt');
+            dateInput.setAttribute('min', minDate);
+            dateInput.setAttribute('max', maxDate);
+            dateInput.value = '';
+            
+            var modal = document.getElementById('scheduleModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeScheduleModal() {
+            var modal = document.getElementById('scheduleModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    </script>
+}

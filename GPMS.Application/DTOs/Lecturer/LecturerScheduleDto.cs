@@ -33,6 +33,7 @@ public class LecturerScheduleEntryDto
     public DateTime ScheduledAt { get; set; }
     public bool IsOnline { get; set; }
     public string Location { get; set; } = string.Empty;
+    public string? MeetLink { get; set; }
     public string? Guidance { get; set; }
     public string StatusKey { get; set; } = "upcoming";
     public string StatusLabel { get; set; } = "Upcoming";
@@ -66,6 +67,7 @@ public class LecturerScheduleFocusDto
     public string ActionUrl { get; set; } = string.Empty;
     public string? SecondaryActionText { get; set; }
     public string? SecondaryActionUrl { get; set; }
+    public string? MeetLink { get; set; }
 }
 
 public class LecturerScheduleDayGroupDto

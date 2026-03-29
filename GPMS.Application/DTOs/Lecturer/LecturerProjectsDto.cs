@@ -61,6 +61,7 @@ public class GroupSessionSummaryDto
     public string RoundType { get; set; } = string.Empty;
     public bool IsOnline { get; set; }
     public DateTime ScheduledAt { get; set; }
+    public string? MeetLink { get; set; }
     public string? RoomCode { get; set; }
     public string? Building { get; set; }
 }

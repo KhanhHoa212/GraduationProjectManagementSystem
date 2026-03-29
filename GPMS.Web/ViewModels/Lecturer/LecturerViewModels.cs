@@ -37,6 +37,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public int DurationMinutes { get; set; }
         public bool IsHighlight { get; set; }
         public string? ActionUrl { get; set; }
+        public string? MeetLink { get; set; }
     }
 
     // -------------------------------------------------------
@@ -219,8 +220,11 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ProjectName { get; set; } = string.Empty;
         public int RoundNumber { get; set; }
         public string RoundType { get; set; } = string.Empty;
+        public DateTime RoundEndDate { get; set; }
         public DateTime? ScheduledAt { get; set; }
+        public string? MeetLink { get; set; }
         public string? Location { get; set; }
+        public bool IsOnline { get; set; }
         public bool HasEvaluation { get; set; }
         public int? EvaluationID { get; set; }
         public string? StatusNote { get; set; }
@@ -255,6 +259,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public MentorGateStatus MentorGateStatus { get; set; } = MentorGateStatus.Pending;
         public string? MentorGateComment { get; set; }
         public bool CanEdit { get; set; } = true;
+        public string? MeetLink { get; set; }
     }
 
     public class ChecklistItemRow
@@ -338,6 +343,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string PrimaryActionUrl { get; set; } = string.Empty;
         public string? SecondaryActionText { get; set; }
         public string? SecondaryActionUrl { get; set; }
+        public string? MeetLink { get; set; }
     }
 
     public class DeadlineAlertViewModel
@@ -359,6 +365,7 @@ namespace GPMS.Web.ViewModels.Lecturer
         public string ActionUrl { get; set; } = string.Empty;
         public string? SecondaryActionText { get; set; }
         public string? SecondaryActionUrl { get; set; }
+        public string? MeetLink { get; set; }
     }
 
     public class ScheduleDayGroupViewModel
