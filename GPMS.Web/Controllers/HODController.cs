@@ -112,7 +112,7 @@ public class HODController : Controller
         var semesters = await _semesterService.GetAllSemestersAsync();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
 
-        var (total, withGroup, missingSupervisor, missingMembers) =
+        var (total, withGroup, missingSupervisor, missingMembers, draftCount, activeCount, completedCount) =
             await _projectService.GetDashboardStatsAsync(activeSemester?.SemesterID);
 
         ViewBag.ActiveSemester = activeSemester;
@@ -123,12 +123,12 @@ public class HODController : Controller
 
         // Recent projects for the status table
         var projects = activeSemester != null
-            ? (await _projectService.GetProjectsBySemesterAsync(activeSemester.SemesterID)).ToList()
+            ? (await _projectService.GetRecentProjectsForDashboardAsync(activeSemester.SemesterID, 5)).ToList()
             : (await _projectService.GetAllProjectsAsync()).ToList();
 
-        ViewBag.ActiveCount = projects.Count(p => p.Status == ProjectStatus.Active);
-        ViewBag.DraftCount = projects.Count(p => p.Status == ProjectStatus.Draft);
-        ViewBag.CompletedCount = projects.Count(p => p.Status == ProjectStatus.Completed);
+        ViewBag.ActiveCount = activeCount;
+        ViewBag.DraftCount = draftCount;
+        ViewBag.CompletedCount = completedCount;
 
         // Fetch review rounds for the timeline
         if (activeSemester != null)
@@ -158,24 +158,8 @@ public class HODController : Controller
             targetSemesterId = semesterId;
         }
 
-        IEnumerable<ProjectDto> projects = targetSemesterId.HasValue
-            ? await _projectService.GetProjectsBySemesterAsync(targetSemesterId.Value)
-            : await _projectService.GetAllProjectsAsync();
-
-        // Filter by status
-        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<ProjectStatus>(status, out var parsedStatus))
-            projects = projects.Where(p => p.Status == parsedStatus);
-
-        // Filter by search
-        if (!string.IsNullOrWhiteSpace(search))
-            projects = projects.Where(p =>
-                p.ProjectCode.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                p.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                (p.SupervisorName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
-
-        // Filter by major
-        if (!string.IsNullOrWhiteSpace(majorName))
-            projects = projects.Where(p => p.MajorName == majorName);
+        // All filters (status, search, majorName) are applied directly in SQL
+        var projects = await _projectService.GetFilteredProjectsAsync(targetSemesterId, status, search, majorName);
 
         ViewBag.Semesters = semesters;
         ViewBag.Majors = await _majorService.GetAllMajorsAsync();
@@ -185,7 +169,6 @@ public class HODController : Controller
         ViewBag.CurrentSearch = search;
         ViewBag.CurrentMajor = majorName;
 
-        // Use PaginatedList (Assuming pageSize = 10 for HOD Projects)
         var paginatedProjects = PaginatedList<ProjectDto>.Create(projects.OrderByDescending(p => p.CreatedAt), page, 10);
         return View(paginatedProjects);
     }
@@ -355,15 +338,43 @@ public class HODController : Controller
     }
 
 
-    public async Task<IActionResult> AssignSupervisor()
+    public async Task<IActionResult> AssignSupervisor(int? semesterId, int page = 1, string? search = null, string? lecturerFilter = null)
     {
         var semesters = await _semesterService.GetAllSemestersAsync();
         var activeSemester = semesters.FirstOrDefault(s => s.Status == SemesterStatus.Active);
         
-        var data = await _projectService.GetSupervisorAssignmentDataAsync(activeSemester?.SemesterID);
-        ViewBag.ActiveSemester = activeSemester;
+        int? targetSemesterId = semesterId ?? activeSemester?.SemesterID;
+        var data = await _projectService.GetSupervisorAssignmentDataAsync(targetSemesterId);
         
-        return View(data);
+        IEnumerable<ProjectDto> assignedProjects = data.AssignedProjects;
+
+        // Apply filters to Assigned Projects
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            assignedProjects = assignedProjects.Where(p => 
+                p.ProjectCode.Contains(search, StringComparison.OrdinalIgnoreCase) || 
+                p.ProjectName.Contains(search, StringComparison.OrdinalIgnoreCase) ||
+                (p.SupervisorName?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false));
+        }
+
+        if (!string.IsNullOrWhiteSpace(lecturerFilter))
+        {
+            assignedProjects = assignedProjects.Where(p => p.SupervisorName == lecturerFilter);
+        }
+
+        var viewModel = new SupervisorAssignmentViewModel
+        {
+            UnassignedProjects = data.UnassignedProjects,
+            Lecturers = data.Lecturers,
+            AssignedProjects = PaginatedList<ProjectDto>.Create(assignedProjects.OrderByDescending(p => p.CreatedAt), page, 10),
+            CurrentSearch = search,
+            CurrentLecturerFilter = lecturerFilter,
+            SelectedSemesterId = targetSemesterId
+        };
+
+        ViewBag.ActiveSemester = semesters.FirstOrDefault(s => s.SemesterID == targetSemesterId) ?? activeSemester;
+        
+        return View(viewModel);
     }
 
     [HttpPost]
@@ -387,13 +398,6 @@ public class HODController : Controller
  
         var rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
         
-        // Auto-initialize 3 rounds if none exist
-        if (!rounds.Any())
-        {
-            await _reviewRoundService.InitializeDefaultRoundsAsync(activeSemester.SemesterID);
-            rounds = await _reviewRoundService.GetReviewRoundsBySemesterAsync(activeSemester.SemesterID);
-        }
-
         return View(rounds);
     }
 
@@ -673,9 +677,10 @@ public class HODController : Controller
         var majors = await _majorRepository.GetAllAsync();
         
         // Fetch projects with all necessary details (Submissions, Evaluations, etc.)
+        // OPTIMIZED: Uses specialized method with SplitQuery to avoid 25s Cartesian Product delay
         IEnumerable<Project> projects = targetSemesterId.HasValue 
-            ? await _projectRepository.GetBySemesterWithDetailsAsync(targetSemesterId.Value)
-            : await _projectRepository.GetAllWithDetailsAsync();
+            ? await _projectRepository.GetProgressProjectsAsync(targetSemesterId.Value)
+            : await _projectRepository.GetProgressProjectsAsync(activeSemester?.SemesterID ?? 0); // Default to active if all semesters is too heavy
 
         if (!string.IsNullOrEmpty(majorName))
             projects = projects.Where(p => p.Major?.MajorName == majorName);

@@ -78,6 +78,18 @@ public class ProjectService : IProjectService
         return _mapper.Map<IEnumerable<ProjectDto>>(projects);
     }
 
+    public async Task<IEnumerable<ProjectDto>> GetRecentProjectsForDashboardAsync(int semesterId, int count)
+    {
+        var projects = await _projectRepository.GetDashboardProjectsAsync(semesterId, count);
+        return _mapper.Map<IEnumerable<ProjectDto>>(projects);
+    }
+
+    public async Task<IEnumerable<ProjectDto>> GetFilteredProjectsAsync(int? semesterId, string? status, string? search, string? majorName)
+    {
+        var projects = await _projectRepository.GetFilteredProjectsAsync(semesterId, status, search, majorName);
+        return _mapper.Map<IEnumerable<ProjectDto>>(projects);
+    }
+
     public async Task<ProjectDto?> GetProjectByStudentAsync(string studentId)
     {
         var project = await _projectRepository.GetProjectByStudentIdAsync(studentId);
@@ -232,9 +244,7 @@ public class ProjectService : IProjectService
 
     public async Task<SupervisorAssignmentDto> GetSupervisorAssignmentDataAsync(int? semesterId)
     {
-        var allProjects = semesterId.HasValue
-            ? await _projectRepository.GetBySemesterWithDetailsAsync(semesterId.Value)
-            : await _projectRepository.GetAllWithDetailsAsync();
+        var allProjects = await _projectRepository.GetSupervisorAssignmentProjectsAsync(semesterId);
 
         var lecturers = await _userRepository.GetByRoleAsync(RoleName.Lecturer);
 
@@ -250,7 +260,7 @@ public class ProjectService : IProjectService
                     FullName = l.FullName,
                     Level = primaryExpertise?.Level.ToString() ?? "Basic",
                     Specialty = primaryExpertise?.Expertise?.ExpertiseName ?? "General",
-                    CurrentWorkload = allProjects.Count(p => p.ProjectSupervisors.Any(ps => ps.LecturerID == l.UserID)),
+                    CurrentWorkload = allProjects.Where(p => p.ProjectSupervisors.Any(ps => ps.LecturerID == l.UserID)).Sum(p => p.ProjectGroups.Count),
                     MaxWorkload = 5
                 };
             }).ToList()
@@ -271,9 +281,13 @@ public class ProjectService : IProjectService
         if (!lecturer.UserRoles.Any(r => r.RoleName == RoleName.Lecturer))
             return (false, "User is not a lecturer.");
 
+        // Check if the lecturer is already the main supervisor
+        var alreadyMain = project.ProjectSupervisors.FirstOrDefault(ps => ps.Role == ProjectRole.Main && ps.LecturerID == lecturerId);
+        if (alreadyMain != null) return (true, "Lecturer is already assigned as the supervisor.");
+
         // Remove existing main supervisors
-        var existingMain = project.ProjectSupervisors.Where(ps => ps.Role == ProjectRole.Main).ToList();
-        foreach (var ps in existingMain)
+        var currentMainSupervisors = project.ProjectSupervisors.Where(ps => ps.Role == ProjectRole.Main).ToList();
+        foreach (var ps in currentMainSupervisors)
         {
             project.ProjectSupervisors.Remove(ps);
         }
@@ -292,20 +306,33 @@ public class ProjectService : IProjectService
         await _projectRepository.SaveChangesAsync();
 
         return (true, "Supervisor assigned successfully.");
+
+        // return (true, "Supervisor assigned successfully.");
     }
 
-    public async Task<(int total, int withGroup, int missingSupervisor, int missingMembers)> GetDashboardStatsAsync(int? semesterId = null)
+    public async Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsAsync(int? semesterId = null)
     {
-        var projects = semesterId.HasValue
-            ? (await _projectRepository.GetBySemesterWithDetailsAsync(semesterId.Value)).ToList()
-            : (await _projectRepository.GetAllWithDetailsAsync()).ToList();
+        if (semesterId.HasValue)
+        {
+            return await _projectRepository.GetDashboardStatsBySemesterAsync(semesterId.Value);
+        }
 
-        var total = projects.Count;
-        var withGroup = projects.Count(p => p.ProjectGroups.Any());
-        var missingSupervisor = projects.Count(p => !p.ProjectSupervisors.Any());
-        var missingMembers = projects.Count(p => p.ProjectGroups.Any(g => !g.GroupMembers.Any()));
+        var projects = (await _projectRepository.GetAllWithDetailsAsync()).ToList();
 
-        return (total, withGroup, missingSupervisor, missingMembers);
+        return (
+            projects.Count,
+            projects.Count(p => p.ProjectGroups.Any()),
+            projects.Count(p => !p.ProjectSupervisors.Any()),
+            projects.Count(p => p.ProjectGroups.Any(g => !g.GroupMembers.Any())),
+            projects.Count(p => p.Status == ProjectStatus.Draft),
+            projects.Count(p => p.Status == ProjectStatus.Active),
+            projects.Count(p => p.Status == ProjectStatus.Completed)
+        );
+    }
+
+    public async Task<(int total, int withGroup, int missingSupervisor, int missingMembers, int draftCount, int activeCount, int completedCount)> GetDashboardStatsBySemesterAsync(int semesterId)
+    {
+        return await _projectRepository.GetDashboardStatsBySemesterAsync(semesterId);
     }
 
     // ============================================================
@@ -1091,7 +1118,7 @@ public class ProjectService : IProjectService
             
             if (targetRound == null) return new ReviewerAssignmentDto { AllRounds = rounds, ReviewRoundID = rounds.FirstOrDefault()?.ReviewRoundID ?? 0 };
 
-            var allGroups = await _groupRepository.GetBySemesterWithDetailsAsync(activeSemester.SemesterID);
+            var allGroups = await _groupRepository.GetReviewerAssignmentGroupsAsync(activeSemester.SemesterID);
             var lecturers = await _userRepository.GetByRoleAsync(RoleName.Lecturer);
 
             // Refined group mapping with MentorIDs for frontend filtering

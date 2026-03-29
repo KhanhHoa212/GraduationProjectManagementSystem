@@ -19,6 +19,7 @@ public interface IProjectGroupRepository
     Task UpdateMemberAsync(GroupMember member);
     Task<IEnumerable<ProjectGroup>> GetAllWithDetailsAsync();
     Task<IEnumerable<ProjectGroup>> GetBySemesterWithDetailsAsync(int semesterId);
+    Task<IEnumerable<ProjectGroup>> GetReviewerAssignmentGroupsAsync(int semesterId);
     Task<bool> IsUserInAnyGroupAsync(string userId);
     Task<bool> HasUserGraduatedAsync(string userId);
     Task<ReviewSessionInfo?> GetGroupDefenseSessionAsync(int groupId);
