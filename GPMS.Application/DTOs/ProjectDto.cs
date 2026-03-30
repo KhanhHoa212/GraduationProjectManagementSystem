@@ -24,6 +24,7 @@ public class ProjectDto
 
     // Team members
     public List<ProjectMemberDto> Members { get; set; } = new();
+    public string? GroupName { get; set; }
     public string? StudentName { get; set; }
 }
 

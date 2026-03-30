@@ -104,6 +104,7 @@ public class ProjectService : IProjectService
         var userGroup = project.ProjectGroups.FirstOrDefault(g => g.GroupMembers.Any(m => m.UserID == studentId));
         if (userGroup != null)
         {
+            dto.GroupName = userGroup.GroupName;
             dto.Members = userGroup.GroupMembers.Select(m => new ProjectMemberDto
             {
                 UserID = m.UserID,
