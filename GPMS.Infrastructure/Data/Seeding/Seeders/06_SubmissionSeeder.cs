@@ -22,6 +22,12 @@ public class SubmissionSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        if (await _context.Submissions.CountAsync() > 20)
+        {
+            Console.WriteLine("[SubmissionSeeder] Submissions already exist, skipping...");
+            return;
+        }
+
         var faker = new Faker();
 
         var rounds = await _context.ReviewRounds

@@ -629,7 +629,8 @@ public class ProjectService : IProjectService
                 ScheduledAt = session.ScheduledAt,
                 RoomName = session.Room?.RoomCode,
                 Building = session.Room?.Building,
-                Notes = session.Notes
+                Notes = session.Notes,
+                MeetLink = session.MeetLink
             };
  
             // Get committee members

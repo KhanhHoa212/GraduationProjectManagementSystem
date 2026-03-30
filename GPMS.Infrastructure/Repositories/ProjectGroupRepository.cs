@@ -250,6 +250,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
                     {
                         EvaluationId = e.EvaluationID,
                         ReviewRoundId = e.ReviewRoundID,
+                        RoundNumber = e.ReviewRound.RoundNumber,
                         ReviewerId = e.ReviewerID,
                         Status = e.Status.ToString(),
                         SubmittedAt = e.SubmittedAt,

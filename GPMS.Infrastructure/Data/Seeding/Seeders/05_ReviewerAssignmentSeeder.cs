@@ -22,6 +22,12 @@ public class ReviewerAssignmentSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        if (await _context.ReviewerAssignments.CountAsync() > 20)
+        {
+            Console.WriteLine("[ReviewerAssignmentSeeder] ReviewerAssignments already exist, skipping...");
+            return;
+        }
+
         var faker = new Faker("vi");
 
         var groups = await _context.ProjectGroups.Include(g => g.Project).ToListAsync();
