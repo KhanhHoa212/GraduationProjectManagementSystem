@@ -1,4 +1,4 @@
-﻿@model IEnumerable<GPMS.Application.DTOs.ProjectDefenseScheduleDto>
+@model IEnumerable<GPMS.Application.DTOs.ProjectDefenseScheduleDto>
 @{
     ViewData["Title"] = "Project Defense Schedule";
     Layout = "_Layout";
@@ -224,9 +224,17 @@
                                     </div>
                                 </div>
 
+                                @if (!string.IsNullOrEmpty(schedule.MeetLink))
+                                {
+                                    <a href="@schedule.MeetLink" 
+                                       target="_blank" 
+                                       class="w-full py-5 mb-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-emerald-900/30 active:scale-[0.98]">
+                                        <span class="material-symbols-outlined filled">video_call</span>
+                                        Join Meeting
+                                    </a>
+                                }
 
-
-                                <button class="w-full py-5 bg-[#1e3a5f] hover:bg-blue-900 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-900/30 active:scale-[0.98] border border-white/10">
+                                <button class="w-full py-5 bg-[#F37021] hover:bg-[#F37021]/90 rounded-[1.25rem] font-black text-sm uppercase tracking-widest flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-orange-900/30 active:scale-[0.98]">
                                     <span class="material-symbols-outlined filled">calendar_add_on</span>
                                     Add to Calendar
                                 </button>

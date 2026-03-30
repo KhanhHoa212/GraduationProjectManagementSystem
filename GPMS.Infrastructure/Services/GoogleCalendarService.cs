@@ -23,6 +23,14 @@ public class GoogleCalendarService : IMeetingService
 
     public async Task<string> CreateOnlineMeetingAsync(string summary, string description, DateTime startTime, DateTime endTime)
     {
+        // Check for static meet link first (easiest workaround for personal accounts)
+        var staticLink = _configuration["GoogleCalendar:StaticMeetLink"];
+        if (!string.IsNullOrEmpty(staticLink))
+        {
+            _logger.LogInformation("Using static Google Meet link from configuration.");
+            return staticLink;
+        }
+
         try
         {
             var credentialPath = _configuration["GoogleCalendar:CredentialFile"];
