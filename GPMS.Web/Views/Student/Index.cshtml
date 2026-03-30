@@ -94,9 +94,17 @@
             <div class="p-8 border-b border-[#f1f5f9]">
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div class="space-y-3">
-                        <span class="inline-flex items-center px-3 py-1 bg-[#1e293b] text-white text-[12px] font-bold rounded-md tracking-wider uppercase">
-                            Project Code: @(string.IsNullOrEmpty(Model.Project.ProjectCode) ? "N/A" : Model.Project.ProjectCode)
-                        </span>
+                        <div class="flex flex-wrap gap-2">
+                            <span class="inline-flex items-center px-3 py-1 bg-[#1e293b] text-white text-[12px] font-bold rounded-md tracking-wider uppercase shadow-sm">
+                                Project Code: @(string.IsNullOrEmpty(Model.Project.ProjectCode) ? "N/A" : Model.Project.ProjectCode)
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.Project.GroupName))
+                            {
+                                <span class="inline-flex items-center px-3 py-1 bg-[#2563eb] text-white text-[12px] font-bold rounded-md tracking-wider uppercase shadow-sm">
+                                    Team: @Model.Project.GroupName
+                                </span>
+                            }
+                        </div>
                         <h2 class="text-[28px] font-bold text-[#1e3a8a] leading-tight">@Model.Project.ProjectName</h2>
                         <p class="text-[#64748b] text-[16px] font-medium">Major: @(Model.Project.MajorName ?? "Common")</p>
                     </div>
