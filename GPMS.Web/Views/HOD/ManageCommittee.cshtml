@@ -11,6 +11,45 @@
         --accent-hover: #e55e0f;
         --header-gradient: linear-gradient(135deg, #f37021, #f4741c);
     }
+    
+    .action-button {
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .btn-edit-soft {
+        background: #f0f4ff;
+        color: #4361ee;
+    }
+    .btn-edit-soft:hover {
+        background: #4361ee;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+    }
+
+    .btn-delete-soft {
+        background: #fff1f2;
+        color: #ef4444;
+    }
+    .btn-delete-soft:hover {
+        background: #ef4444;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    }
+
+    .action-button i {
+        font-size: 1.15rem;
+    }
 
     .container-fluid {
         padding: 2rem;
@@ -220,12 +259,12 @@
                                 </div>
                             </td>
                             <td class="text-end">
-                                <div class="d-flex justify-content-end gap-2">
-                                    <button class="btn btn-sm btn-outline-primary border-0" onclick="editCommittee(@committee.CommitteeID)">
-                                        <i class="fas fa-edit"></i>
+                                <div class="d-flex justify-content-end gap-2 pe-2">
+                                    <button class="action-button btn-edit-soft" onclick="editCommittee(@committee.CommitteeID)" title="Edit Panel">
+                                        <i class="ri-edit-line"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deleteCommittee(@committee.CommitteeID)">
-                                        <i class="fas fa-trash"></i>
+                                    <button class="action-button btn-delete-soft" onclick="deleteCommittee(@committee.CommitteeID)" title="Delete Panel">
+                                        <i class="ri-delete-bin-line"></i>
                                     </button>
                                 </div>
                             </td>
@@ -372,12 +411,39 @@
 
     async function submitCommittee() {
         const id = document.getElementById('committeeId').value;
+        const committeeName = document.getElementById('committeeName').value.trim();
+        const chairpersonId = document.getElementById('chairpersonId').value;
+        const secretaryId = document.getElementById('secretaryId').value;
+        const reviewerId = document.getElementById('reviewerId').value;
+
+        // Validation
+        if (!committeeName) {
+            Swal.fire({
+                title: 'Missing Title',
+                text: 'Please provide a valid Title for this committee panel.',
+                icon: 'warning',
+                confirmButtonColor: '#f37021'
+            });
+            document.getElementById('committeeName').focus();
+            return;
+        }
+
+        if (!chairpersonId || !secretaryId || !reviewerId) {
+            Swal.fire({
+                title: 'Mandatory Roles',
+                text: 'Please ensure Chairperson, Secretary, and Primary Reviewer are assigned.',
+                icon: 'warning',
+                confirmButtonColor: '#f37021'
+            });
+            return;
+        }
+
         const data = {
             CommitteeID: id,
-            CommitteeName: document.getElementById('committeeName').value,
-            ChairpersonID: document.getElementById('chairpersonId').value,
-            SecretaryID: document.getElementById('secretaryId').value,
-            ReviewerID: document.getElementById('reviewerId').value,
+            CommitteeName: committeeName,
+            ChairpersonID: chairpersonId,
+            SecretaryID: secretaryId,
+            ReviewerID: reviewerId,
             Reviewer2ID: document.getElementById('reviewer2Id').value || null,
             Reviewer3ID: document.getElementById('reviewer3Id').value || null
         };
@@ -392,7 +458,12 @@
             });
             const result = await resp.json();
             if (result.success) {
-                location.reload();
+                Swal.fire({
+                    title: 'Success!',
+                    text: isEditing ? 'Committee updated successfully.' : 'New committee specialized panel created.',
+                    icon: 'success',
+                    confirmButtonColor: '#f37021'
+                }).then(() => location.reload());
             } else {
                 Swal.fire('Error', 'Failed to save committee. Check settings.', 'error');
             }
@@ -414,7 +485,14 @@
                 .then(res => res.json())
                 .then(res => {
                     if (res.success) {
-                        location.reload();
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'The committee has been removed.',
+                            icon: 'success',
+                            confirmButtonColor: '#f37021'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', 'Could not delete committee. It might be in use.', 'error');
                     }
                 });
             }
