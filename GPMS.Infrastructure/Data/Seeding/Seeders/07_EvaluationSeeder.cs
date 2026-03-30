@@ -22,14 +22,13 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Evaluations.CountAsync() > 20) return;
-
         var faker = new Faker("vi");
 
         var assignments = await _context.ReviewerAssignments
             .Include(ra => ra.ReviewRound)
                 .ThenInclude(rr => rr!.ReviewChecklist)
                     .ThenInclude(rc => rc!.ChecklistItems)
+            .Include(ra => ra.Group)
             .Where(ra => ra.ReviewRound.Status == RoundStatus.Completed || ra.ReviewRound.Status == RoundStatus.Ongoing)
             .ToListAsync();
 

@@ -59,6 +59,7 @@ public class GroupSessionSummaryDto
     public int ReviewRoundId { get; set; }
     public int RoundNumber { get; set; }
     public string RoundType { get; set; } = string.Empty;
+    public bool IsOnline { get; set; }
     public DateTime ScheduledAt { get; set; }
     public string? MeetLink { get; set; }
     public string? RoomCode { get; set; }
@@ -78,6 +79,7 @@ public class GroupEvaluationSummaryDto
 
 public class GroupSubmissionSummaryDto
 {
+    public int RequirementId { get; set; }
     public int ReviewRoundId { get; set; }
     public string? DocumentName { get; set; }
 }

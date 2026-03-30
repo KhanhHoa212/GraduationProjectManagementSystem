@@ -22,8 +22,12 @@ public class UserSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        // Chỉ seed thêm nếu DB hiện tại có ít user
-        if (await _context.Users.CountAsync() > 50) return;
+        if (await _context.Users.CountAsync() > 20) 
+        {
+            Console.WriteLine("[UserSeeder] Users already exist (>20), skipping...");
+            return;
+        }
+        Console.WriteLine("[UserSeeder] Seeding 30 Lecturers and 200 Students...");
 
         var passwordHash = BCrypt.Net.BCrypt.HashPassword("123456");
 
@@ -82,7 +86,9 @@ public class UserSeeder : IDataSeeder
         await _context.UserRoles.AddRangeAsync(newLecturers.Select(l => new UserRole { UserID = l.UserID, RoleName = RoleName.Lecturer, AssignedAt = DateTime.UtcNow }));
         await _context.UserRoles.AddRangeAsync(newStudents.Select(s => new UserRole { UserID = s.UserID, RoleName = RoleName.Student, AssignedAt = DateTime.UtcNow }));
 
+        Console.WriteLine($"[UserSeeder] Saving {newLecturers.Count + newStudents.Count} users and their roles...");
         await _context.SaveChangesAsync();
+        Console.WriteLine("[UserSeeder] Save successful.");
     }
 }
 

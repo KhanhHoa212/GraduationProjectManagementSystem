@@ -15,7 +15,10 @@ public class ReviewRoundService : IReviewRoundService
     private readonly ISemesterRepository _semesterRepository;
     private readonly IMapper _mapper;
 
-    public ReviewRoundService(IReviewRoundRepository repository, ISemesterRepository semesterRepository, IMapper mapper)
+    public ReviewRoundService(
+        IReviewRoundRepository repository, 
+        ISemesterRepository semesterRepository, 
+        IMapper mapper)
     {
         _repository = repository;
         _semesterRepository = semesterRepository;
@@ -198,4 +201,5 @@ public class ReviewRoundService : IReviewRoundService
         await _repository.SaveChangesAsync();
         return true;
     }
+
 }

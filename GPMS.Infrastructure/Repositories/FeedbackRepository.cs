@@ -141,6 +141,7 @@ public class FeedbackRepository : IFeedbackRepository
                         (f.FeedbackApproval.SupervisorID == supervisorId ||
                          f.Evaluation.Group.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId)))
             .OrderByDescending(f => f.CreatedAt)
+            .AsSplitQuery()
             .Select(f => new PendingFeedbackItemDto
             {
                 FeedbackId = f.FeedbackID,
@@ -165,6 +166,7 @@ public class FeedbackRepository : IFeedbackRepository
     public async Task<LecturerFeedbackApprovalDetailDto?> GetApprovalDetailDtoAsync(int feedbackId) =>
         await _context.Feedbacks
             .Where(f => f.FeedbackID == feedbackId)
+            .AsSplitQuery()
             .Select(f => new LecturerFeedbackApprovalDetailDto
             {
                 FeedbackId = f.FeedbackID,

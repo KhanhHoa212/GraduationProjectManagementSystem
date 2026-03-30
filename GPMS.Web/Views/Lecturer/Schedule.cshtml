@@ -155,6 +155,12 @@
                                     @Model.FocusCard.SecondaryActionText
                                 </a>
                             }
+                            @if (!string.IsNullOrWhiteSpace(Model.FocusCard.MeetLink))
+                            {
+                                <a href="@Model.FocusCard.MeetLink" target="_blank" class="px-8 py-4 rounded-2xl bg-slate-800 text-white text-sm font-black shadow-xl hover:bg-slate-900 transition-all">
+                                    Join Meet
+                                </a>
+                            }
                         </div>
                     }
                     else
@@ -257,10 +263,17 @@
                                                 <a href="@entry.PrimaryActionUrl" target="@(External(entry.PrimaryActionUrl) ? "_blank" : null)" class="px-5 py-3 rounded-2xl bg-primary-500 text-white text-xs font-bold shadow-lg shadow-primary-500/20 hover:bg-primary-600 hover:-translate-y-0.5 transition-all text-center min-w-[120px]">
                                                     @entry.PrimaryActionText
                                                 </a>
+
                                                 @if (!string.IsNullOrWhiteSpace(entry.SecondaryActionUrl))
                                                 {
                                                     <a href="@entry.SecondaryActionUrl" target="@(External(entry.SecondaryActionUrl) ? "_blank" : null)" class="px-5 py-3 rounded-2xl bg-slate-50 dark:bg-dark-800 border-2 border-slate-100 dark:border-dark-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-white transition-all text-center">
                                                         @entry.SecondaryActionText
+                                                    </a>
+                                                }
+                                                @if (!string.IsNullOrWhiteSpace(entry.MeetLink))
+                                                {
+                                                    <a href="@entry.MeetLink" target="_blank" class="px-5 py-3 rounded-2xl bg-slate-800 dark:bg-slate-700 text-white text-xs font-bold shadow-lg hover:bg-slate-900 dark:hover:bg-slate-600 transition-all text-center">
+                                                        Join Meet
                                                     </a>
                                                 }
                                             </div>

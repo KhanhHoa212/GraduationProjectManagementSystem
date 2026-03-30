@@ -1,4 +1,7 @@
 using GPMS.Application.DTOs;
+using GPMS.Domain.Entities;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GPMS.Application.Interfaces.Services;
 
@@ -10,4 +13,5 @@ public interface IReviewRoundService
     Task UpdateReviewRoundAsync(int id, CreateReviewRoundDto dto);
     Task DeleteReviewRoundAsync(int id);
     Task<bool> InitializeDefaultRoundsAsync(int semesterId);
+    
 }

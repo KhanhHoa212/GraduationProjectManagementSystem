@@ -67,6 +67,7 @@ public class LecturerScheduleFocusDto
     public string ActionUrl { get; set; } = string.Empty;
     public string? SecondaryActionText { get; set; }
     public string? SecondaryActionUrl { get; set; }
+    public string? MeetLink { get; set; }
 }
 
 public class LecturerScheduleDayGroupDto

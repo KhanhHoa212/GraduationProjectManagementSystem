@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using GPMS.Domain.Enums;
 
 namespace GPMS.Application.DTOs.Lecturer;
 
@@ -23,11 +24,13 @@ public class ReviewAssignmentItemDto
     public string ReviewRoundName { get; set; } = string.Empty;
     public int RoundNumber { get; set; }
     public string RoundType { get; set; } = string.Empty;
+    public DateTime RoundEndDate { get; set; }
     public DateTime? ScheduledAt { get; set; }
-    public string? Location { get; set; }
     public string? MeetLink { get; set; }
+    public string? Location { get; set; }
     public bool IsOnline { get; set; }
     public bool HasEvaluation { get; set; }
     public int? EvaluationId { get; set; }
+    public ApprovalStatus? ApprovalStatus { get; set; }
     public string? StatusNote { get; set; }
 }

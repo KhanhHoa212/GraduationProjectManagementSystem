@@ -165,16 +165,17 @@
                                         @session.Location • @session.DurationMinutes min
                                     </div>
                                     <div class="flex gap-2">
-                                        @if (!string.IsNullOrWhiteSpace(session.MeetLink))
-                                        {
-                                            <a href="@session.MeetLink" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white text-xs font-semibold rounded-lg transition-colors">
-                                                <span class="material-symbols-outlined text-[14px]">videocam</span> Join Meet
-                                            </a>
-                                        }
+
                                         @if (!string.IsNullOrWhiteSpace(session.ActionUrl))
                                         {
                                             <a href="@session.ActionUrl" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 text-dark-700 dark:text-dark-200 hover:bg-slate-50 dark:hover:bg-dark-700 text-xs font-semibold rounded-lg transition-colors">
                                                 Open <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+                                            </a>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(session.MeetLink))
+                                        {
+                                            <a href="@session.MeetLink" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 dark:bg-slate-700 text-white hover:bg-slate-900 dark:hover:bg-slate-600 text-xs font-semibold rounded-lg transition-colors">
+                                                Join Meet <span class="material-symbols-outlined text-[14px]">videocam</span>
                                             </a>
                                         }
                                     </div>

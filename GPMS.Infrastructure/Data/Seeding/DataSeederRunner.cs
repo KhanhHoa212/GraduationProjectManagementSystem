@@ -19,29 +19,21 @@ public class DataSeederRunner
         {
             var name = seeder.GetType().Name;
             
-            // Aggressive skip for ultra-fast startup during troubleshooting
-            bool isEssential = name.Contains("Schema") || name.Contains("User") || 
-                              name.Contains("Semester") || name.Contains("Major") ||
-                              name.Contains("Faculty") || name.Contains("Round") ||
-                              name.Contains("Project") || name.Contains("Group");
-            
-            // Temporary block for heavy seeders to speed up login
-            if (name.Contains("Assignment") || name.Contains("Submission") || 
-                name.Contains("Evaluation") || name.Contains("Notification") ||
-                name.Contains("WorkflowTest"))
+            // Run all seeders to restore full test data
+            try 
             {
-                isEssential = false;
+                var startTime = DateTime.UtcNow;
+                Console.WriteLine($"[Seeding] Starting {name}...");
+                await seeder.SeedAsync();
+                var duration = DateTime.UtcNow - startTime;
+                Console.WriteLine($"[Seeding] Finished {name} in {duration.TotalSeconds:F2}s.");
             }
-            
-            if (!isEssential) 
+            catch (Exception ex)
             {
-                Console.WriteLine($"[Seeding] Skipping non-essential seeder: {name}");
-                continue;
+                var innerMsg = ex.InnerException != null ? $" -> {ex.InnerException.Message}" : "";
+                Console.WriteLine($"[ERROR] Seeding failed for {name}: {ex.Message}{innerMsg}");
+                // We continue to the next seeder so one failure doesn't block the rest
             }
-
-            Console.WriteLine($"[Seeding] Starting {name}...");
-            await seeder.SeedAsync();
-            Console.WriteLine($"[Seeding] Finished {name}.");
         }
     }
 }

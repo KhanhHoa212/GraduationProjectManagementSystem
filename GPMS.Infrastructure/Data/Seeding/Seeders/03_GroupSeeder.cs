@@ -22,12 +22,16 @@ public class GroupSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.ProjectGroups.CountAsync() > 10) return;
+        if (await _context.ProjectGroups.CountAsync() > 10) 
+        {
+            Console.WriteLine("[GroupSeeder] ProjectGroups already exist (>10), skipping...");
+            return;
+        }
 
         var faker = new Faker("vi");
         
         var students = await _context.Users
-            .Where(u => u.UserID.StartsWith("SE19"))
+            .Where(u => u.UserID.StartsWith("SE19") || u.UserID.StartsWith("SE18"))
             .OrderBy(u => u.UserID)
             .ToListAsync();
             
@@ -36,7 +40,12 @@ public class GroupSeeder : IDataSeeder
             .OrderBy(p => p.ProjectID)
             .ToListAsync();
 
-        if (!students.Any() || !projects.Any()) return;
+        if (!students.Any() || !projects.Any()) 
+        {
+            Console.WriteLine($"[GroupSeeder] Missing prerequisites: Students={students.Count}, Projects={projects.Count}");
+            return;
+        }
+        Console.WriteLine($"[GroupSeeder] Seeding groups for {students.Count} students and {projects.Count} projects...");
 
         // Shuffle projects to give random unique assignments
         var projectQueue = new Queue<Project>(faker.Random.Shuffle(projects));
@@ -80,5 +89,6 @@ public class GroupSeeder : IDataSeeder
 
         await _context.GroupMembers.AddRangeAsync(groupMembers);
         await _context.SaveChangesAsync();
+        Console.WriteLine($"[GroupSeeder] Successfully seeded {groupCounter - 1} groups and {groupMembers.Count} member assignments.");
     }
 }

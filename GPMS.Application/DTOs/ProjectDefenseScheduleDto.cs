@@ -20,6 +20,6 @@ public class CommitteeMemberDto
 {
     public string FullName { get; set; } = string.Empty;
     public string UserID { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty; // Chủ tịch, Phản biện, Hướng dẫn
+    public string Role { get; set; } = string.Empty; // Chairman, Reviewer, Mentor
     public string? AvatarUrl { get; set; }
 }

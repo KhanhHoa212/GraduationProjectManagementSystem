@@ -212,6 +212,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
     public async Task<IEnumerable<ProjectGroupSummaryDto>> GetSummariesBySupervisorAsync(string supervisorId) =>
         await _context.ProjectGroups
             .Where(pg => pg.Project.ProjectSupervisors.Any(ps => ps.LecturerID == supervisorId))
+            .AsSplitQuery()
             .Select(pg => new ProjectGroupSummaryDto
             {
                 GroupId = pg.GroupID,
@@ -237,8 +238,10 @@ public class ProjectGroupRepository : IProjectGroupRepository
                         ReviewRoundId = rs.ReviewRoundID,
                         RoundNumber = rs.ReviewRound.RoundNumber,
                         RoundType = rs.ReviewRound.RoundType.ToString(),
+                        IsOnline = rs.ReviewRound.RoundType == RoundType.Online,
                         ScheduledAt = rs.ScheduledAt,
                         MeetLink = rs.MeetLink,
+
                         RoomCode = rs.Room != null ? rs.Room.RoomCode : null,
                         Building = rs.Room != null ? rs.Room.Building : null
                     }).ToList(),
@@ -258,6 +261,7 @@ public class ProjectGroupRepository : IProjectGroupRepository
                 Submissions = pg.Submissions
                     .Select(s => new GroupSubmissionSummaryDto
                     {
+                        RequirementId = s.RequirementID,
                         ReviewRoundId = s.Requirement.ReviewRoundID,
                         DocumentName = s.Requirement.DocumentName
                     }).ToList()

@@ -20,4 +20,5 @@ public interface ILecturerService
     Task<bool> ApproveFeedbackAsync(string supervisorId, FeedbackApprovalDecisionDto model);
     Task<(byte[] content, string fileName, string contentType)?> GetSubmissionFileAsync(int submissionId);
     Task<bool> CanUserAccessSubmissionAsync(string userId, int submissionId, string role);
+    Task<(bool Success, string ErrorMessage)> ScheduleReviewMeetingAsync(string reviewerId, int assignmentId, DateTime scheduledAt);
 }

@@ -22,8 +22,6 @@ public class SubmissionSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
-        if (await _context.Submissions.CountAsync() > 20) return;
-
         var faker = new Faker();
 
         var rounds = await _context.ReviewRounds
@@ -103,9 +101,6 @@ public class SubmissionSeeder : IDataSeeder
         {
             var msg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
             Console.WriteLine($"[Seeding] SubmissionSeeder FAILED: {msg}");
-            // Still throw to signal failure, or wrap in global if desired
-            // throw; 
         }
     }
 }
-

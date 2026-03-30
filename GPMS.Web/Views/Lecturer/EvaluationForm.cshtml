@@ -6,10 +6,10 @@
     ViewData["Title"] = "Evaluation Form";
     Layout = "_Layout";
     var isReadOnly = Model.ExistingEvaluationID.HasValue && !Model.CanEdit;
-    var isGradeRound = Model.ChecklistItems.Any(i => i.ItemType == "Grade");
+    var isGradeRound = Model.ChecklistItems.Any(i => i.ItemType == "Grade" || i.ItemType == "Rubric");
     var sectionGroups = Model.ChecklistItems
         .Select((item, index) => new { item, index, existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID) })
-        .GroupBy(x => x.item.Section ?? "Checklist");
+        .GroupBy(x => x.item.Section ?? "General Checklist");
 }
 
 <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 pb-4 border-b border-slate-200 dark:border-dark-700 gap-4">
@@ -76,116 +76,204 @@
         <div class="w-full xl:w-3/4 flex flex-col gap-6">
             @if (isGradeRound)
             {
-                <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 dark:border-dark-700 flex items-center gap-3">
-                        <span class="material-symbols-outlined text-primary-500">grading</span>
-                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Round 3 Rubric Evaluation</h2>
+                <!-- Grade Scale Legend (Matches HOD style) -->
+                <div class="bg-slate-900 dark:bg-dark-900 text-white rounded-2xl p-6 shadow-lg border border-slate-800">
+                    <div class="flex items-center gap-3 mb-5 pb-3 border-b border-white/10">
+                         <span class="material-symbols-outlined text-amber-400">bar_chart_4_bars</span>
+                         <h3 class="font-bold text-slate-200 uppercase tracking-wider text-xs">
+                            Qualitative Grading Scale (Rubric)
+                        </h3>
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-sm">
-                            <thead>
-                                <tr class="bg-slate-50 dark:bg-dark-700 border-b border-slate-200 dark:border-dark-600">
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[80px]">Code</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[180px]">Name</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[280px]">Evaluation Criteria</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[150px]">Grade Level</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[260px]">Grade</th>
-                                    <th class="px-4 py-3 font-bold text-slate-500 dark:text-slate-400 min-w-[220px]">Reviewer Comment</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100 dark:divide-dark-700">
-                                @for (var i = 0; i < Model.ChecklistItems.Count; i++)
-                                {
-                                    var item = Model.ChecklistItems[i];
-                                    var existing = Model.ExistingScores.FirstOrDefault(s => s.ItemID == item.ItemID);
-                                    <tr class="hover:bg-slate-50/50 dark:hover:bg-dark-700/30 transition-colors align-top">
-                                        <td class="px-4 py-4 font-bold text-dark-900 dark:text-white">@item.ItemCode</td>
-                                        <td class="px-4 py-4">
-                                            <div class="font-bold text-dark-900 dark:text-white mb-1">@item.ItemName</div>
-                                            @if (!string.IsNullOrWhiteSpace(item.Section))
-                                            {
-                                                <div class="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-dark-600 inline-block px-2 py-1 rounded">@item.Section</div>
-                                            }
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <div class="text-slate-700 dark:text-slate-300 mb-3 whitespace-pre-line leading-relaxed">@item.ItemContent</div>
-                                            <details class="group/details">
-                                                <summary class="text-xs font-bold text-primary-500 hover:text-primary-600 cursor-pointer list-none flex items-center gap-1">
-                                                    <span class="material-symbols-outlined text-[16px] transition-transform group-open/details:rotate-90">chevron_right</span>
-                                                    View rubric reference
-                                                </summary>
-                                                <div class="mt-3 p-3 bg-slate-50 dark:bg-dark-700 rounded-xl space-y-2 text-xs text-slate-600 dark:text-slate-400">
-                                                    <div><strong class="text-dark-900 dark:text-white">Excellent:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Excellent")?.Description</div>
-                                                    <div><strong class="text-dark-900 dark:text-white">Good:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Good")?.Description</div>
-                                                    <div><strong class="text-dark-900 dark:text-white">Acceptable:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Acceptable")?.Description</div>
-                                                    <div><strong class="text-dark-900 dark:text-white">Fail:</strong> @item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == "Fail")?.Description</div>
-                                                </div>
-                                            </details>
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <input type="hidden" name="CriteriaScores.Index" value="@i" />
-                                            <input type="hidden" asp-for="CriteriaScores[i].CriteriaId" value="@item.ItemID" />
-                                            <select asp-for="CriteriaScores[i].Assessment"
-                                                    class="grade-level-select form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors"
-                                                    data-target="grade-desc-@i"
-                                                    data-summary="grade-summary"
-                                                    disabled="@isReadOnly"
-                                                    required>
-                                                <option value="">Select</option>
-                                                <option value="Excellent">Excellent</option>
-                                                <option value="Good">Good</option>
-                                                <option value="Acceptable">Acceptable</option>
-                                                <option value="Fail">Fail</option>
-                                                <option value="NA">N/A</option>
-                                            </select>
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <div id="grade-desc-@i" class="text-xs text-slate-600 dark:text-slate-400 italic">@((existing?.GradeDescription) ?? "Rubric text will appear here based on selected grade level.")</div>
-                                            @if (!string.IsNullOrWhiteSpace(existing?.MentorComment))
-                                            {
-                                                <div class="mt-3 p-3 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 text-xs">
-                                                    <strong class="text-blue-800 dark:text-blue-400 mb-1 block">Mentor Comment:</strong> 
-                                                    <span class="text-blue-700 dark:text-blue-300">@existing.MentorComment</span>
-                                                </div>
-                                            }
-                                        </td>
-                                        <td class="px-4 py-4">
-                                            <textarea asp-for="CriteriaScores[i].Comment" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="4" readonly="@isReadOnly" placeholder="Reviewer comment"></textarea>
-                                        </td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                        <div class="flex items-center gap-3 group transition-transform hover:scale-105">
+                            <span class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]"></span>
+                            <div>
+                                <div class="font-black text-emerald-400 text-sm">Excellent</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">8.0 – 10.0</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group transition-transform hover:scale-105">
+                            <span class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.4)]"></span>
+                            <div>
+                                <div class="font-black text-blue-400 text-sm">Good</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">6.0 – 8.0</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group transition-transform hover:scale-105">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.4)]"></span>
+                            <div>
+                                <div class="font-black text-amber-400 text-sm">Acceptable</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">4.0 – 6.0</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group transition-transform hover:scale-105">
+                            <span class="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.4)]"></span>
+                            <div>
+                                <div class="font-black text-red-400 text-sm">Fail</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">0.0 – 4.0</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 group transition-transform hover:scale-105">
+                            <span class="w-3 h-3 rounded-full bg-slate-500 shadow-[0_0_10px_rgba(107,114,128,0.4)]"></span>
+                            <div>
+                                <div class="font-black text-slate-400 text-sm">N/A</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Not Applicable</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                @foreach (var sectionGroup in sectionGroups)
+                {
+                    <div class="space-y-4">
+                        <h2 class="text-sm font-black text-primary-500 dark:text-primary-400 uppercase tracking-[0.2em] flex items-center gap-3 mt-4">
+                            <span class="material-symbols-outlined text-[20px]">bookmark</span>
+                            @sectionGroup.Key
+                            <span class="h-px bg-slate-200 dark:border-dark-700 flex-grow"></span>
+                        </h2>
+                        
+                        @foreach (var row in sectionGroup)
+                        {
+                            var i = row.index;
+                            var item = row.item;
+                            var existing = row.existing;
+                            <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 overflow-hidden hover:border-primary-200 dark:hover:border-primary-900/50 transition-all duration-300">
+                                <!-- Card Header -->
+                                <div class="p-4 border-b border-slate-50 dark:border-dark-700 bg-slate-50/30 dark:bg-dark-900/20 flex justify-between items-start gap-4">
+                                    <div class="flex gap-4">
+                                        <div class="w-10 h-10 rounded-xl bg-white dark:bg-dark-800 border border-slate-200 dark:border-dark-600 flex items-center justify-center font-black text-primary-500 text-xs shadow-sm shadow-slate-100 dark:shadow-none shrink-0">
+                                            @item.ItemCode
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-dark-900 dark:text-white leading-tight mb-1">@item.ItemName</h4>
+                                            <div class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-[14px]">category</span>
+                                                @item.Section
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" onclick="document.getElementById('rubric-details-@i').classList.toggle('hidden'); this.querySelector('.chevron').classList.toggle('rotate-180')" class="text-primary-500 text-xs font-bold hover:text-primary-600 transition-colors flex items-center gap-1 py-1 px-3 rounded-lg hover:bg-primary-50 dark:hover:bg-primary-900/20">
+                                        <span class="material-symbols-outlined text-[16px]">info</span>
+                                        Rubric Details
+                                        <span class="material-symbols-outlined text-[16px] chevron transition-transform">expand_more</span>
+                                    </button>
+                                </div>
+
+                                <!-- Card Body -->
+                                <div class="p-5">
+                                    <div class="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-line leading-relaxed mb-6 font-medium bg-slate-50 dark:bg-dark-900/50 p-4 rounded-xl border border-slate-100 dark:border-dark-700">
+                                        @item.ItemContent
+                                    </div>
+
+                                    <!-- Rubric Levels Boxes -->
+                                    <div id="rubric-details-@i" class="hidden mb-6 grid grid-cols-1 md:grid-cols-4 gap-3 animate-fadeIn">
+                                        @foreach (var level in new[] { "Excellent", "Good", "Acceptable", "Fail" })
+                                        {
+                                            var rubric = item.RubricDescriptions.FirstOrDefault(r => r.GradeLevel == level);
+                                            var colorClass = level switch { 
+                                                "Excellent" => "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-900/10 dark:text-emerald-400 dark:border-emerald-800/30",
+                                                "Good" => "bg-blue-50 text-blue-700 border-blue-100 dark:bg-blue-900/10 dark:text-blue-400 dark:border-blue-800/30",
+                                                "Acceptable" => "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-900/10 dark:text-amber-400 dark:border-amber-800/30",
+                                                _ => "bg-red-50 text-red-700 border-red-100 dark:bg-red-900/10 dark:text-red-400 dark:border-red-800/30"
+                                            };
+                                            <div class="p-3 rounded-xl border @colorClass text-[11px] leading-snug">
+                                                <div class="font-black mb-1.5 uppercase tracking-wider flex items-center gap-1.5">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-current opacity-60"></span>
+                                                    @level
+                                                </div>
+                                                <p class="opacity-90">@(rubric?.Description ?? "Not configured.")</p>
+                                            </div>
+                                        }
+                                    </div>
+
+                                    <!-- Grading Interface -->
+                                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Assessment Selection</label>
+                                                <input type="hidden" name="CriteriaScores.Index" value="@i" />
+                                                <input type="hidden" asp-for="CriteriaScores[i].CriteriaId" value="@item.ItemID" />
+                                                <select asp-for="CriteriaScores[i].Assessment"
+                                                        class="grade-level-select form-select block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 font-bold text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-all focus:scale-[1.01]"
+                                                        data-target="grade-desc-@i"
+                                                        data-summary="grade-summary"
+                                                        disabled="@isReadOnly"
+                                                        required>
+                                                    <option value="">Select Level</option>
+                                                    <option value="Excellent">Excellent (8-10)</option>
+                                                    <option value="Good">Good (6-8)</option>
+                                                    <option value="Acceptable">Acceptable (4-6)</option>
+                                                    <option value="Fail">Fail (0-4)</option>
+                                                    <option value="NA">N/A - Not Applicable</option>
+                                                </select>
+                                            </div>
+
+                                            <div id="grade-desc-@i" class="p-4 rounded-xl bg-primary-50/30 dark:bg-primary-900/10 border border-primary-100/50 dark:border-primary-900/30 text-xs text-slate-600 dark:text-slate-400 italic leading-relaxed min-h-[60px] flex items-center">
+                                                @((existing?.GradeDescription) ?? "Select a grade level to see the rubric specific to this item.")
+                                            </div>
+                                            
+                                            @if (!string.IsNullOrWhiteSpace(existing?.MentorComment))
+                                            {
+                                                <div class="p-4 rounded-xl bg-blue-50/50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30 text-[11px] flex gap-3">
+                                                    <span class="material-symbols-outlined text-blue-500 text-[18px]">forum</span>
+                                                    <div>
+                                                        <strong class="text-blue-800 dark:text-blue-400 mb-1 block uppercase tracking-wider">Mentor Comment:</strong> 
+                                                        <span class="text-blue-700 dark:text-blue-300">@existing.MentorComment</span>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label class="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">Reviewer Feedback</label>
+                                            <textarea asp-for="CriteriaScores[i].Comment" 
+                                                      class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-all resize-none h-[140px]" 
+                                                      readonly="@isReadOnly" 
+                                                      placeholder="Write specific observations for this criteria..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Summary Section -->
                 <div class="bg-white dark:bg-dark-800 rounded-2xl shadow-sm border border-slate-100 dark:border-dark-700 p-6">
-                    <h2 class="text-lg font-bold text-dark-900 dark:text-white mb-5">Summary</h2>
-                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="grade-summary">
-                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
-                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Excellent">0</div>
-                            <div class="text-[11px] font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Excellent</div>
+                    <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-50 dark:border-dark-700">
+                        <span class="material-symbols-outlined text-primary-500">analytics</span>
+                        <h2 class="text-lg font-bold text-dark-900 dark:text-white">Quantitative Summary</h2>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8" id="grade-summary">
+                        <div class="border border-slate-100 dark:border-dark-700 rounded-2xl p-5 text-center bg-slate-50/50 dark:bg-dark-900/30 transition-all hover:bg-white dark:hover:bg-dark-800 hover:shadow-md hover:-translate-y-1">
+                            <div class="text-3xl font-black text-dark-900 dark:text-white mb-1.5" data-grade-count="Excellent">0</div>
+                            <div class="text-[10px] font-black text-emerald-600 dark:text-emerald-500 uppercase tracking-[0.15em]">Excellent</div>
                         </div>
-                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
-                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Good">0</div>
-                            <div class="text-[11px] font-bold text-blue-600 dark:text-blue-500 uppercase tracking-widest">Good</div>
+                        <div class="border border-slate-100 dark:border-dark-700 rounded-2xl p-5 text-center bg-slate-50/50 dark:bg-dark-900/30 transition-all hover:bg-white dark:hover:bg-dark-800 hover:shadow-md hover:-translate-y-1">
+                            <div class="text-3xl font-black text-dark-900 dark:text-white mb-1.5" data-grade-count="Good">0</div>
+                            <div class="text-[10px] font-black text-blue-600 dark:text-blue-500 uppercase tracking-[0.15em]">Good</div>
                         </div>
-                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
-                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Acceptable">0</div>
-                            <div class="text-[11px] font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest">Acceptable</div>
+                        <div class="border border-slate-100 dark:border-dark-700 rounded-2xl p-5 text-center bg-slate-50/50 dark:bg-dark-900/30 transition-all hover:bg-white dark:hover:bg-dark-800 hover:shadow-md hover:-translate-y-1">
+                            <div class="text-3xl font-black text-dark-900 dark:text-white mb-1.5" data-grade-count="Acceptable">0</div>
+                            <div class="text-[10px] font-black text-amber-600 dark:text-amber-500 uppercase tracking-[0.15em]">Acceptable</div>
                         </div>
-                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
-                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="Fail">0</div>
-                            <div class="text-[11px] font-bold text-red-600 dark:text-red-500 uppercase tracking-widest">Fail</div>
+                        <div class="border border-slate-100 dark:border-dark-700 rounded-2xl p-5 text-center bg-slate-50/50 dark:bg-dark-900/30 transition-all hover:bg-white dark:hover:bg-dark-800 hover:shadow-md hover:-translate-y-1">
+                            <div class="text-3xl font-black text-dark-900 dark:text-white mb-1.5" data-grade-count="Fail">0</div>
+                            <div class="text-[10px] font-black text-red-600 dark:text-red-500 uppercase tracking-[0.15em]">Fail</div>
                         </div>
-                        <div class="border border-slate-200 dark:border-dark-600 rounded-xl p-4 text-center bg-slate-50 dark:bg-dark-900/50">
-                            <div class="text-2xl font-black text-dark-900 dark:text-white mb-1" data-grade-count="NA">0</div>
-                            <div class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">N/A</div>
+                        <div class="border border-slate-100 dark:border-dark-700 rounded-2xl p-5 text-center bg-slate-50/50 dark:bg-dark-900/30 transition-all hover:bg-white dark:hover:bg-dark-800 hover:shadow-md hover:-translate-y-1">
+                            <div class="text-3xl font-black text-dark-900 dark:text-white mb-1.5" data-grade-count="NA">0</div>
+                            <div class="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-[0.15em]">N/A</div>
                         </div>
                     </div>
                     
-                    <label class="block text-sm font-bold text-dark-900 dark:text-white mb-2">Overall Reviewer Comment / Suggestion for Project Supervisor</label>
-                    <textarea asp-for="ExistingFeedbackContent" class="form-control block w-full rounded-xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-colors resize-none" rows="6" readonly="@isReadOnly" placeholder="Enter your overall comment and suggestion for the mentor."></textarea>
+                    <div class="space-y-2">
+                        <label class="block text-sm font-black text-dark-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                            <span class="material-symbols-outlined text-[20px] text-primary-500">rate_review</span>
+                            Overall Reviewer Comment / Suggestion for Project Supervisor
+                        </label>
+                        <textarea asp-for="ExistingFeedbackContent" class="form-control block w-full rounded-2xl border-slate-200 dark:border-dark-600 bg-white dark:bg-dark-800 text-sm focus:border-primary-500 focus:ring-primary-500 shadow-sm transition-all resize-none p-5 h-[200px]" readonly="@isReadOnly" placeholder="Summarize your final verdict and key advice for the mentor..."></textarea>
+                    </div>
                 </div>
             }
             else
@@ -292,6 +380,15 @@
                             </div>
                         </div>
                     }
+                    @if (!string.IsNullOrEmpty(Model.MeetLink))
+                    {
+                        <div class="mt-4">
+                            <a href="@Model.MeetLink" target="_blank" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-bold rounded-xl shadow-sm transition-all group">
+                                <span class="material-symbols-outlined text-[20px] group-hover:animate-pulse">videocam</span>
+                                Join Online Meeting
+                            </a>
+                        </div>
+                    }
                 </div>
 
                 @if (!string.IsNullOrWhiteSpace(Model.SubmissionUrl))
@@ -334,7 +431,6 @@
     </div>
 </form>
 
-@section Scripts {
     <script>
         document.querySelectorAll('.assessment-toggle').forEach(button => {
             button.addEventListener('click', function() {
@@ -394,4 +490,12 @@
 
         updateGradeSummary();
     </script>
-}
+    <style>
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>

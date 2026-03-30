@@ -11,7 +11,44 @@ namespace GPMS.Infrastructure.Repositories;
 public class ReviewSessionRepository : IReviewSessionRepository
 {
     private readonly GpmsDbContext _context;
-    public ReviewSessionRepository(GpmsDbContext context) => _context = context;
+    public ReviewSessionRepository(GpmsDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task<ReviewSessionInfo?> GetByIdAsync(int sessionId)
+    {
+        return await _context.ReviewSessions
+            .Include(s => s.Committee)
+            .Include(s => s.Room)
+            .Include(s => s.ReviewRound)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.GroupMembers)
+                    .ThenInclude(m => m.User)
+            .Include(s => s.Group)
+                .ThenInclude(g => g.Project)
+                    .ThenInclude(p => p.ProjectSupervisors)
+                        .ThenInclude(ps => ps.Lecturer)
+            .FirstOrDefaultAsync(s => s.SessionID == sessionId);
+    }
+
+    public async Task<IEnumerable<ReviewSessionInfo>> GetByRoundIdAsync(int roundId)
+    {
+        return await _context.ReviewSessions
+            .Include(s => s.Room)
+            .Include(s => s.Group)
+            .Where(s => s.ReviewRoundID == roundId)
+            .ToListAsync();
+    }
+
+    public async Task<IEnumerable<ReviewSessionInfo>> GetByGroupIdAsync(int groupId)
+    {
+        return await _context.ReviewSessions
+            .Include(s => s.Room)
+            .Include(s => s.ReviewRound)
+            .Where(s => s.GroupID == groupId)
+            .ToListAsync();
+    }
 
     public async Task<IEnumerable<ReviewSessionInfo>> GetByRoundAndDateAsync(int roundId, DateTime date) =>
         await _context.ReviewSessions
@@ -41,12 +78,10 @@ public class ReviewSessionRepository : IReviewSessionRepository
         await _context.ReviewSessions
             .FirstOrDefaultAsync(s => s.ReviewRoundID == roundId && s.GroupID == groupId);
 
-    public async Task<ReviewSessionInfo?> GetByIdAsync(int sessionId) =>
-        await _context.ReviewSessions
-            .Include(s => s.Committee)
-            .FirstOrDefaultAsync(s => s.SessionID == sessionId);
-
-    public async Task AddAsync(ReviewSessionInfo session) => await _context.ReviewSessions.AddAsync(session);
+    public async Task AddAsync(ReviewSessionInfo session)
+    {
+        await _context.ReviewSessions.AddAsync(session);
+    }
 
     public Task UpdateAsync(ReviewSessionInfo session)
     {
