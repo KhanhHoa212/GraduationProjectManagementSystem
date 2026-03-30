@@ -22,6 +22,12 @@ public class EvaluationSeeder : IDataSeeder
 
     public async Task SeedAsync()
     {
+        if (await _context.Evaluations.CountAsync() > 10)
+        {
+            Console.WriteLine("[EvaluationSeeder] Evaluations already exist, skipping...");
+            return;
+        }
+
         var faker = new Faker("vi");
 
         var assignments = await _context.ReviewerAssignments

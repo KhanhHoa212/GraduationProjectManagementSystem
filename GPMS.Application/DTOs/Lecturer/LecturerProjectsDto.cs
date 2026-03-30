@@ -70,6 +70,7 @@ public class GroupEvaluationSummaryDto
 {
     public int EvaluationId { get; set; }
     public int ReviewRoundId { get; set; }
+    public int RoundNumber { get; set; }
     public string ReviewerId { get; set; } = string.Empty;
     public string? Status { get; set; }
     public DateTime? SubmittedAt { get; set; }

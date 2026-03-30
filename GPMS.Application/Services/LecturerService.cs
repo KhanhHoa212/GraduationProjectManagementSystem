@@ -166,7 +166,7 @@ public class LecturerService : ILecturerService
                 Semester = group.SemesterCode,
                 SupervisorRole = supervisorRole,
                 MemberNames = group.MemberNames,
-                CurrentRound = latestEvaluation != null ? $"Round {latestEvaluation.ReviewRoundId}" : "No review submitted yet",
+                CurrentRound = latestEvaluation != null ? $"Round {latestEvaluation.RoundNumber}" : "No review submitted yet",
                 Status = pendingFeedbackCount > 0
                     ? "Awaiting feedback approval"
                     : latestEvaluation?.ApprovalStatus == ApprovalStatus.Rejected.ToString()
